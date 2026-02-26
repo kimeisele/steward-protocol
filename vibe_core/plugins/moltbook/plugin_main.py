@@ -55,7 +55,6 @@ from vibe_core.mahamantra.substrate.core.seed import (
     MAHAJANA_COUNT,
     MALA,
     NAVA,
-    PANCHA,
     QUARTERS,
     SHARANAGATI,
     TRINITY,
@@ -496,11 +495,6 @@ class MoltbookPlugin(KernelPlugin):
     _ACTIVITY_LOG_FILE = "activity.jsonl"
     _MAX_SEEN_IDS = MALA * NAVA  # 972 ≈ 1000 (108 beads × 9 processes)
 
-    # Rate limits (from platform.yaml moltbook-002-rate-limit)
-    _POST_INTERVAL_SEC = 30 * 60  # 1 post per 30 minutes
-    _COMMENT_LIMIT_PER_HOUR = 10  # 10 comments per hour
-    _DM_LIMIT_PER_HOUR = 30  # 30 DM operations per hour
-
     def __init__(self):
         super().__init__()
         self._client = None  # MoltbookClient, created in on_boot
@@ -531,7 +525,6 @@ class MoltbookPlugin(KernelPlugin):
         self._followed_agents: Set[str] = set()  # Track who we've followed (avoid duplicates)
         self._subscribed_submolts: Set[str] = set()  # Track community subscriptions
         self._submolt_descriptions: Dict[str, str] = {}  # name → description (for LLM context)
-        self._last_overflow_log: int = 0  # Heartbeat count when last overflow was logged
         self._comment_post_map: Dict[str, str] = {}  # comment_id → post_id for reply monitoring
         self._last_profile_heartbeat: int = 0  # Heartbeat count when profile was last updated
         self._activity_log_path: Optional[Path] = None  # JSONL append-only audit log
@@ -548,13 +541,15 @@ class MoltbookPlugin(KernelPlugin):
         self._strategy_planner = None
         self._current_intents: list = []  # List[StrategicIntent]
         self._current_feed_topics: list = []  # Extracted topics from feed scan
+        # Extracted managers (lazy-init)
+        self._drainer = None
+        self._persistence_mgr = None
+        self._feed_analyzer = None
+        self._engagement_tracker = None
         # Engagement tracking: own post IDs → metadata for polling
         self._own_post_ids: Dict[str, Dict[str, object]] = {}
         self._MAX_OWN_POST_IDS = COSMIC_FRAME // MALA  # 200 (pada_unit)
-        # Rate limiting (from platform.yaml: 1 post/30min, 10 comments/hour)
-        self._last_post_ts: float = 0.0
-        self._comment_timestamps: List[float] = []
-        self._dm_timestamps: List[float] = []
+        # Rate limiting now handled by ContentDrainer (managers/drainer.py)
 
     @property
     def dependencies(self) -> Set[str]:
@@ -587,6 +582,67 @@ class MoltbookPlugin(KernelPlugin):
             except Exception as e:
                 logger.warning(f"Strategy planner unavailable: {e}")
         return self._strategy_planner
+
+    @property
+    def _content_drainer(self):
+        """Lazy-init ContentDrainer with shared state refs."""
+        if self._drainer is None:
+            from vibe_core.plugins.moltbook.managers.drainer import ContentDrainer
+
+            self._drainer = ContentDrainer(
+                service_getter=self._ensure_service,
+                log_activity=self._log_activity,
+                broadcast_to_agora=self._broadcast_to_agora,
+                emit_event=self._emit_event,
+                own_post_ids=self._own_post_ids,
+                own_comment_ids=self._own_comment_ids,
+                comment_post_map=self._comment_post_map,
+                followed_agents=self._followed_agents,
+                subscribed_submolts=self._subscribed_submolts,
+            )
+        return self._drainer
+
+    @property
+    def _persistence(self):
+        """Lazy-init PersistenceManager."""
+        if self._persistence_mgr is None:
+            from vibe_core.plugins.moltbook.managers.persistence import PersistenceManager
+
+            self._persistence_mgr = PersistenceManager(
+                state_dir=self._state_dir,
+                max_seen_ids=self._MAX_SEEN_IDS,
+            )
+        return self._persistence_mgr
+
+    @property
+    def _feed(self):
+        """Lazy-init FeedAnalyzer with shared state refs."""
+        if self._feed_analyzer is None:
+            from vibe_core.plugins.moltbook.managers.feed import FeedAnalyzer
+
+            self._feed_analyzer = FeedAnalyzer(
+                seen_post_ids=self._seen_post_ids,
+                subscribed_submolts=self._subscribed_submolts,
+                submolt_descriptions=self._submolt_descriptions,
+            )
+        return self._feed_analyzer
+
+    @property
+    def _engagement(self):
+        """Lazy-init EngagementTracker."""
+        if self._engagement_tracker is None:
+            from vibe_core.plugins.moltbook.managers.engagement import EngagementTracker
+
+            self._engagement_tracker = EngagementTracker(
+                log_activity=self._log_activity,
+            )
+        return self._engagement_tracker
+
+    def _ensure_service(self):
+        """Ensure MoltbookService exists, create if needed. Used by managers."""
+        if self._service is None:
+            self._service = MoltbookService(self._client)
+        return self._service
 
     def _director_propose(
         self,
@@ -655,192 +711,94 @@ class MoltbookPlugin(KernelPlugin):
 
     def _persist_queue(self) -> None:
         """Save content queue + seen IDs to state dir. Called on shutdown."""
-        if not self._state_dir:
-            return
-        try:
-            # Queue: serialize proposals
-            proposals = list(self._content_queue._queue)
-            queue_data = {
-                "version": 1,
-                "proposals": [dict(p) for p in proposals],
-                "stats": {
-                    "total_enqueued": self._content_queue._total_enqueued,
-                    "total_drained": self._content_queue._total_drained,
-                    "total_dropped": self._content_queue._total_dropped,
-                },
-                "timestamp": datetime.now(timezone.utc).isoformat(),
-            }
-            queue_path = self._state_dir / self._QUEUE_STATE_FILE
-            queue_path.write_text(json.dumps(queue_data, indent=2))
-
-            # Seen IDs + tracking sets: cap to prevent unbounded growth
-            msg_ids = sorted(self._seen_message_ids)[-self._MAX_SEEN_IDS :]
-            post_ids = sorted(self._seen_post_ids)[-self._MAX_SEEN_IDS :]
-            # Cap comment_post_map to last N entries
-            cpm_keys = sorted(self._comment_post_map.keys())[-self._MAX_SEEN_IDS :]
-            cpm = {k: self._comment_post_map[k] for k in cpm_keys}
-            # Cap own_post_ids to most recent entries
-            own_post_keys = sorted(
-                self._own_post_ids.keys(),
-                key=lambda k: self._own_post_ids[k].get("created_at", 0),
-            )[-self._MAX_OWN_POST_IDS :]
-            own_posts = {k: self._own_post_ids[k] for k in own_post_keys}
-
-            seen_data = {
-                "version": 5,
-                "message_ids": msg_ids,
-                "post_ids": post_ids,
-                "own_comment_ids": sorted(self._own_comment_ids)[-self._MAX_SEEN_IDS :],
-                "commented_post_ids": sorted(self._commented_post_ids)[-self._MAX_SEEN_IDS :],
-                "followed_agents": sorted(self._followed_agents),
-                "subscribed_submolts": sorted(self._subscribed_submolts),
-                "comment_post_map": cpm,
-                "own_post_ids": own_posts,
-                "timestamp": datetime.now(timezone.utc).isoformat(),
-            }
-            seen_path = self._state_dir / self._SEEN_STATE_FILE
-            seen_path.write_text(json.dumps(seen_data, indent=2))
-
-            total = len(proposals)
-            logger.info(f"State persisted: {total} queued proposals, {len(msg_ids)} msg IDs, {len(post_ids)} post IDs")
-
-            # Also persist cross-phase state (feed_topics + intents)
-            self._persist_phase_state()
-        except Exception as e:
-            logger.warning(f"Queue persistence failed: {e}")
+        self._persistence.persist_queue(
+            queue=self._content_queue,
+            seen_message_ids=self._seen_message_ids,
+            seen_post_ids=self._seen_post_ids,
+            own_comment_ids=self._own_comment_ids,
+            commented_post_ids=self._commented_post_ids,
+            followed_agents=self._followed_agents,
+            subscribed_submolts=self._subscribed_submolts,
+            comment_post_map=self._comment_post_map,
+            own_post_ids=self._own_post_ids,
+            max_own_post_ids=self._MAX_OWN_POST_IDS,
+        )
+        # Also persist cross-phase state (feed_topics + intents)
+        self._persist_phase_state()
 
     def _restore_queue(self) -> None:
         """Restore content queue + seen IDs from state dir. Called on boot."""
-        if not self._state_dir:
-            return
-
-        # Restore queue
-        queue_path = self._state_dir / self._QUEUE_STATE_FILE
-        try:
-            if queue_path.exists():
-                data = json.loads(queue_path.read_text())
-                if data.get("version") == 1:
-                    for p in data.get("proposals", []):
-                        # Clear stale retry state from previous session
-                        p.pop("_retries", None)
-                        p.pop("_retry_after", None)
-                        self._content_queue.enqueue(p)
-                    stats = data.get("stats", {})
-                    self._content_queue._total_enqueued = stats.get("total_enqueued", 0)
-                    self._content_queue._total_drained = stats.get("total_drained", 0)
-                    self._content_queue._total_dropped = stats.get("total_dropped", 0)
-                    restored = self._content_queue.size
-                    if restored:
-                        logger.info(f"Restored {restored} queued proposals from previous session")
-        except Exception as e:
-            logger.warning(f"Queue restore failed: {e}")
-
-        # Restore seen IDs + tracking sets
-        seen_path = self._state_dir / self._SEEN_STATE_FILE
-        try:
-            if seen_path.exists():
-                data = json.loads(seen_path.read_text())
-                if data.get("version") in (1, 2, 3, 4, 5):
-                    self._seen_message_ids = set(data.get("message_ids", []))
-                    self._seen_post_ids = set(data.get("post_ids", []))
-                    self._own_comment_ids = set(data.get("own_comment_ids", []))
-                    self._commented_post_ids = set(data.get("commented_post_ids", []))
-                    self._followed_agents = set(data.get("followed_agents", []))
-                    self._subscribed_submolts = set(data.get("subscribed_submolts", []))
-                    self._comment_post_map = data.get("comment_post_map", {})
-                    self._own_post_ids = data.get("own_post_ids", {})
-                    logger.info(
-                        f"Restored {len(self._seen_message_ids)} msg IDs, "
-                        f"{len(self._seen_post_ids)} post IDs, "
-                        f"{len(self._commented_post_ids)} commented posts, "
-                        f"{len(self._followed_agents)} followed, "
-                        f"{len(self._subscribed_submolts)} subscribed, "
-                        f"{len(self._comment_post_map)} comment threads"
-                    )
-        except Exception as e:
-            logger.warning(f"Seen IDs restore failed: {e}")
+        restored = self._persistence.restore_queue(self._content_queue)
+        if restored:
+            if "seen_message_ids" in restored:
+                self._seen_message_ids = restored["seen_message_ids"]
+            if "seen_post_ids" in restored:
+                self._seen_post_ids = restored["seen_post_ids"]
+            if "own_comment_ids" in restored:
+                self._own_comment_ids = restored["own_comment_ids"]
+            if "commented_post_ids" in restored:
+                self._commented_post_ids = restored["commented_post_ids"]
+            if "followed_agents" in restored:
+                self._followed_agents = restored["followed_agents"]
+            if "subscribed_submolts" in restored:
+                self._subscribed_submolts = restored["subscribed_submolts"]
+            if "comment_post_map" in restored:
+                self._comment_post_map = restored["comment_post_map"]
+            if "own_post_ids" in restored:
+                self._own_post_ids = restored["own_post_ids"]
 
         # Restore cross-phase state (feed_topics + intents from previous run)
         self._restore_phase_state()
 
     def _persist_phase_state(self) -> None:
-        """Save cross-phase state (feed_topics + intents + heartbeat_count).
-
-        Survives GitHub Actions restarts so DHARMA can use GENESIS results
-        from a previous run, and KARMA can use DHARMA intents.
-        """
-        if not self._state_dir:
-            return
-        try:
-            # Serialize intents as dicts (StrategicIntent → dict)
-            intent_dicts = []
-            for intent in self._current_intents:
-                if hasattr(intent, "__dict__"):
-                    intent_dicts.append(intent.__dict__)
-                elif isinstance(intent, dict):
-                    intent_dicts.append(intent)
-
-            phase_data = {
-                "version": 1,
-                "heartbeat_count": self._heartbeat_count,
-                "feed_topics": self._current_feed_topics[:20],  # Cap to prevent bloat
-                "intents": intent_dicts,
-                "timestamp": datetime.now(timezone.utc).isoformat(),
-            }
-            phase_path = self._state_dir / self._PHASE_STATE_FILE
-            phase_path.write_text(json.dumps(phase_data, indent=2, default=str))
-        except Exception as e:
-            logger.debug(f"Phase state persist failed: {e}")
+        """Save cross-phase state (feed_topics + intents + heartbeat_count)."""
+        self._persistence.persist_phase_state(
+            heartbeat_count=self._heartbeat_count,
+            feed_topics=self._current_feed_topics,
+            intents=self._current_intents,
+        )
 
     def _restore_phase_state(self) -> None:
         """Restore cross-phase state from previous run."""
-        if not self._state_dir:
+        restored = self._persistence.restore_phase_state()
+        if not restored:
             return
-        phase_path = self._state_dir / self._PHASE_STATE_FILE
-        try:
-            if not phase_path.exists():
-                return
-            data = json.loads(phase_path.read_text())
-            if data.get("version") != 1:
-                return
 
-            # Restore heartbeat_count (highest wins — snapshot or phase)
-            saved_hb = int(data.get("heartbeat_count", 0))
-            if saved_hb > self._heartbeat_count:
-                self._heartbeat_count = saved_hb
+        # Restore heartbeat_count (highest wins — snapshot or phase)
+        saved_hb = restored.get("heartbeat_count", 0)
+        if saved_hb > self._heartbeat_count:
+            self._heartbeat_count = saved_hb
 
-            # Restore feed topics (raw dicts, no deserialization needed)
-            topics = data.get("feed_topics", [])
-            if topics and not self._current_feed_topics:
-                self._current_feed_topics = topics
-                logger.info(f"Restored {len(topics)} feed topics from previous run")
+        # Restore feed topics (raw dicts, no deserialization needed)
+        topics = restored.get("feed_topics", [])
+        if topics and not self._current_feed_topics:
+            self._current_feed_topics = topics
+            logger.info(f"Restored {len(topics)} feed topics from previous run")
 
-            # Restore intents as StrategicIntent objects
-            intent_dicts = data.get("intents", [])
-            if intent_dicts and not self._current_intents:
-                try:
-                    from vibe_core.cartridges.agent_city.moltbook.core.strategy import StrategicIntent
+        # Restore intents as StrategicIntent objects
+        intent_dicts = restored.get("intent_dicts", [])
+        if intent_dicts and not self._current_intents:
+            try:
+                from vibe_core.cartridges.agent_city.moltbook.core.strategy import StrategicIntent
 
-                    intents = []
-                    for d in intent_dicts:
-                        intents.append(
-                            StrategicIntent(
-                                action_type=d.get("action_type", "skip"),
-                                topic=d.get("topic", ""),
-                                reasoning=d.get("reasoning", ""),
-                                priority=int(d.get("priority", 5)),
-                                mission_id=d.get("mission_id", ""),
-                                target_post_id=d.get("target_post_id", ""),
-                                engagement_context=d.get("engagement_context", ""),
-                                submolt_context=d.get("submolt_context", ""),
-                            )
+                intents = []
+                for d in intent_dicts:
+                    intents.append(
+                        StrategicIntent(
+                            action_type=d.get("action_type", "skip"),
+                            topic=d.get("topic", ""),
+                            reasoning=d.get("reasoning", ""),
+                            priority=int(d.get("priority", 5)),
+                            mission_id=d.get("mission_id", ""),
+                            target_post_id=d.get("target_post_id", ""),
+                            engagement_context=d.get("engagement_context", ""),
+                            submolt_context=d.get("submolt_context", ""),
                         )
-                    self._current_intents = intents
-                    logger.info(f"Restored {len(intents)} strategic intents from previous run")
-                except Exception:
-                    pass
-        except Exception as e:
-            logger.debug(f"Phase state restore failed: {e}")
+                    )
+                self._current_intents = intents
+                logger.info(f"Restored {len(intents)} strategic intents from previous run")
+            except Exception:
+                pass
 
     # =========================================================================
     # PluginStateContract
@@ -1596,105 +1554,24 @@ class MoltbookPlugin(KernelPlugin):
 
     def _analyze_feed(self) -> None:
         """Read personalized feed, score via proposer, generate via AgencyDirector."""
-        if not self._proposer:
-            return
-
-        try:
-            posts = run_async(self._client.get_personalized_feed(sort="hot", limit=10))
-        except Exception as e:
-            logger.warning(f"Feed fetch failed: {e}")
-            return
-
-        if not posts:
-            return
-
-        # Filter already-seen posts
-        unseen = []
-        for post in posts:
-            post_id = post.get("id", "") if isinstance(post, dict) else ""
-            if post_id and post_id not in self._seen_post_ids:
-                self._seen_post_ids.add(post_id)
-                unseen.append(post)
-
-        if not unseen:
-            return
-
-        scored = self._proposer.analyze_feed(unseen)
-
-        for post, ranked, score in scored:
-            post_id = post.get("id", "") if isinstance(post, dict) else ""
-            post_content = post.get("content", post.get("title", "")) if isinstance(post, dict) else ""
-            author_data = post.get("author", {}) if isinstance(post, dict) else {}
-            author = author_data.get("name", "unknown") if isinstance(author_data, dict) else "unknown"
-
-            if not post_id or not post_content:
-                continue
-
-            # Engagement (upvote)
-            try:
-                engage_proposal = self._proposer.should_engage(post_id, post_content, author)
-                if engage_proposal:
-                    self._content_queue.enqueue(engage_proposal)
-            except Exception as e:
-                logger.warning(f"Engagement proposal failed: {e}")
-
-            # Comment on high-resonance posts via Agency Director (I-P-V-O)
-            try:
-                comment_proposal = self._director_propose(
-                    content_type="comment",
-                    raw_input=post_content,
-                    proposal_type=ContentType.COMMENT.value,
-                    post_id=post_id,
-                    trigger="feed_analysis",
-                )
-                if comment_proposal:
-                    self._content_queue.enqueue(comment_proposal)
-                    logger.info(f"Feed comment queued for {post_id} (score={score:.2f})")
-            except Exception as e:
-                logger.warning(f"Comment proposal failed: {e}")
+        self._feed.analyze_feed(
+            client=self._client,
+            proposer=self._proposer,
+            content_queue=self._content_queue,
+            director_propose=self._director_propose,
+        )
 
     # =========================================================================
     # Phase-Aware Methods (MURALI routing)
     # =========================================================================
 
     def _scan_feed(self) -> None:
-        """GENESIS phase: Extract topics + metadata from feed. NO content generation.
-
-        Stores ALL feed posts as topics for strategy evaluation (not just unseen).
-        Only engagement actions (upvotes) are filtered by seen status.
-        """
-        if not self._proposer:
-            return
-
-        try:
-            posts = run_async(self._client.get_personalized_feed(sort="hot", limit=10))
-        except Exception as e:
-            logger.warning(f"Feed fetch failed: {e}")
-            return
-
-        if not posts:
-            return
-
-        # ALL posts become topics for strategy (DHARMA needs context, not just new posts)
-        self._current_feed_topics = posts if isinstance(posts, list) else []
-        logger.info(f"Feed scan: {len(self._current_feed_topics)} topics available")
-
-        # Engagement: upvote UNSEEN high-quality posts (dedup prevents double-engage)
-        for post in posts[:5]:
-            post_id = post.get("id", "") if isinstance(post, dict) else ""
-            if post_id and post_id in self._seen_post_ids:
-                continue  # Already engaged
-            post_content = post.get("content", post.get("title", "")) if isinstance(post, dict) else ""
-            author_data = post.get("author", {}) if isinstance(post, dict) else {}
-            author = author_data.get("name", "unknown") if isinstance(author_data, dict) else "unknown"
-            if post_id and post_content:
-                self._seen_post_ids.add(post_id)
-                try:
-                    engage_proposal = self._proposer.should_engage(post_id, post_content, author)
-                    if engage_proposal:
-                        self._content_queue.enqueue(engage_proposal)
-                except Exception:
-                    pass
+        """GENESIS phase: Extract topics + metadata from feed. NO content generation."""
+        self._current_feed_topics = self._feed.scan_feed(
+            client=self._client,
+            proposer=self._proposer,
+            content_queue=self._content_queue,
+        )
 
     def _evaluate_strategy(self) -> None:
         """DHARMA phase: Sankalpa → prioritized strategic intents.
@@ -1971,207 +1848,26 @@ class MoltbookPlugin(KernelPlugin):
             logger.warning(f"Profile update failed: {e}")
 
     def _track_engagement(self) -> None:
-        """Poll own posts/comments for engagement metrics (upvotes, replies).
-
-        Feeds results into:
-          - EventLog (engagement_metric event for persistence)
-          - FeedbackProtocol (signal_success/failure for adaptive learning)
-        """
-        if not self._service or not self._own_post_ids:
-            return
-
-        from vibe_core.protocols.feedback import get_feedback_safe
-
-        feedback = get_feedback_safe()
-
-        event_log = self.agency_director.event_log
-
-        # Poll up to 5 most recent own posts
-        recent_posts = sorted(
-            self._own_post_ids.items(),
-            key=lambda kv: kv[1].get("created_at", 0),
-            reverse=True,
-        )[:5]
-
-        for post_id, meta in recent_posts:
-            try:
-                post = self._service.get_post(post_id)
-            except Exception as e:
-                logger.debug(f"Engagement poll failed for {post_id}: {e}")
-                continue
-
-            if not isinstance(post, dict):
-                continue
-
-            upvotes = int(post.get("upvotes", 0))
-            downvotes = int(post.get("downvotes", 0))
-            replies = int(post.get("comment_count", 0))
-            submolt = str(meta.get("submolt", ""))
-            net_score = upvotes - downvotes
-
-            event_log.record_engagement_metric(
-                content_id=post_id,
-                content_type="post",
-                upvotes=upvotes,
-                downvotes=downvotes,
-                replies=replies,
-                submolt=submolt,
-            )
-
-            ctx = {"submolt": submolt, "upvotes": upvotes, "replies": replies, "net_score": net_score}
-            if net_score > 0 or replies > 0:
-                feedback.signal_success("moltbook.post", ctx, duration_ms=0.0)
-            elif net_score < 0:
-                feedback.signal_failure("moltbook.post", "negative_engagement", ctx, duration_ms=0.0)
-
-        # Poll up to 5 own comments for engagement
-        comment_ids = list(self._own_comment_ids)[-5:]
-        for comment_id in comment_ids:
-            post_id = self._comment_post_map.get(comment_id, "")
-            if not post_id:
-                continue
-            try:
-                comments = self._service.get_comments(post_id, sort="new")
-            except Exception as e:
-                logger.debug(f"Comment fetch for engagement tracking failed: {e}")
-                continue
-            for c in comments or []:
-                if not isinstance(c, dict):
-                    continue
-                if c.get("id") == comment_id:
-                    upvotes = int(c.get("upvotes", 0))
-                    downvotes = int(c.get("downvotes", 0))
-                    net_score = upvotes - downvotes
-                    event_log.record_engagement_metric(
-                        content_id=comment_id,
-                        content_type="comment",
-                        upvotes=upvotes,
-                        downvotes=downvotes,
-                        replies=0,
-                    )
-                    ctx = {"upvotes": upvotes, "net_score": net_score}
-                    if net_score > 0:
-                        feedback.signal_success("moltbook.comment", ctx, duration_ms=0.0)
-                    elif net_score < 0:
-                        feedback.signal_failure("moltbook.comment", "negative_engagement", ctx, duration_ms=0.0)
-                    break
-
-        # Feed engagement data to strategy planner for mission priority adjustment
-        planner = self.strategy_planner
-        if planner:
-            for post_id, meta in recent_posts:
-                try:
-                    post = self._service.get_post(post_id)
-                    if isinstance(post, dict):
-                        planner.update_from_engagement(
-                            {
-                                "post_id": post_id,
-                                "upvotes": int(post.get("upvotes", 0)),
-                                "reply_count": int(post.get("comment_count", 0)),
-                                "topic": str(meta.get("title", "")),
-                            }
-                        )
-                except Exception:
-                    pass  # Graceful — engagement poll may have already failed above
-
-        logger.debug(f"Engagement tracked: {len(recent_posts)} posts, {len(comment_ids)} comments")
-
-    # Interval bounds (min/max heartbeats) — SEED-derived
-    _MIN_FEED_INTERVAL = HALVES  # 2 halves
-    _MAX_FEED_INTERVAL = MAHAJANA_COUNT  # 12 authorities
-    _MIN_POST_INTERVAL = MAHAJANA_COUNT  # 12 authorities
-    _MAX_POST_INTERVAL = LILA  # 48 Chaitanya's manifest
-
-    # Threshold constants for _adjust_intervals — COSMIC_FRAME integer arithmetic
-    _HIGH_CF = COSMIC_FRAME * QUARTERS // PANCHA  # 17280 ≈ 0.8
-    _LOW_FEED_CF = COSMIC_FRAME // SHARANAGATI  # 3600 ≈ 0.167 ≈ 0.2
-    _LOW_POST_CF = COSMIC_FRAME * SHARANAGATI // (QUARTERS * PANCHA)  # 6480 ≈ 0.3
+        """Poll own posts/comments for engagement metrics (upvotes, replies)."""
+        self._engagement.track(
+            service=self._service,
+            own_post_ids=self._own_post_ids,
+            own_comment_ids=self._own_comment_ids,
+            comment_post_map=self._comment_post_map,
+            event_log=self.agency_director.event_log,
+            strategy_planner=self.strategy_planner,
+        )
 
     def _adjust_intervals(self) -> None:
-        """Adjust heartbeat intervals based on feedback success rate.
-
-        Reads FeedbackProtocol stats. Needs ≥5 signals for cold start protection.
-        All thresholds use COSMIC_FRAME integer arithmetic — no hardcoded floats.
-        Linear interpolation:
-          - High success (≥HIGH_CF) → shorter intervals (more active)
-          - Low success (≤LOW_CF) → longer intervals (more conservative)
-        """
-        from vibe_core.protocols.feedback import get_feedback_safe
-
-        stats = get_feedback_safe().get_stats()
-
-        if stats.total_signals < PANCHA:
-            return  # Cold start: not enough data
-
-        rate_cf = int(stats.success_rate * COSMIC_FRAME)
-
-        # Linear interpolation for feed interval (COSMIC_FRAME integer arithmetic)
-        if rate_cf >= self._HIGH_CF:
-            new_feed = self._MIN_FEED_INTERVAL
-        elif rate_cf <= self._LOW_FEED_CF:
-            new_feed = self._MAX_FEED_INTERVAL
-        else:
-            # Integer lerp: (rate_cf - LOW) * (max - min) // (HIGH - LOW)
-            span = self._HIGH_CF - self._LOW_FEED_CF
-            new_feed = (
-                self._MAX_FEED_INTERVAL
-                - (rate_cf - self._LOW_FEED_CF) * (self._MAX_FEED_INTERVAL - self._MIN_FEED_INTERVAL) // span
-            )
-
-        # Linear interpolation for post interval (COSMIC_FRAME integer arithmetic)
-        if rate_cf >= self._HIGH_CF:
-            new_post = self._MIN_POST_INTERVAL
-        elif rate_cf <= self._LOW_POST_CF:
-            new_post = self._MAX_POST_INTERVAL
-        else:
-            span = self._HIGH_CF - self._LOW_POST_CF
-            new_post = (
-                self._MAX_POST_INTERVAL
-                - (rate_cf - self._LOW_POST_CF) * (self._MAX_POST_INTERVAL - self._MIN_POST_INTERVAL) // span
-            )
-
-        old_feed, old_post = self._feed_interval, self._post_interval
-        self._feed_interval = max(self._MIN_FEED_INTERVAL, min(self._MAX_FEED_INTERVAL, new_feed))
-        self._post_interval = max(self._MIN_POST_INTERVAL, min(self._MAX_POST_INTERVAL, new_post))
-
-        if self._feed_interval != old_feed or self._post_interval != old_post:
-            self._log_activity(
-                "intervals_adjusted",
-                {
-                    "feed": self._feed_interval,
-                    "post": self._post_interval,
-                    "success_rate_cf": rate_cf,
-                    "total_signals": stats.total_signals,
-                },
-            )
-            logger.info(
-                f"Intervals adjusted: feed={old_feed}→{self._feed_interval}, "
-                f"post={old_post}→{self._post_interval} (rate_cf={rate_cf}/{COSMIC_FRAME}, signals={stats.total_signals})"
-            )
+        """Adjust heartbeat intervals based on feedback success rate."""
+        self._feed_interval, self._post_interval = self._engagement.adjust_intervals(
+            feed_interval=self._feed_interval,
+            post_interval=self._post_interval,
+        )
 
     def _monitor_queue_health(self) -> None:
-        """Log warning when queue overflows (proposals silently dropped).
-
-        The ContentQueue uses a bounded deque — when full, oldest proposals
-        get evicted on enqueue. We track total_dropped and log when it rises.
-        Rate-limited to avoid log spam: max 1 warning per 8 heartbeats.
-        """
-        stats = self._content_queue.stats
-        dropped = stats.get("total_dropped", 0)
-        queued = stats.get("queued", 0)
-        max_size = stats.get("max_size", ContentQueue.DEFAULT_MAX_SIZE)
-
-        if dropped > 0 and (self._heartbeat_count - self._last_overflow_log) >= HARE_COUNT:
-            self._last_overflow_log = self._heartbeat_count
-            logger.warning(
-                f"Queue overflow: {dropped} proposals dropped (queue {queued}/{max_size}). "
-                f"Enqueued={stats.get('total_enqueued', 0)}, "
-                f"Drained={stats.get('total_drained', 0)}"
-            )
-
-        # High water mark: queue > 80% full
-        if queued > max_size * 0.8:
-            logger.info(f"Queue high water: {queued}/{max_size} ({queued * 100 // max_size}% full)")
+        """Log warning when queue overflows (proposals silently dropped)."""
+        self._content_drainer.monitor_queue_health(self._content_queue, self._heartbeat_count)
 
     def _follow_back(self, sender: str) -> None:
         """Follow an agent back if we haven't already. Enqueues a FOLLOW proposal."""
@@ -2218,420 +1914,25 @@ class MoltbookPlugin(KernelPlugin):
         except Exception:
             pass  # EventBus unavailable — graceful degradation
 
-    # Resonance threshold scaled to COSMIC_FRAME — integer comparison, no floats
-    # 6480 / 21600 ≈ 0.3 (SHARANAGATI / (QUARTERS × PANCHA))
-    _SUBMOLT_RESONANCE_CF = COSMIC_FRAME * SHARANAGATI // (QUARTERS * PANCHA)  # 6480
-
     def _discover_submolts(self) -> None:
-        """Discover and subscribe to relevant submolts via resonance scoring.
-
-        Uses resonate() to score each submolt by name+description.
-        Only subscribes if score > threshold OR fewer than 3 subscriptions (cold start).
-        """
-        try:
-            submolts = run_async(self._client.get_submolts())
-        except Exception as e:
-            logger.debug(f"Submolt discovery failed: {e}")
-            return
-
-        if not submolts:
-            return
-
-        try:
-            from vibe_core.mahamantra.substrate.encoding.resonance_ranker import resonate
-        except ImportError:
-            # Fallback: subscribe to all (original behavior)
-            for submolt in submolts:
-                if not isinstance(submolt, dict):
-                    continue
-                name = submolt.get("name", "")
-                if name and name not in self._subscribed_submolts:
-                    self._subscribed_submolts.add(name)
-                    desc = submolt.get("description", "")
-                    if desc:
-                        self._submolt_descriptions[name] = desc
-                    self._content_queue.enqueue(
-                        {
-                            "content_type": ContentType.SUBSCRIBE.value,
-                            "submolt": name,
-                            "source": "submolt_discovery",
-                            "priority": 0,
-                        }
-                    )
-            return
-
-        cold_start = len(self._subscribed_submolts) < 3
-
-        for submolt in submolts:
-            if not isinstance(submolt, dict):
-                continue
-            name = submolt.get("name", "")
-            if not name or name in self._subscribed_submolts:
-                continue
-
-            # Score by resonance: name + description
-            desc = submolt.get("description", "")
-            probe = f"{name} {desc}".strip()
-            try:
-                ranked = resonate(probe, top_n=3)
-                score = sum(w.total_score for w in ranked) / len(ranked) if ranked else 0.0
-            except Exception as e:
-                logger.debug(f"Resonance scoring failed for {name}: {e}")
-                score = 0.0
-
-            if int(score * COSMIC_FRAME) > self._SUBMOLT_RESONANCE_CF or cold_start:
-                self._subscribed_submolts.add(name)
-                if desc:
-                    self._submolt_descriptions[name] = desc
-                proposal: ContentProposal = {
-                    "content_type": ContentType.SUBSCRIBE.value,
-                    "submolt": name,
-                    "source": "submolt_discovery",
-                    "priority": 0,
-                }
-                self._content_queue.enqueue(proposal)
-                logger.info(f"Submolt subscription queued: {name} (score={score:.3f})")
-            else:
-                logger.debug(
-                    f"Submolt skipped: {name} (score_cf={int(score * COSMIC_FRAME)} < {self._SUBMOLT_RESONANCE_CF})"
-                )
+        """Discover and subscribe to relevant submolts via resonance scoring."""
+        self._feed.discover_submolts(self._client, self._content_queue)
 
     def _select_submolt(self, seed_text: str) -> Optional[str]:
-        """Select best submolt for content via resonance cross-scoring.
-
-        For each subscribed submolt, compute resonance between content words
-        and submolt name. Weight by engagement history if available.
-        """
-        if not self._subscribed_submolts:
-            return None
-
-        try:
-            from vibe_core.mahamantra.substrate.encoding.resonance_ranker import resonate
-        except ImportError:
-            return None
-
-        # Get content resonance profile
-        try:
-            content_ranked = resonate(seed_text, top_n=3)
-            content_score = sum(w.total_score for w in content_ranked) if content_ranked else 0.0
-        except Exception as e:
-            logger.debug(f"Content resonance scoring failed: {e}")
-            return None
-
-        if content_score == 0.0:
-            return None
-
-        # Build engagement history lookup (submolt → avg net_score)
-        engagement_weights: Dict[str, float] = {}
-        try:
-            event_log = self.agency_director.event_log
-            metrics = event_log.get_events_by_type("engagement_metric", limit=50)
-            submolt_scores: Dict[str, List[int]] = {}
-            for e in metrics:
-                s = e.payload.get("submolt", "")
-                if s:
-                    ns = e.payload.get("net_score", 0)
-                    submolt_scores.setdefault(s, []).append(ns)
-            for s, scores in submolt_scores.items():
-                engagement_weights[s] = sum(scores) / len(scores) if scores else 0.0
-        except Exception as e:
-            logger.debug(f"Engagement history unavailable: {e}")
-
-        # Cross-score each subscribed submolt
-        best_submolt: Optional[str] = None
-        best_score = 0.0
-
-        for submolt_name in self._subscribed_submolts:
-            try:
-                submolt_ranked = resonate(submolt_name, top_n=3)
-                submolt_total = sum(w.total_score for w in submolt_ranked) if submolt_ranked else 0.0
-            except Exception as e:
-                logger.debug(f"Resonance scoring failed for {submolt_name}: {e}")
-                continue
-
-            # Cross-score: product of content and submolt resonance
-            cross = content_score * submolt_total
-
-            # Weight by engagement history (1.0 + normalized avg)
-            eng_weight = 1.0 + max(0.0, engagement_weights.get(submolt_name, 0.0) * 0.1)
-            weighted = cross * eng_weight
-
-            if weighted > best_score:
-                best_score = weighted
-                best_submolt = submolt_name
-
-        if best_submolt:
-            logger.debug(f"Selected submolt: {best_submolt} (score={best_score:.3f})")
-        return best_submolt
-
-    # Max retries before a proposal is permanently dropped
-    _MAX_PROPOSAL_RETRIES = 2
-
-    # Drain dispatch table: ContentType.value → handler method name
-    _DRAIN_DISPATCH = {
-        ContentType.DM_REPLY.value: "_drain_dm_reply",
-        ContentType.DM_INITIATE.value: "_drain_dm_initiate",
-        ContentType.POST.value: "_drain_post",
-        ContentType.COMMENT.value: "_drain_comment",
-        ContentType.VOTE.value: "_drain_vote",
-        ContentType.FOLLOW.value: "_drain_follow",
-        ContentType.SUBSCRIBE.value: "_drain_subscribe",
-    }
-
-    def _drain_dm_reply(self, service: MoltbookService, proposal: ContentProposal) -> None:
-        conv_id = proposal.get("conversation_id", "")
-        content = proposal.get("content", "")
-        if conv_id and content:
-            service.send_dm(conv_id, content)
-            self._log_activity("dm_sent", {"conversation_id": conv_id})
-            logger.info(f"DM reply sent to {conv_id}")
-
-    def _drain_dm_initiate(self, service: MoltbookService, proposal: ContentProposal) -> None:
-        to_agent = proposal.get("to_agent", "")
-        if to_agent:
-            service.approve_dm_request(proposal.get("sender", ""))
-            self._log_activity("dm_request_approved", {"agent": to_agent})
-            logger.info(f"DM request approved for {to_agent}")
-
-    def _drain_post(self, service: MoltbookService, proposal: ContentProposal) -> None:
-        title = proposal.get("title", "")
-        content = proposal.get("content", "")
-        submolt = proposal.get("submolt")
-        if title and content:
-            post_result = service.create_post(title, content, submolt)
-            post_id = post_result.get("id", "") if isinstance(post_result, dict) else ""
-            if post_id:
-                self._own_post_ids[post_id] = {
-                    "submolt": submolt or "",
-                    "created_at": time.time(),
-                    "title": title[:80],
-                }
-            self._log_activity("post_created", {"title": title[:80], "submolt": submolt, "post_id": post_id})
-            self._broadcast_to_agora("post", content, {"title": title[:80], "submolt": submolt})
-            self._emit_event(
-                "BROADCAST",
-                f"Post published: {title[:50]}",
-                {
-                    "content_type": "post",
-                    "post_id": post_id,
-                    "submolt": submolt or "",
-                },
-            )
-            logger.info(f"Post created: {title[:50]} (id={post_id})")
-
-    def _drain_comment(self, service: MoltbookService, proposal: ContentProposal) -> None:
-        post_id = proposal.get("post_id", "")
-        content = proposal.get("content", "")
-        parent_id = proposal.get("parent_id")
-        if post_id and content:
-            result = service.comment(post_id, content, parent_id)
-            comment_id = result.get("id", "") if isinstance(result, dict) else ""
-            if comment_id:
-                self._own_comment_ids.add(comment_id)
-                self._comment_post_map[comment_id] = post_id
-            self._log_activity("comment_posted", {"post_id": post_id, "comment_id": comment_id})
-            self._broadcast_to_agora("comment", content, {"post_id": post_id})
-            self._emit_event(
-                "BROADCAST",
-                f"Comment published on {post_id}",
-                {
-                    "content_type": "comment",
-                    "post_id": post_id,
-                    "comment_id": comment_id,
-                },
-            )
-            logger.info(f"Comment posted on {post_id}")
-
-    def _drain_vote(self, service: MoltbookService, proposal: ContentProposal) -> None:
-        post_id = proposal.get("post_id", "")
-        if post_id:
-            service.upvote(post_id)
-            self._log_activity("upvoted", {"post_id": post_id})
-            logger.info(f"Upvoted {post_id}")
-
-    def _drain_follow(self, service: MoltbookService, proposal: ContentProposal) -> None:
-        to_agent = proposal.get("to_agent", "")
-        if to_agent:
-            service.follow(to_agent)
-            self._log_activity("followed", {"agent": to_agent})
-            logger.info(f"Followed {to_agent}")
-
-    def _drain_subscribe(self, service: MoltbookService, proposal: ContentProposal) -> None:
-        submolt = proposal.get("submolt", "")
-        if submolt:
-            service.subscribe(submolt)
-            self._log_activity("subscribed", {"submolt": submolt})
-            logger.info(f"Subscribed to {submolt}")
+        """Select best submolt for content via resonance cross-scoring."""
+        return self._feed.select_submolt(seed_text, lambda: self.agency_director.event_log)
 
     def _check_rate_limit(self, content_type: str) -> bool:
-        """Check if content type is within rate limits. Returns True if OK."""
-        now = time.time()
-        hour_ago = now - 3600
-
-        if content_type == "post":
-            if now - self._last_post_ts < self._POST_INTERVAL_SEC:
-                logger.info(f"Rate limit: post too soon ({now - self._last_post_ts:.0f}s < {self._POST_INTERVAL_SEC}s)")
-                return False
-        elif content_type == "comment":
-            self._comment_timestamps = [t for t in self._comment_timestamps if t > hour_ago]
-            if len(self._comment_timestamps) >= self._COMMENT_LIMIT_PER_HOUR:
-                logger.info(f"Rate limit: {len(self._comment_timestamps)} comments in last hour")
-                return False
-        elif content_type in ("dm_reply", "dm_initiate"):
-            self._dm_timestamps = [t for t in self._dm_timestamps if t > hour_ago]
-            if len(self._dm_timestamps) >= self._DM_LIMIT_PER_HOUR:
-                logger.info(f"Rate limit: {len(self._dm_timestamps)} DMs in last hour")
-                return False
-        return True
+        """Check if content type is within rate limits. Delegates to ContentDrainer."""
+        return self._content_drainer.check_rate_limit(content_type)
 
     def _record_rate_limit(self, content_type: str) -> None:
-        """Record that a content action was executed (for rate limiting)."""
-        now = time.time()
-        if content_type == "post":
-            self._last_post_ts = now
-        elif content_type == "comment":
-            self._comment_timestamps.append(now)
-        elif content_type in ("dm_reply", "dm_initiate"):
-            self._dm_timestamps.append(now)
+        """Record that a content action was executed. Delegates to ContentDrainer."""
+        self._content_drainer.record_rate_limit(content_type)
 
     def _drain_content_queue(self) -> None:
-        """Execute queued content proposals through MoltbookService.
-
-        Uses dispatch table — no if/elif chains. Failed proposals are
-        re-enqueued with exponential backoff: retry 1 → 2s, retry 2 → 4s.
-        After _MAX_PROPOSAL_RETRIES, the proposal is dropped and logged.
-        Rate limits enforced from platform.yaml (1 post/30min, 10 comments/hour).
-        """
-        if self._content_queue.is_empty:
-            return
-
-        # Offline gate: never send content when offline
-        if self._offline_mode:
-            return
-
-        if self._service is None:
-            self._service = MoltbookService(self._client)
-        service = self._service
-        proposals = self._content_queue.drain(limit=3)
-        failed: List[ContentProposal] = []
-        deferred: List[ContentProposal] = []
-
-        from vibe_core.protocols.feedback import get_feedback_safe
-
-        feedback = get_feedback_safe()
-
-        now = time.time()
-        for proposal in proposals:
-            # Exponential backoff: skip proposals that aren't ready yet
-            retry_after = proposal.get("_retry_after", 0.0)
-            if retry_after > now:
-                deferred.append(proposal)
-                continue
-            ct = proposal.get("content_type", "")
-
-            # Rate limit check — defer if too soon
-            if not self._check_rate_limit(ct):
-                proposal["_retry_after"] = now + 60  # Re-check in 60s
-                deferred.append(proposal)
-                feedback.signal_partial(
-                    f"moltbook.drain.{ct}",
-                    "rate_limited",
-                    {
-                        "content_type": ct,
-                    },
-                )
-                continue
-            t0 = time.monotonic()
-            try:
-                handler_name = self._DRAIN_DISPATCH.get(ct)
-                if handler_name:
-                    getattr(self, handler_name)(service, proposal)
-                    self._record_rate_limit(ct)
-                    elapsed = (time.monotonic() - t0) * 1000
-                    feedback.signal_success(
-                        f"moltbook.drain.{ct}",
-                        {
-                            "content_type": ct,
-                            "priority": proposal.get("priority", 0),
-                        },
-                        duration_ms=elapsed,
-                    )
-                else:
-                    logger.warning(f"Unknown content type in drain queue: {ct}")
-            except PermissionError as e:
-                logger.warning(f"TAMAS blocked: {e}")
-                elapsed = (time.monotonic() - t0) * 1000
-                feedback.signal_failure(
-                    f"moltbook.drain.{ct}",
-                    "tamas_blocked",
-                    {
-                        "content_type": ct,
-                    },
-                    duration_ms=elapsed,
-                )
-                # Permanent failure — do not retry
-            except ConnectionError as e:
-                # HTTP 429 / rate limit from platform — long backoff
-                elapsed = (time.monotonic() - t0) * 1000
-                is_429 = "429" in str(e) or "rate" in str(e).lower()
-                backoff_secs = 300 if is_429 else 60  # 5min for 429, 1min for other connection errors
-                retries = proposal.get("_retries", 0)
-                if retries < self._MAX_PROPOSAL_RETRIES:
-                    proposal["_retries"] = retries + 1
-                    proposal["_retry_after"] = time.time() + backoff_secs
-                    failed.append(proposal)
-                    feedback.signal_partial(
-                        f"moltbook.drain.{ct}",
-                        "rate_limited_429" if is_429 else "connection_error",
-                        {"content_type": ct, "backoff_secs": backoff_secs},
-                    )
-                    logger.warning(
-                        f"{'429 rate limited' if is_429 else 'Connection error'} ({ct}), backoff {backoff_secs}s: {e}"
-                    )
-                else:
-                    self._log_activity("proposal_dropped", {"type": ct, "error": str(e)[:200]})
-                    feedback.signal_failure(
-                        f"moltbook.drain.{ct}",
-                        "dropped_after_retries",
-                        {"content_type": ct, "retries": retries},
-                        duration_ms=elapsed,
-                    )
-                    logger.error(f"Proposal dropped after {retries} retries ({ct}): {e}")
-            except Exception as e:
-                elapsed = (time.monotonic() - t0) * 1000
-                retries = proposal.get("_retries", 0)
-                if retries < self._MAX_PROPOSAL_RETRIES:
-                    proposal["_retries"] = retries + 1
-                    # Exponential backoff: 2^retries seconds (2s, 4s)
-                    proposal["_retry_after"] = time.time() + (2 ** proposal["_retries"])
-                    failed.append(proposal)
-                    feedback.signal_partial(
-                        f"moltbook.drain.{ct}",
-                        f"retry_{retries + 1}",
-                        {
-                            "content_type": ct,
-                            "retries": retries + 1,
-                        },
-                    )
-                    logger.warning(
-                        f"Content execution failed ({ct}), retry {retries + 1}, backoff {2 ** proposal['_retries']}s: {e}"
-                    )
-                else:
-                    self._log_activity("proposal_dropped", {"type": ct, "error": str(e)[:200]})
-                    feedback.signal_failure(
-                        f"moltbook.drain.{ct}",
-                        "dropped_after_retries",
-                        {
-                            "content_type": ct,
-                            "retries": retries,
-                        },
-                        duration_ms=elapsed,
-                    )
-                    logger.error(f"Proposal dropped after {retries} retries ({ct}): {e}")
-
-        # Re-enqueue: deferred (not yet ready) + failed (with backoff)
-        for proposal in deferred + failed:
-            self._content_queue.enqueue(proposal)
+        """Execute queued content proposals through MoltbookService."""
+        self._content_drainer.drain(self._content_queue, self._offline_mode)
 
     # =========================================================================
     # API — exposed to other plugins via kernel.api("moltbook")

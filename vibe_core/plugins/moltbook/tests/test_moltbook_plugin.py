@@ -22,12 +22,12 @@ Organization (by concern):
 """
 
 import time
-from abc import abstractmethod
 
 import pytest
 
 from vibe_core.mahamantra import MoltbookClient
 from vibe_core.plugin_protocol import HookResult, KernelPlugin, PulsePhase
+from vibe_core.plugins.moltbook.managers.drainer import ContentDrainer
 from vibe_core.plugins.moltbook.plugin_main import (
     _TICKS_PER_HEARTBEAT,
     MoltbookPlugin,
@@ -743,20 +743,20 @@ class TestQueueHealthMonitoring:
 
     def test_overflow_log_rate_limited(self, plugin):
         """Overflow log timestamp updates only after 8+ heartbeats."""
-        plugin._last_overflow_log = 0
+        plugin._content_drainer._last_overflow_log = 0
         plugin._heartbeat_count = 10
         plugin._content_queue._total_dropped = 1
         plugin._monitor_queue_health()
-        assert plugin._last_overflow_log == 10  # Updated (10 - 0 >= 8)
+        assert plugin._content_drainer._last_overflow_log == 10  # Updated (10 - 0 >= 8)
 
         plugin._heartbeat_count = 15
         plugin._content_queue._total_dropped = 2
         plugin._monitor_queue_health()
-        assert plugin._last_overflow_log == 10  # NOT updated (15 - 10 = 5 < 8)
+        assert plugin._content_drainer._last_overflow_log == 10  # NOT updated (15 - 10 = 5 < 8)
 
         plugin._heartbeat_count = 20
         plugin._monitor_queue_health()
-        assert plugin._last_overflow_log == 20  # Updated (20 - 10 >= 8)
+        assert plugin._content_drainer._last_overflow_log == 20  # Updated (20 - 10 >= 8)
 
 
 # =============================================================================
@@ -1148,7 +1148,7 @@ class TestRetryQueue:
             {
                 "content_type": ContentType.VOTE.value,
                 "post_id": "p_doomed",
-                "_retries": plugin._MAX_PROPOSAL_RETRIES,
+                "_retries": ContentDrainer._MAX_PROPOSAL_RETRIES,
             }
         )
 

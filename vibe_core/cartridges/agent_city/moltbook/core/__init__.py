@@ -1,1 +1,1 @@
-"""Moltbook Core — agency director, event sourcing."""
+"""Moltbook Core — agency director, event sourcing, content composition."""
