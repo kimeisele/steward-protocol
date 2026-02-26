@@ -551,6 +551,8 @@ class MoltbookPlugin(KernelPlugin):
         self._boot_manager = None
         # State restoration (extracted manager)
         self._state_restorer = None
+        # Proposal building (extracted manager)
+        self._proposal_builder = None
 
     @property
     def dependencies(self) -> Set[str]:
@@ -729,6 +731,15 @@ class MoltbookPlugin(KernelPlugin):
             self._state_restorer = StateRestorer(self)
         return self._state_restorer
 
+    @property
+    def _builder(self):
+        """Lazy-init ProposalBuilder for circuit → proposal conversion."""
+        if self._proposal_builder is None:
+            from vibe_core.plugins.moltbook.managers.proposal_builder import ProposalBuilder
+
+            self._proposal_builder = ProposalBuilder(self)
+        return self._proposal_builder
+
     def _ensure_service(self):
         """Ensure MoltbookService exists, create if needed. Used by managers."""
         if self._service is None:
@@ -747,8 +758,6 @@ class MoltbookPlugin(KernelPlugin):
         ONE path. execute_content_circuit() IS the content pipeline.
         SHABDA → ARTHA → PRATYAYA → KARMA → SUCCESS or None.
         """
-        from vibe_core.plugins.moltbook.resonance_proposer import _kg_priority
-
         # Extract context dict and pass through to AgencyDirector
         extra_context = extra.get("context", {})
         circuit_result = self.execute_content_circuit(
@@ -759,42 +768,8 @@ class MoltbookPlugin(KernelPlugin):
             trigger=extra.get("trigger", "heartbeat"),
             context=extra_context if isinstance(extra_context, dict) else {},
         )
-        if not circuit_result or not circuit_result.get("content"):
-            return None
-
-        content = circuit_result["content"]
-        guna = circuit_result.get("guna", "")
-        guardian = circuit_result.get("guardian", "")
-
-        proposal = ContentProposal(
-            content_type=proposal_type,
-            content=content,
-            source=extra.get("trigger", "circuit"),
-            priority=_kg_priority(proposal_type),
-        )
-
-        for key in ("post_id", "conversation_id", "sender", "parent_id", "submolt", "to_agent"):
-            if key in extra and extra[key]:
-                proposal[key] = extra[key]
-
-        gw = extra.get("gateway_response") or {}
-        if gw:
-            proposal["gateway_success"] = bool(gw.get("success"))
-            proposal["gateway_position"] = gw.get("position", -1)
-            proposal["gateway_guardian"] = gw.get("guardian", "unknown")
-            proposal["gateway_guna"] = gw.get("guna", "sattva")
-
-        self._emit_event(
-            "PROPOSAL_CREATED",
-            f"Proposal: {content_type}",
-            {
-                "content_type": content_type,
-                "priority": proposal.get("priority", 0),
-                "guna": guna,
-                "guardian": guardian,
-            },
-        )
-        return proposal
+        # Delegate proposal building to ProposalBuilder
+        return self._builder.build_proposal(circuit_result, content_type, proposal_type, **extra)
 
     # =========================================================================
     # Queue + Seen ID Persistence
