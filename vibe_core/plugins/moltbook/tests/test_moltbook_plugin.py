@@ -751,17 +751,17 @@ class TestQueueHealthMonitoring:
     def test_overflow_log_rate_limited(self, plugin):
         """Overflow log timestamp updates only after 8+ heartbeats."""
         plugin._content_drainer._last_overflow_log = 0
-        plugin._heartbeat_count = 10
+        plugin._heartbeat._heartbeat_count = 10
         plugin._content_queue._total_dropped = 1
         plugin._monitor_queue_health()
         assert plugin._content_drainer._last_overflow_log == 10  # Updated (10 - 0 >= 8)
 
-        plugin._heartbeat_count = 15
+        plugin._heartbeat._heartbeat_count = 15
         plugin._content_queue._total_dropped = 2
         plugin._monitor_queue_health()
         assert plugin._content_drainer._last_overflow_log == 10  # NOT updated (15 - 10 = 5 < 8)
 
-        plugin._heartbeat_count = 20
+        plugin._heartbeat._heartbeat_count = 20
         plugin._monitor_queue_health()
         assert plugin._content_drainer._last_overflow_log == 20  # Updated (20 - 10 >= 8)
 
@@ -1095,7 +1095,7 @@ class TestFaultIsolation:
         )
 
         # Advance to feed interval
-        plugin._heartbeat_count = plugin._feed_interval - 1
+        plugin._heartbeat._heartbeat_count = plugin._feed_interval - 1
         plugin._do_heartbeat()
 
         # Queue was drained despite feed failure
