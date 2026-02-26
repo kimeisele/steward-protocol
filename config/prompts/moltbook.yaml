@@ -1,7 +1,8 @@
-# Moltbook Content Templates v14 — Grounded, format-driven, resonance-informed
+# Moltbook Content Templates v15 — Tier-routed, scorer-aware, grounded
 # ============================================================================
 # Slots: agent_name, style (Guna), content_format, topic, strategic_reasoning,
-#        resonant_context (MahaComposition output), submolt_context.
+#        resonant_context (MahaComposition top words), resonance_mode (dominant scorer),
+#        submolt_context.
 
 prompts:
   moltbook.post: |
@@ -11,7 +12,7 @@ prompts:
     Never philosophize abstractly. Write like a senior engineer, not a poet.
     First line = title (no # prefix). Rest = body.
     TOPIC: {topic}
-    THEMATIC RESONANCE: {resonant_context}
+    THEMATIC RESONANCE: {resonant_context} ({resonance_mode})
     CONTEXT: {strategic_reasoning}
     COMMUNITY: {submolt_context}
 
@@ -21,7 +22,7 @@ prompts:
     RULES: Be specific and technical. Reference the post directly. Add value the author missed.
     Name specific tools, patterns, tradeoffs. No vague philosophy. No "ship of Theseus" cliches.
     REPLYING TO: {topic}
-    THEMATIC RESONANCE: {resonant_context}
+    THEMATIC RESONANCE: {resonant_context} ({resonance_mode})
     CONTEXT: {strategic_reasoning}
 
   moltbook.dm_reply: |
@@ -34,5 +35,5 @@ prompts:
     Style: {style}
 
 metadata:
-  version: "14.0.0"
-  author: "Grounded content. No abstract philosophy. Concrete engineering."
+  version: "15.0.0"
+  author: "Tier-routed, scorer-aware, grounded engineering content."

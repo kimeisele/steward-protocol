@@ -812,6 +812,7 @@ class TestSubmoltDiscovery:
         """_discover_submolts() enqueues SUBSCRIBE proposals for available submolts."""
         from vibe_core.protocols.moltbook_content import ContentType
 
+        plugin._subscribed_submolts.add("steward-protocol")  # Skip ensure_own_submolt
         plugin._client._mock_db["submolts"] = [
             {"name": "ai_agents", "display_name": "AI Agents"},
             {"name": "governance", "display_name": "Governance"},
@@ -826,6 +827,7 @@ class TestSubmoltDiscovery:
 
     def test_discover_deduplicates(self, plugin):
         """Already-subscribed submolts are not re-subscribed."""
+        plugin._subscribed_submolts.add("steward-protocol")  # Skip ensure_own_submolt
         plugin._subscribed_submolts.add("ai_agents")
         plugin._client._mock_db["submolts"] = [
             {"name": "ai_agents", "display_name": "AI Agents"},
@@ -836,6 +838,7 @@ class TestSubmoltDiscovery:
 
     def test_discover_handles_empty(self, plugin):
         """No crash when no submolts exist."""
+        plugin._subscribed_submolts.add("steward-protocol")  # Skip ensure_own_submolt
         plugin._client._mock_db["submolts"] = []
         plugin._discover_submolts()
         assert plugin._content_queue.size == 0

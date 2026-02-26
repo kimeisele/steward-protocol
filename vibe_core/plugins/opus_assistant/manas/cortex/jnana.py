@@ -52,7 +52,7 @@ import logging
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from vibe_core.mahamantra import handle_sankalpa_query
+from vibe_core.mahamantra.substrate.sankalpa.will import handle_sankalpa_query
 
 from .akasha import handle_akasha_query
 from .dharma import check_drift_for_chat

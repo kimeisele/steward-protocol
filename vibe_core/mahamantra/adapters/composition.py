@@ -375,12 +375,36 @@ class MahaComposition:
         chunks = chunk_sentence(ordered_words)
 
         self._compositions += KSETRAJNA
+
+        # Expose per-word scorer breakdowns (top 5) for downstream consumers
+        top_scored = []
+        for item in ranked[:PANCHA]:
+            top_scored.append({
+                "word": str(item.get("meaning", "")).split()[0] if item.get("meaning") else "",
+                "total": round(float(item.get("_total_score", 0.0)), 4),
+                "prana": round(float(item.get("_prana_score", 0.0)), 4),
+                "rhythm": round(float(item.get("_rhythm_score", 0.0)), 4),
+                "semantic": round(float(item.get("_semantic_score", 0.0)), 4),
+                "mode": round(float(item.get("_mode_score", 0.0)), 4),
+                "state": round(float(item.get("_state_score", 0.0)), 4),
+            })
+
+        # Scorer averages across ranked pool
+        scorer_avgs: Dict[str, float] = {}
+        for scorer in self._scorers:
+            key = f"_{scorer.name}_score"
+            vals = [float(it.get(key, 0.0)) for it in ranked if float(it.get(key, 0.0)) > 0]
+            scorer_avgs[scorer.name] = round(sum(vals) / len(vals), 4) if vals else 0.0
+
         self._last_context = {
             "guna_mode": kwargs.get("guna_mode"),
             "quarter": str(lotus_response.get("quarter", "")),
             "guardian": str(lotus_response.get("guardian", "")),
             "max_words": max_words,
             "scorer_names": tuple(s.name for s in self._scorers),
+            "top_scored": top_scored,
+            "scorer_avgs": scorer_avgs,
+            "pool_size": len(pool),
         }
         return " — ".join(chunks)
 

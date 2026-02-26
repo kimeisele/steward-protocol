@@ -238,7 +238,7 @@ class MemoryStore(AkashicProtocol, PrahladaProtocol):
             feedback=feedback,
             execution_time_ms=execution_time_ms,
         )
-        self.remember(entry)
+        self.store_entry(entry)
 
     def get_success_rate(self, intent_type: str) -> float:
         """
@@ -382,11 +382,12 @@ class MemoryStore(AkashicProtocol, PrahladaProtocol):
         """
         if value is None:
             return False
-        self.record(
+        self.store_entry(MemoryEntry(
             intent_type=key,
             intent_description=str(value),
             outcome="pending",
-        )
+            timestamp=datetime.now(timezone.utc).isoformat(),
+        ))
         return True
 
     def recall(self, key: str) -> Optional[MemoryValue]:

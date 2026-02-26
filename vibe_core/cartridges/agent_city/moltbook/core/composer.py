@@ -2,17 +2,27 @@
 
 Extracted from AgencyDirector._compose_content() / _try_llm_compose().
 
-1. MahaComposition (5 scorers) runs for backend analytics (NOT injected into prompt)
+1. MahaComposition (5 scorers) runs for backend analytics + resonant context
 2. Pipeline data (guna→style, topic, reasoning) fills YAML template slots
-3. Atomic LLM call: identity + style + topic + context → content
-4. Code enforces: char limits, constitution, sravanam (in caller)
+3. Tier-based model routing: (content_type, format, integrity, prana) → model
+4. Atomic LLM call: identity + style + topic + context → content
+5. Code enforces: constitution, sravanam (in caller)
 """
 
 import logging
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Tuple
+
+from vibe_core.mahamantra.substrate.core.seed import (
+    COSMIC_FRAME,
+    PANCHA,
+    TRINITY,
+)
 
 logger = logging.getLogger("MOLTBOOK_COMPOSER")
+
+# Prana constant — imported lazily for cell system, defined here for tier math
+_GENESIS_PRANA = 13700  # MAHA_QUANTUM * 100 (from cell.py)
 
 # Content-type → YAML prompt key (PromptRegistry lookup)
 _PROMPT_KEYS = {
@@ -36,6 +46,65 @@ _FORMAT_TOKENS = {
     "tutorial": 600,     # Step-by-step, needs space
 }
 _DEFAULT_TOKENS = 300
+
+# =============================================================================
+# TIER-BASED MODEL ROUTING — atomic per task, like an agency
+# =============================================================================
+# Tier 0 = Azubi (config default, cheapest)
+# Tier 1 = Senior (same model, bigger token budget)
+# Tier 2 = Chef (reasoning model, strategic content)
+
+_TIER_MAP = {
+    # Azubi tier — quick, simple tasks
+    ("comment", "question"):    0,
+    ("comment", "observation"): 0,
+    ("dm_reply", None):         0,
+    ("dm_request", None):       0,
+    # Senior tier — substantive content
+    ("comment", "analysis"):    1,
+    ("comment", "opinion"):     1,
+    ("post", "question"):       1,
+    ("post", "observation"):    1,
+    # Chef tier — strategic, high-investment
+    ("post", "analysis"):       2,
+    ("post", "opinion"):        2,
+    ("post", "tutorial"):       2,
+}
+
+_TIER_MODELS = {
+    0: None,                       # Config default (deepseek/deepseek-v3.2)
+    1: None,                       # Same model, bigger budget
+    2: "deepseek/deepseek-r1",     # Reasoning model for deep content
+}
+
+_TIER_NAMES = {0: "azubi", 1: "senior", 2: "chef"}
+
+
+def _resolve_model_tier(
+    content_type: str,
+    content_format: str,
+    integrity_cf: int = 0,
+    prana: int = 0,
+) -> Tuple[int, Optional[str]]:
+    """(content_type, format, integrity, prana) → (tier, model_or_None).
+
+    Atomic decision. Each task gets the right tool.
+    Prana gates tier upgrades. Low prana = can't afford Chef.
+    """
+    # DMs use None format in lookup
+    fmt = content_format if content_type not in ("dm_reply", "dm_request") else None
+    base_tier = _TIER_MAP.get((content_type, fmt), 0)
+
+    # Prana-based upgrade: high prana + high integrity → can afford pro model
+    if base_tier < 2 and prana > _GENESIS_PRANA * 10 and integrity_cf > COSMIC_FRAME * TRINITY // PANCHA:
+        base_tier = min(base_tier + 1, 2)
+
+    # Prana-based downgrade: explicitly low prana → force cheap
+    # prana=0 means "unknown" (chamber unavailable), NOT "low" — no downgrade
+    if 0 < prana < _GENESIS_PRANA and base_tier > 0:
+        base_tier = 0
+
+    return base_tier, _TIER_MODELS.get(base_tier)
 
 # (content_type, format) → task instruction for LLM
 # Format-aware: questions vs analyses vs opinions produce different content.
@@ -114,24 +183,39 @@ class ContentComposer:
         style: str = "",
         resonance_zone: str = "",
         sravanam_status: str = "",
+        integrity_cf: int = 0,
+        prana: int = 0,
     ) -> str:
         """Deterministic pre-processing → atomic LLM call.
 
-        1. MahaComposition (5 scorers) runs for backend analytics (NOT injected into prompt)
+        1. MahaComposition (5 scorers) → resonant context for LLM
         2. Pipeline data (guna→style, topic, reasoning) fills YAML template slots
-        3. Atomic LLM call: identity + style + topic + context → content
-        4. Code enforces: char limits, constitution, sravanam (in caller)
+        3. Tier-based model routing: (content_type, format, integrity, prana) → model
+        4. Atomic LLM call: identity + style + topic + context → content
+        5. Code enforces: constitution, sravanam (in caller)
         """
         _load_yaml_prompts()
 
+        # Read current prana from Antaranga/Chamber (soft — 0 if unavailable)
+        if prana == 0:
+            try:
+                from vibe_core.mahamantra.substrate.cell_system.chamber import get_chamber
+
+                prana = get_chamber().antaranga.total_prana()
+            except Exception:
+                pass  # prana=0 → cheapest tier
+
         engine_result = self._run_engine(input_text)
 
-        # Step 1: MahaComposition — deterministic English (5 scorers)
+        # Step 1: MahaComposition — 5 scorers → resonant context for LLM
         composed_words = ""
+        comp_ctx: Dict[str, Any] = {}
         try:
             from vibe_core.mahamantra.adapters.composition import get_composition
 
-            composed_words = get_composition().compose(pipeline_result, input_text) or ""
+            composition = get_composition()
+            composed_words = composition.compose(pipeline_result, input_text) or ""
+            comp_ctx = composition.last_context
         except Exception as e:
             logger.warning(f"MahaComposition failed: {e}")
 
@@ -167,6 +251,20 @@ class ContentComposer:
         # Content format flows from StrategyPlanner → input_ctx → prompt
         content_format = input_ctx.get("content_format", "observation")
 
+        # Build resonant_context from scored words (not just chunk string)
+        resonant_context = composed_words[:100] if composed_words else ""
+        resonance_mode = ""
+        if comp_ctx.get("top_scored"):
+            top_words = [w["word"] for w in comp_ctx["top_scored"] if w.get("word")]
+            if top_words:
+                resonant_context = ", ".join(top_words[:5])
+            # Dominant scorer → informs style hint
+            avgs = comp_ctx.get("scorer_avgs", {})
+            if avgs:
+                dominant = max(avgs, key=lambda k: avgs[k])
+                if avgs[dominant] > 0:
+                    resonance_mode = dominant
+
         prompt_ctx = {
             "agent_name": agent_name,
             "topic": input_text[:200],
@@ -175,7 +273,8 @@ class ContentComposer:
             "style": style,
             "knowledge_context": knowledge_context,
             "content_format": content_format,
-            "resonant_context": composed_words[:100] if composed_words else "",
+            "resonant_context": resonant_context,
+            "resonance_mode": resonance_mode,
         }
 
         # Step 5: Task input (content-type-specific fragment)
@@ -187,8 +286,8 @@ class ContentComposer:
         else:
             task_input = str(input_ctx.get("trigger", input_text))[:200]
 
-        # Step 6: Atomic LLM call
-        content = self._try_llm(prompt_ctx, task_input, content_type)
+        # Step 6: Atomic LLM call (tier-routed)
+        content = self._try_llm(prompt_ctx, task_input, content_type, integrity_cf=integrity_cf, prana=prana)
         if content:
             # Clean up mid-sentence cuts from max_tokens limit
             if not content.rstrip().endswith((".", "!", "?", ":", "```")):
@@ -204,12 +303,15 @@ class ContentComposer:
         prompt_ctx: Dict[str, str],
         task_input: str,
         content_type: str,
+        *,
+        integrity_cf: int = 0,
+        prana: int = 0,
     ) -> Optional[str]:
-        """LLM call. System = YAML template (PromptRegistry SSOT). User = task + input.
+        """LLM call with tier-based model routing.
 
-        System message: identity + style + topic + context (from YAML v12).
+        System message: identity + style + topic + context (from YAML SSOT).
         User message: atomic task ("Post about: ..." / "Reply to: ...").
-        No fallback. PromptRegistry is the single path.
+        Model: resolved per-task via _resolve_model_tier().
         """
         try:
             from vibe_core.runtime.providers.factory import get_llm_provider
@@ -241,12 +343,25 @@ class ContentComposer:
         # Token budget: FORMAT determines length, not content_type
         max_tokens = _FORMAT_TOKENS.get(content_format, _DEFAULT_TOKENS)
 
-        # Quota check
+        # Tier-based model routing — atomic per task
+        tier, model = _resolve_model_tier(content_type, content_format, integrity_cf, prana)
+        tier_name = _TIER_NAMES.get(tier, "unknown")
+        logger.info(f"Tier routing: {content_type}/{content_format} → tier={tier_name} model={model or 'default'}")
+
+        # Chef tier gets +50% token budget
+        if tier >= 2:
+            max_tokens = int(max_tokens * 1.5)
+
+        # Quota check (model-aware)
         try:
             from vibe_core.runtime.quota_manager import OperationalQuota, QuotaExceededError
 
             quota = OperationalQuota()
-            quota.check_before_request(estimated_tokens=max_tokens, operation=f"moltbook.{content_type}")
+            quota.check_before_request(
+                estimated_tokens=max_tokens,
+                operation=f"moltbook.{content_type}",
+                model=model or "",
+            )
         except QuotaExceededError as e:
             logger.warning(f"Quota exceeded: {e}")
             return None
@@ -256,7 +371,7 @@ class ContentComposer:
         try:
             response = provider.invoke(
                 prompt="",
-                model=None,  # Config default (deepseek/deepseek-v3.2)
+                model=model,  # Tier-routed: None=default, or specific model
                 max_tokens=max_tokens,
                 temperature=0.7,
                 messages=[
@@ -266,17 +381,21 @@ class ContentComposer:
             )
             if response and response.content and not response.content.startswith("# ERROR"):
                 content = response.content.strip()
+                # Record actual cost from provider response
+                actual_cost = 0.001
+                if hasattr(response, "usage") and response.usage and hasattr(response.usage, "cost_usd"):
+                    actual_cost = response.usage.cost_usd or 0.001
                 try:
                     quota.record_request(
                         tokens_used=len(content.split()) + len(system_msg.split()),
-                        cost_usd=0.001,
+                        cost_usd=actual_cost,
                         operation=f"moltbook.{content_type}",
                     )
                 except Exception as e:
                     logger.debug(f"Quota record skipped: {e}")
                 return content
         except Exception as e:
-            logger.warning(f"LLM: {e}")
+            logger.warning(f"LLM [{tier_name}]: {e}")
 
         return None
 

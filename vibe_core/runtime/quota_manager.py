@@ -183,6 +183,7 @@ class OperationalQuota:
         self,
         estimated_tokens: int,
         operation: str = "unknown",
+        model: str = "",
     ) -> tuple[bool, str]:
         """
         Pre-flight check before sending a request to LLM.
@@ -190,6 +191,7 @@ class OperationalQuota:
         Args:
             estimated_tokens: Estimated tokens this request will use
             operation: Human-readable description of the operation
+            model: Model identifier for cost estimation (uses OpenRouter pricing)
 
         Returns:
             (can_execute: bool, reason: str)
@@ -217,7 +219,7 @@ class OperationalQuota:
             )
 
         # Check 3: Estimate cost and check against limits
-        estimated_cost = self._estimate_cost(estimated_tokens)
+        estimated_cost = self._estimate_cost(estimated_tokens, model=model)
 
         if estimated_cost > self.limits.cost_per_request_usd:
             logger.warning(
@@ -333,28 +335,35 @@ class OperationalQuota:
             self.metrics.cost_this_day_usd = 0.0
             self.metrics.day_start_time = now
 
-    def _estimate_cost(self, tokens: int) -> float:
+    def _estimate_cost(self, tokens: int, model: str = "") -> float:
         """
-        Estimate cost for a given number of tokens.
+        Estimate cost for a given number of tokens. Model-aware via OpenRouter pricing.
 
-        Based on Claude 3.5 Sonnet pricing:
-        - Input: $3 per million tokens
-        - Output: $15 per million tokens
-
-        Conservative estimate assumes equal input/output ratio.
+        Uses OpenRouterProvider.PRICING when available, falls back to conservative defaults.
+        DeepSeek v3.2: ~$0.27/$1.10/M. Claude Sonnet: ~$3/$15/M. 55× difference.
 
         Args:
             tokens: Number of tokens
+            model: Model identifier for pricing lookup
 
         Returns:
             Estimated cost in USD
         """
+        pricing = {"input": 1.0, "output": 3.0}  # Conservative fallback
+        if model:
+            try:
+                from vibe_core.runtime.providers.openrouter import OpenRouterProvider
+
+                pricing = OpenRouterProvider.PRICING.get(model, OpenRouterProvider.PRICING.get("default", pricing))
+            except ImportError:
+                pass
+
         # Assume 50% input, 50% output for conservative estimate
         input_tokens = tokens // 2
         output_tokens = tokens - input_tokens
 
-        input_cost = (input_tokens / 1_000_000) * 3.0
-        output_cost = (output_tokens / 1_000_000) * 15.0
+        input_cost = (input_tokens / 1_000_000) * pricing.get("input", 1.0)
+        output_cost = (output_tokens / 1_000_000) * pricing.get("output", 3.0)
 
         return input_cost + output_cost
 

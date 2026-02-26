@@ -68,6 +68,9 @@ class OpenRouterProvider(LLMProvider):
         # Meta models via OpenRouter
         "meta-llama/llama-3.1-70b-instruct": {"input": 0.52, "output": 0.75},
         "meta-llama/llama-3.1-8b-instruct": {"input": 0.06, "output": 0.06},
+        # DeepSeek models via OpenRouter
+        "deepseek/deepseek-v3.2": {"input": 0.27, "output": 1.10},
+        "deepseek/deepseek-r1": {"input": 0.55, "output": 2.19},
         # Default fallback pricing
         "default": {"input": 1.0, "output": 3.0},
     }

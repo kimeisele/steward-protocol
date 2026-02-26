@@ -810,7 +810,7 @@ class MoltbookClient:
 
     async def create_post(self, title: str, content: str, submolt: Optional[str] = None) -> MoltbookPost:
         """POST /posts — create a post. Strictly rate limited."""
-        submolt_val = submolt or "general"
+        submolt_val = submolt or "steward-protocol"
         data: Dict[str, Any] = {
             "title": title,
             "content": content,
