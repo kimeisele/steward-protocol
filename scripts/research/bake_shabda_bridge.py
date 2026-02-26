@@ -1,9 +1,19 @@
 """
-BAKE SHABDA BRIDGE — Prabhupada's Japa → Pre-baked Acoustic Signatures
-=======================================================================
+BAKE SHABDA BRIDGE — Prabhupada's Japa → Continuous Signature Stream
+=====================================================================
 
-One-time script. Reads WAV, extracts spectral features per syllable,
-maps through existing RAMA/Pancha infrastructure, writes shabda_bridge.json.
+One-time script. Reads WAV, extracts frame-by-frame acoustic features,
+packs each frame into a uint32, writes continuous stream to shabda_bridge.json.
+
+The WAV can be deleted after baking — the signature is not reversible to audio.
+
+Each frame (10ms) is packed as:
+    Bits  0-7  (8): RMS energy (0-255)
+    Bits  8-10 (3): Varga (articulation point, 0-4)
+    Bits 11-22 (12): F0 (fundamental frequency × 10, 0-4095)
+    Bits 23-31 (9): Centroid (spectral centroid / 100, 0-511)
+
+638 frames × 4 bytes = 2,552 bytes. Fits in Antaranga (16 KB).
 
 Dependencies: wave (stdlib), numpy, scipy (both already installed).
 Output: vibe_core/mahamantra/data/shabda_bridge.json
@@ -35,21 +45,16 @@ from vibe_core.mahamantra.protocols._seed import (
     POSITION_SUM_RAMA,
     SEVEN,
     TRINITY,
+    WORDS,
 )
 from vibe_core.mahamantra.substrate._paths import DATA_DIR
 from vibe_core.mahamantra.substrate.encoding.pancha_walk import (
     COORD_ELEMENT,
-    COORD_HARMONIC,
-    COORD_SUB,
     COORD_VARGA,
     IS_SHRUTI,
     element_histogram,
-    element_walk,
 )
-from vibe_core.mahamantra.substrate.encoding.varnamala_codec import encode, tokenize_iast
-from vibe_core.mahamantra.substrate.phonetics.shabda import (
-    SANSKRIT_PHONEME_MAP,
-)
+from vibe_core.mahamantra.substrate.encoding.varnamala_codec import encode
 
 # =============================================================================
 # CONSTANTS
@@ -58,15 +63,10 @@ from vibe_core.mahamantra.substrate.phonetics.shabda import (
 WAV_PATH = PROJECT_ROOT / "temp" / "srila prabhupada japa clip.wav"
 OUTPUT_PATH = DATA_DIR / "shabda_bridge.json"
 
-# The Mahamantra: 16 words, 32 syllables
-MAHAMANTRA_WORDS = [
-    "hare", "kṛṣṇa", "hare", "kṛṣṇa",
-    "kṛṣṇa", "kṛṣṇa", "hare", "hare",
-    "hare", "rāma", "hare", "rāma",
-    "rāma", "rāma", "hare", "hare",
-]
+HOP_MS = 10  # 10ms per frame
+N_FFT = 1024  # FFT window size
 
-# Syllable breakdown (how japa is chanted)
+# Mahamantra syllable sequence (32 syllables)
 MAHAMANTRA_SYLLABLES = [
     "ha", "re", "kṛ", "ṣṇa", "ha", "re", "kṛ", "ṣṇa",
     "kṛ", "ṣṇa", "kṛ", "ṣṇa", "ha", "re", "ha", "re",
@@ -74,20 +74,46 @@ MAHAMANTRA_SYLLABLES = [
     "rā", "ma", "rā", "ma", "ha", "re", "ha", "re",
 ]
 
-# The 6 unique syllable types
 UNIQUE_SYLLABLES = ["ha", "re", "kṛ", "ṣṇa", "rā", "ma"]
+
+
+# =============================================================================
+# PACKING (32-bit per frame)
+# =============================================================================
+
+def pack_frame(rms: int, varga: int, f0_x10: int, centroid_x10: int) -> int:
+    """Pack one frame into a uint32.
+
+    Bits  0-7  (8): RMS (0-255)
+    Bits  8-10 (3): Varga (0-4)
+    Bits 11-22 (12): F0×10 (0-4095)
+    Bits 23-31 (9): Centroid/100 (0-511)
+    """
+    r = min(255, max(0, rms))
+    v = min(4, max(0, varga))
+    f = min(4095, max(0, f0_x10))
+    c = min(511, max(0, centroid_x10 // 100))
+    return r | (v << 8) | (f << 11) | (c << 23)
+
+
+def unpack_frame(packed: int) -> dict:
+    """Unpack a uint32 back to features (for verification)."""
+    return {
+        "rms": packed & 0xFF,
+        "varga": (packed >> 8) & 0x7,
+        "f0_x10": (packed >> 11) & 0xFFF,
+        "centroid_100": (packed >> 23) & 0x1FF,
+    }
 
 
 # =============================================================================
 # AUDIO READING
 # =============================================================================
 
-
 def read_wav(path: Path) -> tuple:
     """Read WAV, mix to mono, normalize to [-1, 1]."""
     w = wave.open(str(path), "rb")
     n_channels = w.getnchannels()
-    sampwidth = w.getsampwidth()
     sr = w.getframerate()
     n_frames = w.getnframes()
     raw = w.readframes(n_frames)
@@ -107,247 +133,146 @@ def read_wav(path: Path) -> tuple:
 # FEATURE EXTRACTION
 # =============================================================================
 
+def centroid_to_varga(centroid_hz: float) -> int:
+    """Map spectral centroid to Varga (articulation point).
 
-def detect_onsets(samples: np.ndarray, sr: int) -> list:
-    """Detect syllable onsets via spectral flux peak-picking."""
-    n_fft = 1024
-    hop = 512
-    prev_spec = np.zeros(n_fft // 2)
-    flux = []
-
-    for i in range(0, len(samples) - n_fft, hop):
-        frame = samples[i : i + n_fft] * np.hanning(n_fft)
-        spec = np.abs(fft(frame))[: n_fft // 2]
-        diff = spec - prev_spec
-        diff[diff < 0] = 0
-        flux.append(np.sum(diff))
-        prev_spec = spec.copy()
-
-    flux = np.array(flux)
-    flux_smooth = np.convolve(flux, np.ones(5) / 5, mode="same")
-
-    threshold = np.median(flux_smooth) + 1.5 * np.std(flux_smooth)
-
-    peaks, _ = scipy_signal.find_peaks(
-        flux_smooth,
-        height=threshold,
-        distance=int(0.08 * sr / hop),
-        prominence=threshold * 0.3,
-    )
-
-    onset_times = [p * hop / sr for p in peaks]
-    return onset_times
+    Based on acoustic phonetics — where the spectral energy concentrates
+    maps to where in the vocal tract the sound is produced.
+    """
+    if centroid_hz < 800:
+        return 4  # OSHTHYA (labial) — rounded, low centroid
+    elif centroid_hz < 1200:
+        return 0  # KANTHYA (throat) — open, mid-low
+    elif centroid_hz < 1800:
+        return 1  # TALAVYA (palatal) — front, mid
+    elif centroid_hz < 2500:
+        return 2  # MURDHANYA (retroflex) — mid-high
+    else:
+        return 3  # DANTYA (dental/sibilant) — high centroid
 
 
-def estimate_f0(segment: np.ndarray, sr: int) -> float:
-    """Estimate fundamental frequency via autocorrelation."""
-    if len(segment) < 512:
+def estimate_f0(frame: np.ndarray, sr: int) -> float:
+    """F0 via autocorrelation."""
+    autocorr = np.correlate(frame, frame, mode="full")
+    autocorr = autocorr[len(autocorr) // 2:]
+    min_lag = sr // 400
+    max_lag = min(sr // 80, len(autocorr) - 1)
+    if max_lag <= min_lag:
         return 0.0
-
-    autocorr = np.correlate(segment, segment, mode="full")
-    autocorr = autocorr[len(autocorr) // 2 :]
-
-    min_lag = sr // 400  # 400 Hz max
-    max_lag = sr // 80  # 80 Hz min
-
-    if max_lag >= len(autocorr):
-        max_lag = len(autocorr) - 1
-    if min_lag >= max_lag:
-        return 0.0
-
     ac_slice = autocorr[min_lag:max_lag]
     if len(ac_slice) == 0:
         return 0.0
-
-    peak_idx = np.argmax(ac_slice) + min_lag
-    return sr / peak_idx if peak_idx > 0 else 0.0
-
-
-def spectral_centroid(segment: np.ndarray, sr: int) -> float:
-    """Compute spectral centroid in Hz."""
-    N = len(segment)
-    if N < 256:
-        return 0.0
-    yf = np.abs(fft(segment * np.hanning(N)))[: N // 2]
-    xf = fftfreq(N, 1 / sr)[: N // 2]
-    total = np.sum(yf)
-    if total == 0:
-        return 0.0
-    return float(np.sum(xf * yf) / total)
-
-
-def harmonic_ratios(segment: np.ndarray, sr: int, f0: float, n_harmonics: int = 8) -> list:
-    """Compute harmonic magnitude ratios relative to fundamental."""
-    if f0 <= 0 or len(segment) < 512:
-        return [0] * n_harmonics
-
-    N = len(segment)
-    yf = np.abs(fft(segment * np.hanning(N)))[: N // 2]
-    xf = fftfreq(N, 1 / sr)[: N // 2]
-    freq_res = sr / N
-
-    ratios = []
-    # Get fundamental magnitude
-    f0_bin = int(f0 / freq_res) if freq_res > 0 else 0
-    f0_mag = yf[f0_bin] if 0 < f0_bin < len(yf) else 1.0
-    if f0_mag == 0:
-        f0_mag = 1.0
-
-    for h in range(1, n_harmonics + 1):
-        target_freq = f0 * h
-        target_bin = int(target_freq / freq_res) if freq_res > 0 else 0
-        if 0 < target_bin < len(yf):
-            # Search small window around target
-            lo = max(0, target_bin - 2)
-            hi = min(len(yf), target_bin + 3)
-            h_mag = float(np.max(yf[lo:hi]))
-            ratios.append(int(h_mag / f0_mag * 1000))
-        else:
-            ratios.append(0)
-
-    return ratios
+    peak = np.argmax(ac_slice) + min_lag
+    return sr / peak if peak > 0 else 0.0
 
 
 # =============================================================================
 # SYLLABLE ASSIGNMENT
 # =============================================================================
 
-
-def assign_syllables(onset_times: list, duration: float) -> list:
-    """Assign Mahamantra syllables to detected onsets proportionally."""
-    n_onsets = len(onset_times)
-    n_syllables = len(MAHAMANTRA_SYLLABLES)
-
-    if n_onsets == 0:
-        return []
-
-    # Duration of chanting (first onset to end)
-    chant_start = onset_times[0]
-    chant_end = duration
-
-    assignments = []
-    for i, onset_t in enumerate(onset_times):
-        # Where is this onset proportionally in the chant?
-        proportion = (onset_t - chant_start) / (chant_end - chant_start) if chant_end > chant_start else 0
-        # Map to syllable index
-        syl_idx = min(int(proportion * n_syllables), n_syllables - 1)
-        assignments.append(MAHAMANTRA_SYLLABLES[syl_idx])
-
-    return assignments
-
-
-# =============================================================================
-# INFRASTRUCTURE MAPPING
-# =============================================================================
-
-
-def map_syllable_to_rama(syllable: str) -> list:
-    """Map a syllable through varnamala_codec to RAMA coordinates."""
-    try:
-        coords = encode(syllable)
-        return list(coords)
-    except Exception:
-        return []
-
-
-def map_coords_to_4d(coords: list) -> list:
-    """Map RAMA coordinates to 4D decomposition."""
-    result = []
-    for c in coords:
-        if 0 <= c < POSITION_SUM_RAMA:
-            result.append({
-                "coord": c,
-                "element": COORD_ELEMENT[c],
-                "varga": COORD_VARGA[c],
-                "sub": COORD_SUB[c],
-                "harmonic": COORD_HARMONIC[c],
-                "is_shruti": c in IS_SHRUTI,
-            })
-    return result
-
-
-def get_phoneme_signature(syllable: str) -> dict:
-    """Get existing VibrationSignature data for a syllable."""
-    sig = SANSKRIT_PHONEME_MAP.get(syllable)
-    if sig is None:
-        # Try first char
-        sig = SANSKRIT_PHONEME_MAP.get(syllable[0]) if syllable else None
-    if sig is None:
-        return {"articulation": -1, "voicing": -1, "base_frequency": 0, "duration_ratio": 0}
-    return {
-        "articulation": sig.articulation.value,
-        "voicing": sig.voicing.value,
-        "base_frequency": sig.base_frequency,
-        "duration_ratio": sig.duration_ratio,
-    }
+def assign_syllable_per_frame(frame_idx: int, n_frames: int, chant_start_frame: int, chant_end_frame: int) -> str:
+    """Map a frame index to its Mahamantra syllable position."""
+    if frame_idx < chant_start_frame or frame_idx > chant_end_frame:
+        return ""  # silence
+    chant_range = chant_end_frame - chant_start_frame
+    if chant_range <= 0:
+        return ""
+    proportion = (frame_idx - chant_start_frame) / chant_range
+    syl_idx = min(int(proportion * len(MAHAMANTRA_SYLLABLES)), len(MAHAMANTRA_SYLLABLES) - 1)
+    return MAHAMANTRA_SYLLABLES[syl_idx]
 
 
 # =============================================================================
 # MAIN BAKE
 # =============================================================================
 
-
 def bake():
-    """Main bake process."""
     print(f"Reading WAV: {WAV_PATH}")
     samples, sr = read_wav(WAV_PATH)
     duration = len(samples) / sr
     print(f"Duration: {duration:.2f}s, Samples: {len(samples)}, Rate: {sr}Hz")
 
-    # 1. Detect onsets
-    print("\nDetecting syllable onsets...")
-    onset_times = detect_onsets(samples, sr)
-    print(f"Detected {len(onset_times)} onsets")
+    hop = int(sr * HOP_MS / 1000)
+    n_frames = (len(samples) - N_FFT) // hop
 
-    # 2. Assign syllables
-    assignments = assign_syllables(onset_times, duration)
-    print(f"Assigned syllables: {' '.join(assignments)}")
+    print(f"Hop: {HOP_MS}ms ({hop} samples), Frames: {n_frames}")
 
-    # 3. Extract features per segment
-    print("\nExtracting per-segment features...")
-    segments = []
+    # 1. Find chant boundaries (where energy > threshold)
+    frame_rms = []
+    for i in range(n_frames):
+        start = i * hop
+        frame = samples[start:start + N_FFT]
+        rms = np.sqrt(np.mean(frame**2))
+        frame_rms.append(rms)
+
+    rms_arr = np.array(frame_rms)
+    threshold = np.max(rms_arr) * 0.1
+    voiced = rms_arr > threshold
+    chant_start = 0
+    chant_end = n_frames - 1
+    for i in range(n_frames):
+        if voiced[i]:
+            chant_start = i
+            break
+    for i in range(n_frames - 1, -1, -1):
+        if voiced[i]:
+            chant_end = i
+            break
+
+    print(f"Chant region: frame {chant_start}-{chant_end} "
+          f"({chant_start * HOP_MS}ms - {chant_end * HOP_MS}ms)")
+
+    # 2. Frame-by-frame feature extraction + packing
+    print("\nExtracting continuous signature stream...")
+    packed_stream = []
     f0_values = []
+    syllable_frames = {s: [] for s in UNIQUE_SYLLABLES}
 
-    for i, onset_t in enumerate(onset_times):
-        end_t = onset_times[i + 1] if i + 1 < len(onset_times) else min(onset_t + 0.3, duration)
-        start_idx = int(onset_t * sr)
-        end_idx = int(end_t * sr)
-        segment = samples[start_idx:end_idx]
+    for i in range(n_frames):
+        start = i * hop
+        frame = samples[start:start + N_FFT]
 
-        if len(segment) < 256:
-            continue
+        # RMS
+        rms = int(np.sqrt(np.mean(frame**2)) * 1000)
 
-        f0 = estimate_f0(segment, sr)
-        centroid = spectral_centroid(segment, sr)
-        rms = float(np.sqrt(np.mean(segment**2)))
-        h_ratios = harmonic_ratios(segment, sr, f0)
+        # Spectral centroid
+        spec = np.abs(fft(frame * np.hanning(N_FFT)))[:N_FFT // 2]
+        xf = fftfreq(N_FFT, 1 / sr)[:N_FFT // 2]
+        total = np.sum(spec)
+        centroid_hz = float(np.sum(xf * spec) / total) if total > 0 else 0.0
+        centroid_x10 = int(centroid_hz * 10)
 
-        # Map through infrastructure
-        syllable = assignments[i] if i < len(assignments) else "ha"
-        rama_coords = map_syllable_to_rama(syllable)
-        vib_id = frequency_to_vibration_id(f0) if f0 > 0 else 0
+        # Varga
+        varga = centroid_to_varga(centroid_hz)
 
-        seg_data = {
-            "idx": i,
-            "onset_ms": int(onset_t * 1000),
-            "duration_ms": int((end_t - onset_t) * 1000),
-            "syllable": syllable,
-            "f0_hz_x10": int(f0 * 10),
-            "centroid_hz_x10": int(centroid * 10),
-            "rms_x1000": int(rms * 1000),
-            "vibration_id": vib_id,
-            "rama_coords": rama_coords,
-            "harmonic_ratios_x1000": h_ratios,
-        }
-        segments.append(seg_data)
+        # F0
+        if rms > 20:
+            f0 = estimate_f0(frame, sr)
+            f0_x10 = int(f0 * 10)
+            if f0 > 80:
+                f0_values.append(f0)
+        else:
+            f0_x10 = 0
 
-        if f0 > 80:
-            f0_values.append(f0)
+        # Pack
+        packed = pack_frame(rms, varga, f0_x10, centroid_x10)
+        packed_stream.append(packed)
 
-        print(f"  Seg {i:2d} [{onset_t:.3f}s] {syllable:4s} "
-              f"F0={f0:.1f}Hz VibID={vib_id} centroid={centroid:.0f}Hz")
+        # Track per syllable
+        syl = assign_syllable_per_frame(i, n_frames, chant_start, chant_end)
+        if syl in syllable_frames:
+            syllable_frames[syl].append(i)
 
-    # 4. Compute aggregate F0 stats
+    print(f"Packed {len(packed_stream)} frames ({len(packed_stream) * 4} bytes)")
+
+    # Verify pack/unpack round-trip
+    for p in packed_stream[:5]:
+        u = unpack_frame(p)
+        p2 = pack_frame(u["rms"], u["varga"], u["f0_x10"], u["centroid_100"] * 100)
+        assert p == p2, f"Pack/unpack mismatch: {p} != {p2}"
+    print("Pack/unpack round-trip verified.")
+
+    # 3. Compute aggregate statistics
     if f0_values:
         mean_f0 = float(np.mean(f0_values))
         median_f0 = float(np.median(f0_values))
@@ -355,126 +280,66 @@ def bake():
         mean_f0 = 0.0
         median_f0 = 0.0
 
-    print(f"\nF0 mean: {mean_f0:.1f} Hz, median: {median_f0:.1f} Hz")
-    print(f"VibID(mean): {frequency_to_vibration_id(mean_f0)}")
-    print(f"VibID(median): {frequency_to_vibration_id(median_f0)}")
-
-    # 5. Aggregate per syllable type
-    print("\nAggregating per syllable type...")
+    # 4. Per-syllable aggregates
     syllable_data = {}
     for syl in UNIQUE_SYLLABLES:
-        syl_segments = [s for s in segments if s["syllable"] == syl]
-        n = len(syl_segments)
+        idxs = syllable_frames[syl]
+        if not idxs:
+            syllable_data[syl] = {"n_frames": 0, "rama_coords": list(encode(syl))}
+            continue
 
-        rama_coords = map_syllable_to_rama(syl)
-        phon_sig = get_phoneme_signature(syl)
+        syl_packed = [packed_stream[i] for i in idxs]
+        syl_unpacked = [unpack_frame(p) for p in syl_packed]
 
-        if n > 0:
-            avg_centroid = int(sum(s["centroid_hz_x10"] for s in syl_segments) / n)
-            avg_rms = int(sum(s["rms_x1000"] for s in syl_segments) / n)
-            avg_f0 = int(sum(s["f0_hz_x10"] for s in syl_segments) / n)
+        avg_rms = int(np.mean([u["rms"] for u in syl_unpacked]))
+        avg_f0 = int(np.mean([u["f0_x10"] for u in syl_unpacked]))
+        avg_cent = int(np.mean([u["centroid_100"] for u in syl_unpacked]))
 
-            # Average harmonic ratios
-            n_h = len(syl_segments[0]["harmonic_ratios_x1000"])
-            avg_harmonics = []
-            for h_idx in range(n_h):
-                vals = [s["harmonic_ratios_x1000"][h_idx] for s in syl_segments if h_idx < len(s["harmonic_ratios_x1000"])]
-                avg_harmonics.append(int(sum(vals) / len(vals)) if vals else 0)
-        else:
-            avg_centroid = 0
-            avg_rms = 0
-            avg_f0 = 0
-            avg_harmonics = [0] * 8
-
-        # Element walk for this syllable's RAMA coords
-        if rama_coords:
-            e_walk = [COORD_ELEMENT[c] for c in rama_coords if 0 <= c < POSITION_SUM_RAMA]
-            e_hist = list(element_histogram(tuple(rama_coords)))
-        else:
-            e_walk = []
-            e_hist = [0] * PANCHA
+        rama_coords = list(encode(syl))
+        e_hist = list(element_histogram(tuple(rama_coords)))
 
         syllable_data[syl] = {
+            "n_frames": len(idxs),
             "rama_coords": rama_coords,
-            "articulation": phon_sig["articulation"],
-            "voicing": phon_sig["voicing"],
-            "base_frequency": phon_sig["base_frequency"],
-            "duration_ratio": phon_sig["duration_ratio"],
-            "centroid_hz_x10": avg_centroid,
-            "f0_hz_x10": avg_f0,
-            "rms_x1000": avg_rms,
-            "harmonics_x1000": avg_harmonics,
-            "onset_count": n,
-            "element_walk": e_walk,
             "element_histogram": e_hist,
+            "avg_rms": avg_rms,
+            "avg_f0_x10": avg_f0,
+            "avg_centroid_100": avg_cent,
         }
 
-        print(f"  {syl:4s}: {n} occurrences, centroid={avg_centroid/10:.0f}Hz, "
-              f"F0={avg_f0/10:.0f}Hz, RAMA={rama_coords}")
-
-    # 6. Harmonic series from mean F0
-    print("\nComputing harmonic series...")
+    # 5. Harmonic series
     harmonic_vib_ids = []
     harmonic_shruti = []
-    harmonic_rama_residues = []
     for h in range(1, 9):
         freq = mean_f0 * h
-        vid = frequency_to_vibration_id(freq)
+        vid = frequency_to_vibration_id(freq) if freq > 0 else 0
         residue = vid % POSITION_SUM_RAMA
-        is_shr = residue in IS_SHRUTI
         harmonic_vib_ids.append(vid)
-        harmonic_rama_residues.append(residue)
-        harmonic_shruti.append(is_shr)
-        print(f"  H{h}: {freq:.1f}Hz → VibID={vid}, RAMA residue={residue}, shruti={is_shr}")
+        harmonic_shruti.append(residue in IS_SHRUTI)
 
-    # 7. Aggregate element histogram across all segments
-    all_rama = []
-    for seg in segments:
-        all_rama.extend(seg["rama_coords"])
-    if all_rama:
-        agg_element_hist = list(element_histogram(tuple(all_rama)))
-    else:
-        agg_element_hist = [0] * PANCHA
-
-    # Varga histogram (H=0, K=1, R=2 from varnamala codec)
-    varga_counts = [0, 0, 0]
-    for seg in segments:
-        syl = seg["syllable"]
-        if syl in ("ha", "re"):
-            varga_counts[0] += 1  # Hare
-        elif syl in ("kṛ", "ṣṇa"):
-            varga_counts[1] += 1  # Krishna
-        elif syl in ("rā", "ma"):
-            varga_counts[2] += 1  # Rama
-
-    # 8. Build final JSON
+    # 6. Build JSON
     bridge_data = {
         "meta": {
             "source": "Srila Prabhupada japa recording",
-            "file": "srila prabhupada japa clip.wav",
+            "bake_version": 2,
+            "hop_ms": HOP_MS,
+            "n_fft": N_FFT,
+            "sample_rate": sr,
+            "duration_ms": int(duration * 1000),
+            "n_frames": len(packed_stream),
+            "chant_start_frame": chant_start,
+            "chant_end_frame": chant_end,
             "fundamental_hz_x10": int(mean_f0 * 10),
             "median_hz_x10": int(median_f0 * 10),
-            "vibration_id": frequency_to_vibration_id(mean_f0),
-            "vibration_id_median": frequency_to_vibration_id(median_f0),
-            "duration_ms": int(duration * 1000),
-            "sample_rate": sr,
-            "n_segments": len(segments),
-            "n_syllable_types": len(UNIQUE_SYLLABLES),
-            "bake_version": 1,
+            "vibration_id": frequency_to_vibration_id(mean_f0) if mean_f0 > 0 else 0,
+            "vibration_id_median": frequency_to_vibration_id(median_f0) if median_f0 > 0 else 0,
+            "pack_format": "RMS(8)|Varga(3)|F0x10(12)|Centroid/100(9) = uint32",
         },
+        "stream": packed_stream,
         "syllables": syllable_data,
-        "segments": segments,
         "harmonic_series": {
             "vibration_ids": harmonic_vib_ids,
-            "rama_residues": harmonic_rama_residues,
             "is_shruti": harmonic_shruti,
-        },
-        "aggregate": {
-            "element_histogram": agg_element_hist,
-            "varga_histogram": varga_counts,
-            "dominant_element": int(np.argmax(agg_element_hist)) if agg_element_hist else 0,
-            "mean_rms_x1000": int(np.mean([s["rms_x1000"] for s in segments])) if segments else 0,
-            "mean_centroid_hz_x10": int(np.mean([s["centroid_hz_x10"] for s in segments])) if segments else 0,
         },
         "mahamantra_coords": {
             "hare": list(encode("hare")),
@@ -483,10 +348,10 @@ def bake():
         },
     }
 
-    # 9. Verify: no floats leaked
+    # 7. Verify no floats
     def verify_no_floats(obj, path=""):
         if isinstance(obj, float):
-            raise ValueError(f"Float leaked at {path}: {obj}")
+            raise ValueError(f"Float at {path}: {obj}")
         elif isinstance(obj, dict):
             for k, v in obj.items():
                 verify_no_floats(v, f"{path}.{k}")
@@ -495,26 +360,28 @@ def bake():
                 verify_no_floats(v, f"{path}[{i}]")
 
     verify_no_floats(bridge_data)
-    print("\n  No floats leaked in JSON data.")
+    print("No floats in data.")
 
-    # 10. Write JSON
+    # 8. Write
     print(f"\nWriting to {OUTPUT_PATH}...")
     with open(OUTPUT_PATH, "w") as f:
-        json.dump(bridge_data, f, indent=2, ensure_ascii=False)
+        json.dump(bridge_data, f, ensure_ascii=False)
 
     file_size = OUTPUT_PATH.stat().st_size
     print(f"Written: {file_size} bytes ({file_size / 1024:.1f} KB)")
 
-    # 11. Summary
+    # 9. Summary
     print("\n" + "=" * 60)
-    print("SHABDA BRIDGE BAKED SUCCESSFULLY")
+    print("SHABDA BRIDGE v2 — CONTINUOUS STREAM")
     print("=" * 60)
-    print(f"  F0 mean: {mean_f0:.1f} Hz → VibID {frequency_to_vibration_id(mean_f0)} (POSITION_SUM_RAMA={POSITION_SUM_RAMA})")
-    print(f"  F0 median: {median_f0:.1f} Hz → VibID {frequency_to_vibration_id(median_f0)}")
-    print(f"  Segments: {len(segments)}")
-    print(f"  Syllable types: {len(syllable_data)}")
-    print(f"  Element histogram: {agg_element_hist}")
-    print(f"  Name histogram: H={varga_counts[0]} K={varga_counts[1]} R={varga_counts[2]}")
+    print(f"  Frames: {len(packed_stream)} × uint32 = {len(packed_stream) * 4} bytes")
+    print(f"  Fits Antaranga (16KB): {len(packed_stream) * 4 <= 16384}")
+    print(f"  F0 mean: {mean_f0:.1f} Hz → VibID {frequency_to_vibration_id(mean_f0) if mean_f0 > 0 else 0}")
+    print(f"  F0 median: {median_f0:.1f} Hz → VibID {frequency_to_vibration_id(median_f0) if median_f0 > 0 else 0}")
+    syl_summary = ', '.join(f'{s}={d["n_frames"]}' for s, d in syllable_data.items())
+    print(f"  Syllable frames: {syl_summary}")
+    print(f"  Harmonics: {harmonic_vib_ids}")
+    print(f"  WAV can now be deleted — signature is not reversible.")
     print(f"  Output: {OUTPUT_PATH}")
 
 

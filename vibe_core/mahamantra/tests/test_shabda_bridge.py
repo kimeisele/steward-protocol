@@ -1,21 +1,25 @@
 """
-Tests for Shabda Bridge — Prabhupada Acoustic Signatures
-=========================================================
+Tests for Shabda Bridge v2 — Prabhupada Continuous Acoustic Stream
+===================================================================
 """
 
 import json
-import sys
 
 import pytest
 
-from vibe_core.mahamantra.protocols._seed import PANCHA, POSITION_SUM_RAMA
+from vibe_core.mahamantra.protocols._seed import POSITION_SUM_RAMA, WORDS
 from vibe_core.mahamantra.substrate._paths import DATA_DIR
 from vibe_core.mahamantra.substrate.encoding.shabda_bridge import (
+    _MAHAMANTRA_SYLLABLES,
     _ensure_loaded,
     acoustic_score,
     acoustic_signature,
     get_meta,
-    segment_at,
+    prabhupada_salt,
+    stream_frame,
+    stream_length,
+    syllable_at_position,
+    unpack_frame,
     vibration_alignment,
 )
 
@@ -40,7 +44,7 @@ class TestDataFile:
         path = DATA_DIR / "shabda_bridge.json"
         with open(path) as f:
             data = json.load(f)
-        required = {"meta", "syllables", "segments", "harmonic_series", "aggregate", "mahamantra_coords"}
+        required = {"meta", "stream", "syllables", "harmonic_series", "mahamantra_coords"}
         assert required <= set(data.keys())
 
     def test_data_file_no_floats(self):
@@ -61,6 +65,12 @@ class TestDataFile:
 
         check(data)
 
+    def test_bake_version_is_2(self):
+        path = DATA_DIR / "shabda_bridge.json"
+        with open(path) as f:
+            data = json.load(f)
+        assert data["meta"]["bake_version"] == 2
+
 
 # =============================================================================
 # LOADING
@@ -70,7 +80,6 @@ class TestDataFile:
 class TestLoading:
     def test_ensure_loaded(self):
         _ensure_loaded()
-        # Should not raise
 
     def test_meta_has_vibration_id(self):
         meta = get_meta()
@@ -81,9 +90,123 @@ class TestLoading:
         assert "source" in meta
         assert "Prabhupada" in meta["source"]
 
-    def test_meta_segments_positive(self):
+    def test_meta_has_n_frames(self):
         meta = get_meta()
-        assert meta["n_segments"] > 0
+        assert meta["n_frames"] > 0
+
+    def test_meta_has_chant_boundaries(self):
+        meta = get_meta()
+        assert "chant_start_frame" in meta
+        assert "chant_end_frame" in meta
+        assert meta["chant_end_frame"] > meta["chant_start_frame"]
+
+
+# =============================================================================
+# CONTINUOUS STREAM
+# =============================================================================
+
+
+class TestContinuousStream:
+    def test_stream_length_positive(self):
+        assert stream_length() > 0
+
+    def test_stream_length_matches_meta(self):
+        meta = get_meta()
+        assert stream_length() == meta["n_frames"]
+
+    def test_stream_frame_valid(self):
+        frame = stream_frame(0)
+        assert isinstance(frame, int)
+        assert frame >= 0
+
+    def test_stream_frame_out_of_range(self):
+        assert stream_frame(-1) == 0
+        assert stream_frame(999999) == 0
+
+    def test_all_frames_are_uint32(self):
+        """Every frame must fit in 32 bits."""
+        for i in range(stream_length()):
+            f = stream_frame(i)
+            assert 0 <= f < (1 << 32), f"Frame {i} out of uint32 range: {f}"
+
+    def test_stream_fits_antaranga(self):
+        """638 frames × 4 bytes = 2,552 bytes < 16 KB Antaranga."""
+        assert stream_length() * 4 <= 16384
+
+
+# =============================================================================
+# FRAME UNPACKING
+# =============================================================================
+
+
+class TestUnpackFrame:
+    def test_unpack_returns_4_tuple(self):
+        packed = prabhupada_salt(0)
+        result = unpack_frame(packed)
+        assert len(result) == 4
+
+    def test_unpack_rms_range(self):
+        for i in range(32):
+            rms, _, _, _ = unpack_frame(prabhupada_salt(i))
+            assert 0 <= rms <= 255
+
+    def test_unpack_varga_range(self):
+        for i in range(32):
+            _, varga, _, _ = unpack_frame(prabhupada_salt(i))
+            assert 0 <= varga <= 4
+
+    def test_unpack_f0_range(self):
+        for i in range(32):
+            _, _, f0_x10, _ = unpack_frame(prabhupada_salt(i))
+            assert 0 <= f0_x10 <= 4095
+
+    def test_unpack_centroid_range(self):
+        for i in range(32):
+            _, _, _, centroid_100 = unpack_frame(prabhupada_salt(i))
+            assert 0 <= centroid_100 <= 511
+
+    def test_pack_unpack_roundtrip(self):
+        """Verify unpack matches the bake script's packing."""
+        for i in range(min(50, stream_length())):
+            packed = stream_frame(i)
+            rms, varga, f0_x10, cent = unpack_frame(packed)
+            repacked = rms | (varga << 8) | (f0_x10 << 11) | (cent << 23)
+            assert packed == repacked, f"Frame {i}: {packed} != {repacked}"
+
+
+# =============================================================================
+# PRABHUPADA SALT (CORE)
+# =============================================================================
+
+
+class TestPrabhupadaSalt:
+    def test_returns_int(self):
+        assert isinstance(prabhupada_salt(0), int)
+
+    def test_32_positions(self):
+        """All 32 Mahamantra syllable positions return a value."""
+        for i in range(32):
+            salt = prabhupada_salt(i)
+            assert salt >= 0, f"Position {i} returned negative: {salt}"
+
+    def test_wraps_modulo(self):
+        """Position 32 wraps to position 0."""
+        assert prabhupada_salt(32) == prabhupada_salt(0)
+        assert prabhupada_salt(33) == prabhupada_salt(1)
+
+    def test_voiced_positions_have_energy(self):
+        """Most positions in the chant should have nonzero RMS."""
+        voiced = 0
+        for i in range(32):
+            rms, _, _, _ = unpack_frame(prabhupada_salt(i))
+            if rms > 10:
+                voiced += 1
+        assert voiced > 20, f"Only {voiced}/32 positions have RMS > 10"
+
+    def test_different_syllables_have_different_salt(self):
+        """At least some positions differ — not all the same value."""
+        values = {prabhupada_salt(i) for i in range(32)}
+        assert len(values) > 10, f"Only {len(values)} unique salt values out of 32"
 
 
 # =============================================================================
@@ -125,69 +248,43 @@ class TestSyllableSignatures:
             expected = list(encode(syl))
             assert sig["rama_coords"] == expected, f"{syl}: {sig['rama_coords']} != {expected}"
 
-    def test_signature_has_articulation(self):
+    def test_signature_has_n_frames(self):
         for syl in EXPECTED_SYLLABLES:
             sig = acoustic_signature(syl)
-            assert "articulation" in sig
-            assert isinstance(sig["articulation"], int)
+            assert "n_frames" in sig
+            assert isinstance(sig["n_frames"], int)
+            assert sig["n_frames"] >= 0
 
-    def test_signature_has_voicing(self):
+    def test_signature_has_avg_features(self):
         for syl in EXPECTED_SYLLABLES:
             sig = acoustic_signature(syl)
-            assert "voicing" in sig
-            assert isinstance(sig["voicing"], int)
-
-    def test_signature_has_acoustic_features(self):
-        for syl in EXPECTED_SYLLABLES:
-            sig = acoustic_signature(syl)
-            for key in ("centroid_hz_x10", "f0_hz_x10", "rms_x1000"):
+            for key in ("avg_rms", "avg_f0_x10", "avg_centroid_100"):
                 assert key in sig, f"{syl} missing {key}"
                 assert isinstance(sig[key], int)
 
-    def test_element_histogram_length(self):
-        for syl in EXPECTED_SYLLABLES:
-            sig = acoustic_signature(syl)
-            assert "element_histogram" in sig
-            assert len(sig["element_histogram"]) == PANCHA
-
 
 # =============================================================================
-# SEGMENTS
+# SYLLABLE AT POSITION
 # =============================================================================
 
 
-class TestSegments:
-    def test_segment_at_zero(self):
-        seg = segment_at(0)
-        assert seg is not None
-        assert "syllable" in seg
-        assert "onset_ms" in seg
+class TestSyllableAtPosition:
+    def test_32_positions_cover_mahamantra(self):
+        syllables = [syllable_at_position(i) for i in range(32)]
+        assert len(syllables) == 32
 
-    def test_segment_at_out_of_range(self):
-        assert segment_at(-1) is None
-        assert segment_at(9999) is None
+    def test_first_syllable_is_ha(self):
+        assert syllable_at_position(0) == "ha"
 
-    def test_segments_have_valid_rama_coords(self):
-        meta = get_meta()
-        for i in range(meta["n_segments"]):
-            seg = segment_at(i)
-            for c in seg.get("rama_coords", []):
-                assert 0 <= c < POSITION_SUM_RAMA
+    def test_second_syllable_is_re(self):
+        assert syllable_at_position(1) == "re"
 
-    def test_segments_have_vibration_ids(self):
-        meta = get_meta()
-        for i in range(meta["n_segments"]):
-            seg = segment_at(i)
-            assert "vibration_id" in seg
-            assert isinstance(seg["vibration_id"], int)
+    def test_wraps(self):
+        assert syllable_at_position(32) == syllable_at_position(0)
 
-    def test_segments_chronological(self):
-        meta = get_meta()
-        prev_ms = 0
-        for i in range(meta["n_segments"]):
-            seg = segment_at(i)
-            assert seg["onset_ms"] >= prev_ms, f"Segment {i} not chronological"
-            prev_ms = seg["onset_ms"]
+    def test_mahamantra_word_count(self):
+        """32 syllable positions = WORDS × 2 (two lines)."""
+        assert len(_MAHAMANTRA_SYLLABLES) == WORDS * 2
 
 
 # =============================================================================
@@ -196,14 +293,13 @@ class TestSegments:
 
 
 class TestVibrationAlignment:
-    def test_fundamental_max_score(self):
+    def test_fundamental_high_score(self):
         meta = get_meta()
         vid = meta["vibration_id"]
         score = vibration_alignment(vid)
         assert score >= 0.9, f"Fundamental VibID {vid} should score high, got {score}"
 
     def test_harmonic_positive(self):
-        # H2 should score positively
         path = DATA_DIR / "shabda_bridge.json"
         with open(path) as f:
             data = json.load(f)
@@ -211,7 +307,6 @@ class TestVibrationAlignment:
         assert vibration_alignment(h2) > 0.5
 
     def test_non_harmonic_low(self):
-        # Very far from any harmonic
         score = vibration_alignment(9999)
         assert score < 0.1
 
@@ -232,8 +327,6 @@ class TestAcousticScore:
         assert acoustic_score("test", "") == 0.0
 
     def test_score_range(self):
-        # Can't easily test with real packed_hex without full infrastructure,
-        # but verify the function runs without error
         score = acoustic_score("hare krishna", "nonexistent_hex")
         assert 0.0 <= score <= 1.0
 
@@ -246,7 +339,6 @@ class TestAcousticScore:
 class TestNoDeps:
     def test_no_numpy_at_import(self):
         """Importing shabda_bridge must NOT trigger numpy/scipy."""
-        # Re-import and check
         import importlib
 
         mod = importlib.import_module("vibe_core.mahamantra.substrate.encoding.shabda_bridge")
