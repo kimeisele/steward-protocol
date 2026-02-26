@@ -316,7 +316,10 @@ class MoltbookStrategyPlanner:
         # Always include at least 1 post intent per cycle
         # First try: unmatched mission → proactive post
         matched_mission_ids = {m.mission_id for m in matches}
+        logger.info(f"Post diversity: {len(matches)} matches, {len(matched_mission_ids)} matched missions, {len(missions)} total missions")
         post_added = False
+        # Compute highest comment priority for post boost
+        highest_prio = max((i.priority for i in intents), default=5)
         for mission in missions:
             if mission.id not in matched_mission_ids:
                 eng = self._engagement_cache.get(mission.id, {})
@@ -331,25 +334,25 @@ class MoltbookStrategyPlanner:
                         action_type="post",
                         topic=mission.description,
                         reasoning=f"Mission '{mission.name}' — proactive post",
-                        priority=self._mission_priority_score(mission.id, missions),
+                        priority=highest_prio,  # Boosted to survive top-3 cut
                         mission_id=mission.id,
                         engagement_context=eng_context,
                         content_format=self._select_format("post", len(intents)),
                     )
                 )
                 post_added = True
+                logger.info(f"Post diversity: proactive post from unmatched mission '{mission.name}'")
                 break
 
-        # If all missions matched (common with 80+ missions), convert lowest comment to post
+        # If all missions matched, convert lowest comment to post
         if not post_added and intents:
             lowest = min(intents, key=lambda i: i.priority)
             lowest.action_type = "post"
             lowest.reasoning = f"{lowest.reasoning} (converted to post for diversity)"
             lowest.target_post_id = ""
             lowest.content_format = self._select_format("post", len(intents))
-            # Boost priority so the post survives the top-3 filter
-            highest_prio = max(i.priority for i in intents)
             lowest.priority = highest_prio
+            logger.info(f"Post diversity: converted comment to post (all missions matched)")
 
         # Sort by priority (descending), take top 3
         intents.sort(key=lambda i: i.priority, reverse=True)
