@@ -549,6 +549,8 @@ class MoltbookPlugin(KernelPlugin):
         self._heartbeat_orchestrator = None
         # Boot orchestration (extracted manager)
         self._boot_manager = None
+        # State restoration (extracted manager)
+        self._state_restorer = None
 
     @property
     def dependencies(self) -> Set[str]:
@@ -718,6 +720,15 @@ class MoltbookPlugin(KernelPlugin):
         """Set MOKSHA phase tick counter."""
         self._heartbeat._moksha_tick = value
 
+    @property
+    def _restorer(self):
+        """Lazy-init StateRestorer for cross-phase state restoration."""
+        if self._state_restorer is None:
+            from vibe_core.plugins.moltbook.managers.state_restorer import StateRestorer
+
+            self._state_restorer = StateRestorer(self)
+        return self._state_restorer
+
     def _ensure_service(self):
         """Ensure MoltbookService exists, create if needed. Used by managers."""
         if self._service is None:
@@ -828,7 +839,7 @@ class MoltbookPlugin(KernelPlugin):
                 self._own_post_ids = restored["own_post_ids"]
 
         # Restore cross-phase state (feed_topics + intents from previous run)
-        self._restore_phase_state()
+        self._restorer.restore_phase_state()
 
     def _persist_phase_state(self) -> None:
         """Save cross-phase state (feed_topics + intents + heartbeat_count + orchestrator state)."""
@@ -838,55 +849,6 @@ class MoltbookPlugin(KernelPlugin):
             intents=self._current_intents,
             orchestrator_state=self._heartbeat.snapshot(),
         )
-
-    def _restore_phase_state(self) -> None:
-        """Restore cross-phase state from previous run."""
-        restored = self._persistence.restore_phase_state()
-        if not restored:
-            return
-
-        # Restore orchestrator state (phase ticks, debounce timestamp, etc.)
-        orch_state = restored.get("orchestrator_state", {})
-        if orch_state:
-            self._heartbeat.restore(orch_state)
-
-        # Restore heartbeat_count (from orchestrator, highest wins)
-        saved_hb = restored.get("heartbeat_count", 0)
-        if saved_hb > self._heartbeat.current_heartbeat_count:
-            # Manually set if persistence has a higher count
-            if hasattr(self._heartbeat, "_heartbeat_count"):
-                self._heartbeat._heartbeat_count = saved_hb
-
-        # Restore feed topics (raw dicts, no deserialization needed)
-        topics = restored.get("feed_topics", [])
-        if topics and not self._current_feed_topics:
-            self._current_feed_topics = topics
-            logger.info(f"Restored {len(topics)} feed topics from previous run")
-
-        # Restore intents as StrategicIntent objects
-        intent_dicts = restored.get("intent_dicts", [])
-        if intent_dicts and not self._current_intents:
-            try:
-                from vibe_core.cartridges.agent_city.moltbook.core.strategy import StrategicIntent
-
-                intents = []
-                for d in intent_dicts:
-                    intents.append(
-                        StrategicIntent(
-                            action_type=d.get("action_type", "skip"),
-                            topic=d.get("topic", ""),
-                            reasoning=d.get("reasoning", ""),
-                            priority=int(d.get("priority", 5)),
-                            mission_id=d.get("mission_id", ""),
-                            target_post_id=d.get("target_post_id", ""),
-                            engagement_context=d.get("engagement_context", ""),
-                            submolt_context=d.get("submolt_context", ""),
-                        )
-                    )
-                self._current_intents = intents
-                logger.info(f"Restored {len(intents)} strategic intents from previous run")
-            except Exception:
-                pass
 
     # =========================================================================
     # PluginStateContract
