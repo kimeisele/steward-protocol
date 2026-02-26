@@ -1283,9 +1283,10 @@ class MoltbookPlugin(KernelPlugin):
             heartbeat = self._client.sync_check_heartbeat()
             self._last_heartbeat_error = None
         except Exception as e:
+            # DM check failure is non-fatal — continue heartbeat without DM data
             self._last_heartbeat_error = f"[{type(e).__name__}] {e!r}"
-            logger.warning(f"Heartbeat failed [{type(e).__name__}]: {e!r}")
-            return
+            logger.warning(f"DM check failed [{type(e).__name__}]: {e!r} — continuing heartbeat")
+            heartbeat = {}
 
         self._heartbeat_count += 1
 

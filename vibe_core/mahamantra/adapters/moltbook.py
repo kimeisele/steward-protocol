@@ -465,8 +465,8 @@ class MoltbookClient:
 
     # --- HTTP TRANSPORT ---
 
-    # Endpoints known to be slow on Moltbook's side (feed aggregation, search)
-    _SLOW_ENDPOINTS = ("/feed", "/posts", "/search")
+    # Endpoints known to be slow on Moltbook's side
+    _SLOW_ENDPOINTS = ("/feed", "/posts", "/search", "/agents")
 
     async def _request(self, method: str, endpoint: str, data: Optional[Dict] = None) -> Dict[str, Any]:
         """Core request dispatcher. Handles offline routing and httpx transport."""
@@ -810,9 +810,13 @@ class MoltbookClient:
 
     async def create_post(self, title: str, content: str, submolt: Optional[str] = None) -> MoltbookPost:
         """POST /posts — create a post. Strictly rate limited."""
-        data: Dict[str, Any] = {"title": title, "content": content}
-        if submolt:
-            data["submolt"] = submolt
+        submolt_val = submolt or "general"
+        data: Dict[str, Any] = {
+            "title": title,
+            "content": content,
+            "submolt": submolt_val,
+            "submolt_name": submolt_val,
+        }
         res = await self._request("POST", "/posts", data)
         return res  # type: ignore
 
