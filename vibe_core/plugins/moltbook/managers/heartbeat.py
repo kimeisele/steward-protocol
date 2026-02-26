@@ -4,6 +4,8 @@ import logging
 import time
 from typing import TYPE_CHECKING, Callable, Protocol
 
+from vibe_core.mahamantra.substrate.core.seed import HALVES, MAHAJANA_COUNT, QUARTERS, SHARANAGATI, TRINITY
+
 if TYPE_CHECKING:
     from vibe_core.plugins.moltbook.plugin_main import MoltbookPlugin
 
@@ -96,13 +98,6 @@ class HeartbeatOrchestrator:
     - No hidden side effects
     """
 
-    # Constants (from substrate/core/seed.py)
-    QUARTERS = 4
-    HALVES = 2
-    TRINITY = 3
-    MAHAJANA_COUNT = 12
-    SHARANAGATI = 6
-
     _DEPARTMENTS = ("research", "planning", "execution", "learning")
     _HEARTBEAT_DEBOUNCE_S = 2.0
 
@@ -178,7 +173,7 @@ class HeartbeatOrchestrator:
         self._dispatch_department_tasks(department)
 
         # === STEP 4: Maintenance cycles ===
-        if self._heartbeat_count % self.MAHAJANA_COUNT == 0:
+        if self._heartbeat_count % MAHAJANA_COUNT == 0:
             self._safe_call(self._plugin._update_profile, "profile_update")
             self._safe_call(self._plugin._trim_memory, "memory_trim")
 
@@ -204,7 +199,7 @@ class HeartbeatOrchestrator:
         """
         if department == "research":
             # GENESIS: discover new submolts
-            if self._heartbeat_count <= self.QUARTERS or self._genesis_tick % self.SHARANAGATI == 0:
+            if self._heartbeat_count <= QUARTERS or self._genesis_tick % SHARANAGATI == 0:
                 self._safe_call(self._plugin._discover_submolts, "submolt_discovery")
             self._genesis_tick += 1
 
@@ -214,13 +209,13 @@ class HeartbeatOrchestrator:
 
         elif department == "execution":
             # KARMA: execute and monitor replies
-            if self._karma_tick % self.HALVES == 0:
+            if self._karma_tick % HALVES == 0:
                 self._safe_call(self._plugin._check_own_comment_replies, "reply_monitoring")
             self._karma_tick += 1
 
         elif department == "learning":
             # MOKSHA: reflect on patterns and adjust
-            if self._moksha_tick % self.TRINITY == 0:
+            if self._moksha_tick % TRINITY == 0:
                 self._safe_call(self._plugin._adjust_intervals, "interval_adjustment")
             self._safe_call(self._plugin._reflect_on_patterns, "reflection_analysis")
             self._moksha_tick += 1

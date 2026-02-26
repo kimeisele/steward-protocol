@@ -240,12 +240,17 @@ class TestMahamantraListener:
 
     def test_heartbeat_at_exact_multiples(self, plugin):
         """Heartbeat count increments at tick 16, 32, 48 — exactly at multiples."""
+        import time as time_module
+
         for i in range(1, 49):
             plugin._on_mahamantra_tick({})
             expected_heartbeats = i // _TICKS_PER_HEARTBEAT
             assert plugin._heartbeat_count == expected_heartbeats, (
                 f"At tick {i}, expected {expected_heartbeats} heartbeats"
             )
+            # Small delay after heartbeat triggers to let debounce reset for next cycle
+            if i % _TICKS_PER_HEARTBEAT == 0:
+                time_module.sleep(0.05)  # Just enough to clear debounce guard
 
     def test_skips_without_client(self, bare_plugin):
         """No crash if tick fires before client is ready. No tick counted."""
