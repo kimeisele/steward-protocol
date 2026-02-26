@@ -1630,6 +1630,7 @@ class MoltbookPlugin(KernelPlugin):
                             "strategic_reasoning": intent.reasoning,
                             "engagement_context": intent.engagement_context,
                             "submolt_context": intent.submolt_context,
+                            "content_format": intent.content_format,
                         },
                     )
                     if proposal:
@@ -1658,6 +1659,7 @@ class MoltbookPlugin(KernelPlugin):
                             "strategic_reasoning": intent.reasoning,
                             "engagement_context": intent.engagement_context,
                             "submolt_context": submolt_ctx,
+                            "content_format": intent.content_format,
                         },
                     )
                     if proposal:
