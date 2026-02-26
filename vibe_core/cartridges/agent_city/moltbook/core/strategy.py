@@ -334,7 +334,7 @@ class MoltbookStrategyPlanner:
                         action_type="post",
                         topic=mission.description,
                         reasoning=f"Mission '{mission.name}' — proactive post",
-                        priority=highest_prio,  # Boosted to survive top-3 cut
+                        priority=highest_prio + 1,  # Strictly higher to survive stable sort
                         mission_id=mission.id,
                         engagement_context=eng_context,
                         content_format=self._select_format("post", len(intents)),
@@ -351,7 +351,7 @@ class MoltbookStrategyPlanner:
             lowest.reasoning = f"{lowest.reasoning} (converted to post for diversity)"
             lowest.target_post_id = ""
             lowest.content_format = self._select_format("post", len(intents))
-            lowest.priority = highest_prio
+            lowest.priority = highest_prio + 1
             logger.info(f"Post diversity: converted comment to post (all missions matched)")
 
         # Sort by priority (descending), take top 3
