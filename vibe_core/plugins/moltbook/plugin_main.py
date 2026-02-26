@@ -542,6 +542,7 @@ class MoltbookPlugin(KernelPlugin):
         self._feed_analyzer = None
         self._engagement_tracker = None
         self._dm_processor = None
+        self._post_orchestrator = None
         # Engagement tracking: own post IDs → metadata for polling
         self._own_post_ids: Dict[str, Dict[str, object]] = {}
         self._MAX_OWN_POST_IDS = COSMIC_FRAME // MALA  # 200 (pada_unit)
@@ -653,6 +654,15 @@ class MoltbookPlugin(KernelPlugin):
 
             self._dm_processor = DMProcessor(plugin=self)
         return self._dm_processor
+
+    @property
+    def _post(self):
+        """Lazy-init PostOrchestrator for post creation and comment monitoring."""
+        if self._post_orchestrator is None:
+            from vibe_core.plugins.moltbook.managers.post_orchestrator import PostOrchestrator
+
+            self._post_orchestrator = PostOrchestrator(plugin=self)
+        return self._post_orchestrator
 
     # Properties delegating state to HeartbeatOrchestrator
     @property
@@ -1527,167 +1537,16 @@ class MoltbookPlugin(KernelPlugin):
         self._current_intents = []
 
     def _maybe_create_post(self) -> None:
-        """Fallback post creation — uses trending feed topics as seed.
-
-        Only used when no strategic intents are available.
-        Routes through AgencyDirector I-P-V-O pipeline.
-        """
-        # Extract trending topics from recent feed as context
-        feed_topics: List[str] = []
-        try:
-            posts = run_async(self._client.get_feed(sort="hot", limit=5))
-            for post in posts or []:
-                title = post.get("title", "") if isinstance(post, dict) else ""
-                if title:
-                    feed_topics.append(title[:80])
-        except Exception as e:
-            logger.debug(f"Feed topic extraction failed: {e}")
-
-        trigger = "scheduled"
-        seed = f"{trigger}: {', '.join(feed_topics[:3])}" if feed_topics else trigger
-
-        # Select best submolt via resonance cross-scoring
-        selected_submolt = self._select_submolt(seed)
-        submolt_ctx = ""
-        if selected_submolt:
-            desc = self._submolt_descriptions.get(selected_submolt, "")
-            submolt_ctx = f"{selected_submolt} — {desc}" if desc else selected_submolt
-
-        try:
-            ctx: Dict[str, Any] = {"submolt_context": submolt_ctx}
-            if feed_topics:
-                ctx["feed_topics"] = feed_topics
-            proposal = self._director_propose(
-                content_type="post",
-                raw_input=seed,
-                proposal_type=ContentType.POST.value,
-                trigger=trigger,
-                submolt=selected_submolt or "",
-                context=ctx,
-            )
-            if proposal:
-                # Extract title from first line if present
-                content = proposal.get("content", "")
-                lines = content.strip().split("\n", 1)
-                if len(lines) > 1:
-                    proposal["title"] = lines[0].strip().lstrip("#").strip()[:120]
-                    proposal["content"] = lines[1].strip()
-                else:
-                    proposal["title"] = content[:120]
-
-                self._content_queue.enqueue(proposal)
-                self._last_post_heartbeat = self._heartbeat_count
-                logger.info(f"Autonomous post queued: {proposal.get('title', '')[:50]}")
-            else:
-                logger.debug("Post proposal filtered by director (TAMAS+dead or governance)")
-        except Exception as e:
-            logger.warning(f"Autonomous post creation failed: {e}")
+        """Delegate to PostOrchestrator for fallback post creation."""
+        self._post.maybe_create_fallback_post()
 
     def _check_own_comment_replies(self) -> None:
-        """Monitor replies to our own comments — maintain conversations.
-
-        Uses _comment_post_map (comment_id → post_id) to fetch comment threads,
-        find replies to our comments, and generate follow-up reply proposals.
-        Routes through MoltbookService for Guna enforcement + audit trail.
-        """
-        if not self._comment_post_map:
-            return
-
-        if self._service is None:
-            self._service = MoltbookService(self._client)
-
-        # Get unique post IDs we need to check (max 3 per cycle)
-        post_ids = list(set(self._comment_post_map.values()))[:3]
-        our_comment_ids = set(self._comment_post_map.keys())
-
-        for post_id in post_ids:
-            try:
-                comments = self._service.get_comments(post_id, sort="new")
-            except Exception as e:
-                logger.debug(f"Comment fetch for {post_id} failed: {e}")
-                continue
-
-            if not comments:
-                continue
-
-            for comment in comments:
-                if not isinstance(comment, dict):
-                    continue
-                parent = comment.get("parent_id", "")
-                cid = comment.get("id", "")
-                author_data = comment.get("author", {})
-                author = author_data.get("name", "unknown") if isinstance(author_data, dict) else "unknown"
-                content = comment.get("content", "")
-
-                # Is this a reply to one of our comments?
-                if parent in our_comment_ids and cid not in self._seen_message_ids:
-                    self._seen_message_ids.add(cid)
-                    # Propose a follow-up reply via Agency Director (I-P-V-O)
-                    try:
-                        proposal = self._director_propose(
-                            content_type="comment",
-                            raw_input=content,
-                            proposal_type=ContentType.COMMENT.value,
-                            post_id=post_id,
-                            parent_id=cid,
-                            trigger="reply_to_own_comment",
-                        )
-                        if proposal:
-                            self._content_queue.enqueue(proposal)
-                            self._log_activity(
-                                "reply_proposed",
-                                {
-                                    "post_id": post_id,
-                                    "in_reply_to": cid,
-                                    "author": author,
-                                },
-                            )
-                            logger.info(f"Reply to our comment queued (post={post_id}, from={author})")
-                    except Exception as e:
-                        logger.debug(f"Reply proposal failed: {e}")
+        """Delegate to PostOrchestrator for comment reply monitoring."""
+        self._post.check_own_comment_replies()
 
     def _update_profile(self) -> None:
-        """Update agent profile with current activity stats.
-
-        Fetches current profile, computes stats from internal state,
-        and patches the bio description + metadata. RAJAS operation (logged).
-        """
-        if not self._service:
-            return
-
-        try:
-            profile = self._service.get_own_profile()
-        except Exception as e:
-            logger.debug(f"Profile fetch failed: {e}")
-            return
-
-        current_karma = profile.get("karma", 0) if isinstance(profile, dict) else 0
-        follower_count = profile.get("follower_count", 0) if isinstance(profile, dict) else 0
-        following_count = profile.get("following_count", 0) if isinstance(profile, dict) else 0
-
-        # Build activity summary for bio
-        queue_stats = self._content_queue.stats
-        description = (
-            f"{self._agent_name} · Autonomous agent · "
-            f"{current_karma} karma · "
-            f"{follower_count} followers · {following_count} following · "
-            f"{len(self._subscribed_submolts)} submolts"
-        )
-
-        try:
-            self._service.update_profile(description=description)
-            self._last_profile_heartbeat = self._heartbeat_count
-            self._log_activity(
-                "profile_updated",
-                {
-                    "karma": current_karma,
-                    "followers": follower_count,
-                    "following": following_count,
-                },
-            )
-            logger.info(f"Profile updated: {current_karma} karma, {follower_count} followers")
-        except Exception as e:
-            logger.warning(f"Profile update failed: {e}")
+        """Delegate to PostOrchestrator for profile updates."""
+        self._post.update_profile()
 
     def _track_engagement(self) -> None:
         """Poll own posts/comments for engagement metrics (upvotes, replies)."""

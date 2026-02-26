@@ -1,0 +1,599 @@
+{
+  "meta": {
+    "source": "Srila Prabhupada japa recording",
+    "file": "srila prabhupada japa clip.wav",
+    "fundamental_hz_x10": 1319,
+    "median_hz_x10": 1122,
+    "vibration_id": 32,
+    "vibration_id_median": 28,
+    "duration_ms": 6410,
+    "sample_rate": 44100,
+    "n_segments": 13,
+    "n_syllable_types": 6,
+    "bake_version": 1
+  },
+  "syllables": {
+    "ha": {
+      "rama_coords": [
+        48
+      ],
+      "articulation": 0,
+      "voicing": 3,
+      "base_frequency": 72,
+      "duration_ratio": 1,
+      "centroid_hz_x10": 12020,
+      "f0_hz_x10": 1112,
+      "rms_x1000": 134,
+      "harmonics_x1000": [
+        1189,
+        4711,
+        2166,
+        1518,
+        769,
+        950,
+        331,
+        548
+      ],
+      "onset_count": 4,
+      "element_walk": [
+        0
+      ],
+      "element_histogram": [
+        1,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    "re": {
+      "rama_coords": [
+        42,
+        10
+      ],
+      "articulation": 2,
+      "voicing": 2,
+      "base_frequency": 72,
+      "duration_ratio": 1,
+      "centroid_hz_x10": 11570,
+      "f0_hz_x10": 1105,
+      "rms_x1000": 133,
+      "harmonics_x1000": [
+        1433,
+        3908,
+        2063,
+        4010,
+        1920,
+        1066,
+        228,
+        193
+      ],
+      "onset_count": 1,
+      "element_walk": [
+        2,
+        1
+      ],
+      "element_histogram": [
+        0,
+        1,
+        1,
+        0,
+        0
+      ]
+    },
+    "kṛ": {
+      "rama_coords": [
+        16,
+        3
+      ],
+      "articulation": 0,
+      "voicing": 0,
+      "base_frequency": 108,
+      "duration_ratio": 1,
+      "centroid_hz_x10": 18513,
+      "f0_hz_x10": 1758,
+      "rms_x1000": 90,
+      "harmonics_x1000": [
+        2058,
+        3596,
+        2110,
+        1069,
+        632,
+        612,
+        565,
+        383
+      ],
+      "onset_count": 4,
+      "element_walk": [
+        0,
+        2
+      ],
+      "element_histogram": [
+        1,
+        0,
+        1,
+        0,
+        0
+      ]
+    },
+    "ṣṇa": {
+      "rama_coords": [
+        46,
+        30
+      ],
+      "articulation": 2,
+      "voicing": 2,
+      "base_frequency": 72,
+      "duration_ratio": 2,
+      "centroid_hz_x10": 15725,
+      "f0_hz_x10": 1132,
+      "rms_x1000": 107,
+      "harmonics_x1000": [
+        1047,
+        3031,
+        1335,
+        3152,
+        1191,
+        794,
+        227,
+        132
+      ],
+      "onset_count": 2,
+      "element_walk": [
+        2,
+        2
+      ],
+      "element_histogram": [
+        0,
+        0,
+        2,
+        0,
+        0
+      ]
+    },
+    "rā": {
+      "rama_coords": [
+        42,
+        5
+      ],
+      "articulation": 2,
+      "voicing": 2,
+      "base_frequency": 72,
+      "duration_ratio": 2,
+      "centroid_hz_x10": 13802,
+      "f0_hz_x10": 1172,
+      "rms_x1000": 135,
+      "harmonics_x1000": [
+        3879,
+        10413,
+        913,
+        1261,
+        703,
+        725,
+        370,
+        3380
+      ],
+      "onset_count": 1,
+      "element_walk": [
+        2,
+        0
+      ],
+      "element_histogram": [
+        1,
+        0,
+        1,
+        0,
+        0
+      ]
+    },
+    "ma": {
+      "rama_coords": [
+        40
+      ],
+      "articulation": 4,
+      "voicing": 2,
+      "base_frequency": 48,
+      "duration_ratio": 1,
+      "centroid_hz_x10": 11376,
+      "f0_hz_x10": 1127,
+      "rms_x1000": 119,
+      "harmonics_x1000": [
+        1682,
+        4409,
+        1232,
+        1998,
+        1268,
+        1056,
+        408,
+        339
+      ],
+      "onset_count": 1,
+      "element_walk": [
+        4
+      ],
+      "element_histogram": [
+        0,
+        0,
+        0,
+        0,
+        1
+      ]
+    }
+  },
+  "segments": [
+    {
+      "idx": 0,
+      "onset_ms": 545,
+      "duration_ms": 406,
+      "syllable": "ha",
+      "f0_hz_x10": 1113,
+      "centroid_hz_x10": 13016,
+      "rms_x1000": 144,
+      "vibration_id": 27,
+      "rama_coords": [
+        48
+      ],
+      "harmonic_ratios_x1000": [
+        1000,
+        6107,
+        4184,
+        2177,
+        280,
+        177,
+        82,
+        269
+      ]
+    },
+    {
+      "idx": 1,
+      "onset_ms": 952,
+      "duration_ms": 777,
+      "syllable": "kṛ",
+      "f0_hz_x10": 1122,
+      "centroid_hz_x10": 12856,
+      "rms_x1000": 118,
+      "vibration_id": 28,
+      "rama_coords": [
+        16,
+        3
+      ],
+      "harmonic_ratios_x1000": [
+        2111,
+        9579,
+        7017,
+        3134,
+        836,
+        620,
+        810,
+        345
+      ]
+    },
+    {
+      "idx": 2,
+      "onset_ms": 1729,
+      "duration_ms": 116,
+      "syllable": "kṛ",
+      "f0_hz_x10": 2308,
+      "centroid_hz_x10": 22036,
+      "rms_x1000": 66,
+      "vibration_id": 57,
+      "rama_coords": [
+        16,
+        3
+      ],
+      "harmonic_ratios_x1000": [
+        1000,
+        577,
+        177,
+        40,
+        90,
+        49,
+        199,
+        365
+      ]
+    },
+    {
+      "idx": 3,
+      "onset_ms": 1845,
+      "duration_ms": 568,
+      "syllable": "ṣṇa",
+      "f0_hz_x10": 1160,
+      "centroid_hz_x10": 18513,
+      "rms_x1000": 80,
+      "vibration_id": 29,
+      "rama_coords": [
+        46,
+        30
+      ],
+      "harmonic_ratios_x1000": [
+        1000,
+        2021,
+        514,
+        1696,
+        1202,
+        1072,
+        201,
+        118
+      ]
+    },
+    {
+      "idx": 4,
+      "onset_ms": 2414,
+      "duration_ms": 139,
+      "syllable": "kṛ",
+      "f0_hz_x10": 2463,
+      "centroid_hz_x10": 24301,
+      "rms_x1000": 66,
+      "vibration_id": 61,
+      "rama_coords": [
+        16,
+        3
+      ],
+      "harmonic_ratios_x1000": [
+        4075,
+        1418,
+        312,
+        165,
+        790,
+        655,
+        552,
+        474
+      ]
+    },
+    {
+      "idx": 5,
+      "onset_ms": 2554,
+      "duration_ms": 116,
+      "syllable": "kṛ",
+      "f0_hz_x10": 1139,
+      "centroid_hz_x10": 14859,
+      "rms_x1000": 113,
+      "vibration_id": 28,
+      "rama_coords": [
+        16,
+        3
+      ],
+      "harmonic_ratios_x1000": [
+        1049,
+        2812,
+        935,
+        939,
+        813,
+        1124,
+        699,
+        351
+      ]
+    },
+    {
+      "idx": 6,
+      "onset_ms": 2670,
+      "duration_ms": 197,
+      "syllable": "ṣṇa",
+      "f0_hz_x10": 1105,
+      "centroid_hz_x10": 12938,
+      "rms_x1000": 135,
+      "vibration_id": 27,
+      "rama_coords": [
+        46,
+        30
+      ],
+      "harmonic_ratios_x1000": [
+        1094,
+        4042,
+        2157,
+        4609,
+        1180,
+        516,
+        254,
+        147
+      ]
+    },
+    {
+      "idx": 7,
+      "onset_ms": 2867,
+      "duration_ms": 510,
+      "syllable": "ha",
+      "f0_hz_x10": 1113,
+      "centroid_hz_x10": 12072,
+      "rms_x1000": 123,
+      "vibration_id": 27,
+      "rama_coords": [
+        48
+      ],
+      "harmonic_ratios_x1000": [
+        1415,
+        4021,
+        2671,
+        1842,
+        990,
+        279,
+        77,
+        75
+      ]
+    },
+    {
+      "idx": 8,
+      "onset_ms": 3378,
+      "duration_ms": 243,
+      "syllable": "re",
+      "f0_hz_x10": 1105,
+      "centroid_hz_x10": 11570,
+      "rms_x1000": 133,
+      "vibration_id": 27,
+      "rama_coords": [
+        42,
+        10
+      ],
+      "harmonic_ratios_x1000": [
+        1433,
+        3908,
+        2063,
+        4010,
+        1920,
+        1066,
+        228,
+        193
+      ]
+    },
+    {
+      "idx": 9,
+      "onset_ms": 3622,
+      "duration_ms": 673,
+      "syllable": "ha",
+      "f0_hz_x10": 1108,
+      "centroid_hz_x10": 10680,
+      "rms_x1000": 130,
+      "vibration_id": 27,
+      "rama_coords": [
+        48
+      ],
+      "harmonic_ratios_x1000": [
+        1238,
+        3974,
+        1035,
+        1080,
+        1162,
+        2122,
+        640,
+        1292
+      ]
+    },
+    {
+      "idx": 10,
+      "onset_ms": 4295,
+      "duration_ms": 487,
+      "syllable": "ha",
+      "f0_hz_x10": 1116,
+      "centroid_hz_x10": 12313,
+      "rms_x1000": 141,
+      "vibration_id": 27,
+      "rama_coords": [
+        48
+      ],
+      "harmonic_ratios_x1000": [
+        1104,
+        4743,
+        775,
+        976,
+        645,
+        1224,
+        528,
+        556
+      ]
+    },
+    {
+      "idx": 11,
+      "onset_ms": 4783,
+      "duration_ms": 243,
+      "syllable": "ma",
+      "f0_hz_x10": 1127,
+      "centroid_hz_x10": 11376,
+      "rms_x1000": 119,
+      "vibration_id": 28,
+      "rama_coords": [
+        40
+      ],
+      "harmonic_ratios_x1000": [
+        1682,
+        4409,
+        1232,
+        1998,
+        1268,
+        1056,
+        408,
+        339
+      ]
+    },
+    {
+      "idx": 12,
+      "onset_ms": 5027,
+      "duration_ms": 299,
+      "syllable": "rā",
+      "f0_hz_x10": 1172,
+      "centroid_hz_x10": 13802,
+      "rms_x1000": 135,
+      "vibration_id": 29,
+      "rama_coords": [
+        42,
+        5
+      ],
+      "harmonic_ratios_x1000": [
+        3879,
+        10413,
+        913,
+        1261,
+        703,
+        725,
+        370,
+        3380
+      ]
+    }
+  ],
+  "harmonic_series": {
+    "vibration_ids": [
+      32,
+      65,
+      98,
+      131,
+      164,
+      197,
+      230,
+      263
+    ],
+    "rama_residues": [
+      32,
+      16,
+      0,
+      33,
+      17,
+      1,
+      34,
+      18
+    ],
+    "is_shruti": [
+      false,
+      false,
+      true,
+      false,
+      false,
+      true,
+      false,
+      false
+    ]
+  },
+  "aggregate": {
+    "element_histogram": [
+      9,
+      1,
+      10,
+      0,
+      1
+    ],
+    "varga_histogram": [
+      5,
+      6,
+      2
+    ],
+    "dominant_element": 2,
+    "mean_rms_x1000": 115,
+    "mean_centroid_hz_x10": 14640
+  },
+  "mahamantra_coords": {
+    "hare": [
+      48,
+      42,
+      10
+    ],
+    "kṛṣṇa": [
+      16,
+      3,
+      46,
+      30
+    ],
+    "rāma": [
+      42,
+      5,
+      40
+    ]
+  }
+}
