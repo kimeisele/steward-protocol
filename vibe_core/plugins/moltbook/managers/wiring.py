@@ -1,7 +1,7 @@
 """Moltbook Wiring Module — Circuit + AGORA + Mahamantra integration."""
 
 import logging
-from typing import TYPE_CHECKING, Any, Optional
+from typing import TYPE_CHECKING, Protocol
 
 if TYPE_CHECKING:
     from vibe_core.runtime.kernel import RealVibeKernel
@@ -9,14 +9,36 @@ if TYPE_CHECKING:
 logger = logging.getLogger("MOLTBOOK.WIRING")
 
 
+class CircuitExecutor(Protocol):
+    """Circuit executor interface."""
+    circuits: dict
+
+
+class MetaCircuitManager(Protocol):
+    """Meta circuit manager interface."""
+    pass
+
+
+class AgoraAgent(Protocol):
+    """AGORA agent interface."""
+    def publish_message(
+        self,
+        source: str,
+        message_type: str,
+        content: str,
+        metadata: dict,
+    ) -> None:
+        """Publish message to AGORA."""
+        ...
+
+
 class WiringModule:
     """Handle all kernel wiring: Circuit Executor, AGORA, Mahamantra."""
 
-    def __init__(self):
-        self.circuit_executor = None
-        self.meta_circuit_manager = None
-        self.agora = None
-        self.mahamantra_listener = None
+    def __init__(self) -> None:
+        self.circuit_executor: CircuitExecutor | None = None
+        self.meta_circuit_manager: MetaCircuitManager | None = None
+        self.agora: AgoraAgent | None = None
 
     def wire_circuit_executor(self, kernel: "RealVibeKernel") -> None:
         """Wire CognitiveCircuitExecutor + MetaCircuitManager."""
@@ -46,17 +68,6 @@ class WiringModule:
                 logger.info("AGORA not available")
         except Exception as e:
             logger.debug(f"AGORA wiring skipped: {e}")
-
-    def wire_mahamantra(self, kernel: "RealVibeKernel") -> None:
-        """Wire Mahamantra tick listener."""
-        try:
-            singularity = kernel.api("singularity") if hasattr(kernel, "api") else None
-            if singularity and hasattr(singularity, "on_tick"):
-                logger.info("Mahamantra wired")
-            else:
-                logger.debug("Mahamantra listener not wired")
-        except Exception as e:
-            logger.debug(f"Mahamantra wiring skipped: {e}")
 
     def broadcast_to_agora(
         self, content_type: str, content: str, metadata: dict

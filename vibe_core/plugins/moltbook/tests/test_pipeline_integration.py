@@ -132,8 +132,15 @@ def mock_llm():
                 "The intersection of these ideas creates powerful new possibilities."
             )
 
-        # Fallback (should not be reached with correct test data)
-        return _make_response("Understanding emerges from practice, not speculation.")
+        # No fallback — unmatched template means test/code mismatch.
+        # This forces test failures when template strings change, preventing silent regressions.
+        # See GitHub issue #833: Don't hide mismatches with fallback text.
+        raise AssertionError(
+            f"Mock LLM: unmatched template string in user message.\n"
+            f"User: {user[:100]}\n"
+            f"This indicates the test expectations don't match _TASK_TEMPLATES in composer.py.\n"
+            f"Update mock conditions or verify _build_task_message() output."
+        )
 
     provider.invoke.side_effect = invoke_side_effect
     return provider

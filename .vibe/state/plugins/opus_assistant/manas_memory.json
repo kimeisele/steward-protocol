@@ -1,23 +1,239 @@
 {
   "memories": [
     {
-      "intent_type": "recent_test",
-      "intent_description": "First",
-      "timestamp": "2026-01-10T08:06:10.471389",
-      "outcome": "failed",
-      "context": {},
-      "feedback": null,
-      "execution_time_ms": null
-    },
-    {
-      "intent_type": "recent_test",
-      "intent_description": "Second",
-      "timestamp": "2026-01-10T08:06:10.472564",
+      "intent_type": "test_create",
+      "intent_description": "Task execution via MANAS Oracle",
+      "timestamp": "2026-02-26T19:01:18.501981+00:00",
       "outcome": "success",
       "context": {},
       "feedback": null,
-      "execution_time_ms": null
+      "execution_time_ms": 1250
+    },
+    {
+      "intent_type": "deploy",
+      "intent_description": "Task execution via MANAS Oracle",
+      "timestamp": "2026-02-26T19:01:18.539431+00:00",
+      "outcome": "failed",
+      "context": {},
+      "feedback": "Error: Connection timeout",
+      "execution_time_ms": 5000
+    },
+    {
+      "intent_type": "test_create",
+      "intent_description": "Task execution via MANAS Oracle",
+      "timestamp": "2026-02-26T19:01:18.638031+00:00",
+      "outcome": "success",
+      "context": {},
+      "feedback": null,
+      "execution_time_ms": 0
+    },
+    {
+      "intent_type": "test_create",
+      "intent_description": "Task execution via MANAS Oracle",
+      "timestamp": "2026-02-26T19:01:18.639672+00:00",
+      "outcome": "success",
+      "context": {},
+      "feedback": null,
+      "execution_time_ms": 0
+    },
+    {
+      "intent_type": "test_create",
+      "intent_description": "Task execution via MANAS Oracle",
+      "timestamp": "2026-02-26T19:01:18.641430+00:00",
+      "outcome": "success",
+      "context": {},
+      "feedback": null,
+      "execution_time_ms": 0
+    },
+    {
+      "intent_type": "test_create",
+      "intent_description": "Task execution via MANAS Oracle",
+      "timestamp": "2026-02-26T19:01:18.643435+00:00",
+      "outcome": "success",
+      "context": {},
+      "feedback": null,
+      "execution_time_ms": 0
+    },
+    {
+      "intent_type": "test_create",
+      "intent_description": "Task execution via MANAS Oracle",
+      "timestamp": "2026-02-26T19:01:18.645396+00:00",
+      "outcome": "success",
+      "context": {},
+      "feedback": null,
+      "execution_time_ms": 0
+    },
+    {
+      "intent_type": "test_create",
+      "intent_description": "Task execution via MANAS Oracle",
+      "timestamp": "2026-02-26T19:15:49.336132+00:00",
+      "outcome": "success",
+      "context": {},
+      "feedback": null,
+      "execution_time_ms": 1250
+    },
+    {
+      "intent_type": "deploy",
+      "intent_description": "Task execution via MANAS Oracle",
+      "timestamp": "2026-02-26T19:15:49.395811+00:00",
+      "outcome": "failed",
+      "context": {},
+      "feedback": "Error: Connection timeout",
+      "execution_time_ms": 5000
+    },
+    {
+      "intent_type": "test_create",
+      "intent_description": "Task execution via MANAS Oracle",
+      "timestamp": "2026-02-26T19:15:49.608632+00:00",
+      "outcome": "success",
+      "context": {},
+      "feedback": null,
+      "execution_time_ms": 0
+    },
+    {
+      "intent_type": "test_create",
+      "intent_description": "Task execution via MANAS Oracle",
+      "timestamp": "2026-02-26T19:15:49.609616+00:00",
+      "outcome": "success",
+      "context": {},
+      "feedback": null,
+      "execution_time_ms": 0
+    },
+    {
+      "intent_type": "test_create",
+      "intent_description": "Task execution via MANAS Oracle",
+      "timestamp": "2026-02-26T19:15:49.611074+00:00",
+      "outcome": "success",
+      "context": {},
+      "feedback": null,
+      "execution_time_ms": 0
+    },
+    {
+      "intent_type": "test_create",
+      "intent_description": "Task execution via MANAS Oracle",
+      "timestamp": "2026-02-26T19:15:49.612287+00:00",
+      "outcome": "success",
+      "context": {},
+      "feedback": null,
+      "execution_time_ms": 0
+    },
+    {
+      "intent_type": "test_create",
+      "intent_description": "Task execution via MANAS Oracle",
+      "timestamp": "2026-02-26T19:15:49.613223+00:00",
+      "outcome": "success",
+      "context": {},
+      "feedback": null,
+      "execution_time_ms": 0
+    },
+    {
+      "intent_type": "test_create",
+      "intent_description": "Task execution via MANAS Oracle",
+      "timestamp": "2026-02-26T19:15:57.240180+00:00",
+      "outcome": "success",
+      "context": {},
+      "feedback": null,
+      "execution_time_ms": 1000
+    },
+    {
+      "intent_type": "test",
+      "intent_description": "Task execution via MANAS Oracle",
+      "timestamp": "2026-02-26T19:15:57.313432+00:00",
+      "outcome": "success",
+      "context": {},
+      "feedback": null,
+      "execution_time_ms": 500
+    },
+    {
+      "intent_type": "unique_task",
+      "intent_description": "Task execution via MANAS Oracle",
+      "timestamp": "2026-02-26T19:15:57.437274+00:00",
+      "outcome": "success",
+      "context": {},
+      "feedback": null,
+      "execution_time_ms": 0
+    },
+    {
+      "intent_type": "unique_task",
+      "intent_description": "Task execution via MANAS Oracle",
+      "timestamp": "2026-02-26T19:15:57.438505+00:00",
+      "outcome": "success",
+      "context": {},
+      "feedback": null,
+      "execution_time_ms": 0
+    },
+    {
+      "intent_type": "unique_task",
+      "intent_description": "Task execution via MANAS Oracle",
+      "timestamp": "2026-02-26T19:15:57.439609+00:00",
+      "outcome": "success",
+      "context": {},
+      "feedback": null,
+      "execution_time_ms": 0
+    },
+    {
+      "intent_type": "test_create",
+      "intent_description": "Task execution via MANAS Oracle",
+      "timestamp": "2026-02-26T19:20:02.004649+00:00",
+      "outcome": "success",
+      "context": {},
+      "feedback": null,
+      "execution_time_ms": 1250
+    },
+    {
+      "intent_type": "deploy",
+      "intent_description": "Task execution via MANAS Oracle",
+      "timestamp": "2026-02-26T19:20:02.039151+00:00",
+      "outcome": "failed",
+      "context": {},
+      "feedback": "Error: Connection timeout",
+      "execution_time_ms": 5000
+    },
+    {
+      "intent_type": "test_create",
+      "intent_description": "Task execution via MANAS Oracle",
+      "timestamp": "2026-02-26T19:20:02.195282+00:00",
+      "outcome": "success",
+      "context": {},
+      "feedback": null,
+      "execution_time_ms": 0
+    },
+    {
+      "intent_type": "test_create",
+      "intent_description": "Task execution via MANAS Oracle",
+      "timestamp": "2026-02-26T19:20:02.198016+00:00",
+      "outcome": "success",
+      "context": {},
+      "feedback": null,
+      "execution_time_ms": 0
+    },
+    {
+      "intent_type": "test_create",
+      "intent_description": "Task execution via MANAS Oracle",
+      "timestamp": "2026-02-26T19:20:02.199495+00:00",
+      "outcome": "success",
+      "context": {},
+      "feedback": null,
+      "execution_time_ms": 0
+    },
+    {
+      "intent_type": "test_create",
+      "intent_description": "Task execution via MANAS Oracle",
+      "timestamp": "2026-02-26T19:20:02.200785+00:00",
+      "outcome": "success",
+      "context": {},
+      "feedback": null,
+      "execution_time_ms": 0
+    },
+    {
+      "intent_type": "test_create",
+      "intent_description": "Task execution via MANAS Oracle",
+      "timestamp": "2026-02-26T19:20:02.202273+00:00",
+      "outcome": "success",
+      "context": {},
+      "feedback": null,
+      "execution_time_ms": 0
     }
   ],
-  "updated_at": "2026-01-10T08:06:10.472719"
+  "updated_at": "2026-02-26T19:20:02.202743+00:00"
 }

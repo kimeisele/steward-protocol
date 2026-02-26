@@ -7,10 +7,12 @@
     "correlations_performed": 0,
     "decisions_made": 0,
     "decisions_dispatched": 1,
-    "decisions_by_action": {}
+    "decisions_by_action": {
+      "NONE": 5
+    }
   },
   "dispatched": {
-    "97b41484eea474e6": "2026-02-01T17:40:28.144002"
+    "97b41484eea474e6": "2026-02-26T20:28:13.762782"
   },
   "config": {
     "enabled": true,
@@ -20,5 +22,5 @@
     "auto_dispatch": false,
     "log_decisions": false
   },
-  "snapshot_at": "2026-02-01T17:40:28.144028"
+  "snapshot_at": "2026-02-26T20:28:13.762804"
 }
