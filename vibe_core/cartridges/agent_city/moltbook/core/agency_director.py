@@ -26,9 +26,11 @@ from typing import TypedDict
 
 from vibe_core.mahamantra.substrate.core.seed import (
     COSMIC_FRAME,
+    HALVES,
     PANCHA,
     QUARTERS,
     SHARANAGATI,
+    TRINITY,
 )
 from vibe_core.mahamantra.substrate.encoding.harmonics import (
     ResonanceHarmonics,
@@ -41,13 +43,13 @@ from vibe_core.cartridges.agent_city.moltbook.core.murali_router import MuraliRo
 
 logger = logging.getLogger("MOLTBOOK_DIRECTOR")
 
-# Character limits per content type (not cleanly derivable from SEED — config constants)
-_CHAR_LIMIT = {"comment": 280, "dm_reply": 280, "post": 500}
-_DEFAULT_CHAR_LIMIT = 280
-
-# Integrity threshold scaled to COSMIC_FRAME — integer comparison, no floats
-# 6480 / 21600 ≈ 0.3 (SHARANAGATI / (QUARTERS × PANCHA))
-_MIN_INTEGRITY_CF = COSMIC_FRAME * SHARANAGATI // (QUARTERS * PANCHA)  # 6480
+# Per-guna integrity thresholds — ALL gunas can skip, not just TAMAS.
+# Derived from COSMIC_FRAME (21600). Higher guna = lower bar (more trust).
+_INTEGRITY_THRESHOLDS = {
+    "SATTVA": COSMIC_FRAME * HALVES // PANCHA,        # 8640 — low bar, SATTVA is usually clean
+    "RAJAS": COSMIC_FRAME * TRINITY // PANCHA,        # 12960 — medium, RAJAS is 90% of traffic
+    "TAMAS": COSMIC_FRAME * SHARANAGATI // (QUARTERS * PANCHA),  # 6480 — same as before
+}
 
 
 class DirectorContext(TypedDict, total=False):
@@ -248,13 +250,13 @@ class AgencyDirector:
 
         if not content:
             elapsed = (time.monotonic() - t0) * 1000
-            # Distinguish TAMAS skip from LLM unavailability
+            # Distinguish integrity skip from LLM unavailability
             status = process_ctx.get("status", "ERROR")
             if process_ctx.get("skipped"):
-                status = "SKIPPED"
+                # Preserve specific skip status (SKIPPED_LOW_INTEGRITY)
                 self.feedback.signal_partial(
                     feedback_cmd,
-                    "tamas_skip",
+                    "integrity_skip",
                     {
                         "guna": process_ctx.get("guna", ""),
                         "guardian": process_ctx.get("guardian", ""),
@@ -432,12 +434,13 @@ class AgencyDirector:
         integrity = float(pipeline_result.get("cell", {}).get("integrity", 1.0))
         guardian = str(pipeline_result.get("guardian", "unknown"))
 
-        # Minimal gate: only TAMAS + dead/low-integrity = skip
-        # SATTVA and RAJAS BOTH produce content (different styles)
+        # Semantic skip: ALL gunas check integrity, not just TAMAS.
+        # Dead cells always skip. Low-integrity content = silence is better than garbage.
         integrity_cf = int(integrity * COSMIC_FRAME)
-        if guna == "TAMAS" and (not alive or integrity_cf < _MIN_INTEGRITY_CF):
-            logger.info(f"TAMAS + dead/low-integrity (cf={integrity_cf}/{COSMIC_FRAME}): skipping")
-            return "", {"guna": guna, "guardian": guardian, "skipped": True, "status": "SKIPPED"}
+        threshold = _INTEGRITY_THRESHOLDS.get(guna, _INTEGRITY_THRESHOLDS["RAJAS"])
+        if not alive or integrity_cf < threshold:
+            logger.info(f"Skip: {guna} integrity={integrity_cf}/{COSMIC_FRAME} (threshold={threshold})")
+            return "", {"guna": guna, "guardian": guardian, "skipped": True, "status": "SKIPPED_LOW_INTEGRITY"}
 
         style = _GUNA_STYLE.get(guna, "active")
 
@@ -479,10 +482,11 @@ class AgencyDirector:
                     f"SravanamCheck advisory: {sravanam_reason} (safe_output={safe_size}, actual={output_tokens})"
                 )
 
-        # Smart truncation: trim to last sentence boundary within limit
-        char_limit = _CHAR_LIMIT.get(content_type, _DEFAULT_CHAR_LIMIT)
-        if content and len(content) > char_limit:
-            content = self._content_composer.truncate_smart(content, char_limit)
+        # Safety-net truncation: only if content exceeds API hard limit (10KB)
+        # Length is FORMAT-DRIVEN (via token budget in composer), not hardcoded here.
+        _API_SAFETY_LIMIT = 10000
+        if content and len(content) > _API_SAFETY_LIMIT:
+            content = self._content_composer.truncate_smart(content, _API_SAFETY_LIMIT)
 
         process_ctx = {
             "source": "mahamantra",

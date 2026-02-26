@@ -1134,6 +1134,11 @@ class MoltbookPlugin(KernelPlugin):
         if context:
             kwargs.update(context)
         result = self.agency_director.run_retry_loop(**kwargs)
+        if result.status == "SKIPPED_LOW_INTEGRITY":
+            self._emit_event("CONTENT_SKIPPED", f"Low integrity skip: {result.guna}", {
+                "guna": result.guna, "content_type": content_type,
+            })
+            return None
         if result.status != "SUCCESS" or not result.content:
             return None
         return {
@@ -1284,44 +1289,35 @@ class MoltbookPlugin(KernelPlugin):
 
         self._heartbeat_count += 1
 
-        # MURALI phase-aware dispatch: each department runs its core action.
-        # Rate limiting is handled by _check_rate_limit() (real time windows),
-        # NOT by modulo gating (which was mathematically broken: intervals
-        # that are multiples of 4 never align with dept rotation % 4).
+        # MURALI = priority weight, not execution gate.
+        # ALL core phases run every heartbeat. Fresh data, no stale pipelines.
+        # Rate limiting = safety (real time windows). MURALI = preference signal.
         department = self._get_current_department()
         q_pending = self._content_queue.stats.get("pending", 0) if hasattr(self._content_queue, "stats") else 0
         logger.info(f"HB#{self._heartbeat_count} → {department.upper()} (topics={len(self._current_feed_topics)}, intents={len(self._current_intents)}, queue={q_pending})")
 
-        # Always: process inbound DMs (reactive, not phased)
+        # Always: process inbound DMs (reactive)
         has_new = heartbeat.get("has_activity", False)
         if has_new:
             self._safe_call(self._process_inbound_dms, "inbound_dms")
             self._safe_call(self._process_dm_requests, "dm_requests")
 
+        # Core pipeline: ALL phases every heartbeat (no gating)
+        self._safe_call(self._scan_feed, "feed_scan")
+        self._safe_call(self._evaluate_strategy, "strategy_evaluation")
+        self._safe_call(self._execute_intents, "intent_execution")
+        self._safe_call(self._track_engagement, "engagement_tracking")
+
+        # Sub-frequency tasks: MURALI phase determines WHEN (not if)
         if department == "research":
-            # GENESIS: scan feed, discover submolts
-            self._safe_call(self._scan_feed, "feed_scan")
-            # Submolt discovery is expensive — only on first beat or every 6 GENESIS cycles
             if self._heartbeat_count <= QUARTERS or self._genesis_tick % SHARANAGATI == 0:
                 self._safe_call(self._discover_submolts, "submolt_discovery")
             self._genesis_tick += 1
-
-        elif department == "planning":
-            # DHARMA: evaluate strategy → intents
-            self._safe_call(self._evaluate_strategy, "strategy_evaluation")
-
         elif department == "execution":
-            # KARMA: generate content from intents, reply monitoring
-            self._safe_call(self._execute_intents, "intent_execution")
-            # Reply monitoring every other KARMA cycle
             if self._karma_tick % HALVES == 0:
                 self._safe_call(self._check_own_comment_replies, "reply_monitoring")
             self._karma_tick += 1
-
         elif department == "learning":
-            # MOKSHA: track engagement, adjust intervals, analyze patterns
-            self._safe_call(self._track_engagement, "engagement_tracking")
-            # Interval adjustment every 3rd MOKSHA cycle (needs data)
             if self._moksha_tick % TRINITY == 0:
                 self._safe_call(self._adjust_intervals, "interval_adjustment")
             self._safe_call(self._reflect_on_patterns, "reflection_analysis")
@@ -1611,8 +1607,9 @@ class MoltbookPlugin(KernelPlugin):
         generates content via AgencyDirector, enqueues proposals.
         """
         if not self._current_intents:
-            # Fallback: if no strategic intents, try legacy post creation
-            self._maybe_create_post()
+            # Strategic silence: no quality intents = don't force-post garbage
+            logger.info("No quality intents — strategic silence")
+            self._emit_event("STRATEGIC_SILENCE", "No intents met quality threshold")
             return
 
         for intent in self._current_intents[:3]:

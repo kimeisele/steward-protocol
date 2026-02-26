@@ -9,30 +9,30 @@ from vibe_core.cartridges.agent_city.moltbook.core.composer import (
 
 
 class TestBuildTaskMessage:
-    def test_comment_template(self):
-        msg = _build_task_message("comment", "Hello world")
-        assert "Write a comment responding to: Hello world" in msg
+    def test_comment_with_format(self):
+        msg = _build_task_message("comment", "Hello world", content_format="question")
+        assert "Hello world" in msg
 
-    def test_post_template(self):
-        msg = _build_task_message("post", "AI agents")
-        assert "Write an original post about: AI agents" in msg
+    def test_post_with_format(self):
+        msg = _build_task_message("post", "AI agents", content_format="analysis")
+        assert "AI agents" in msg
 
     def test_dm_reply_template(self):
         msg = _build_task_message("dm_reply", "Thanks for your message")
         assert "Reply to this message: Thanks for your message" in msg
 
     def test_with_knowledge_context(self):
-        msg = _build_task_message("post", "topic", knowledge="Some domain context")
+        msg = _build_task_message("post", "topic", knowledge="Some domain context", content_format="opinion")
         assert "Domain context: Some domain context" in msg
 
     def test_without_knowledge_context(self):
-        msg = _build_task_message("post", "topic")
+        msg = _build_task_message("post", "topic", content_format="observation")
         assert "Domain context" not in msg
 
     def test_truncates_long_input(self):
         long_input = "x" * 500
-        msg = _build_task_message("post", long_input)
-        # Template uses input_text[:200]
+        msg = _build_task_message("post", long_input, content_format="observation")
+        # Template uses input_text[:300]
         assert len(msg) < 500
 
     def test_fallback_template(self):

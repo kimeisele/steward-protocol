@@ -37,7 +37,7 @@ class TestRateLimiting:
     def test_comment_rate_limit(self):
         drainer = _make_drainer()
         now = time.time()
-        drainer._comment_timestamps = [now - i for i in range(10)]  # 10 recent comments
+        drainer._comment_timestamps = [now - i for i in range(30)]  # 30 recent comments
         assert drainer.check_rate_limit("comment") is False
 
     def test_comment_rate_limit_ok(self):
