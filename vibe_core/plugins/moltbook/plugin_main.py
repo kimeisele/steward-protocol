@@ -1111,13 +1111,13 @@ class MoltbookPlugin(KernelPlugin):
         auto_approve: bool = True,
         context: Optional[Dict[str, Any]] = None,
     ) -> Optional[Dict[str, Any]]:
-        """MOLTBOOK_CONTENT_V1 — Circuit Executor (primary) or AgencyDirector (fallback).
+        """MOLTBOOK_CONTENT_V1 — ONE path through AgencyDirector.
 
-        PRIMARY PATH: If circuit executor available, use it:
-            Circuit: SHABDA → ARTHA → PRATYAYA → KARMA with Govardhan Gates
-
-        FALLBACK PATH: Circuit unavailable, use AgencyDirector directly:
-            AgencyDirector.run_retry_loop() = inline state machine
+        AgencyDirector.run_retry_loop() IS the state machine:
+            SHABDA  = _run_pipeline()
+            ARTHA   = guna/integrity gates
+            PRATYAYA = _compose_content() (engine + MahaComposition + LLM)
+            KARMA   = constitution.validate() + event_log
 
         This method converts CycleResult → dict for callers that want dict format.
         Context dict flows through to AgencyDirector._input() → _compose_content()
@@ -1133,33 +1133,6 @@ class MoltbookPlugin(KernelPlugin):
         # Thread strategic context through to _input() → _compose_content()
         if context:
             kwargs.update(context)
-
-        # PRIMARY: Try circuit executor if available (GitHub issue #835)
-        if self._circuit_executor:
-            try:
-                circuit_result = self._circuit_executor.execute(
-                    "MOLTBOOK_CONTENT_V1",
-                    {
-                        "content_type": content_type,
-                        "raw_input": raw_input,
-                        "post_id": post_id,
-                        "sender": sender,
-                        "trigger": trigger,
-                        "context": context or {},
-                    }
-                )
-                if circuit_result and circuit_result.get("content"):
-                    logger.info(f"Circuit path: MOLTBOOK_CONTENT_V1 executed successfully")
-                    return {
-                        "content": circuit_result.get("content", ""),
-                        "guna": circuit_result.get("guna", "RAJAS"),
-                        "guardian": circuit_result.get("guardian", "unknown"),
-                        "duration_ms": circuit_result.get("duration_ms", 0),
-                    }
-            except Exception as e:
-                logger.warning(f"Circuit executor failed, falling back to AgencyDirector: {e}")
-
-        # FALLBACK: AgencyDirector direct call
         result = self.agency_director.run_retry_loop(**kwargs)
         if result.status == "SKIPPED_LOW_INTEGRITY":
             self._emit_event("CONTENT_SKIPPED", f"Low integrity skip: {result.guna}", {
