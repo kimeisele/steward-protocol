@@ -123,14 +123,16 @@ class TestPluginStateContract:
     def test_snapshot_without_client(self, bare_plugin):
         """Pre-boot plugin returns minimal snapshot."""
         snapshot = bare_plugin.snapshot_state()
-        assert snapshot["version"] == 6
+        assert snapshot["version"] == 7
         assert snapshot["client_active"] is False
+        assert "orchestrator_state" in snapshot
 
     def test_snapshot_with_client(self, plugin):
         """Active plugin includes all rate limit fields + queue state + tracking counts."""
         snapshot = plugin.snapshot_state()
-        assert snapshot["version"] == 6
+        assert snapshot["version"] == 7
         assert snapshot["client_active"] is True
+        assert "orchestrator_state" in snapshot
         assert "requests_this_minute" in snapshot
         assert "posts_this_30m" in snapshot
         assert "comments_this_hour" in snapshot

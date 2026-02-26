@@ -504,11 +504,7 @@ class MoltbookPlugin(KernelPlugin):
         self._last_heartbeat_error: Optional[str] = None
         self._state_dir: Optional[Path] = None
         self._tick_count: int = 0
-        self._heartbeat_count: int = 0
-        # Department-level tick counters (reset per session, used for intra-dept gating)
-        self._genesis_tick: int = 0
-        self._karma_tick: int = 0
-        self._moksha_tick: int = 0
+        # Department-level tick counters now managed by HeartbeatOrchestrator
         # Adaptive intervals (diagnostic — real gating is _check_rate_limit)
         self._feed_interval: int = self._DEFAULT_FEED_INTERVAL
         self._post_interval: int = self._DEFAULT_POST_INTERVAL
@@ -529,7 +525,7 @@ class MoltbookPlugin(KernelPlugin):
         self._last_profile_heartbeat: int = 0  # Heartbeat count when profile was last updated
         self._activity_log_path: Optional[Path] = None  # JSONL append-only audit log
         self._agent_name: str = "steward-protocol"  # Resolved from profile at boot
-        self._last_heartbeat_ts: float = 0.0  # Debounce guard: epoch of last heartbeat
+        # Heartbeat orchestration (extracted manager, manages debounce + phase ticks)
         # Circuit Executor (cortex/engines/circuit_engine.py) — wired at boot
         self._wiring = None  # WiringModule (lazy-loaded)
         # AGORA broadcast channel (cartridges/agent_city/agora/) — wired at boot
@@ -549,6 +545,8 @@ class MoltbookPlugin(KernelPlugin):
         self._own_post_ids: Dict[str, Dict[str, object]] = {}
         self._MAX_OWN_POST_IDS = COSMIC_FRAME // MALA  # 200 (pada_unit)
         # Rate limiting now handled by ContentDrainer (managers/drainer.py)
+        # Heartbeat orchestration (extracted manager)
+        self._heartbeat_orchestrator = None
 
     @property
     def dependencies(self) -> Set[str]:
@@ -636,6 +634,51 @@ class MoltbookPlugin(KernelPlugin):
                 log_activity=self._log_activity,
             )
         return self._engagement_tracker
+
+    @property
+    def _heartbeat(self):
+        """Lazy-init HeartbeatOrchestrator for phase-aware dispatch."""
+        if self._heartbeat_orchestrator is None:
+            from vibe_core.plugins.moltbook.managers.heartbeat import HeartbeatOrchestrator
+
+            self._heartbeat_orchestrator = HeartbeatOrchestrator(plugin=self)
+        return self._heartbeat_orchestrator
+
+    # Properties delegating state to HeartbeatOrchestrator
+    @property
+    def _heartbeat_count(self) -> int:
+        """Current heartbeat sequence (from orchestrator)."""
+        return self._heartbeat.current_heartbeat_count
+
+    @property
+    def _genesis_tick(self) -> int:
+        """GENESIS phase tick counter."""
+        return self._heartbeat._genesis_tick
+
+    @_genesis_tick.setter
+    def _genesis_tick(self, value: int) -> None:
+        """Set GENESIS phase tick counter."""
+        self._heartbeat._genesis_tick = value
+
+    @property
+    def _karma_tick(self) -> int:
+        """KARMA phase tick counter."""
+        return self._heartbeat._karma_tick
+
+    @_karma_tick.setter
+    def _karma_tick(self, value: int) -> None:
+        """Set KARMA phase tick counter."""
+        self._heartbeat._karma_tick = value
+
+    @property
+    def _moksha_tick(self) -> int:
+        """MOKSHA phase tick counter."""
+        return self._heartbeat._moksha_tick
+
+    @_moksha_tick.setter
+    def _moksha_tick(self, value: int) -> None:
+        """Set MOKSHA phase tick counter."""
+        self._heartbeat._moksha_tick = value
 
     def _ensure_service(self):
         """Ensure MoltbookService exists, create if needed. Used by managers."""
@@ -750,11 +793,12 @@ class MoltbookPlugin(KernelPlugin):
         self._restore_phase_state()
 
     def _persist_phase_state(self) -> None:
-        """Save cross-phase state (feed_topics + intents + heartbeat_count)."""
+        """Save cross-phase state (feed_topics + intents + heartbeat_count + orchestrator state)."""
         self._persistence.persist_phase_state(
-            heartbeat_count=self._heartbeat_count,
+            heartbeat_count=self._heartbeat.current_heartbeat_count,
             feed_topics=self._current_feed_topics,
             intents=self._current_intents,
+            orchestrator_state=self._heartbeat.snapshot(),
         )
 
     def _restore_phase_state(self) -> None:
@@ -763,10 +807,17 @@ class MoltbookPlugin(KernelPlugin):
         if not restored:
             return
 
-        # Restore heartbeat_count (highest wins — snapshot or phase)
+        # Restore orchestrator state (phase ticks, debounce timestamp, etc.)
+        orch_state = restored.get("orchestrator_state", {})
+        if orch_state:
+            self._heartbeat.restore(orch_state)
+
+        # Restore heartbeat_count (from orchestrator, highest wins)
         saved_hb = restored.get("heartbeat_count", 0)
-        if saved_hb > self._heartbeat_count:
-            self._heartbeat_count = saved_hb
+        if saved_hb > self._heartbeat.current_heartbeat_count:
+            # Manually set if persistence has a higher count
+            if hasattr(self._heartbeat, "_heartbeat_count"):
+                self._heartbeat._heartbeat_count = saved_hb
 
         # Restore feed topics (raw dicts, no deserialization needed)
         topics = restored.get("feed_topics", [])
@@ -810,12 +861,18 @@ class MoltbookPlugin(KernelPlugin):
 
     def snapshot_state(self) -> Dict[str, Any]:
         if not self._client:
-            return {"version": 6, "client_active": False, "heartbeat_count": self._heartbeat_count}
+            return {
+                "version": 7,
+                "client_active": False,
+                "heartbeat_count": self._heartbeat.current_heartbeat_count,
+                "orchestrator_state": self._heartbeat.snapshot(),
+            }
         limits = self._client.limits
         return {
-            "version": 6,
+            "version": 7,
             "client_active": True,
-            "heartbeat_count": self._heartbeat_count,
+            "heartbeat_count": self._heartbeat.current_heartbeat_count,
+            "orchestrator_state": self._heartbeat.snapshot(),
             "requests_this_minute": limits.requests_this_minute,
             "posts_this_30m": limits.posts_this_30m,
             "comments_this_hour": limits.comments_this_hour,
@@ -841,10 +898,12 @@ class MoltbookPlugin(KernelPlugin):
         }
 
     def restore_state(self, snapshot: Dict[str, Any]) -> None:
-        if snapshot.get("version") not in (1, 2, 3, 4, 5, 6):
+        if snapshot.get("version") not in (1, 2, 3, 4, 5, 6, 7):
             return
-        # Restore heartbeat_count even without client (survives GitHub Actions restarts)
-        self._heartbeat_count = int(snapshot.get("heartbeat_count", self._heartbeat_count))
+        # Restore orchestrator state for recovery after restarts
+        orch_state = snapshot.get("orchestrator_state", {})
+        if orch_state:
+            self._heartbeat.restore(orch_state)
         if not snapshot.get("client_active") or not self._client:
             return
         limits = self._client.limits
@@ -1214,26 +1273,7 @@ class MoltbookPlugin(KernelPlugin):
         if self._tick_count % _TICKS_PER_HEARTBEAT != 0:
             return
 
-        self._do_heartbeat()
-
-    # Minimum seconds between heartbeats (prevents double-fire from on_pulse + tick)
-    _HEARTBEAT_DEBOUNCE_S = 2.0
-
-    def _do_heartbeat(self) -> None:
-        """Execute one heartbeat cycle with MURALI phase-aware dispatch.
-
-        MURALI routing changes PRIORITY within the heartbeat, not exclusion.
-        All 4 departments execute within one full cycle, but the current
-        phase determines which department gets run first.
-
-        Debounce guard: if on_pulse() AND _on_mahamantra_tick() both call this
-        within the same tick window, the second call is silently skipped.
-        """
-        now = time.time()
-        if (now - self._last_heartbeat_ts) < self._HEARTBEAT_DEBOUNCE_S:
-            return  # Already fired recently — skip (split-brain guard)
-        self._last_heartbeat_ts = now
-
+        # Fetch heartbeat from Moltbook API
         try:
             heartbeat = self._client.sync_check_heartbeat()
             self._last_heartbeat_error = None
@@ -1243,79 +1283,8 @@ class MoltbookPlugin(KernelPlugin):
             logger.warning(f"DM check failed [{type(e).__name__}]: {e!r} — continuing heartbeat")
             heartbeat = {}
 
-        self._heartbeat_count += 1
-
-        # MURALI = priority weight, not execution gate.
-        # ALL core phases run every heartbeat. Fresh data, no stale pipelines.
-        # Rate limiting = safety (real time windows). MURALI = preference signal.
-        department = self._get_current_department()
-        q_pending = self._content_queue.stats.get("pending", 0) if hasattr(self._content_queue, "stats") else 0
-        logger.info(f"HB#{self._heartbeat_count} → {department.upper()} (topics={len(self._current_feed_topics)}, intents={len(self._current_intents)}, queue={q_pending})")
-
-        # Always: process inbound DMs (reactive)
-        has_new = heartbeat.get("has_activity", False)
-        if has_new:
-            self._safe_call(self._process_inbound_dms, "inbound_dms")
-            self._safe_call(self._process_dm_requests, "dm_requests")
-
-        # Core pipeline: ALL phases every heartbeat (no gating)
-        self._safe_call(self._scan_feed, "feed_scan")
-        self._safe_call(self._evaluate_strategy, "strategy_evaluation")
-        self._safe_call(self._execute_intents, "intent_execution")
-        self._safe_call(self._track_engagement, "engagement_tracking")
-
-        # Sub-frequency tasks: MURALI phase determines WHEN (not if)
-        if department == "research":
-            if self._heartbeat_count <= QUARTERS or self._genesis_tick % SHARANAGATI == 0:
-                self._safe_call(self._discover_submolts, "submolt_discovery")
-            self._genesis_tick += 1
-        elif department == "execution":
-            if self._karma_tick % HALVES == 0:
-                self._safe_call(self._check_own_comment_replies, "reply_monitoring")
-            self._karma_tick += 1
-        elif department == "learning":
-            if self._moksha_tick % TRINITY == 0:
-                self._safe_call(self._adjust_intervals, "interval_adjustment")
-            self._safe_call(self._reflect_on_patterns, "reflection_analysis")
-            self._moksha_tick += 1
-
-        # Non-phased maintenance: profile update every 12th heartbeat
-        if self._heartbeat_count % MAHAJANA_COUNT == 0:
-            self._safe_call(self._update_profile, "profile_update")
-            self._trim_memory()
-
-        # Monitor queue health — warn on overflow
-        self._monitor_queue_health()
-
-        # Always drain queue on heartbeat (even without new activity)
-        self._drain_content_queue()
-
-        # Record heartbeat in Reflection Protocol (learning from execution patterns)
-        self._record_heartbeat_reflection(department, time.time() - now)
-
-        # Emit health to Ouroboros (system-wide observability)
-        self._emit_ouroboros_health()
-
-    _DEPARTMENTS = ("research", "planning", "execution", "learning")
-
-    def _get_current_department(self) -> str:
-        """Determine current MURALI department from heartbeat cycle.
-
-        Uses heartbeat_count % 4 for reliable rotation. VenuOrchestrator-based
-        routing only works when singularity.tick() is actively driven by the
-        kernel heartbeat loop — in standalone mode (MinimalKernel, GitHub Actions),
-        venu.tick is either stuck or advances randomly via side effects.
-        Heartbeat count is the only reliable clock.
-        """
-        if not self._standalone_mode:
-            try:
-                from vibe_core.cartridges.agent_city.moltbook.core.agency_director import MuraliRouter
-
-                return MuraliRouter().current_department(fallback_tick=self._heartbeat_count)
-            except Exception:
-                pass
-
-        return self._DEPARTMENTS[self._heartbeat_count % len(self._DEPARTMENTS)]
+        # Delegate to orchestrator (handles debounce, phase routing, all dispatch)
+        self._heartbeat.dispatch_heartbeat(heartbeat)
 
     # =========================================================================
     # Reflection Protocol — learning from execution patterns
