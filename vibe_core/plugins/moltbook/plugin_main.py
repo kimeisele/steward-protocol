@@ -48,7 +48,6 @@ from vibe_core.protocols.moltbook_content import (
 )
 from vibe_core.mahamantra.substrate.core.seed import (
     COSMIC_FRAME,
-    HALVES,
     HARE_COUNT,
     KSHETRA,
     LILA,
@@ -56,8 +55,6 @@ from vibe_core.mahamantra.substrate.core.seed import (
     MALA,
     NAVA,
     QUARTERS,
-    SHARANAGATI,
-    TRINITY,
     WORDS,
 )
 

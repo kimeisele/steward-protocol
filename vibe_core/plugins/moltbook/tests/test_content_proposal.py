@@ -270,7 +270,8 @@ class TestDMReplyLoop:
         plugin._content_queue.enqueue(proposal)
         assert plugin._content_queue.size == 1
 
-        plugin._do_heartbeat()
+        # Trigger heartbeat cycle to drain queue
+        plugin._heartbeat.dispatch_heartbeat({"has_activity": False})
         assert plugin._content_queue.is_empty
 
     def test_content_queue_stats_in_api(self, plugin):
