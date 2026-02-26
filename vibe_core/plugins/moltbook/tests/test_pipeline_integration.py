@@ -324,6 +324,7 @@ class TestPromptConstruction:
             "style": style,
             "content_format": "observation",
             "resonant_context": composed[:100] if composed else "",
+            "resonance_mode": "semantic",
         }
         return PromptRegistry.get("moltbook.comment", context=ctx)
 

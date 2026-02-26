@@ -1915,7 +1915,8 @@ class MoltbookPlugin(KernelPlugin):
             pass  # EventBus unavailable — graceful degradation
 
     def _discover_submolts(self) -> None:
-        """Discover and subscribe to relevant submolts via resonance scoring."""
+        """Ensure own submolt exists, then discover and subscribe to relevant submolts."""
+        self._feed.ensure_own_submolt(self._client, self._content_queue)
         self._feed.discover_submolts(self._client, self._content_queue)
 
     def _select_submolt(self, seed_text: str) -> Optional[str]:

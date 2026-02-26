@@ -33,8 +33,8 @@ __mahajana__ = "prahlada"
 __position__ = 9
 __genesis__ = "0xde97569d"  # GenesisByte: parampara % 37 == 0
 
-# OPUS-055: SANKALPA (The Will) - Now in mahamantra/protocols/
-from vibe_core.mahamantra import SankalpaOrchestrator
+# OPUS-055: SANKALPA (The Will) - substrate implementation
+from vibe_core.mahamantra.substrate.sankalpa.will import SankalpaOrchestrator
 from vibe_core.plugins.opus_assistant.manas.cortex.akasha import (
     AkashaContext,
     AkashaNode,

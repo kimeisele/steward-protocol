@@ -463,6 +463,7 @@ class AgencyDirector:
             guna=guna,
             style=style,
             resonance_zone=resonance_zone,
+            integrity_cf=integrity_cf,
         )
 
         # SravanamCheck advisory — entropy verification (observability, not blocking)

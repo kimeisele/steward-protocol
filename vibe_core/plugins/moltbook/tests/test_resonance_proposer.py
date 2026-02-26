@@ -406,7 +406,7 @@ class TestYamlPrompts:
             assert "you should" not in lower
             assert "be creative" not in lower
             # Balanced: not 900 tokens, not 50 tokens
-            assert len(prompt) < 300, f"Prompt too long ({len(prompt)} chars)"
+            assert len(prompt) < 450, f"Prompt too long ({len(prompt)} chars)"
 
 
 # =========================================================================

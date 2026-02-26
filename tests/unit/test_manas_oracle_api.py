@@ -2,6 +2,7 @@
 Test: MANAS Oracle API (OPUS-089)
 
 Tests the clean separation of concerns: ManasOracle as a Wisdom Interface.
+No CognitiveKernel dependency. Own MemoryStore. Fast (< 100ms per consult).
 """
 
 import pytest
@@ -14,11 +15,10 @@ class TestManasOracleBasics:
     """Test basic Oracle functionality."""
 
     def test_oracle_initialization(self):
-        """Oracle should initialize without errors."""
+        """Oracle should initialize without errors and without kernel boot."""
         oracle = ManasOracle()
         assert oracle is not None
-        assert oracle.kernel is not None
-        assert oracle.config is not None
+        assert oracle._memory is not None
 
     def test_consult_low_risk_task(self):
         """Oracle should give high safety score to low-risk tasks."""
@@ -290,6 +290,23 @@ class TestManasOracleErrorHandling:
 
         assert result is not None
         assert isinstance(result, AnalysisResult)
+
+    def test_fast_initialization(self):
+        """Oracle init should be fast (< 5 seconds, no kernel boot)."""
+        import time
+        start = time.monotonic()
+        oracle = ManasOracle()
+        elapsed = time.monotonic() - start
+        assert elapsed < 5.0, f"Oracle init took {elapsed:.1f}s — should be < 5s"
+
+    def test_fast_consult(self):
+        """consult() should be fast (< 1 second)."""
+        import time
+        oracle = ManasOracle()
+        start = time.monotonic()
+        oracle.consult({"task_title": "test", "risk_level": "low"})
+        elapsed = time.monotonic() - start
+        assert elapsed < 1.0, f"consult() took {elapsed:.1f}s — should be < 1s"
 
 
 if __name__ == "__main__":

@@ -5,10 +5,10 @@ This is the **clean separation of concerns** entry point for consulting MANAS.
 Other system components (Heartbeat, Envoy, etc.) call this API instead of
 directly coupling to the CognitiveKernel.
 
-Philosophy:
-    "System agents are fractal-matching collections of jobs"
-    → MANAS is exposed via a single, clear interface
-    → No spaghetti code, just Service-Oriented Architecture
+Architecture:
+    ManasOracle owns its OWN MemoryStore. No CognitiveKernel boot required.
+    CognitiveWisdom (WeaverBridge) is lazy-optional — enriches when available.
+    consult() is O(1) deterministic, < 100ms. No LLM. No heavy loading.
 
 Key Methods:
     - consult(context) → AnalysisResult
@@ -41,7 +41,6 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from .cognitive_kernel import CognitiveKernel, ManasConfig
 from .intent_generator import IntentPriority
 
 logger = logging.getLogger("MANAS.Oracle")
@@ -83,7 +82,7 @@ class AnalysisResult:
     def __str__(self) -> str:
         """Human-readable format."""
         lines = [
-            "🧠 MANAS Analysis:",
+            "MANAS Analysis:",
             f"  Priority: {self.priority.value if isinstance(self.priority, IntentPriority) else self.priority}",
             f"  Safety: {self.safety_score:.0%}",
             f"  Confidence: {self.confidence:.0%}",
@@ -102,30 +101,30 @@ class ManasOracle:
     """
     The Manas Oracle - Wisdom Interface for System Agents.
 
-    This is the **clean API** that allows any system component to ask MANAS
-    for advice without coupling to internal implementation details.
+    Self-sufficient. Owns its MemoryStore directly.
+    Does NOT boot CognitiveKernel for consult/pre/post_analysis.
+    CognitiveKernel is only needed for think() — not our concern.
 
     Design principles:
     1. **Deterministic**: Same input → same output (no randomness)
     2. **Traceable**: All advice includes reasoning
-    3. **Bounded**: Consults are fast (< 100ms)
-    4. **Stateful**: Learns from history via MemoryStore
+    3. **Fast**: consult() < 100ms. No heavy loading.
+    4. **Stateful**: Learns from history via MemoryStore (own instance)
     """
 
-    def __init__(self, config: Optional[ManasConfig] = None):
+    def __init__(self, workspace: Optional[Path] = None):
         """
-        Initialize the Oracle with CognitiveKernel.
+        Initialize the Oracle with its own MemoryStore.
 
-        Args:
-            config: Optional ManasConfig. If None, uses defaults.
+        No CognitiveKernel boot. No 60-second wait.
         """
-        self.config = config or ManasConfig()
-        # Use workspace if available, otherwise current directory
+        self._workspace = workspace or Path.cwd()
 
-        workspace = Path.cwd()
-        # OPUS-167: Use singleton pattern to avoid expensive re-initialization
-        self.kernel = CognitiveKernel.get_instance(workspace=workspace, config=self.config)
-        logger.info("🧠 ManasOracle initialized")
+        # Own MemoryStore — no kernel dependency
+        from .memory_store import MemoryStore
+        self._memory = MemoryStore(workspace=self._workspace)
+
+        logger.info("ManasOracle initialized (lightweight, no kernel boot)")
 
     # =========================================================================
     # PRIMARY API: consult(context) → AnalysisResult
@@ -135,7 +134,7 @@ class ManasOracle:
         """
         Core method: Ask MANAS for wisdom on a decision.
 
-        This is the main entry point for all consultations.
+        Deterministic, O(1), no LLM. Pure risk assessment + memory lookup.
 
         Args:
             context: Dict with task/decision context. Common keys:
@@ -148,18 +147,6 @@ class ManasOracle:
 
         Returns:
             AnalysisResult with recommendation
-
-        Example:
-            context = {
-                "task_title": "Deploy to production",
-                "task_type": "deploy",
-                "risk_level": "high",
-                "changes": ["main.py", "config.yaml"],
-                "is_automated": False,
-                "user_approval": True
-            }
-            result = oracle.consult(context)
-            print(f"Safety: {result.safety_score:.0%}")
         """
         try:
             # Extract context
@@ -200,30 +187,9 @@ class ManasOracle:
             risks = self._identify_risks(context)
             precautions = self._suggest_precautions(context, risks)
 
-            # Query memory for historical patterns
-            self.kernel._ensure_booted()
-            success_rate = self.kernel._memory.get_success_rate(task_type) if self.kernel._memory else 0.5
+            # Query memory for historical patterns (own MemoryStore, no kernel)
+            success_rate = self._memory.get_success_rate(task_type)
             confidence = 0.5 + (success_rate * 0.5)  # Confidence based on history
-
-            # OPUS-106: Query CognitiveWeaver for unified State + Knowledge wisdom
-            cognitive_wisdom = self._get_cognitive_wisdom(task_title, context)
-            if cognitive_wisdom:
-                # Adjust safety based on system health
-                if cognitive_wisdom.get("health_score", 1.0) < 0.5:
-                    base_safety_score = max(0.10, base_safety_score - 0.10)
-                    risks.append(f"System health low ({cognitive_wisdom.get('health_score', 0):.0%})")
-
-                # Add constraint violations as risks
-                for violation in cognitive_wisdom.get("constraints_violated", []):
-                    risks.append(f"Constraint: {violation}")
-
-                # Add wisdom notes to precautions
-                for note in cognitive_wisdom.get("wisdom_notes", []):
-                    precautions.append(note)
-
-                # Boost confidence if knowledge graph consulted
-                if cognitive_wisdom.get("knowledge_consulted"):
-                    confidence = min(0.95, confidence + 0.1)
 
             # Build advice
             advice = self._generate_advice(
@@ -257,22 +223,20 @@ class ManasOracle:
                     "is_automated": is_automated,
                     "success_rate": round(success_rate, 2),
                     "base_safety_score": round(base_safety_score, 2),
-                    # OPUS-106: Cognitive Wisdom context
-                    "cognitive_wisdom": cognitive_wisdom if cognitive_wisdom else None,
                 },
             )
 
-            logger.info(f"🧠 MANAS.consult() → {result.priority.value} | Safety: {result.safety_score:.0%}")
+            logger.info(f"MANAS.consult() -> {result.priority.value} | Safety: {result.safety_score:.0%}")
             return result
 
         except Exception as e:
-            logger.error(f"❌ MANAS.consult() failed: {e}", exc_info=True)
+            logger.error(f"MANAS.consult() failed: {e}", exc_info=True)
             # Fallback to safe response
             return AnalysisResult(
                 priority=IntentPriority.LOW,
                 safety_score=0.5,
                 confidence=0.3,
-                advice=f"⚠️ Oracle consultation failed: {str(e)}. Assuming neutral stance.",
+                advice=f"Oracle consultation failed: {str(e)}. Assuming neutral stance.",
                 risks=["System error during analysis"],
                 precautions=["Proceed with caution", "Manual review recommended"],
             )
@@ -285,22 +249,8 @@ class ManasOracle:
         """
         Pre-execution hook: Should this task run at all?
 
-        Called BEFORE UnifiedRouter executes a task.
+        Called BEFORE task execution.
         Returns a gate decision: can the task proceed?
-
-        Args:
-            task_context: Dict with task metadata
-
-        Returns:
-            Dict with keys:
-            - proceed: bool - Should the task run?
-            - reason: str - Why or why not?
-            - recommendation: AnalysisResult - Full analysis
-
-        Example:
-            gate = oracle.pre_analysis({"task_id": "123", "priority": "high"})
-            if gate["proceed"]:
-                unified_router.execute(task)
         """
         recommendation = self.consult(task_context)
 
@@ -318,17 +268,7 @@ class ManasOracle:
         """
         Post-execution hook: Learn from what happened.
 
-        Called AFTER task execution. MANAS updates its memory.
-
-        Args:
-            task_result: Dict with execution result
-                - task_type: str
-                - success: bool
-                - duration_ms: float
-                - error: Optional[str]
-
-        Returns:
-            Dict with learning summary
+        Called AFTER task execution. Updates own MemoryStore.
         """
         try:
             task_type = task_result.get("task_type", "unknown")
@@ -336,21 +276,19 @@ class ManasOracle:
             error = task_result.get("error", None)
             duration_ms = task_result.get("duration_ms", 0)
 
-            # Record to memory using the correct API
+            # Record to own memory
             outcome = "success" if success else "failed"
             feedback = f"Error: {error}" if error else None
 
-            self.kernel._ensure_booted()
-            if self.kernel._memory:
-                self.kernel._memory.record_intent_outcome(
-                    intent_type=task_type,
-                    description="Task execution via MANAS Oracle",
-                    outcome=outcome,
-                    feedback=feedback,
-                    execution_time_ms=int(duration_ms),
-                )
+            self._memory.record_intent_outcome(
+                intent_type=task_type,
+                description="Task execution via MANAS Oracle",
+                outcome=outcome,
+                feedback=feedback,
+                execution_time_ms=int(duration_ms),
+            )
 
-            logger.info(f"🧠 MANAS.post_analysis() recorded {task_type} → {'✅ success' if success else '❌ failed'}")
+            logger.info(f"MANAS.post_analysis() recorded {task_type} -> {'success' if success else 'failed'}")
 
             return {
                 "recorded": True,
@@ -359,60 +297,12 @@ class ManasOracle:
             }
 
         except Exception as e:
-            logger.error(f"❌ MANAS.post_analysis() failed: {e}")
+            logger.error(f"MANAS.post_analysis() failed: {e}")
             return {"recorded": False, "error": str(e)}
 
     # =========================================================================
     # HELPER METHODS
     # =========================================================================
-
-    def _get_cognitive_wisdom(self, task_title: str, context: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-        """
-        OPUS-106: Get unified cognitive wisdom from CognitiveWeaver.
-
-        This bridges the Oracle API to the unified State + Knowledge context,
-        enabling decisions informed by both system state and knowledge graph.
-
-        Args:
-            task_title: The task being consulted about (used as focus)
-            context: Full context dict for constraint checking
-
-        Returns:
-            Dict with cognitive wisdom or None if unavailable
-        """
-        try:
-            # Try to get cognitive context from kernel
-            cognitive_context = self.kernel.get_cognitive_context(focus=task_title)
-
-            if cognitive_context is None:
-                return None
-
-            wisdom = {
-                "health_score": cognitive_context.get("health_score", 1.0),
-                "guna_distribution": cognitive_context.get("guna_distribution"),
-                "wisdom_notes": cognitive_context.get("wisdom_notes", []),
-                "recommended_actions": cognitive_context.get("recommended_actions", []),
-                "knowledge_consulted": True,
-                "constraints_violated": [],
-            }
-
-            # Also consult knowledge for specific action constraints
-            consultation = self.kernel.consult_knowledge(
-                action=task_title,
-                context=context,
-            )
-
-            if consultation:
-                wisdom["constraints_violated"] = consultation.get("constraints_violated", [])
-                wisdom["action_allowed"] = consultation.get("allowed", True)
-                wisdom["recommendation"] = consultation.get("recommendation", "")
-
-            logger.debug(f"🧵 Oracle cognitive wisdom: health={wisdom['health_score']:.0%}")
-            return wisdom
-
-        except Exception as e:
-            logger.warning(f"🧵 Oracle cognitive wisdom unavailable: {e}")
-            return None
 
     def _identify_risks(self, context: Dict[str, Any]) -> List[str]:
         """Identify risks in a context."""
@@ -466,19 +356,19 @@ class ManasOracle:
     ) -> str:
         """Generate human-readable advice."""
         if safety_score >= 0.90:
-            base = "✅ This looks safe. Proceed with confidence."
+            base = "This looks safe. Proceed with confidence."
         elif safety_score >= 0.70:
-            base = "⚠️  Moderate caution advised."
+            base = "Moderate caution advised."
         elif safety_score >= 0.40:
-            base = "🔴 High caution - consider human review."
+            base = "High caution - consider human review."
         else:
-            base = "🛑 Not recommended in current state."
+            base = "Not recommended in current state."
 
         # Add success rate insight
         if success_rate > 0.8:
             base += f" (Similar tasks succeeded {success_rate:.0%} of the time)"
         elif success_rate < 0.3:
-            base += f" (⚠️ Similar tasks failed {1 - success_rate:.0%} of the time)"
+            base += f" (Similar tasks failed {1 - success_rate:.0%} of the time)"
 
         # Add approval status
         if not user_approval:

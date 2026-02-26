@@ -163,6 +163,42 @@ class FeedAnalyzer:
             except Exception as e:
                 logger.warning(f"Comment proposal failed: {e}")
 
+    # Agent's own submolt — created autonomously on first discovery
+    _OWN_SUBMOLT = "steward-protocol"
+    _OWN_SUBMOLT_DISPLAY = "Steward Protocol"
+    _OWN_SUBMOLT_DESC = "Autonomous systems engineering — infrastructure, observability, distributed systems."
+
+    def ensure_own_submolt(self, client: MoltbookProtocol, content_queue: ContentQueue) -> None:
+        """Ensure 'steward-protocol' submolt exists. Create if not. Subscribe if not."""
+        if self._OWN_SUBMOLT in self._subscribed_submolts:
+            return  # Already subscribed → exists
+
+        # Check if it exists in known submolts
+        try:
+            submolts = run_async(client.get_submolts())
+            names = {s.get("name", "") for s in submolts if isinstance(s, dict)}
+        except Exception:
+            return  # API unavailable, try next cycle
+
+        if self._OWN_SUBMOLT not in names:
+            try:
+                client.sync_create_submolt(self._OWN_SUBMOLT, self._OWN_SUBMOLT_DISPLAY, self._OWN_SUBMOLT_DESC)
+                logger.info(f"Created submolt: {self._OWN_SUBMOLT}")
+            except Exception as e:
+                logger.warning(f"Submolt creation failed: {e}")
+                return
+
+        # Subscribe
+        self._subscribed_submolts.add(self._OWN_SUBMOLT)
+        self._submolt_descriptions[self._OWN_SUBMOLT] = self._OWN_SUBMOLT_DESC
+        content_queue.enqueue({
+            "content_type": ContentType.SUBSCRIBE.value,
+            "submolt": self._OWN_SUBMOLT,
+            "source": "own_submolt_init",
+            "priority": 0,
+        })
+        logger.info(f"Own submolt '{self._OWN_SUBMOLT}' ensured + subscription queued")
+
     def discover_submolts(self, client: MoltbookProtocol, content_queue: ContentQueue) -> None:
         """Discover and subscribe to relevant submolts via resonance scoring.
 
