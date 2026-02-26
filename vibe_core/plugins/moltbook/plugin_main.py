@@ -547,6 +547,8 @@ class MoltbookPlugin(KernelPlugin):
         # Rate limiting now handled by ContentDrainer (managers/drainer.py)
         # Heartbeat orchestration (extracted manager)
         self._heartbeat_orchestrator = None
+        # Boot orchestration (extracted manager)
+        self._boot_manager = None
 
     @property
     def dependencies(self) -> Set[str]:
@@ -670,6 +672,15 @@ class MoltbookPlugin(KernelPlugin):
 
             self._intent_executor = IntentExecutor(plugin=self)
         return self._intent_executor
+
+    @property
+    def _boot(self):
+        """Lazy-init BootManager for plugin initialization."""
+        if self._boot_manager is None:
+            from vibe_core.plugins.moltbook.managers.boot_manager import BootManager
+
+            self._boot_manager = BootManager(plugin=self)
+        return self._boot_manager
 
     # Properties delegating state to HeartbeatOrchestrator
     @property
@@ -950,92 +961,8 @@ class MoltbookPlugin(KernelPlugin):
         kernel: "RealVibeKernel",
         config: Optional[Dict[str, object]] = None,
     ) -> HookResult:
-        from vibe_core.mahamantra import MoltbookClient
-
-        try:
-            # Resolve state dir
-            try:
-                from vibe_core.phoenix.config import get_config
-
-                data_root = Path(get_config().paths.data.resolve("plugins/moltbook"))
-            except Exception:
-                data_root = Path(".vibe/state/plugins/moltbook")
-            data_root.mkdir(parents=True, exist_ok=True)
-            self._state_dir = data_root
-
-            cfg = config or {}
-            self._offline_mode = bool(cfg.get("offline_mode", True))
-            api_key = str(cfg.get("api_key", ""))
-
-            # Configurable heartbeat intervals (all in heartbeat counts, 1 hb = 16 ticks)
-            self._feed_interval = int(cfg.get("feed_interval", self._DEFAULT_FEED_INTERVAL))
-            self._post_interval = int(cfg.get("post_interval", self._DEFAULT_POST_INTERVAL))
-            self._reply_check_interval = int(cfg.get("reply_check_interval", self._DEFAULT_REPLY_CHECK_INTERVAL))
-            self._profile_update_interval = int(
-                cfg.get("profile_update_interval", self._DEFAULT_PROFILE_UPDATE_INTERVAL)
-            )
-
-            if not api_key:
-                api_key = self._try_vault(kernel)
-
-            if not api_key:
-                api_key = "offline_master_key"
-                self._offline_mode = True
-
-            self._client = MoltbookClient(
-                api_key=api_key,
-                offline_mode=self._offline_mode,
-            )
-
-            # Register MoltbookProtocol + ContentProposalProtocol in ServiceRegistry
-            self._register_service()
-
-            # Register FeedbackProtocol (InMemoryFeedback) for learning signals
-            self._register_feedback()
-
-            # Resolve agent name from profile BEFORE booting proposer
-            # (proposer uses agent_name in content templates)
-            try:
-                profile = self._service.get_own_profile() if self._service else {}
-                name = profile.get("name", "") if isinstance(profile, dict) else ""
-                if name:
-                    self._agent_name = name
-            except Exception as e:
-                logger.debug(f"Profile name fetch failed, keeping default: {e}")
-
-            self._boot_proposer()
-            self._register_proposer()
-
-            # Restore persisted queue + seen IDs from previous session
-            self._restore_queue()
-
-            # Activity log: append-only JSONL
-            self._activity_log_path = data_root / self._ACTIVITY_LOG_FILE
-
-            # Circuit Executor: wire MOLTBOOK_CONTENT_V1 circuit for state-machine content generation
-            self._wire_circuit_executor(kernel)
-
-            # AGORA: wire broadcast channel for federation publishing
-            self._wire_agora(kernel)
-
-            # Detect standalone mode: MinimalKernel has no singularity/venu tick loop
-            # → use heartbeat_count for MURALI department rotation instead of VenuOrchestrator
-            if kernel is None or not hasattr(kernel, "api") or kernel.api("singularity") is None:
-                self._standalone_mode = True
-
-            # PARAMPARA: Wire to Mahamantra heartbeat (same as Nrisimha)
-            self._wire_to_mahamantra()
-
-            # OUROBOROS: Register as self-healing gene
-            self._wire_ouroboros()
-
-            mode = "OFFLINE" if self._offline_mode else "LIVE"
-            logger.info(f"Moltbook booted [{mode}]")
-            return HookResult.ok()
-
-        except Exception as e:
-            logger.error(f"Moltbook boot failed: {e}")
-            return HookResult.error(str(e))
+        """Delegate to BootManager for plugin initialization."""
+        return self._boot.execute_boot(kernel, config)
 
     def _register_service(self) -> None:
         """Register MoltbookProtocol in DI so other plugins get it via ServiceRegistry."""
