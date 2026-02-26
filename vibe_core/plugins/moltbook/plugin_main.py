@@ -555,6 +555,8 @@ class MoltbookPlugin(KernelPlugin):
         self._proposal_builder = None
         # Vault resolution (extracted manager)
         self._vault_resolver_mgr = None
+        # Content circuit execution (extracted manager)
+        self._content_circuit_executor = None
 
     @property
     def dependencies(self) -> Set[str]:
@@ -750,6 +752,15 @@ class MoltbookPlugin(KernelPlugin):
 
             self._vault_resolver_mgr = VaultResolver()
         return self._vault_resolver_mgr
+
+    @property
+    def _circuit(self):
+        """Lazy-init ContentCircuitExecutor for AgencyDirector execution."""
+        if self._content_circuit_executor is None:
+            from vibe_core.plugins.moltbook.managers.content_circuit import ContentCircuitExecutor
+
+            self._content_circuit_executor = ContentCircuitExecutor(self)
+        return self._content_circuit_executor
 
     def _ensure_service(self):
         """Ensure MoltbookService exists, create if needed. Used by managers."""
@@ -1039,30 +1050,14 @@ class MoltbookPlugin(KernelPlugin):
         Context dict flows through to AgencyDirector._input() → _compose_content()
         for strategic reasoning, engagement context, submolt context.
         """
-        kwargs: Dict[str, Any] = {
-            "content_type": content_type,
-            "raw_input": raw_input,
-            "post_id": post_id,
-            "sender": sender,
-            "trigger": trigger,
-        }
-        # Thread strategic context through to _input() → _compose_content()
-        if context:
-            kwargs.update(context)
-        result = self.agency_director.run_retry_loop(**kwargs)
-        if result.status == "SKIPPED_LOW_INTEGRITY":
-            self._emit_event("CONTENT_SKIPPED", f"Low integrity skip: {result.guna}", {
-                "guna": result.guna, "content_type": content_type,
-            })
-            return None
-        if result.status != "SUCCESS" or not result.content:
-            return None
-        return {
-            "content": result.content,
-            "guna": result.guna,
-            "guardian": result.guardian,
-            "duration_ms": result.duration_ms,
-        }
+        return self._circuit.execute(
+            raw_input=raw_input,
+            content_type=content_type,
+            post_id=post_id,
+            sender=sender,
+            trigger=trigger,
+            context=context,
+        )
 
     def _try_vault(self, kernel: "RealVibeKernel") -> str:
         """Attempt to load API key: CivicVault → env → ~/.config/moltbook/credentials.json."""
