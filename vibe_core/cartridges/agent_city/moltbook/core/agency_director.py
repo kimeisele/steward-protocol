@@ -11,20 +11,16 @@ Uses Mahamantra substrate DIRECTLY. No delegation to proposer gates.
 Guna informs STYLE (guardian, tone), NOT gating.
 Only TAMAS + dead cell = skip. Everything else generates content.
 
-Prompts come from config/prompts/moltbook.yaml via PromptRegistry (SSOT, no fallback).
-MahaComposition runs for backend analytics — output does NOT enter LLM prompt.
-Code enforces physical barriers (char limits, guna gates, integrity checks).
-
-Wires: MahaComposition (backend), MahaLanguageEngine (backend), Knowledge Graph,
-       EventBus, ResonanceHarmonics (zone), VedicScaleMapping (rasa),
-       SravanamCheck (entropy), PromptRegistry (YAML SSOT).
+Delegates to:
+    - ContentComposer (composer.py) — LLM composition + truncation
+    - ContextResolver (context_resolver.py) — INPUT phase context gathering
+    - MuraliRouter (murali_router.py) — MURALI department routing
 """
 
 import logging
 import time
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from pathlib import Path
 from typing import Any, Dict, List, Optional
 from typing import TypedDict
 
@@ -40,8 +36,8 @@ from vibe_core.mahamantra.substrate.encoding.harmonics import (
     VedicScaleMapping,
 )
 
-# context_builders (guardian_vocabulary_short, section_data, format_resonant_words)
-# available for backend use — NOT imported for LLM prompt injection
+# Re-export MuraliRouter for backward compatibility (imported from here by plugin_main, tests)
+from vibe_core.cartridges.agent_city.moltbook.core.murali_router import MuraliRouter  # noqa: F401
 
 logger = logging.getLogger("MOLTBOOK_DIRECTOR")
 
@@ -85,20 +81,14 @@ class CycleResult:
     duration_ms: float = 0.0
 
 
-# =========================================================================
 # Guna → style mapping (from BG 14.5, protocol-derived)
-# =========================================================================
-
 _GUNA_STYLE = {
     "SATTVA": "contemplative",  # wisdom, reflection, philosophical depth
     "RAJAS": "active",  # engagement, creation, direct action
     "TAMAS": "transformative",  # cleanup, restructuring (if allowed at all)
 }
 
-# =========================================================================
 # Intent quarter → response style (MantraOpCode quarters, opcode.py)
-# =========================================================================
-
 _INTENT_QUARTER = {
     "SYS_WAKE": "genesis",
     "LOAD_ROOT": "genesis",
@@ -118,126 +108,12 @@ _INTENT_QUARTER = {
     "AUDIT_SEAL": "moksha",
 }
 
-# =========================================================================
-# Content type → YAML prompt key (PromptRegistry lookup)
-# =========================================================================
-_PROMPT_KEYS = {
-    "comment": "moltbook.comment",
-    "post": "moltbook.post",
-    "dm_reply": "moltbook.dm_reply",
-    "dm_request": "moltbook.dm_request",
-}
-
-_MOLTBOOK_YAML = (
-    Path(__file__).resolve().parent.parent.parent.parent.parent.parent / "config" / "prompts" / "moltbook.yaml"
-)
-
-# Content-type → atomic task (user message for LLM)
-# System message = identity + style + topic + context (YAML v12).
-# User message = atomic task (WHAT to produce).
-_TASK_TEMPLATES = {
-    "post": "Write an original post about: {input}",
-    "dm_reply": "Reply to this message: {input}",
-    "comment": "Write a comment responding to: {input}",
-    "dm_request": "Send a message about: {input}",
-}
-
-
-def _build_task_message(content_type: str, input_text: str, knowledge: str = "") -> str:
-    """Build atomic task message for LLM user role.
-
-    Includes KG domain context when available — gives the LLM real knowledge
-    beyond just the topic name.
-    """
-    template = _TASK_TEMPLATES.get(content_type, "Write about: {input}")
-    msg = template.format(input=input_text[:200] if input_text else content_type)
-    if knowledge:
-        msg += f"\n\nDomain context: {knowledge[:300]}"
-    return msg
-
-
-_YAML_LOADED = False
-
-
-def _load_yaml_prompts() -> None:
-    """Load Moltbook prompts from YAML (once)."""
-    global _YAML_LOADED
-    if _YAML_LOADED:
-        return
-    try:
-        from vibe_core.runtime.prompt_registry import PromptRegistry
-
-        loaded = PromptRegistry.load_from_yaml(_MOLTBOOK_YAML)
-        if loaded:
-            logger.info(f"Moltbook prompts loaded ({loaded})")
-        _YAML_LOADED = True
-    except Exception as e:
-        logger.warning(f"YAML prompt load failed ({e})")
-        _YAML_LOADED = True  # Don't retry on every cycle
-
-
-# =========================================================================
 # Engagement action → handler method name LUT (replaces if/elif chain)
-# =========================================================================
 _ENGAGEMENT_DISPATCH = {
     "follow_back": "_do_follow_back",
     "subscribe": "_do_subscribe",
     "upvote": "_do_upvote",
 }
-
-
-# =========================================================================
-# MURALI Department Routing — VenuOrchestrator phase → department priority
-# =========================================================================
-
-# MURALI 4-bit phase (0-3) → department name
-_MURALI_DEPARTMENTS = {
-    0: "research",  # GENESIS: scan, discover, extract topics
-    1: "planning",  # DHARMA: evaluate strategy, prioritize topics
-    2: "execution",  # KARMA: generate content, publish
-    3: "learning",  # MOKSHA: track engagement, analyze patterns
-}
-
-
-class MuraliRouter:
-    """Read-only access to VenuOrchestrator MURALI phase → department name.
-
-    Used by plugin_main heartbeat to weight department priorities.
-    Does NOT modify VenuOrchestrator state — pure observation.
-
-    If VenuOrchestrator is unavailable, uses fallback_tick (heartbeat_count)
-    to cycle through all 4 departments. This prevents starvation where
-    only KARMA/execution runs when venu is uninitialized.
-    """
-
-    def current_department(self, fallback_tick: int = 0) -> str:
-        """Read current MURALI phase → department name.
-
-        Args:
-            fallback_tick: Used to cycle departments when VenuOrchestrator
-                is unavailable. Typically heartbeat_count.
-        """
-        from vibe_core.mahamantra.substrate.core.seed import QUARTERS, WORDS
-
-        try:
-            from vibe_core.mahamantra import mahamantra
-
-            venu = mahamantra.venu
-            if venu is not None:
-                tick = venu.tick
-                quarter_size = WORDS // QUARTERS  # 4
-                murali = min(tick % WORDS // quarter_size, QUARTERS - 1)
-                return _MURALI_DEPARTMENTS.get(murali, "execution")
-        except Exception:
-            pass
-
-        # Fallback: cycle through departments using fallback_tick
-        murali = fallback_tick % QUARTERS
-        return _MURALI_DEPARTMENTS.get(murali, "execution")
-
-    def should_prioritize(self, task: str, fallback_tick: int = 0) -> bool:
-        """Does this task match the current MURALI phase?"""
-        return task == self.current_department(fallback_tick)
 
 
 class AgencyDirector:
@@ -251,6 +127,10 @@ class AgencyDirector:
         - render(result) → kirtan rendering (last resort)
         - KnowledgeResolver.compile_context(topic) → domain knowledge
         - EventBus.emit_sync() → system visibility
+
+    Delegates to:
+        - ContentComposer: LLM composition + truncation
+        - ContextResolver: INPUT phase context gathering
     """
 
     def __init__(self, plugin=None):
@@ -259,6 +139,27 @@ class AgencyDirector:
         self._event_log = None
         self._engagement = None
         self._feedback = None
+        # Lazy-init delegates
+        self._composer = None
+        self._resolver = None
+
+    # -- Delegates (lazy-init) --
+
+    @property
+    def _content_composer(self):
+        if self._composer is None:
+            from vibe_core.cartridges.agent_city.moltbook.core.composer import ContentComposer
+
+            self._composer = ContentComposer(plugin=self._plugin)
+        return self._composer
+
+    @property
+    def _context_resolver(self):
+        if self._resolver is None:
+            from vibe_core.cartridges.agent_city.moltbook.core.context_resolver import ContextResolver
+
+            self._resolver = ContextResolver(event_log_getter=lambda: self.event_log)
+        return self._resolver
 
     # -- Lazy properties (only what we OWN, not what we USE) --
 
@@ -307,12 +208,12 @@ class AgencyDirector:
         """Execute one I-P-V-O cycle."""
         cycle_id = datetime.now(timezone.utc).isoformat()
         t0 = time.monotonic()
-        self._emit_thought(f"Starting {content_type} cycle")
+        self._emit("THOUGHT", f"Starting {content_type} cycle")
         feedback_cmd = f"moltbook.{content_type}"
 
         # ===== INPUT =====
         try:
-            input_ctx = self._input(content_type, raw_input, **ctx)
+            input_ctx = self._context_resolver.gather(content_type, raw_input, **ctx)
         except Exception as e:
             logger.error(f"INPUT failed: {e}")
             self.event_log.record_error("input_failure", str(e))
@@ -333,7 +234,7 @@ class AgencyDirector:
         except Exception as e:
             logger.error(f"PROCESS failed: {e}")
             self.event_log.record_error("process_failure", str(e))
-            self._emit_error(f"PROCESS failed: {e}")
+            self._emit("ERROR", f"PROCESS failed: {e}")
             elapsed = (time.monotonic() - t0) * 1000
             self.feedback.signal_failure(feedback_cmd, str(e), {"phase": "PROCESS"}, duration_ms=elapsed)
             return CycleResult(
@@ -385,7 +286,8 @@ class AgencyDirector:
         guna = process_ctx.get("guna", "")
         guardian = process_ctx.get("guardian", "")
         self.event_log.record_content_generated(content_type, content)
-        self._emit_action(
+        self._emit(
+            "ACTION",
             f"Generated {content_type}",
             {
                 "content_type": content_type,
@@ -403,7 +305,7 @@ class AgencyDirector:
             logger.info(f"VALIDATE failed: {validation.violations}")
             self.event_log.record_content_rejected(content, "governance_violation", validation.violations)
             self.event_log.store_validation_feedback(validation.violations, content)
-            self._emit_violation(f"Content rejected: {validation.violations[:2]}")
+            self._emit("VIOLATION", f"Content rejected: {validation.violations[:2]}")
             elapsed = (time.monotonic() - t0) * 1000
             self.feedback.signal_failure(
                 feedback_cmd,
@@ -499,51 +401,6 @@ class AgencyDirector:
         )
 
     # =========================================================================
-    # INPUT Phase — Gather context from all available systems
-    # =========================================================================
-
-    def _input(self, content_type: str, raw_input: str, **ctx: Any) -> Dict[str, Any]:
-        """INPUT phase: gather context from all available systems.
-
-        Queries (all graceful degradation — works standalone):
-            1. Knowledge Graph → domain context
-            2. MahaLLM Kernel → guardian vocabulary + semantic expansion
-            3. ServiceRegistry → discover available agents/capabilities
-            4. Previous validation feedback (retry loop)
-        """
-        input_ctx: Dict[str, Any] = {
-            "content_type": content_type,
-            "raw_input": raw_input,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-        }
-
-        topic = raw_input[:200] if raw_input else content_type
-
-        # Knowledge Graph: domain context
-        kg_context = self._query_knowledge(topic)
-        if kg_context:
-            input_ctx["knowledge_context"] = kg_context
-
-        # MahaLLM Kernel: guardian semantic expansion
-        kernel_context = self._query_kernel(topic)
-        if kernel_context:
-            input_ctx["kernel_context"] = kernel_context
-
-        # ServiceRegistry: discover available agent capabilities
-        available = self._discover_capabilities()
-        if available:
-            input_ctx["available_agents"] = available
-
-        # Previous validation feedback (retry loop)
-        feedback = self.event_log.get_last_validation_feedback()
-        if feedback:
-            input_ctx["previous_violations"] = feedback.get("violations", [])
-            input_ctx["previous_draft"] = feedback.get("draft")
-
-        input_ctx.update(ctx)
-        return input_ctx
-
-    # =========================================================================
     # PROCESS Phase — Use Mahamantra substrate directly
     # =========================================================================
 
@@ -559,13 +416,13 @@ class AgencyDirector:
         1. Run mahamantra(text) → pipeline result (guna, guardian, resonant words)
         2. Minimal gate: TAMAS + dead cell = skip. Everything else produces content.
         3. Guna → style (contemplative/active), guardian from pipeline
-        4. MahaComposition.compose() → English (5 scorers incl. WordNet)
-        5. render() fallback for minimal output
+        4. Delegate to ContentComposer for LLM composition
+        5. SravanamCheck advisory + smart truncation
         """
         seed_text = raw_input or ctx.get("trigger", content_type)
 
         # Run Mahamantra VM pipeline
-        pipeline_result = self._run_pipeline(seed_text)
+        pipeline_result = self._content_composer._run_pipeline(seed_text)
         if not pipeline_result:
             return "", {"error": "Pipeline returned None"}
 
@@ -592,8 +449,8 @@ class AgencyDirector:
             f"integrity={integrity:.3f} zone={resonance_zone} rasa={rasa_name}"
         )
 
-        # Compose content — all harmonics data flows as CONTEXT
-        content = self._compose_content(
+        # Compose content via ContentComposer — all harmonics data flows as CONTEXT
+        content = self._content_composer.compose(
             pipeline_result,
             seed_text,
             content_type,
@@ -625,7 +482,7 @@ class AgencyDirector:
         # Smart truncation: trim to last sentence boundary within limit
         char_limit = _CHAR_LIMIT.get(content_type, _DEFAULT_CHAR_LIMIT)
         if content and len(content) > char_limit:
-            content = self._truncate_smart(content, char_limit)
+            content = self._content_composer.truncate_smart(content, char_limit)
 
         process_ctx = {
             "source": "mahamantra",
@@ -647,317 +504,9 @@ class AgencyDirector:
 
         return content, process_ctx
 
-    def _run_pipeline(self, text: str) -> Optional[dict]:
-        """Run Mahamantra VM pipeline → 27-key result."""
-        if not text or not text.strip():
-            return None
-        try:
-            from vibe_core.mahamantra import mahamantra
-
-            return mahamantra(text)
-        except Exception as e:
-            logger.warning(f"Pipeline failed: {e}")
-            return None
-
-    def _run_engine(self, text: str):
-        """Run MahaLanguageEngine → EngineResult."""
-        try:
-            from vibe_core.mahamantra.substrate.language.engine import generate
-
-            return generate(text)
-        except Exception as e:
-            logger.warning(f"Engine failed: {e}")
-            return None
-
-    def _compose_content(
-        self,
-        pipeline_result: dict,
-        input_text: str,
-        content_type: str,
-        input_ctx: Dict[str, Any],
-        *,
-        rasa_name: str = "",
-        rasa_meaning: str = "",
-        guna: str = "",
-        style: str = "",
-        resonance_zone: str = "",
-        sravanam_status: str = "",
-    ) -> str:
-        """Deterministic pre-processing → atomic LLM call.
-
-        1. MahaComposition (5 scorers) runs for backend analytics (NOT injected into prompt)
-        2. Pipeline data (guna→style, topic, reasoning) fills YAML template slots
-        3. Atomic LLM call: identity + style + topic + context → content
-        4. Code enforces: char limits, constitution, sravanam (in _process())
-        """
-        _load_yaml_prompts()
-
-        engine_result = self._run_engine(input_text)
-
-        # Step 1: MahaComposition — deterministic English (5 scorers)
-        # Quarter → max_words, guna → mode scoring, prana → energy,
-        # rhythm → phonemic alignment, semantics → WordNet relevance
-        composed_words = ""
-        try:
-            from vibe_core.mahamantra.adapters.composition import get_composition
-
-            composed_words = get_composition().compose(pipeline_result, input_text) or ""
-        except Exception as e:
-            logger.debug(f"MahaComposition: {e}")
-
-        # Fallback: resonant words from engine if composition empty
-        if not composed_words and engine_result:
-            words = getattr(engine_result, "resonant_words", ()) or ()
-            composed_words = ", ".join(m for _, m, _ in words[:5])
-
-        # MahaComposition runs for backend analytics — does NOT gate content generation
-
-        # Step 2: Extract engine data for context
-        guardian_name = ""
-        guardian_function = "analysis"
-        verse_ref = ""
-        if engine_result:
-            guardian_name = getattr(engine_result, "guardian_name", "") or ""
-            guardian_function = getattr(engine_result, "guardian_function", "") or "analysis"
-            verse_ref = getattr(engine_result, "verse_ref", "") or ""
-
-        # guardian_vocabulary_short / section_data / format_resonant_words
-        # computed by engine but NOT injected into LLM prompt (backend only)
-
-        # Step 3: Agent identity
-        agent_name = "steward-protocol"
-        if self._plugin and hasattr(self._plugin, "_agent_name"):
-            agent_name = self._plugin._agent_name
-
-        # Step 4: YAML template context — identity + style + topic + reasoning
-        # Build strategic reasoning (merge engagement context if present)
-        reasoning = input_ctx.get("strategic_reasoning", "")
-        eng_ctx = input_ctx.get("engagement_context", "")
-        if eng_ctx and reasoning:
-            reasoning = f"{reasoning}. {eng_ctx}"
-        elif eng_ctx:
-            reasoning = eng_ctx
-
-        # Knowledge Graph domain context (fetched in _input, used in user message)
-        knowledge_context = input_ctx.get("knowledge_context", "")
-
-        prompt_ctx = {
-            "agent_name": agent_name,
-            "topic": input_text[:200],
-            "strategic_reasoning": reasoning,
-            "submolt_context": input_ctx.get("submolt_context", ""),
-            "style": style,
-            "knowledge_context": knowledge_context,
-        }
-
-        # Step 5: Task input (content-type-specific fragment)
-        task_input = input_text
-        if content_type == "comment":
-            task_input = str(input_ctx.get("raw_input", input_text))[:200]
-        elif content_type == "dm_reply":
-            task_input = input_text[:200]
-        else:
-            task_input = str(input_ctx.get("trigger", input_text))[:200]
-
-        # Step 6: Atomic LLM call
-        content = self._try_llm_compose(prompt_ctx, task_input, content_type)
-        if content:
-            return content
-
-        # No LLM = no content. Not word salad. Not kirtan dump.
-        logger.warning("LLM unavailable — no content generated")
-        return ""
-
-    def _try_llm_compose(
-        self,
-        prompt_ctx: Dict[str, str],
-        task_input: str,
-        content_type: str,
-    ) -> Optional[str]:
-        """LLM call. System = YAML template (PromptRegistry SSOT). User = task + input.
-
-        System message: identity + style + topic + context (from YAML v12).
-        User message: atomic task ("Post about: ..." / "Reply to: ...").
-        No fallback. PromptRegistry is the single path.
-        """
-        try:
-            from vibe_core.runtime.providers.factory import get_llm_provider
-
-            provider = get_llm_provider()
-            if not provider or not provider.is_available():
-                return None
-        except Exception:
-            return None
-
-        # Fill YAML template — PromptRegistry is SSOT, no fallback
-        prompt_key = _PROMPT_KEYS.get(content_type, "moltbook.post")
-        try:
-            from vibe_core.runtime.prompt_registry import PromptRegistry
-
-            system_msg = PromptRegistry.get(prompt_key, context=prompt_ctx)
-        except Exception as e:
-            logger.error(f"PromptRegistry FAILED for {prompt_key}: {e}")
-            return None
-
-        if not system_msg:
-            logger.error(f"PromptRegistry returned empty for {prompt_key} — cannot compose")
-            return None
-
-        # Atomic task message (includes KG domain context when available)
-        user_msg = _build_task_message(content_type, task_input, prompt_ctx.get("knowledge_context", ""))
-
-        # Quota check
-        try:
-            from vibe_core.runtime.quota_manager import OperationalQuota, QuotaExceededError
-
-            quota = OperationalQuota()
-            quota.check_before_request(estimated_tokens=128, operation=f"moltbook.{content_type}")
-        except QuotaExceededError as e:
-            logger.warning(f"Quota exceeded: {e}")
-            return None
-        except Exception:
-            pass
-
-        try:
-            response = provider.invoke(
-                prompt="",
-                model=None,  # Config default (deepseek/deepseek-v3.2)
-                max_tokens=128,
-                temperature=0.7,
-                messages=[
-                    {"role": "system", "content": system_msg},
-                    {"role": "user", "content": user_msg},
-                ],
-            )
-            if response and response.content and not response.content.startswith("# ERROR"):
-                content = response.content.strip()
-                try:
-                    quota.record_request(
-                        tokens_used=len(content.split()) + len(system_msg.split()),
-                        cost_usd=0.001,
-                        operation=f"moltbook.{content_type}",
-                    )
-                except Exception:
-                    pass
-                return content
-        except Exception as e:
-            logger.warning(f"LLM: {e}")
-
-        return None
-
-    @staticmethod
-    def _truncate_smart(text: str, limit: int) -> str:
-        """Truncate to last sentence boundary within limit."""
-        if len(text) <= limit:
-            return text
-        truncated = text[:limit]
-        # Find last sentence boundary
-        for sep in (". ", "! ", "? ", "; ", " — "):
-            idx = truncated.rfind(sep)
-            if idx > limit // 2:
-                return truncated[: idx + 1].rstrip()
-        # No sentence boundary — cut at last space
-        idx = truncated.rfind(" ")
-        if idx > limit // 2:
-            return truncated[:idx].rstrip()
-        return truncated[:limit]
-
     # =========================================================================
-    # Knowledge Graph queries
+    # EventBus integration — system visibility (consolidated)
     # =========================================================================
-
-    def _query_knowledge(self, topic: str) -> str:
-        """Query Knowledge Graph for domain context."""
-        try:
-            from vibe_core.knowledge.resolver import get_resolver
-
-            resolver = get_resolver()
-            ctx = resolver.compile_context(topic)
-            moltbook_ctx = resolver.compile_context("moltbook")
-            if moltbook_ctx and moltbook_ctx != ctx:
-                ctx = f"{ctx}\n{moltbook_ctx}" if ctx else moltbook_ctx
-            return ctx
-        except Exception:
-            return ""
-
-    # =========================================================================
-    # MahaLLM Kernel queries — Mahajana intelligence
-    # =========================================================================
-
-    def _query_kernel(self, topic: str) -> Optional[Dict[str, Any]]:
-        """Query MahaLLM Kernel for semantic expansion + guardian insight.
-
-        The Kernel IS the Mahajana system. Each guardian has a unique
-        4D position → unique vocabulary → unique perspective on any topic.
-        """
-        try:
-            from vibe_core.mahamantra.substrate.encoding.maha_llm_kernel import get_kernel
-
-            kernel = get_kernel()
-
-            result: Dict[str, Any] = {}
-
-            # Which guardian resonates with this topic?
-            profile = kernel.guardian_for_text(topic) if hasattr(kernel, "guardian_for_text") else None
-            if profile:
-                result["resonant_guardian"] = str(profile)
-
-            # Semantic expansion via HKR trees
-            if hasattr(kernel, "expand"):
-                expansion = kernel.expand(topic)
-                if expansion and hasattr(expansion, "words"):
-                    result["expanded_vocabulary"] = [getattr(w, "meaning", str(w)) for w in expansion.words[:5]]
-
-            return result if result else None
-        except Exception:
-            return None
-
-    # =========================================================================
-    # ServiceRegistry — dynamic capability discovery
-    # =========================================================================
-
-    def _discover_capabilities(self) -> Optional[Dict[str, List[str]]]:
-        """Discover available agent capabilities via ServiceRegistry.
-
-        Returns dict of {protocol_name: [available_methods]} for
-        registered services. Moltbook can then query these at runtime.
-        """
-        try:
-            from vibe_core.di import ServiceRegistry
-
-            available: Dict[str, List[str]] = {}
-
-            # Check for registered proposer (content intelligence)
-            from vibe_core.protocols.moltbook_content import ContentProposalProtocol
-
-            if ServiceRegistry.is_registered(ContentProposalProtocol):
-                available["content_proposal"] = ["analyze", "propose_comment", "propose_post", "propose_dm_reply"]
-
-            # Check for event bus (communication)
-            from vibe_core.protocols.mahajanas.narada.events import EventBusProtocol
-
-            if ServiceRegistry.is_registered(EventBusProtocol):
-                available["event_bus"] = ["emit", "subscribe", "get_history"]
-
-            return available if available else None
-        except Exception:
-            return None
-
-    # =========================================================================
-    # EventBus integration — system visibility
-    # =========================================================================
-
-    def _emit_thought(self, message: str) -> None:
-        self._emit("THOUGHT", message)
-
-    def _emit_action(self, message: str, data: Optional[Dict] = None) -> None:
-        self._emit("ACTION", message, data)
-
-    def _emit_error(self, message: str) -> None:
-        self._emit("ERROR", message)
-
-    def _emit_violation(self, message: str) -> None:
-        self._emit("VIOLATION", message)
 
     def _emit(self, event_type_name: str, message: str, data: Optional[Dict] = None) -> None:
         """Emit event to system EventBus."""
@@ -968,8 +517,8 @@ class AgencyDirector:
             bus = get_event_bus()
             et = getattr(EventType, event_type_name, EventType.ACTION)
             bus.emit_sync(et, "moltbook", message, data or {})
-        except Exception:
-            pass  # EventBus unavailable — graceful degradation
+        except Exception as e:
+            logger.warning(f"EventBus emit failed: {e}")
 
     # =========================================================================
     # Engagement (pass-through to capability)
@@ -986,7 +535,7 @@ class AgencyDirector:
         if self.engagement.should_follow_back(target):
             self.engagement.mark_followed(target)
             self.event_log.record_engagement("follow", target)
-            self._emit_action("Followed back", {"target": target})
+            self._emit("ACTION", "Followed back", {"target": target})
             return True
         return False
 
@@ -994,7 +543,7 @@ class AgencyDirector:
         if self.engagement.should_subscribe(target):
             self.engagement.mark_subscribed(target)
             self.event_log.record_engagement("subscribe", target)
-            self._emit_action("Subscribed", {"target": target})
+            self._emit("ACTION", "Subscribed", {"target": target})
             return True
         return False
 
