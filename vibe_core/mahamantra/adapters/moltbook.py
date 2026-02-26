@@ -493,7 +493,7 @@ class MoltbookClient:
                 logger.error(f"Moltbook HTTP Error: {e.response.status_code} - {e.response.text}")
                 raise
             except Exception as e:
-                logger.error(f"Moltbook Request Error: {str(e)}")
+                logger.error(f"Moltbook Request Error [{type(e).__name__}]: {e!r} — {method} {url}")
                 raise
 
     # --- OFFLINE MOCK HUB ---

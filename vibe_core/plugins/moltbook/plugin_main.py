@@ -1283,8 +1283,8 @@ class MoltbookPlugin(KernelPlugin):
             heartbeat = self._client.sync_check_heartbeat()
             self._last_heartbeat_error = None
         except Exception as e:
-            self._last_heartbeat_error = str(e)
-            logger.warning(f"Heartbeat failed: {e}")
+            self._last_heartbeat_error = f"[{type(e).__name__}] {e!r}"
+            logger.warning(f"Heartbeat failed [{type(e).__name__}]: {e!r}")
             return
 
         self._heartbeat_count += 1
