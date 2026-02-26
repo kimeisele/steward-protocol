@@ -51,6 +51,8 @@ from vibe_core.mahamantra.substrate.venu_orchestrator import (
 )
 from vibe_core.mahamantra.protocols.diw import (
     CLUSTER_SHIFT,
+    CONDITION_MASK,
+    CONDITION_SHIFT,
     DIW_MASK,
     SUNYA_MASK,
     VENU_SHIFT,
@@ -161,6 +163,49 @@ _DIW_NAME_FIRST: tuple = tuple(
 
 # Default: phase-first (the DIW naturally decomposes phase then name)
 _DIW_RESONANCE_TABLE = _DIW_PHASE_FIRST
+
+
+# =============================================================================
+# SHABDA SALT — Prabhupada's full acoustic fingerprint per Mahamantra position
+# =============================================================================
+
+# Per word position (0-15): (rms, varga, f0_x10, centroid_100)
+# Averaged across both syllables of each word.
+_SHABDA_SALT: Optional[tuple] = None
+
+# Neutral salt: all modulation factors = 1.0
+_NEUTRAL_SALT = (128, 2, 1200, 128)
+
+
+def _get_shabda_salt() -> tuple:
+    """Prabhupada's full acoustic salt per word position (0-15).
+
+    Returns tuple of 16 entries, each (rms, varga, f0_x10, centroid_100).
+    Lazy init. After first call: pure tuple lookup, O(1).
+    """
+    global _SHABDA_SALT
+    if _SHABDA_SALT is not None:
+        return _SHABDA_SALT
+    try:
+        from vibe_core.mahamantra.substrate.encoding.shabda_bridge import (
+            prabhupada_salt,
+            unpack_frame,
+        )
+
+        entries = []
+        for p in range(WORDS):
+            r0, v0, f0, c0 = unpack_frame(prabhupada_salt(p * 2))
+            r1, v1, f1, c1 = unpack_frame(prabhupada_salt(p * 2 + 1))
+            entries.append((
+                (r0 + r1) // 2,      # RMS average
+                (v0 + v1) // 2,      # Varga average (integer)
+                (f0 + f1) // 2,      # F0×10 average
+                (c0 + c1) // 2,      # Centroid/100 average
+            ))
+        _SHABDA_SALT = tuple(entries)
+    except Exception:
+        _SHABDA_SALT = (_NEUTRAL_SALT,) * WORDS
+    return _SHABDA_SALT
 
 
 class KirtanMode(IntEnum):
@@ -566,13 +611,35 @@ class SankirtanChamber(Generic[C]):
         # Base delta scaled by SEVEN (SSOT: 7 = HALF_SIZE - KSETRAJNA)
         base_delta = (SEVEN + int(intensity * SEVEN)) * (mode + KSETRAJNA)
 
+        # --- SHABDA SALT: Prabhupada's full acoustic fingerprint modulates resonance ---
+        # 4 channels: RMS→prana, F0→integrity, Varga→cycle, Centroid→integrity
+        position = (diw >> CONDITION_SHIFT) & CONDITION_MASK
+        salt_rms, salt_varga, salt_f0, salt_cent = _get_shabda_salt()[position]
+
+        # RMS → base_delta (prana strength): louder = stronger energy transfer
+        base_delta = base_delta * (128 + salt_rms) // 256
+
+        # F0 → intensity (integrity sensitivity): pitch modulates membrane response
+        # Median ~1130 (113Hz). Normalize: 0→0.5×, 1130→1.0×, 2400→1.5×
+        f0_norm = min(255, salt_f0 * 255 // 2400)
+        intensity = intensity * (128 + f0_norm) / (256)
+
         # --- RESONANCE TABLE: phase(4) × name(3) → (prana_factor, integrity_coeff, cycle_add) ---
         # No if/else. The DIW components ARE the index. The table IS the transformation.
         pf, ic_cf, ca = _DIW_RESONANCE_TABLE[phase * 3 + name_region]
         cell.lifecycle.prana += int(pf * base_delta)
         cell.lifecycle.prana = max(0, cell.lifecycle.prana)
-        # integrity_coeff_cf is already in CF space; scale by intensity (0-1 float)
-        cell.lifecycle.integrity = max(0, min(COSMIC_FRAME, cell.lifecycle.integrity + int(ic_cf * intensity)))
+
+        # Centroid → integrity: spectral brightness amplifies integrity effect
+        # Median ~120. Normalize: 0→0.5×, 128→1.0×, 511→1.5×
+        cent_factor = (128 + min(255, salt_cent)) / 256
+        cell.lifecycle.integrity = max(0, min(COSMIC_FRAME, cell.lifecycle.integrity + int(ic_cf * intensity * cent_factor)))
+
+        # Varga → cycle: articulation depth modulates progression
+        # Varga 0 (throat/deep) adds more, Varga 4 (lips/shallow) adds less
+        # Scale ca by (5 - varga + 3) / 5 → varga=0: 1.6×, varga=2: 1.2×, varga=4: 0.8×
+        if ca > 0:
+            ca = max(KSETRAJNA, ca * (SEVEN + KSETRAJNA - salt_varga) // (SEVEN + KSETRAJNA))
         cell.lifecycle.cycle += ca
 
         # --- SANKIRTAN REACTOR: Prana clamped to MAX_PRANA ---

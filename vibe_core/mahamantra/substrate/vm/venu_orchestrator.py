@@ -39,6 +39,7 @@ from vibe_core.mahamantra.protocols._seed import (
 )
 from vibe_core.mahamantra.protocols.diw import (
     CLUSTER_SHIFT,
+    CONDITION_SHIFT,
     DIW_MASK,
     MURALI_MASK,
     MURALI_SHIFT,
@@ -307,7 +308,8 @@ class VenuOrchestrator:
         The flute plays, every jiva dances.
         """
         # O(1) lookup - native 19-bit DIW
-        diw = THE_FLUTE_CYCLE[self._tick % WORDS]
+        position = self._tick % WORDS
+        diw = THE_FLUTE_CYCLE[position]
 
         # Dispatch to all subscribers BEFORE advancing tick
         # (subscribers see the tick that produced this DIW)
@@ -317,8 +319,9 @@ class VenuOrchestrator:
         self._prev_state = diw
         self._tick = (self._tick + 1) % COSMIC_FRAME
 
-        # Inject Mode into Cluster Bits (Harmonic Feedback)
-        return diw | (self._mode << CLUSTER_SHIFT)
+        # Inject Mode + Position into transport bits
+        # Cluster (23-26): Reactor mode. Condition (27-30): Mantra position.
+        return diw | (self._mode << CLUSTER_SHIFT) | (position << CONDITION_SHIFT)
 
     def cycle(self) -> int:
         """

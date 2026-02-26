@@ -51,6 +51,7 @@ from vibe_core.mahamantra.protocols._seed import (
     NAVA,
     PARAMPARA,
     VAMSI_HOLES,
+    WORDS,
 )
 
 # === MAHAJANA DECLARATION ===
@@ -91,6 +92,47 @@ _SLOT_SIZE: Final[int] = struct.calcsize(_SLOT_FMT)
 
 # Verify slot size matches
 assert _SLOT_SIZE == SLOT_BYTES, f"Slot size mismatch: {_SLOT_SIZE} != {SLOT_BYTES}"
+
+
+# =============================================================================
+# SHABDA SALT — Prabhupada's full acoustic fingerprint per Mahamantra position
+# =============================================================================
+
+_SHABDA_SALT: Optional[tuple] = None
+
+# Neutral: rms=128(1.0×), varga=2(mid), f0=1200(~1.0×), cent=128(1.0×)
+_NEUTRAL_SALT = (128, 2, 1200, 128)
+
+
+def _get_shabda_salt() -> tuple:
+    """Prabhupada's full acoustic salt per word position (0-15).
+
+    Returns tuple of 16 entries, each (rms, varga, f0_x10, centroid_100).
+    Lazy init. After first call: pure tuple lookup, O(1).
+    """
+    global _SHABDA_SALT
+    if _SHABDA_SALT is not None:
+        return _SHABDA_SALT
+    try:
+        from vibe_core.mahamantra.substrate.encoding.shabda_bridge import (
+            prabhupada_salt,
+            unpack_frame,
+        )
+
+        entries = []
+        for p in range(WORDS):
+            r0, v0, f0, c0 = unpack_frame(prabhupada_salt(p * 2))
+            r1, v1, f1, c1 = unpack_frame(prabhupada_salt(p * 2 + 1))
+            entries.append((
+                (r0 + r1) // 2,
+                (v0 + v1) // 2,
+                (f0 + f1) // 2,
+                (c0 + c1) // 2,
+            ))
+        _SHABDA_SALT = tuple(entries)
+    except Exception:
+        _SHABDA_SALT = (_NEUTRAL_SALT,) * WORDS
+    return _SHABDA_SALT
 
 
 # =============================================================================
@@ -290,6 +332,8 @@ class AntarangaRegistry:
         )
         from vibe_core.mahamantra.protocols.diw import (
             CLUSTER_SHIFT,
+            CONDITION_MASK,
+            CONDITION_SHIFT,
             MURALI_MASK,
             MURALI_SHIFT,
             VAMSI_MASK,
@@ -329,6 +373,24 @@ class AntarangaRegistry:
         # base_delta = (7 + intensity * 7) * (mode + 1)
         # Using integer: (SEVEN + venu * SEVEN // 63) * (mode + 1)
         base_delta = (SEVEN + (intensity_fp * SEVEN) // max_intensity) * (mode + KSETRAJNA)
+
+        # Shabda salt: Prabhupada's full acoustic fingerprint modulates resonance
+        condition = (diw >> CONDITION_SHIFT) & CONDITION_MASK
+        salt_rms, salt_varga, salt_f0, salt_cent = _get_shabda_salt()[condition]
+
+        # RMS → base_delta (prana strength)
+        base_delta = base_delta * (128 + salt_rms) // 256
+
+        # F0 → intensity (integrity sensitivity): pitch modulates membrane response
+        f0_norm = min(255, salt_f0 * 255 // 2400)
+        intensity_fp = intensity_fp * (128 + f0_norm) // 256
+
+        # Centroid → intensity (second factor): spectral brightness amplifies integrity
+        cent_norm = min(255, salt_cent)
+        intensity_fp = intensity_fp * (128 + cent_norm) // 256
+
+        # Save cycle before phase block for varga modulation
+        cycle_before = cycle
 
         # Phase-specific transformation (mirrors _apply_diw exactly)
         if phase == 0:  # GENESIS
@@ -378,6 +440,13 @@ class AntarangaRegistry:
                 )
             else:  # RAMA
                 cycle += HALVES
+
+        # Varga → cycle: articulation depth modulates progression
+        # Throat (0) → 1.3×, mid (2) → 1.0×, lips (4) → 0.7×
+        cycle_added = cycle - cycle_before
+        if cycle_added > 0:
+            varga_factor = 128 + (HALVES - salt_varga) * 20  # 0→168, 2→128, 4→88
+            cycle = cycle_before + max(KSETRAJNA, cycle_added * varga_factor // 128)
 
         # Clamp prana
         prana = min(prana, MAX_PRANA_U32)

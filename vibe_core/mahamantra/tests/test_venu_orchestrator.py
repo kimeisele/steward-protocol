@@ -151,11 +151,21 @@ class TestStep:
         assert orch.tick == 0
 
     def test_step_sequence_matches_lut(self, orch: VenuOrchestrator):
-        """First WORDS steps must match THE_FLUTE_CYCLE exactly (mode=0)."""
+        """First WORDS steps must match THE_FLUTE_CYCLE in core 19 bits (mode=0)."""
+        from vibe_core.mahamantra.protocols.diw import DIW_MASK
         for i in range(WORDS):
             diw = orch.step()
+            core = diw & DIW_MASK
             expected = THE_FLUTE_CYCLE[i]
-            assert diw == expected, f"Step {i}: got {hex(diw)}, expected {hex(expected)}"
+            assert core == expected, f"Step {i}: got {hex(core)}, expected {hex(expected)}"
+
+    def test_step_carries_position_in_condition_bits(self, orch: VenuOrchestrator):
+        """step() embeds tick position into CONDITION bits (27-30)."""
+        from vibe_core.mahamantra.protocols.diw import CONDITION_SHIFT, CONDITION_MASK
+        for i in range(WORDS):
+            diw = orch.step()
+            position = (diw >> CONDITION_SHIFT) & CONDITION_MASK
+            assert position == i, f"Step {i}: condition bits = {position}"
 
     def test_step_repeats_after_words(self, orch: VenuOrchestrator):
         """Pattern repeats every WORDS steps."""
