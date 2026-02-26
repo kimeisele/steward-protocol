@@ -465,6 +465,9 @@ class MoltbookClient:
 
     # --- HTTP TRANSPORT ---
 
+    # Endpoints known to be slow on Moltbook's side (feed aggregation, search)
+    _SLOW_ENDPOINTS = ("/feed", "/posts", "/search")
+
     async def _request(self, method: str, endpoint: str, data: Optional[Dict] = None) -> Dict[str, Any]:
         """Core request dispatcher. Handles offline routing and httpx transport."""
         self._enforce_limits(endpoint, method)
@@ -475,10 +478,14 @@ class MoltbookClient:
             logger.debug(f"[OFFLINE] {method} {endpoint} - {data}")
             return self._handle_offline(method, endpoint, data)
 
+        # Slow endpoints get longer timeout (Moltbook feed aggregation is slow)
+        is_slow = any(endpoint.startswith(s) for s in self._SLOW_ENDPOINTS)
+        timeout = 30.0 if is_slow else 10.0
+
         async with httpx.AsyncClient() as client:
             url = f"{self.base_url}{endpoint}"
             try:
-                response = await client.request(method, url, headers=headers, json=data, timeout=10.0)
+                response = await client.request(method, url, headers=headers, json=data, timeout=timeout)
                 response.raise_for_status()
                 return response.json()
             except httpx.HTTPStatusError as e:

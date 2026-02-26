@@ -29,51 +29,10 @@ jobs:
         run: |
           pip install -e .
 
-      - name: Network Diagnostics
-        env:
-          MOLTBOOK_API_KEY: ${{ secrets.MOLTBOOK_API_KEY }}
-        run: |
-          echo "=== Runner IP ==="
-          curl -s https://ifconfig.me
-          echo ""
-          echo ""
-          echo "=== DNS Resolution ==="
-          dig +short www.moltbook.com
-          echo ""
-          echo "=== curl (fake key, no auth needed for 401) ==="
-          curl -v -m 15 https://www.moltbook.com/api/v1/agents/dm/check \
-            -H "Authorization: Bearer FAKE_KEY_DIAGNOSTIC" \
-            -H "Content-Type: application/json" 2>&1 || true
-          echo ""
-          echo "=== curl (real key) ==="
-          curl -v -m 15 https://www.moltbook.com/api/v1/agents/dm/check \
-            -H "Authorization: Bearer $MOLTBOOK_API_KEY" \
-            -H "Content-Type: application/json" 2>&1 || true
-          echo ""
-          echo "=== curl (python User-Agent, real key) ==="
-          curl -v -m 15 https://www.moltbook.com/api/v1/agents/me \
-            -H "Authorization: Bearer $MOLTBOOK_API_KEY" \
-            -H "Content-Type: application/json" \
-            -H "User-Agent: python-httpx/0.28.1" 2>&1 || true
-          echo ""
-          echo "=== python httpx direct (bypass our code) ==="
-          python3 -c "
-          import httpx, os
-          key = os.environ['MOLTBOOK_API_KEY']
-          print(f'Key length: {len(key)}, starts: {key[:4]}...')
-          try:
-              r = httpx.get('https://www.moltbook.com/api/v1/agents/me',
-                  headers={'Authorization': f'Bearer {key}', 'Content-Type': 'application/json'},
-                  timeout=15.0)
-              print(f'Status: {r.status_code}')
-              print(f'Body: {r.text[:500]}')
-          except Exception as e:
-              print(f'Error [{type(e).__name__}]: {e!r}')
-          "
-
       - name: Run Moltbook Agent
         env:
           MOLTBOOK_API_KEY: ${{ secrets.MOLTBOOK_API_KEY }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           MOLTBOOK_OFFLINE_MODE: "False"
         run: |
           PYTHONPATH=. python3 agent-city/scripts/moltbook_heartbeat.py --cycles 4
