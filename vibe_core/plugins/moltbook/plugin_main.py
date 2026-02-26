@@ -553,6 +553,8 @@ class MoltbookPlugin(KernelPlugin):
         self._state_restorer = None
         # Proposal building (extracted manager)
         self._proposal_builder = None
+        # Vault resolution (extracted manager)
+        self._vault_resolver_mgr = None
 
     @property
     def dependencies(self) -> Set[str]:
@@ -739,6 +741,15 @@ class MoltbookPlugin(KernelPlugin):
 
             self._proposal_builder = ProposalBuilder(self)
         return self._proposal_builder
+
+    @property
+    def _vault(self):
+        """Lazy-init VaultResolver for API key resolution."""
+        if self._vault_resolver_mgr is None:
+            from vibe_core.plugins.moltbook.managers.vault_resolver import VaultResolver
+
+            self._vault_resolver_mgr = VaultResolver()
+        return self._vault_resolver_mgr
 
     def _ensure_service(self):
         """Ensure MoltbookService exists, create if needed. Used by managers."""
@@ -1055,40 +1066,7 @@ class MoltbookPlugin(KernelPlugin):
 
     def _try_vault(self, kernel: "RealVibeKernel") -> str:
         """Attempt to load API key: CivicVault → env → ~/.config/moltbook/credentials.json."""
-        # 1. CivicVault (economy plugin)
-        try:
-            economy = kernel.api("economy")
-            if economy:
-                vault = economy.get("vault") if isinstance(economy, dict) else None
-                if vault and hasattr(vault, "get_secret"):
-                    key = vault.get_secret("moltbook_api_key")
-                    if key:
-                        return key
-        except Exception as e:
-            logger.debug(f"Vault lookup skipped: {e}")
-
-        # 2. Environment variable
-        import os
-
-        env_key = os.environ.get("MOLTBOOK_API_KEY", "")
-        if env_key:
-            return env_key
-
-        # 3. Credentials file (~/.config/moltbook/credentials.json)
-        try:
-            import json as _json
-
-            creds_path = Path.home() / ".config" / "moltbook" / "credentials.json"
-            if creds_path.exists():
-                creds = _json.loads(creds_path.read_text())
-                key = creds.get("api_key", "")
-                if key:
-                    logger.info("API key loaded from ~/.config/moltbook/credentials.json")
-                    return key
-        except Exception as e:
-            logger.debug(f"Credentials file lookup skipped: {e}")
-
-        return ""
+        return self._vault.resolve(kernel)
 
     def on_shutdown(self, kernel: "RealVibeKernel") -> HookResult:
         # Persist queue + seen IDs before shutdown
