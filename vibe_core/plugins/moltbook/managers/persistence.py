@@ -158,6 +158,7 @@ class PersistenceManager:
         heartbeat_count: int,
         feed_topics: list,
         intents: list,
+        orchestrator_state: dict | None = None,
     ) -> None:
         """Save cross-phase state (feed_topics + intents + heartbeat_count).
 
@@ -180,6 +181,7 @@ class PersistenceManager:
                 "heartbeat_count": heartbeat_count,
                 "feed_topics": feed_topics[:20],  # Cap to prevent bloat
                 "intents": intent_dicts,
+                "orchestrator_state": orchestrator_state or {},
                 "timestamp": datetime.now(timezone.utc).isoformat(),
             }
             phase_path = self._state_dir / _PHASE_STATE_FILE
