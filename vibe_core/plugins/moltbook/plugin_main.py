@@ -540,6 +540,7 @@ class MoltbookPlugin(KernelPlugin):
         self._engagement_tracker = None
         self._dm_processor = None
         self._post_orchestrator = None
+        self._intent_executor = None
         # Engagement tracking: own post IDs → metadata for polling
         self._own_post_ids: Dict[str, Dict[str, object]] = {}
         self._MAX_OWN_POST_IDS = COSMIC_FRAME // MALA  # 200 (pada_unit)
@@ -660,6 +661,15 @@ class MoltbookPlugin(KernelPlugin):
 
             self._post_orchestrator = PostOrchestrator(plugin=self)
         return self._post_orchestrator
+
+    @property
+    def _intent(self):
+        """Lazy-init IntentExecutor for strategic intent execution."""
+        if self._intent_executor is None:
+            from vibe_core.plugins.moltbook.managers.intent_executor import IntentExecutor
+
+            self._intent_executor = IntentExecutor(plugin=self)
+        return self._intent_executor
 
     # Properties delegating state to HeartbeatOrchestrator
     @property
@@ -1451,87 +1461,8 @@ class MoltbookPlugin(KernelPlugin):
             logger.warning(f"Strategy evaluation failed: {e}")
 
     def _execute_intents(self) -> None:
-        """KARMA phase: Generate content for strategically selected intents.
-
-        Loops through self._current_intents (max 3 per cycle),
-        generates content via AgencyDirector, enqueues proposals.
-        """
-        if not self._current_intents:
-            # Strategic silence: no quality intents = don't force-post garbage
-            logger.info("No quality intents — strategic silence")
-            self._emit_event("STRATEGIC_SILENCE", "No intents met quality threshold")
-            return
-
-        for intent in self._current_intents[:3]:
-            try:
-                if intent.action_type == "comment" and intent.target_post_id:
-                    # Post-level dedup: don't comment on same post twice
-                    if intent.target_post_id in self._commented_post_ids:
-                        logger.info(f"Already commented on {intent.target_post_id}, skipping")
-                        continue
-
-                    proposal = self._director_propose(
-                        content_type="comment",
-                        raw_input=intent.topic,
-                        proposal_type=ContentType.COMMENT.value,
-                        post_id=intent.target_post_id,
-                        trigger="strategic_intent",
-                        context={
-                            "strategic_reasoning": intent.reasoning,
-                            "engagement_context": intent.engagement_context,
-                            "submolt_context": intent.submolt_context,
-                            "content_format": intent.content_format,
-                        },
-                    )
-                    if proposal:
-                        self._content_queue.enqueue(proposal)
-                        self._commented_post_ids.add(intent.target_post_id)
-                        logger.info(
-                            f"Strategic comment queued for {intent.target_post_id} (mission={intent.mission_id})"
-                        )
-
-                elif intent.action_type == "post":
-                    seed = intent.topic
-                    selected_submolt = self._select_submolt(seed)
-                    # Build meaningful context: name + description (not bare name)
-                    submolt_ctx = intent.submolt_context
-                    if not submolt_ctx and selected_submolt:
-                        desc = self._submolt_descriptions.get(selected_submolt, "")
-                        submolt_ctx = f"{selected_submolt} — {desc}" if desc else selected_submolt
-
-                    proposal = self._director_propose(
-                        content_type="post",
-                        raw_input=seed,
-                        proposal_type=ContentType.POST.value,
-                        trigger="strategic_intent",
-                        submolt=selected_submolt or "",
-                        context={
-                            "strategic_reasoning": intent.reasoning,
-                            "engagement_context": intent.engagement_context,
-                            "submolt_context": submolt_ctx,
-                            "content_format": intent.content_format,
-                        },
-                    )
-                    if proposal:
-                        content = proposal.get("content", "")
-                        lines = content.strip().split("\n", 1)
-                        if len(lines) > 1:
-                            proposal["title"] = lines[0].strip().lstrip("#").strip()[:120]
-                            proposal["content"] = lines[1].strip()
-                        else:
-                            proposal["title"] = content[:120]
-
-                        self._content_queue.enqueue(proposal)
-                        self._last_post_heartbeat = self._heartbeat_count
-                        logger.info(
-                            f"Strategic post queued: {proposal.get('title', '')[:50]} (mission={intent.mission_id})"
-                        )
-
-            except Exception as e:
-                logger.warning(f"Intent execution failed ({intent.action_type}): {e}")
-
-        # Clear executed intents
-        self._current_intents = []
+        """Delegate to IntentExecutor for strategic intent processing."""
+        self._intent.execute_intents()
 
     def _maybe_create_post(self) -> None:
         """Delegate to PostOrchestrator for fallback post creation."""
