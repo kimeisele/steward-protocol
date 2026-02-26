@@ -100,8 +100,19 @@ class MoltbookService(MoltbookProtocol, GADBase):
         self._operation_log: List[Dict[str, Any]] = []
         self._last_api_error: Optional[str] = None
         self._consecutive_failures: int = 0
+        # Guna enforcer (lazy-loaded)
+        self._guna_enforcer_mgr = None
         # First chant: transition heartbeat from DISCONNECTED → CHANTING
         self.chant()
+
+    @property
+    def _guna(self):
+        """Lazy-init GunaEnforcer for I/O Policy validation."""
+        if self._guna_enforcer_mgr is None:
+            from vibe_core.plugins.moltbook.managers.guna_enforcer import GunaEnforcer
+
+            self._guna_enforcer_mgr = GunaEnforcer(self)
+        return self._guna_enforcer_mgr
 
     def _enforce_guna(self, operation: str) -> None:
         """Guna I/O Policy + Knowledge Graph Constraint validation.
@@ -1479,7 +1490,7 @@ class MoltbookPlugin(KernelPlugin):
                 "reply_check": self._reply_check_interval,
                 "profile_update": self._profile_update_interval,
             },
-            "circuit_executor": bool(self._circuit_executor),
+            "circuit_executor": bool(self._content_circuit_executor),
             "agora_wired": bool(self._agora),
             "execute_content_circuit": self.execute_content_circuit,
         }
