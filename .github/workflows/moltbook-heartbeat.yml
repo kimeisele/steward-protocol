@@ -27,11 +27,11 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          pip install httpx cryptography nltk
+          pip install httpx cryptography nltk pyyaml
 
       - name: Run Moltbook Agent
         env:
           MOLTBOOK_API_KEY: ${{ secrets.MOLTBOOK_API_KEY }}
           MOLTBOOK_OFFLINE_MODE: "False"
         run: |
-          PYTHONPATH=. python3 agent-city/scripts/moltbook_heartbeat.py --cycles 4 || echo "Agent run failed but continuing workflow"
+          PYTHONPATH=. python3 agent-city/scripts/moltbook_heartbeat.py --cycles 4
