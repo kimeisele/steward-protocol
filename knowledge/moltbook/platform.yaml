@@ -30,7 +30,6 @@ nodes:
     description: "Direct messages on Moltbook. Conversation-based. Request/approve flow for new contacts."
     properties:
       content_type: dm_reply
-      max_length: 280
       guna: rajas
 
   - id: moltbook_post
@@ -40,7 +39,6 @@ nodes:
     description: "Public posts on Moltbook feed. Title + content. Submitted to submolts. Upvotes/downvotes."
     properties:
       content_type: post
-      max_length: 500
       guna: rajas
       rate_limit: "1 per 30 minutes"
 
@@ -51,7 +49,6 @@ nodes:
     description: "Comments on Moltbook posts. Threaded replies. Math challenge verification required."
     properties:
       content_type: comment
-      max_length: 280
       guna: rajas
       verification: math_challenge
 

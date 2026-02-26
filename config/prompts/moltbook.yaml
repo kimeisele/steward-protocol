@@ -1,23 +1,25 @@
-# Moltbook Content Templates v12 — Identity + Context, no vocabulary injection
+# Moltbook Content Templates v13 — Format-driven, resonance-informed
 # ============================================================================
-# Slots filled atomically from pipeline: agent_name, style (Guna), topic,
-# strategic_reasoning, submolt_context.
+# Slots: agent_name, style (Guna), content_format, topic, strategic_reasoning,
+#        resonant_context (MahaComposition output), submolt_context.
 #
-# MahaComposition runs in backend (scoring, routing). Output does NOT enter prompt.
-# Code enforces: [:280]/[:500], Constitution, SravanamCheck.
+# Format-driven token budget determines content length (no hardcoded char limits).
+# MahaComposition output flows into {resonant_context} — thematic keywords for LLM.
 
 prompts:
   moltbook.post: |
     {agent_name} on Moltbook. Autonomous agent. Builds systems.
-    Style: {style}
+    Style: {style}. Format: {content_format}.
     TOPIC: {topic}
+    THEMATIC RESONANCE: {resonant_context}
     CONTEXT: {strategic_reasoning}
     COMMUNITY: {submolt_context}
 
   moltbook.comment: |
     {agent_name} on Moltbook. Autonomous agent.
-    Style: {style}
+    Style: {style}. Format: {content_format}.
     REPLYING TO: {topic}
+    THEMATIC RESONANCE: {resonant_context}
     CONTEXT: {strategic_reasoning}
 
   moltbook.dm_reply: |
@@ -30,5 +32,5 @@ prompts:
     Style: {style}
 
 metadata:
-  version: "12.0.0"
-  author: "No vocabulary injection. MahaComposition = backend only."
+  version: "13.0.0"
+  author: "Format-driven token budget. MahaComposition → resonant_context."

@@ -304,23 +304,17 @@ class TestPromptConstruction:
     def _build_prompt(self, post: str) -> str:
         """Run full pipeline and build the system prompt."""
         from pathlib import Path
-        from vibe_core.cartridges.agent_city.moltbook.core.context_builders import (
-            guardian_vocabulary_short,
-        )
         from vibe_core.runtime.prompt_registry import PromptRegistry
 
         yaml_path = Path(__file__).resolve().parent.parent.parent.parent.parent / "config" / "prompts" / "moltbook.yaml"
         PromptRegistry.load_from_yaml(yaml_path)
 
         pipeline_result = mahamantra(post)
-        engine_result = generate(post)
 
         guna = pipeline_result.get("guna", {}).get("mode", "RAJAS")
         style = {"SATTVA": "contemplative", "RAJAS": "active", "TAMAS": "transformative"}.get(guna, "active")
 
         composed = get_composition().compose(pipeline_result, post) or ""
-
-        gn = getattr(engine_result, "guardian_name", "") or ""
 
         ctx = {
             "agent_name": "steward-protocol",
@@ -328,8 +322,8 @@ class TestPromptConstruction:
             "strategic_reasoning": "",
             "submolt_context": "",
             "style": style,
-            "voice": guardian_vocabulary_short(gn),
-            "composed_words": composed,
+            "content_format": "observation",
+            "resonant_context": composed[:100] if composed else "",
         }
         return PromptRegistry.get("moltbook.comment", context=ctx)
 

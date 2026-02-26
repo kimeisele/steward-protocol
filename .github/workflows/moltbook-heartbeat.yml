@@ -27,7 +27,7 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          pip install httpx cryptography nltk pyyaml
+          pip install -e .
 
       - name: Run Moltbook Agent
         env:

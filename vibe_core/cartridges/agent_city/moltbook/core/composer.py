@@ -26,12 +26,32 @@ _MOLTBOOK_YAML = (
     Path(__file__).resolve().parent.parent.parent.parent.parent.parent / "config" / "prompts" / "moltbook.yaml"
 )
 
-# Content-type → atomic task (user message for LLM)
+# Format-driven token budget: the FORMAT decides how long the content should be.
+# No hardcoded char limits — the LLM generates to the right length.
+_FORMAT_TOKENS = {
+    "question": 100,     # Short, punchy
+    "observation": 150,  # Brief insight
+    "opinion": 300,      # Substantive argument with examples
+    "analysis": 500,     # Deep breakdown
+    "tutorial": 600,     # Step-by-step, needs space
+}
+_DEFAULT_TOKENS = 256
+
+# (content_type, format) → task instruction for LLM
+# Format-aware: questions vs analyses vs opinions produce different content.
+# DMs don't need format diversity (conversational by nature).
 _TASK_TEMPLATES = {
-    "post": "Write an original post about: {input}",
-    "dm_reply": "Reply to this message: {input}",
-    "comment": "Write a comment responding to: {input}",
-    "dm_request": "Send a message about: {input}",
+    ("post", "question"): "Ask a thought-provoking question about: {input}",
+    ("post", "analysis"): "Break down and analyze: {input}",
+    ("post", "opinion"): "Share a strong opinion on: {input}. Use specific examples.",
+    ("post", "observation"): "Share an insight about: {input}",
+    ("post", "tutorial"): "Explain how to approach: {input}. Be practical and specific.",
+    ("comment", "question"): "Ask the author a specific follow-up question about: {input}",
+    ("comment", "analysis"): "Add analysis or a different angle to: {input}",
+    ("comment", "opinion"): "Respond with your perspective on: {input}",
+    ("comment", "observation"): "Share an observation about: {input}",
+    ("dm_reply", None): "Reply to this message: {input}",
+    ("dm_request", None): "Send a message about: {input}",
 }
 
 _YAML_LOADED = False
@@ -54,14 +74,18 @@ def _load_yaml_prompts() -> None:
         _YAML_LOADED = True  # Don't retry on every cycle
 
 
-def _build_task_message(content_type: str, input_text: str, knowledge: str = "") -> str:
+def _build_task_message(content_type: str, input_text: str, knowledge: str = "", content_format: str = "") -> str:
     """Build atomic task message for LLM user role.
 
-    Includes KG domain context when available — gives the LLM real knowledge
-    beyond just the topic name.
+    Format-aware: (content_type, format) determines the instruction.
+    Includes KG domain context when available.
     """
-    template = _TASK_TEMPLATES.get(content_type, "Write about: {input}")
-    msg = template.format(input=input_text[:200] if input_text else content_type)
+    # Format-aware lookup: (content_type, format) → specific instruction
+    template = _TASK_TEMPLATES.get((content_type, content_format))
+    if not template:
+        # Fallback: (content_type, None) for DMs, or generic
+        template = _TASK_TEMPLATES.get((content_type, None), "Write about: {input}")
+    msg = template.format(input=input_text[:300] if input_text else content_type)
     if knowledge:
         msg += f"\n\nDomain context: {knowledge[:300]}"
     return msg
@@ -140,6 +164,9 @@ class ContentComposer:
 
         knowledge_context = input_ctx.get("knowledge_context", "")
 
+        # Content format flows from StrategyPlanner → input_ctx → prompt
+        content_format = input_ctx.get("content_format", "observation")
+
         prompt_ctx = {
             "agent_name": agent_name,
             "topic": input_text[:200],
@@ -147,6 +174,8 @@ class ContentComposer:
             "submolt_context": input_ctx.get("submolt_context", ""),
             "style": style,
             "knowledge_context": knowledge_context,
+            "content_format": content_format,
+            "resonant_context": composed_words[:100] if composed_words else "",
         }
 
         # Step 5: Task input (content-type-specific fragment)
@@ -202,15 +231,19 @@ class ContentComposer:
             logger.error(f"PromptRegistry returned empty for {prompt_key} — cannot compose")
             return None
 
-        # Atomic task message (includes KG domain context when available)
-        user_msg = _build_task_message(content_type, task_input, prompt_ctx.get("knowledge_context", ""))
+        # Atomic task message (format-aware, includes KG domain context)
+        content_format = prompt_ctx.get("content_format", "")
+        user_msg = _build_task_message(content_type, task_input, prompt_ctx.get("knowledge_context", ""), content_format)
+
+        # Token budget: FORMAT determines length, not content_type
+        max_tokens = _FORMAT_TOKENS.get(content_format, _DEFAULT_TOKENS)
 
         # Quota check
         try:
             from vibe_core.runtime.quota_manager import OperationalQuota, QuotaExceededError
 
             quota = OperationalQuota()
-            quota.check_before_request(estimated_tokens=128, operation=f"moltbook.{content_type}")
+            quota.check_before_request(estimated_tokens=max_tokens, operation=f"moltbook.{content_type}")
         except QuotaExceededError as e:
             logger.warning(f"Quota exceeded: {e}")
             return None
@@ -221,7 +254,7 @@ class ContentComposer:
             response = provider.invoke(
                 prompt="",
                 model=None,  # Config default (deepseek/deepseek-v3.2)
-                max_tokens=128,
+                max_tokens=max_tokens,
                 temperature=0.7,
                 messages=[
                     {"role": "system", "content": system_msg},

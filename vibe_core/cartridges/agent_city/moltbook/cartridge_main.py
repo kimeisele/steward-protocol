@@ -29,7 +29,7 @@ Task routing:
 import logging
 from typing import Any, Dict, Optional
 
-from vibe_core import Task, VibeAgent
+from vibe_core import Task
 from vibe_core.agents import ContextAwareAgent
 from vibe_core.protocols import AgentManifest
 from vibe_core.steward import OathMixin

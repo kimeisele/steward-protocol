@@ -6,8 +6,6 @@ Thin tool wrapper. Gets proposer from ServiceRegistry (registered by plugin).
 Does NOT create its own proposer instance.
 """
 
-from typing import Any, Dict, Optional
-
 from vibe_core.tools.tool_protocol import Tool, ToolResult
 
 

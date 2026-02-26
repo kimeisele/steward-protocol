@@ -32,12 +32,12 @@ class ValidationResult:
         return self.is_valid
 
 
-# Platform constraints — defaults match knowledge/moltbook/platform.yaml nodes.
-# KG-loaded overrides queried at runtime via _check_kg_constraints().
+# Platform constraints — format-driven token budget determines content length.
+# No hardcoded max_length for posts. DMs/comments keep soft API limits as safety net.
 _DEFAULT_CONSTRAINTS: Dict[str, Dict[str, object]] = {
-    "dm_reply": {"max_length": 280, "guna": "rajas"},
-    "comment": {"max_length": 280, "guna": "rajas"},
-    "post": {"max_length": 500, "guna": "rajas"},
+    "dm_reply": {"guna": "rajas"},
+    "comment": {"guna": "rajas"},
+    "post": {"guna": "rajas"},
     "vote": {"guna": "rajas"},
     "follow": {"guna": "rajas"},
     "subscribe": {"guna": "rajas"},

@@ -38,7 +38,7 @@ class ContentDrainer:
 
     # Rate limits (from platform.yaml moltbook-002-rate-limit)
     _POST_INTERVAL_SEC = 30 * 60  # 1 post per 30 minutes
-    _COMMENT_LIMIT_PER_HOUR = 10  # 10 comments per hour
+    _COMMENT_LIMIT_PER_HOUR = 30  # API allows 50, stay conservative
     _DM_LIMIT_PER_HOUR = 30  # 30 DM operations per hour
     _MAX_PROPOSAL_RETRIES = 2
 
