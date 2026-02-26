@@ -24,7 +24,6 @@ kernel.pulse() works, both paths converge safely.
 
 import json
 import logging
-import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, ClassVar, Dict, List, Optional, Set
@@ -114,38 +113,7 @@ class MoltbookService(MoltbookProtocol, GADBase):
         Additionally checks constraints from knowledge/moltbook/platform.yaml
         (6 hard/soft constraints) via Knowledge Graph.
         """
-        from vibe_core.protocols.moltbook import MOLTBOOK_GUNA_MAP, MoltbookGuna
-
-        guna = MOLTBOOK_GUNA_MAP.get(operation, MoltbookGuna.SATTVA)
-
-        if guna == MoltbookGuna.TAMAS:
-            raise PermissionError(
-                f"MOLTBOOK-TAMAS: Operation '{operation}' is destructive and requires "
-                f"explicit authorization. Not implemented."
-            )
-
-        # Knowledge Graph constraint check (knowledge/moltbook/platform.yaml)
-        try:
-            from vibe_core.knowledge.resolver import get_resolver
-
-            resolver = get_resolver()
-            violations = resolver.get_violations(operation, {"guna": guna.value, "operation": operation})
-            for v in violations:
-                logger.warning(f"MOLTBOOK-KG-CONSTRAINT: {v}")
-        except Exception as e:
-            logger.debug(f"KG constraint check unavailable: {e}")
-
-        if guna == MoltbookGuna.RAJAS:
-            entry = {
-                "operation": operation,
-                "guna": guna.value,
-                "timestamp": time.time(),
-            }
-            self._operation_log.append(entry)
-            # Prevent unbounded growth: trim when log exceeds 5000 entries
-            if len(self._operation_log) > 5000:
-                self._operation_log = self._operation_log[-2500:]
-            logger.info(f"MOLTBOOK-RAJAS: {operation} (write operation logged)")
+        self._guna.enforce(operation)
 
     # --- SATTVA operations (read-only) ---
 
@@ -557,6 +525,8 @@ class MoltbookPlugin(KernelPlugin):
         self._vault_resolver_mgr = None
         # Content circuit execution (extracted manager)
         self._content_circuit_executor = None
+        # Guna enforcement (extracted manager)
+        self._guna_enforcer_mgr = None
 
     @property
     def dependencies(self) -> Set[str]:
@@ -761,6 +731,15 @@ class MoltbookPlugin(KernelPlugin):
 
             self._content_circuit_executor = ContentCircuitExecutor(self)
         return self._content_circuit_executor
+
+    @property
+    def _guna(self):
+        """Lazy-init GunaEnforcer for I/O Policy validation."""
+        if self._guna_enforcer_mgr is None:
+            from vibe_core.plugins.moltbook.managers.guna_enforcer import GunaEnforcer
+
+            self._guna_enforcer_mgr = GunaEnforcer(self)
+        return self._guna_enforcer_mgr
 
     def _ensure_service(self):
         """Ensure MoltbookService exists, create if needed. Used by managers."""
