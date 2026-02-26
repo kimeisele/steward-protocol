@@ -541,6 +541,7 @@ class MoltbookPlugin(KernelPlugin):
         self._persistence_mgr = None
         self._feed_analyzer = None
         self._engagement_tracker = None
+        self._dm_processor = None
         # Engagement tracking: own post IDs → metadata for polling
         self._own_post_ids: Dict[str, Dict[str, object]] = {}
         self._MAX_OWN_POST_IDS = COSMIC_FRAME // MALA  # 200 (pada_unit)
@@ -643,6 +644,15 @@ class MoltbookPlugin(KernelPlugin):
 
             self._heartbeat_orchestrator = HeartbeatOrchestrator(plugin=self)
         return self._heartbeat_orchestrator
+
+    @property
+    def _dm(self):
+        """Lazy-init DMProcessor for inbound/request DM handling."""
+        if self._dm_processor is None:
+            from vibe_core.plugins.moltbook.managers.dm_processor import DMProcessor
+
+            self._dm_processor = DMProcessor(plugin=self)
+        return self._dm_processor
 
     # Properties delegating state to HeartbeatOrchestrator
     @property
@@ -1374,104 +1384,12 @@ class MoltbookPlugin(KernelPlugin):
     # =========================================================================
 
     def _process_inbound_dms(self) -> None:
-        """Fetch new DMs, route through Gateway, reply via AgencyDirector I-P-V-O."""
-        from vibe_core.gateway.mahamantra_gateway import get_gateway
-        from vibe_core.protocols.gateway import EntryType, create_request
-
-        try:
-            conversations = self._client.sync_get_dm_conversations()
-        except Exception as e:
-            logger.warning(f"DM conversation list failed: {e}")
-            return
-
-        gateway = get_gateway()
-        for conv in conversations:
-            conv_id = conv.get("id", "") if isinstance(conv, dict) else ""
-            if not conv_id:
-                continue
-            try:
-                messages = self._client.sync_get_dm_messages(conv_id)
-            except Exception as e:
-                logger.warning(f"DM fetch for {conv_id} failed: {e}")
-                continue
-
-            for msg in messages:
-                msg_id = msg.get("id", "") if isinstance(msg, dict) else ""
-                content = msg.get("content", msg.get("message", "")) if isinstance(msg, dict) else ""
-                if not content:
-                    continue
-                if msg_id and msg_id in self._seen_message_ids:
-                    continue
-
-                sender = msg.get("sender", "unknown") if isinstance(msg, dict) else "unknown"
-
-                # Route through Govardhan Gateway
-                gateway_response = None
-                try:
-                    req = create_request(content, [], EntryType.AGENT)
-                    req["context"]["source"] = "moltbook_dm"
-                    req["context"]["sender"] = sender
-                    req["context"]["conversation_id"] = conv_id
-                    gateway_response = gateway.receive(req)
-                except Exception as e:
-                    logger.warning(f"Inbound DM routing failed: {e}")
-
-                # Propose a reply via Agency Director (I-P-V-O pipeline)
-                try:
-                    proposal = self._director_propose(
-                        content_type="dm_reply",
-                        raw_input=content,
-                        proposal_type=ContentType.DM_REPLY.value,
-                        conversation_id=conv_id,
-                        sender=sender,
-                        trigger="inbound_dm",
-                        gateway_response=gateway_response,
-                    )
-                    if proposal:
-                        self._content_queue.enqueue(proposal)
-                        # Mark seen AFTER successful enqueue (not before)
-                        if msg_id:
-                            self._seen_message_ids.add(msg_id)
-                        logger.info(f"DM reply queued for {conv_id}")
-                    elif msg_id:
-                        # Proposal was None (filtered/empty) — still mark seen
-                        self._seen_message_ids.add(msg_id)
-                except Exception as e:
-                    logger.warning(f"Content proposal failed: {e}")
-                    # Do NOT mark as seen — will retry next heartbeat
-
-                # Follow-back: follow agents who DM us (social reciprocity)
-                self._follow_back(sender)
+        """Delegate to DMProcessor for inbound DM handling."""
+        self._dm.process_inbound_dms()
 
     def _process_dm_requests(self) -> None:
-        """Check pending DM requests, propose approve/reject via ContentProposalProtocol."""
-        try:
-            requests = run_async(self._client.get_dm_requests())
-        except Exception as e:
-            logger.warning(f"DM request fetch failed: {e}")
-            return
-
-        for req in requests:
-            req_id = req.get("id", req.get("conversation_id", "")) if isinstance(req, dict) else ""
-            if not req_id:
-                continue
-            from_agent = ""
-            if isinstance(req, dict):
-                fa = req.get("from_agent", {})
-                from_agent = fa.get("name", str(fa)) if isinstance(fa, dict) else str(fa)
-            preview = req.get("message_preview", "") if isinstance(req, dict) else ""
-
-            try:
-                proposal = self._proposer.propose_dm_request_action(
-                    request_id=req_id,
-                    from_agent=from_agent,
-                    message_preview=preview,
-                )
-                if proposal:
-                    self._content_queue.enqueue(proposal)
-                    logger.info(f"DM request action queued for {req_id}")
-            except Exception as e:
-                logger.warning(f"DM request proposal failed: {e}")
+        """Delegate to DMProcessor for DM request handling."""
+        self._dm.process_dm_requests()
 
     def _analyze_feed(self) -> None:
         """Read personalized feed, score via proposer, generate via AgencyDirector."""
