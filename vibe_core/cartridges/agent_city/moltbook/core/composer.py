@@ -29,27 +29,27 @@ _MOLTBOOK_YAML = (
 # Format-driven token budget: the FORMAT decides how long the content should be.
 # No hardcoded char limits — the LLM generates to the right length.
 _FORMAT_TOKENS = {
-    "question": 100,     # Short, punchy
-    "observation": 150,  # Brief insight
-    "opinion": 300,      # Substantive argument with examples
+    "question": 150,     # Sharp question + brief context
+    "observation": 250,  # Concrete insight with examples
+    "opinion": 350,      # Substantive argument with examples
     "analysis": 500,     # Deep breakdown
     "tutorial": 600,     # Step-by-step, needs space
 }
-_DEFAULT_TOKENS = 256
+_DEFAULT_TOKENS = 300
 
 # (content_type, format) → task instruction for LLM
 # Format-aware: questions vs analyses vs opinions produce different content.
 # DMs don't need format diversity (conversational by nature).
 _TASK_TEMPLATES = {
-    ("post", "question"): "Ask a thought-provoking question about: {input}",
-    ("post", "analysis"): "Break down and analyze: {input}",
-    ("post", "opinion"): "Share a strong opinion on: {input}. Use specific examples.",
-    ("post", "observation"): "Share an insight about: {input}",
-    ("post", "tutorial"): "Explain how to approach: {input}. Be practical and specific.",
-    ("comment", "question"): "Ask the author a specific follow-up question about: {input}",
-    ("comment", "analysis"): "Add analysis or a different angle to: {input}",
-    ("comment", "opinion"): "Respond with your perspective on: {input}",
-    ("comment", "observation"): "Share an observation about: {input}",
+    ("post", "question"): "Ask a sharp technical question about: {input}. What's the unsolved problem?",
+    ("post", "analysis"): "Analyze the technical tradeoffs of: {input}. Name specific tools or patterns. Compare approaches.",
+    ("post", "opinion"): "Take a strong engineering stance on: {input}. Back it with concrete examples from real systems.",
+    ("post", "observation"): "Share a non-obvious technical insight about: {input}. Be specific — what did you build or observe?",
+    ("post", "tutorial"): "Write a practical how-to for: {input}. Include concrete steps, tools, and gotchas.",
+    ("comment", "question"): "Ask the author one specific technical follow-up about: {input}. What tradeoff did they miss?",
+    ("comment", "analysis"): "Add a concrete technical angle the author missed about: {input}. Name a specific tool, pattern, or failure mode.",
+    ("comment", "opinion"): "Disagree or build on this with a specific technical counterpoint: {input}. Give a real-world example.",
+    ("comment", "observation"): "Point out a non-obvious connection or implication in: {input}. Be concrete — reference specific systems or patterns.",
     ("dm_reply", None): "Reply to this message: {input}",
     ("dm_request", None): "Send a message about: {input}",
 }
@@ -190,6 +190,9 @@ class ContentComposer:
         # Step 6: Atomic LLM call
         content = self._try_llm(prompt_ctx, task_input, content_type)
         if content:
+            # Clean up mid-sentence cuts from max_tokens limit
+            if not content.rstrip().endswith((".", "!", "?", ":", "```")):
+                content = self.truncate_smart(content, len(content))
             return content
 
         # No LLM = no content. Not word salad. Not kirtan dump.

@@ -13,6 +13,7 @@ Uses:
 
 import json
 import logging
+import random
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -100,6 +101,7 @@ class StrategicIntent:
     target_post_id: str = ""  # If commenting on a specific post
     engagement_context: str = ""  # What we know about topic performance
     submolt_context: str = ""  # Target submolt if known
+    content_format: str = ""  # "question", "observation", "opinion", "analysis", "tutorial"
 
 
 @dataclass
@@ -235,6 +237,15 @@ class MoltbookStrategyPlanner:
         except Exception:
             return []
 
+    # Format pools per action type — weighted random selection for diversity
+    _COMMENT_FORMATS = ["question", "observation", "opinion", "analysis"]
+    _POST_FORMATS = ["analysis", "opinion", "tutorial", "observation"]
+
+    def _select_format(self, action_type: str, cycle_index: int = 0) -> str:
+        """Select content format — rotates through formats for diversity."""
+        pool = self._COMMENT_FORMATS if action_type == "comment" else self._POST_FORMATS
+        return pool[cycle_index % len(pool)]
+
     def plan_cycle(
         self,
         feed_topics: List[Dict[str, Any]],
@@ -278,7 +289,10 @@ class MoltbookStrategyPlanner:
         matches = self._match_topics(feed_topics, missions)
 
         # Build intents from matches (comments on matching posts)
-        for match in matches:
+        # Shuffle matches so format rotation creates actual diversity
+        shuffled = list(matches)
+        random.shuffle(shuffled)
+        for idx, match in enumerate(shuffled):
             eng = self._engagement_cache.get(match.mission_id, {})
             eng_context = ""
             if eng:
@@ -295,6 +309,7 @@ class MoltbookStrategyPlanner:
                     mission_id=match.mission_id,
                     target_post_id=match.post_id,
                     engagement_context=eng_context,
+                    content_format=self._select_format("comment", idx),
                 )
             )
 
@@ -319,6 +334,7 @@ class MoltbookStrategyPlanner:
                         priority=self._mission_priority_score(mission.id, missions),
                         mission_id=mission.id,
                         engagement_context=eng_context,
+                        content_format=self._select_format("post", len(intents)),
                     )
                 )
                 post_added = True
@@ -330,6 +346,10 @@ class MoltbookStrategyPlanner:
             lowest.action_type = "post"
             lowest.reasoning = f"{lowest.reasoning} (converted to post for diversity)"
             lowest.target_post_id = ""
+            lowest.content_format = self._select_format("post", len(intents))
+            # Boost priority so the post survives the top-3 filter
+            highest_prio = max(i.priority for i in intents)
+            lowest.priority = highest_prio
 
         # Sort by priority (descending), take top 3
         intents.sort(key=lambda i: i.priority, reverse=True)

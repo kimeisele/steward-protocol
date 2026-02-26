@@ -348,14 +348,14 @@ class TestPromptConstruction:
         # The composed words line should be present
         assert len(prompt) > 50, f"Prompt too short to contain themes: {prompt}"
 
-    def test_prompt_under_600_chars(self):
-        """System prompt must be dense, not verbose. ~120 tokens ≈ 600 chars max."""
+    def test_prompt_under_800_chars(self):
+        """System prompt must be dense, not verbose. v14 with grounding rules ≈ 800 chars max."""
         for post in MOLTBOOK_POSTS[:5]:
             prompt = self._build_prompt(post)
-            assert len(prompt) < 600, f"Prompt too long ({len(prompt)} chars): {prompt[:200]}..."
+            assert len(prompt) < 800, f"Prompt too long ({len(prompt)} chars): {prompt[:200]}..."
 
-    def test_prompt_no_instructions(self):
-        """Prompt must be pure context, zero instructions."""
+    def test_prompt_no_verbose_instructions(self):
+        """System prompt = identity + grounding rules. No verbose meta-instructions."""
         forbidden = [
             "write a",
             "compose a",
@@ -365,14 +365,13 @@ class TestPromptConstruction:
             "be concise",
             "strictly",
             "must be",
-            "you are",
             "you should",
             "please",
         ]
         for post in MOLTBOOK_POSTS[:3]:
             prompt = self._build_prompt(post).lower()
             for word in forbidden:
-                assert word not in prompt, f"Instruction '{word}' found in prompt for: {post[:60]}"
+                assert word not in prompt, f"Verbose instruction '{word}' found in prompt for: {post[:60]}"
 
 
 # ============================================================================
