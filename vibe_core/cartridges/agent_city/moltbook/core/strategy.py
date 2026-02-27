@@ -266,12 +266,19 @@ class MoltbookStrategyPlanner:
     ) -> List[StrategicIntent]:
         """DHARMA phase: evaluate missions → prioritized action list.
 
-        1. Seed missions from feed (first call)
-        2. Match feed_topics against missions (semantic via RAMA coords)
-        3. Buddhi.think() on top matches → format selection
-        4. Weight by engagement_stats
-        5. Return top-3 prioritized intents (comment-first)
+        1. SravanamCheck: listen-before-speak gate (input ≥ 2× output)
+        2. Seed missions from feed (first call)
+        3. Match feed_topics against missions (semantic via RAMA coords)
+        4. Buddhi.think() on top matches → format selection
+        5. Weight by engagement_stats
+        6. Engagement threshold: 0 engagement → comments only
+        7. Return top-3 prioritized intents (comment-first)
         """
+        # SravanamCheck: entropy law — must consume enough feed before producing
+        input_count = len(feed_topics) if feed_topics else 0
+        output_count = len(own_post_ids) if own_post_ids else 0
+        can_post = self._sravanam_check(input_count, output_count)
+
         # Seed missions from feed on first call
         if not self._missions_seeded and feed_topics:
             self._seed_missions(feed_topics=feed_topics)
@@ -344,10 +351,24 @@ class MoltbookStrategyPlanner:
                 )
             )
 
-        # COMMENT-FIRST: Only add a post when there's an unmatched mission
-        # AND the topic doesn't semantically overlap recent posts.
+        # COMMENT-FIRST: Only add a post when:
+        # 1. There's an unmatched mission
+        # 2. SravanamCheck passed (consumed enough feed)
+        # 3. Topic doesn't semantically overlap recent posts
+        # 4. Engagement threshold: skip posts if 0 engagement on recent posts
         matched_mission_ids = {m.mission_id for m in matches}
         highest_prio = max((i.priority for i in intents), default=5)
+
+        if not can_post:
+            logger.info("SravanamCheck: insufficient input — comments only this cycle")
+            intents.sort(key=lambda i: i.priority, reverse=True)
+            return intents[:TRINITY]
+
+        # Engagement threshold: if we've posted ≥3 times with 0 engagement, comments only
+        if own_post_ids and self._zero_engagement_streak(own_post_ids):
+            logger.info("Engagement threshold: 0 engagement on recent posts — comments only")
+            intents.sort(key=lambda i: i.priority, reverse=True)
+            return intents[:TRINITY]
 
         for mission in missions:
             if mission.id not in matched_mission_ids:
@@ -401,6 +422,53 @@ class MoltbookStrategyPlanner:
 
         intents.sort(key=lambda i: i.priority, reverse=True)
         return intents[:TRINITY]
+
+    @staticmethod
+    def _sravanam_check(input_count: int, output_count: int) -> bool:
+        """SravanamCheck gate: listen before speak.
+
+        Uses the entropy law from harmonics.py: input ≥ IO_RATIO × output.
+        If agent hasn't consumed enough feed relative to posts produced, block new posts.
+        Comments still allowed (lower cost, higher engagement).
+
+        Returns True if posting is allowed.
+        """
+        try:
+            from vibe_core.mahamantra.substrate.encoding.harmonics import SravanamCheck
+
+            can, reason = SravanamCheck.can_emit(
+                input_tokens=input_count,
+                output_tokens=output_count,
+                resonance=0.5,  # Neutral — only entropy law matters here
+                strict=False,
+            )
+            if not can:
+                logger.info(f"SravanamCheck blocked: {reason}")
+            return can
+        except Exception as e:
+            logger.debug(f"SravanamCheck unavailable: {e}")
+            return True  # Fail open if infrastructure missing
+
+    @staticmethod
+    def _zero_engagement_streak(
+        own_post_ids: Dict[str, Dict[str, object]],
+    ) -> bool:
+        """Check if recent posts have zero engagement.
+
+        Returns True if agent should stop posting (≥3 posts, all with 0 engagement).
+        """
+        recent_posts = sorted(
+            (v for v in own_post_ids.values() if isinstance(v, dict)),
+            key=lambda v: v.get("created_at", 0),
+            reverse=True,
+        )[:TRINITY]
+        if len(recent_posts) < TRINITY:
+            return False  # Not enough posts to judge
+        # Check if any recent post has engagement data
+        return all(
+            int(p.get("upvotes", 0)) == 0 and int(p.get("replies", 0)) == 0
+            for p in recent_posts
+        )
 
     def _semantic_dedup(
         self, topic: str, own_post_ids: Dict[str, Dict[str, object]],

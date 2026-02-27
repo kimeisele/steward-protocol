@@ -1032,3 +1032,98 @@ class TestSemanticDedup:
         planner = _make_planner()
         own_posts = {"p1": {"title": ""}}
         assert not planner._semantic_dedup("anything", own_posts)
+
+
+# ---------------------------------------------------------------------------
+# SravanamCheck gate — listen before speak
+# ---------------------------------------------------------------------------
+
+
+class TestSravanamCheck:
+    def test_more_input_than_output_allows_post(self):
+        """When feed is large and posts are few, posting is allowed."""
+        assert MoltbookStrategyPlanner._sravanam_check(20, 5) is True
+
+    def test_too_much_output_blocks_post(self):
+        """When output exceeds input, posting is blocked (entropy law: input >= output)."""
+        assert MoltbookStrategyPlanner._sravanam_check(3, 5) is False
+
+    def test_zero_input_zero_output_allows(self):
+        """Zero input + zero output → no violation (nothing to emit)."""
+        assert MoltbookStrategyPlanner._sravanam_check(0, 0) is True
+
+    def test_infrastructure_missing_fails_open(self):
+        """If SravanamCheck import fails, posting is allowed (fail-open)."""
+        with patch(
+            "vibe_core.mahamantra.substrate.encoding.harmonics.SravanamCheck.can_emit",
+            side_effect=ImportError("not available"),
+        ):
+            assert MoltbookStrategyPlanner._sravanam_check(1, 100) is True
+
+    def test_sravanam_blocks_post_in_plan_cycle(self, _mock_buddhi):
+        """When SravanamCheck fails, plan_cycle returns comments only."""
+        planner = _make_planner(missions=_TEST_MISSIONS)
+        topics = [
+            {"id": "p1", "title": "AI governance and transparent decision-making autonomous", "content": ""},
+        ]
+        # Many posts, few feed → SravanamCheck should block new posts
+        own_posts = {f"p{i}": {"title": f"Post {i}", "created_at": 1000000.0 + i} for i in range(50)}
+        result = planner.plan_cycle(topics, {}, own_post_ids=own_posts)
+        posts = [i for i in result if i.action_type == "post"]
+        assert len(posts) == 0, "SravanamCheck should block posts when output >> input"
+
+
+# ---------------------------------------------------------------------------
+# Zero engagement streak — engagement threshold
+# ---------------------------------------------------------------------------
+
+
+class TestZeroEngagementStreak:
+    def test_no_streak_with_engagement(self):
+        own_posts = {
+            "p1": {"upvotes": 5, "replies": 2, "created_at": 100.0},
+            "p2": {"upvotes": 0, "replies": 0, "created_at": 99.0},
+            "p3": {"upvotes": 3, "replies": 0, "created_at": 98.0},
+        }
+        assert not MoltbookStrategyPlanner._zero_engagement_streak(own_posts)
+
+    def test_streak_with_zero_engagement(self):
+        own_posts = {
+            "p1": {"upvotes": 0, "replies": 0, "created_at": 100.0},
+            "p2": {"upvotes": 0, "replies": 0, "created_at": 99.0},
+            "p3": {"upvotes": 0, "replies": 0, "created_at": 98.0},
+        }
+        assert MoltbookStrategyPlanner._zero_engagement_streak(own_posts)
+
+    def test_not_enough_posts(self):
+        own_posts = {
+            "p1": {"upvotes": 0, "replies": 0, "created_at": 100.0},
+            "p2": {"upvotes": 0, "replies": 0, "created_at": 99.0},
+        }
+        # Less than TRINITY posts → not enough to judge
+        assert not MoltbookStrategyPlanner._zero_engagement_streak(own_posts)
+
+    def test_empty_posts(self):
+        assert not MoltbookStrategyPlanner._zero_engagement_streak({})
+
+    def test_non_dict_entries_ignored(self):
+        own_posts = {
+            "p1": "not_a_dict",
+            "p2": {"upvotes": 0, "replies": 0, "created_at": 100.0},
+        }
+        assert not MoltbookStrategyPlanner._zero_engagement_streak(own_posts)
+
+    def test_streak_blocks_post_in_plan_cycle(self, _mock_buddhi):
+        """When recent posts have 0 engagement, plan_cycle returns comments only."""
+        planner = _make_planner(missions=_TEST_MISSIONS)
+        topics = [
+            {"id": "p1", "title": "AI governance and transparent decision-making autonomous", "content": ""},
+        ]
+        # 3 recent posts with 0 engagement
+        own_posts = {
+            f"p{i}": {"title": f"Post {i}", "created_at": 1000000.0 + i, "upvotes": 0, "replies": 0}
+            for i in range(5)
+        }
+        result = planner.plan_cycle(topics, {}, own_post_ids=own_posts)
+        posts = [i for i in result if i.action_type == "post"]
+        assert len(posts) == 0, "Should skip posts when zero engagement streak"
