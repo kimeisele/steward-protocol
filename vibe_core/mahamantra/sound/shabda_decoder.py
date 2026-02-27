@@ -540,6 +540,29 @@ def _score_candidate(
 
 
 # =============================================================================
+# CTC-STYLE DEDUPLICATION (frame-level → phoneme-level)
+# =============================================================================
+
+
+def _dedup_coords(coords: Tuple[int, ...]) -> Tuple[int, ...]:
+    """Collapse consecutive identical RAMA coordinates.
+
+    Frame-level coords repeat the same value for the duration of each phoneme.
+    A 300ms /a/ at 10ms/frame → 30× coord 0. This collapses to 1× coord 0.
+
+    Standard CTC (Connectionist Temporal Classification) approach:
+    (5, 5, 5, 12, 12, 12, 12, 42, 42) → (5, 12, 42)
+    """
+    if not coords:
+        return ()
+    result: List[int] = [coords[0]]
+    for c in coords[1:]:
+        if c != result[-1]:
+            result.append(c)
+    return tuple(result)
+
+
+# =============================================================================
 # TRANSCRIPT DATA TYPES
 # =============================================================================
 
@@ -651,14 +674,21 @@ class ShabdaDecoder:
 
         Steps:
         1. Extract RAMA coords from frames (via shabda_processor)
-        2. Get candidates from PronunciationDict (prefiltered)
-        3. Score candidates via weighted edit distance
-        4. Return best match above confidence threshold
+        2. CTC-style dedup: collapse consecutive identical coords → phoneme sequence
+        3. Get candidates from PronunciationDict (prefiltered by first coord + length)
+        4. Score candidates via weighted edit distance
+        5. Return best match above confidence threshold
         """
         from vibe_core.mahamantra.sound.shabda_processor import stream_to_rama
 
         # Extract RAMA coordinates from segment frames
-        rama_coords = stream_to_rama(seg.frames)
+        raw_coords = stream_to_rama(seg.frames)
+        if not raw_coords:
+            return None
+
+        # CTC-style dedup: collapse consecutive identical coords → phoneme-level
+        # (32, 32, 32, 12, 12, 5) → (32, 12, 5)
+        rama_coords = _dedup_coords(raw_coords)
         if not rama_coords:
             return None
 
@@ -666,7 +696,7 @@ class ShabdaDecoder:
         first_coord = rama_coords[0]
         coord_len = len(rama_coords)
         candidates = self._dict.candidates_for_segment(
-            first_coord, coord_len, length_tolerance=2,
+            first_coord, coord_len, length_tolerance=3,
         )
 
         # Also try neighbors of first coord (acoustic noise tolerance)
@@ -674,7 +704,7 @@ class ShabdaDecoder:
             if 0 <= neighbor < 49:
                 candidates.extend(
                     self._dict.candidates_for_segment(
-                        neighbor, coord_len, length_tolerance=2,
+                        neighbor, coord_len, length_tolerance=3,
                     )
                 )
 
@@ -729,4 +759,5 @@ __all__ = [
     "get_pronunciation_dict",
     "score_frame",
     "segment_stream",
+    "_dedup_coords",
 ]
