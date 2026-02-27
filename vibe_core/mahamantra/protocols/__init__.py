@@ -200,6 +200,12 @@ def __getattr__(name: str):
 
         return getattr(_shabda_derivation, name)
 
+    # Buddhi (Discriminative Intelligence - Mahat-tattva)
+    if name in ("BuddhiProtocol", "BuddhiResult", "BuddhiEvaluation"):
+        from vibe_core.mahamantra.protocols import _buddhi
+
+        return getattr(_buddhi, name)
+
     # Veda Protocol (from vibe_core/protocols/veda.py - NOT mahamantra!)
     if name in ("VedaProtocol", "VedaMixin", "is_vedic", "veda_audit"):
         from vibe_core.protocols import veda

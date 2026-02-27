@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "proposals": [],
+  "stats": {
+    "total_enqueued": 0,
+    "total_drained": 0,
+    "total_dropped": 0
+  },
+  "timestamp": "2026-02-27T13:28:54.743254+00:00"
+}
