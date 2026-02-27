@@ -3,13 +3,14 @@
 Extracted from MoltbookPlugin._drain_content_queue() and related drain handlers.
 
 Owns: rate-limit state, drain dispatch table, retry logic with exponential backoff.
+Owns: credit-gated posting via CivicBank (optional — degrades to no-cost when unavailable).
 """
 
 from __future__ import annotations
 
 import logging
 import time
-from typing import TYPE_CHECKING, Callable, Dict, List, Set
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Set
 
 from vibe_core.protocols.moltbook_content import (
     ContentProposal,
@@ -22,6 +23,17 @@ if TYPE_CHECKING:
     from vibe_core.protocols.moltbook import MoltbookProtocol
 
 logger = logging.getLogger("MOLTBOOK_DRAINER")
+
+# Credit costs per content type (from Agent City economic model)
+_CREDIT_COSTS: Dict[str, int] = {
+    ContentType.POST.value: 5,
+    ContentType.COMMENT.value: 2,
+    ContentType.DM_REPLY.value: 1,
+    ContentType.DM_INITIATE.value: 1,
+    ContentType.VOTE.value: 0,      # Free — social grooming
+    ContentType.FOLLOW.value: 0,    # Free — social grooming
+    ContentType.SUBSCRIBE.value: 0, # Free — discovery
+}
 
 
 class ContentDrainer:
@@ -54,11 +66,15 @@ class ContentDrainer:
         comment_post_map: Dict[str, str],
         followed_agents: Set[str],
         subscribed_submolts: Set[str],
+        bank: Optional[Any] = None,
+        agent_id: str = "moltbook",
     ):
         self._get_service = service_getter
         self._log_activity = log_activity
         self._broadcast_to_agora = broadcast_to_agora
         self._emit_event = emit_event
+        self._bank = bank
+        self._agent_id = agent_id
         # Shared refs from plugin (not copies)
         self._own_post_ids = own_post_ids
         self._own_comment_ids = own_comment_ids
@@ -113,6 +129,41 @@ class ContentDrainer:
                 return False
         return True
 
+    def check_credits(self, content_type: str) -> bool:
+        """Check if agent has enough credits for this content type. Returns True if OK."""
+        if self._bank is None:
+            return True  # No bank = no cost (standalone without economy)
+        cost = _CREDIT_COSTS.get(content_type, 0)
+        if cost == 0:
+            return True
+        try:
+            balance = self._bank.get_balance(self._agent_id)
+            if balance < cost:
+                logger.info(f"Credit gate: {balance} < {cost} for {content_type}")
+                return False
+            return True
+        except Exception as e:
+            logger.warning(f"Credit check failed: {e}")
+            return True  # Fail open — don't block content on bank errors
+
+    def deduct_credits(self, content_type: str) -> None:
+        """Deduct credits after successful content publication."""
+        if self._bank is None:
+            return
+        cost = _CREDIT_COSTS.get(content_type, 0)
+        if cost == 0:
+            return
+        try:
+            tx_id = self._bank.transfer(
+                self._agent_id, "CIVIC", cost,
+                f"moltbook_{content_type}",
+                service_type="content",
+            )
+            logger.info(f"Credit deducted: {cost} for {content_type} (tx={tx_id})")
+        except Exception as e:
+            # Log but don't fail — content already published
+            logger.warning(f"Credit deduction failed: {e}")
+
     def record_rate_limit(self, content_type: str) -> None:
         """Record that a content action was executed (for rate limiting)."""
         now = time.time()
@@ -156,6 +207,17 @@ class ContentDrainer:
                 continue
             ct = proposal.get("content_type", "")
 
+            # Credit check — defer if insufficient funds
+            if not self.check_credits(ct):
+                proposal["_retry_after"] = now + 120  # Re-check in 2min
+                deferred.append(proposal)
+                feedback.signal_partial(
+                    f"moltbook.drain.{ct}",
+                    "insufficient_credits",
+                    {"content_type": ct},
+                )
+                continue
+
             # Rate limit check — defer if too soon
             if not self.check_rate_limit(ct):
                 proposal["_retry_after"] = now + 60  # Re-check in 60s
@@ -174,6 +236,7 @@ class ContentDrainer:
                 if handler_name:
                     getattr(self, handler_name)(service, proposal)
                     self.record_rate_limit(ct)
+                    self.deduct_credits(ct)
                     elapsed = (time.monotonic() - t0) * 1000
                     feedback.signal_success(
                         f"moltbook.drain.{ct}",
@@ -257,8 +320,9 @@ class ContentDrainer:
                     logger.error(f"Proposal dropped after {retries} retries ({ct}): {e}")
 
         # Re-enqueue: deferred (not yet ready) + failed (with backoff)
+        # Uses requeue() to bypass content dedup — these were already accepted
         for proposal in deferred + failed:
-            queue.enqueue(proposal)
+            queue.requeue(proposal)
 
     def monitor_queue_health(self, queue: ContentQueue, heartbeat_count: int) -> None:
         """Log warning when queue overflows (proposals silently dropped).

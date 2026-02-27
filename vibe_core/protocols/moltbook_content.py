@@ -149,6 +149,21 @@ class ContentQueue:
 
         return True
 
+    def requeue(self, proposal: ContentProposal) -> bool:
+        """Re-add a previously drained proposal. Bypasses content dedup.
+
+        Used by the drainer to put back proposals that were deferred
+        (rate-limited, insufficient credits) or failed with retryable errors.
+        """
+        if not proposal.get("content_type"):
+            return False
+        was_full = len(self._queue) >= self._max_size
+        self._queue.append(proposal)
+        self._total_enqueued += 1
+        if was_full:
+            self._total_dropped += 1
+        return True
+
     def drain(self, limit: int = 5) -> List[ContentProposal]:
         """Drain up to `limit` proposals, highest priority first.
 
