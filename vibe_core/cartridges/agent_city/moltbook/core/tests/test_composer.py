@@ -74,8 +74,8 @@ class TestTruncateSmart:
 
 
 class TestContentComposer:
-    def test_compose_returns_empty_when_no_llm(self):
-        """No LLM provider → empty string (not word salad)."""
+    def test_compose_returns_none_when_no_llm(self):
+        """No LLM provider → None (fail-hard, no fallback)."""
         composer = ContentComposer(plugin=None)
         # Mock to avoid actual infrastructure
         with patch.object(composer, "_run_engine", return_value=None):
@@ -87,21 +87,22 @@ class TestContentComposer:
                         content_type="post",
                         input_ctx={"raw_input": "test topic"},
                     )
-        assert result == ""
+        assert result is None
 
     def test_compose_returns_llm_content(self):
         """LLM content is returned when available."""
+        llm_output = "The tradeoff between consistency and availability is fundamental. CAP theorem defines the boundary."
         composer = ContentComposer(plugin=None)
         with patch.object(composer, "_run_engine", return_value=None):
             with patch("vibe_core.cartridges.agent_city.moltbook.core.composer._load_yaml_prompts"):
-                with patch.object(composer, "_try_llm", return_value="Generated content"):
+                with patch.object(composer, "_try_llm", return_value=llm_output):
                     result = composer.compose(
                         pipeline_result={"guna": {"mode": "RAJAS"}},
                         input_text="test topic",
                         content_type="post",
                         input_ctx={"raw_input": "test topic"},
                     )
-        assert result == "Generated content"
+        assert result == llm_output
 
     def test_compose_extracts_agent_name(self):
         """Agent name extracted from plugin._agent_name."""
@@ -267,3 +268,114 @@ class TestQuotaModelAwareness:
         v3_cost = quota._estimate_cost(10000, model="deepseek/deepseek-v3.2")
         # R1 is more expensive than v3.2
         assert r1_cost > v3_cost
+
+
+# =============================================================================
+# CONSTITUTION HARD GATES — Guna, Slop, Coherence
+# =============================================================================
+
+
+class TestConstitutionHardGates:
+    """Programmatic content gates — not prompt strings, actual code blocks."""
+
+    def setup_method(self):
+        from vibe_core.cartridges.agent_city.moltbook.governance.constitution import MoltbookConstitution
+
+        self.constitution = MoltbookConstitution()
+
+    def test_tamas_blocks_post(self):
+        """TAMAS guna cannot produce posts (permanent, high-visibility)."""
+        result = self.constitution.validate(
+            "Valid content here with multiple sentences. This should be enough.",
+            "post",
+            guna="TAMAS",
+        )
+        assert not result.is_valid
+        assert any("TAMAS" in v for v in result.violations)
+
+    def test_tamas_allows_comment(self):
+        """TAMAS guna can still produce comments (low-visibility, transient)."""
+        result = self.constitution.validate(
+            "Valid comment content here with substance.",
+            "comment",
+            guna="TAMAS",
+        )
+        assert result.is_valid
+
+    def test_rajas_allows_post(self):
+        """RAJAS guna can produce posts."""
+        result = self.constitution.validate(
+            "Valid post with real substance. Two sentences make it pass.",
+            "post",
+            guna="RAJAS",
+        )
+        assert result.is_valid
+
+    def test_sattva_allows_post(self):
+        """SATTVA guna can produce posts."""
+        result = self.constitution.validate(
+            "Contemplative insight on system design. Architectural clarity matters.",
+            "post",
+            guna="SATTVA",
+        )
+        assert result.is_valid
+
+    def test_no_guna_allows_all(self):
+        """Missing guna does not block (backward compat)."""
+        result = self.constitution.validate(
+            "Content without guna context provided. Still valid if checks pass.",
+            "post",
+        )
+        assert result.is_valid
+
+    def test_slop_two_patterns_blocks(self):
+        """Two AI filler patterns = hard block."""
+        result = self.constitution.validate(
+            "As an AI, let me break this down for you today.",
+            "comment",
+        )
+        assert not result.is_valid
+        assert any("slop" in v.lower() for v in result.violations)
+
+    def test_slop_one_pattern_warns(self):
+        """One AI filler pattern = warning only, not a block."""
+        result = self.constitution.validate(
+            "It's important to note that distributed systems scale differently.",
+            "comment",
+        )
+        assert result.is_valid
+        assert len(result.warnings) > 0
+
+    def test_shallow_post_blocks(self):
+        """Posts need at least 2 sentences (substance gate)."""
+        result = self.constitution.validate(
+            "Just one short sentence",
+            "post",
+            guna="RAJAS",
+        )
+        assert not result.is_valid
+        assert any("shallow" in v.lower() for v in result.violations)
+
+    def test_clean_content_passes(self):
+        """Well-formed content with no slop passes all gates."""
+        result = self.constitution.validate(
+            "The tradeoff between consistency and availability is fundamental. "
+            "CAP theorem defines the boundary condition for distributed systems.",
+            "comment",
+        )
+        assert result.is_valid
+        assert len(result.violations) == 0
+
+    def test_empty_content_blocks(self):
+        """Empty content is always blocked."""
+        result = self.constitution.validate("", "comment")
+        assert not result.is_valid
+
+    def test_internal_term_leak_blocks(self):
+        """Internal system terms leaking into output are blocked."""
+        result = self.constitution.validate(
+            "The SATTVA mode enables read operations through the gateway.",
+            "comment",
+        )
+        assert not result.is_valid
+        assert any("leak" in v.lower() for v in result.violations)

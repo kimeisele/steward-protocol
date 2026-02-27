@@ -46,11 +46,18 @@ from vibe_core.protocols.moltbook import (
 
 @pytest.fixture
 def plugin():
-    """Fresh plugin with offline client — complete state isolation."""
+    """Fresh plugin with offline client — complete state isolation.
+
+    Mocks _director_propose → None to prevent LLM API calls (httpx → SSL timeout).
+    The heartbeat pipeline still runs: scan → strategy → intents → enqueue.
+    Content generation has its own test suite (test_composer.py, test_agency_director.py).
+    """
     p = MoltbookPlugin()
     p._client = MoltbookClient(api_key="test", offline_mode=True)
     p._offline_mode = True
-    p._HEARTBEAT_DEBOUNCE_S = 0  # Disable debounce in tests (instant ticks)
+    p._heartbeat._HEARTBEAT_DEBOUNCE_S = 0  # Disable debounce in tests (instant ticks)
+    # Prevent LLM calls: _director_propose is the entry to AgencyDirector → OpenRouter
+    p._director_propose = lambda *a, **kw: None
     return p
 
 
@@ -1096,7 +1103,7 @@ class TestFaultIsolation:
 
         # Advance to feed interval
         plugin._heartbeat._heartbeat_count = plugin._feed_interval - 1
-        plugin._do_heartbeat()
+        plugin._heartbeat.dispatch_heartbeat({})
 
         # Queue was drained despite feed failure
         assert plugin._content_queue.is_empty

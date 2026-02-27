@@ -5,7 +5,7 @@ RESONANCE PROPOSER v3 — Content Intelligence Layer
 Single path. No instructions in prompts.
 System physics (guna/integrity/section mode) enforce quality.
 LLM gets DENSE CONTEXT and assembles words.
-No LLM = kirtan rendering via render(result).
+No LLM = no content. Fail hard. No fallbacks.
 
 The system IS the constraint:
     - Guna gate = TAMAS filter (destructive → skip)
@@ -14,17 +14,13 @@ The system IS the constraint:
     - Dense context = semantic grounding (resonant/template/section/knowledge)
 
 Quality comes from CONTEXT DENSITY, not from "please don't be sloppy".
+MahaComposition = backend analytics (LLM context), NEVER standalone output.
 """
 
 import logging
 from pathlib import Path
 from typing import Dict, List, Optional, Sequence, Tuple
 
-from vibe_core.cartridges.agent_city.moltbook.core.context_builders import (
-    format_resonant_words,
-    guardian_vocabulary_short,
-    section_data,
-)
 from vibe_core.mahamantra.substrate.encoding.resonance_ranker import (
     RankedWord,
     resonate,
@@ -150,7 +146,7 @@ class ResonanceProposer(ContentProposalProtocol):
     """
     Content Intelligence layer. System physics enforce quality.
     LLM gets dense context, assembles words.
-    No LLM = kirtan rendering via render(result).
+    No LLM = no content. Fail hard. No fallback to MahaComposition or kirtan.
     """
 
     def __init__(
@@ -188,12 +184,12 @@ class ResonanceProposer(ContentProposalProtocol):
             else:
                 self._llm = None
                 logger.warning(
-                    "No LLM provider available — content generation uses kirtan rendering only. "
-                    "Configure an LLM provider for richer output."
+                    "No LLM provider available — content generation will refuse (fail-hard). "
+                    "Configure an LLM provider for content generation."
                 )
         except Exception as e:
             self._llm = None
-            logger.warning(f"LLM provider resolution failed: {e} — using kirtan fallback")
+            logger.warning(f"LLM provider resolution failed: {e} — content will be refused")
         self._llm_resolved = True
         return self._llm
 
@@ -244,49 +240,30 @@ class ResonanceProposer(ContentProposalProtocol):
         pipeline_result: Optional[dict] = None,
         **extra: str,
     ) -> Optional[str]:
-        """Deterministic pre-processing → atomic LLM → fallback chain.
+        """Deterministic pre-processing → atomic LLM call. No fallbacks.
 
-        1. MahaComposition (5 scorers) → deterministic English (standalone-quality)
-        2. Resonant words from engine → vocabulary hint (LLM-only, not standalone)
-        3. If LLM: atomic prompt (identity + words) → natural language
-        4. If no LLM: MahaComposition output directly (already English)
-        5. Last resort: kirtan rendering
-
-        MahaComposition runs BEFORE LLM (pre-processing), not after (fallback).
+        1. MahaComposition (5 scorers) → backend analytics context for LLM
+        2. LLM: atomic prompt (identity + context) → natural language
+        3. No LLM = None. No MahaComposition output. No kirtan rendering. Fail hard.
         """
-        # Step 1: MahaComposition — deterministic English (standalone-quality)
-        composed = ""
+        # MahaComposition — backend analytics only, NEVER returned as content
         if pipeline_result:
             try:
                 from vibe_core.mahamantra.adapters.composition import MahaComposition
 
                 composer = MahaComposition()
-                composed = composer.compose(pipeline_result, user_input) or ""
+                composer.compose(pipeline_result, user_input)  # analytics side-effect only
             except Exception as e:
-                logger.debug(f"MahaComposition: {e}")
+                logger.debug(f"MahaComposition analytics: {e}")
 
-        # Vocabulary hint: composed words OR resonant words (for LLM input)
-        # Resonant words are raw meanings — only useful as LLM input, not standalone
-        vocab = composed
-        if not vocab and engine_result:
-            words = getattr(engine_result, "resonant_words", ()) or ()
-            vocab = ", ".join(m for _, m, _ in words[:5])
-
-        # Step 2: Extract engine data for context
+        # Extract engine data for context
         guardian_name = getattr(engine_result, "guardian_name", "") or "" if engine_result else ""
-        guardian_function = (
-            getattr(engine_result, "guardian_function", "") or "analysis" if engine_result else "analysis"
-        )
-        verse_ref = getattr(engine_result, "verse_ref", "") or "" if engine_result else ""
-        voice = guardian_vocabulary_short(guardian_name)
-        sec = section_data(engine_result)
-        resonant_words_str = format_resonant_words(engine_result)
 
         # Derive style from pipeline guna
         guna = pipeline_result.get("guna", {}).get("mode", "RAJAS") if pipeline_result else "RAJAS"
         style = {"SATTVA": "contemplative", "RAJAS": "active", "TAMAS": "transformative"}.get(guna, "active")
 
-        # Step 3: YAML template v12 context — no vocabulary injection
+        # YAML template v12 context — no vocabulary injection
         prompt_ctx = {
             "agent_name": self._agent_name,
             "topic": user_input[:200] if user_input else "",
@@ -296,52 +273,44 @@ class ResonanceProposer(ContentProposalProtocol):
             "knowledge_context": "",
         }
 
-        # Step 4: Try LLM — PromptRegistry is SSOT, no fallback
+        # LLM — PromptRegistry is SSOT. No LLM = no content.
         provider = self._get_provider()
-        if provider:
-            try:
-                from vibe_core.runtime.prompt_registry import PromptRegistry
+        if not provider:
+            logger.warning("No LLM provider — refusing to generate content (fail-hard)")
+            return None
 
-                system_msg = PromptRegistry.get(prompt_key, context=prompt_ctx)
-            except Exception as e:
-                logger.error(f"PromptRegistry FAILED for {prompt_key}: {e}")
-                system_msg = None
+        try:
+            from vibe_core.runtime.prompt_registry import PromptRegistry
 
-            if not system_msg:
-                logger.error(f"PromptRegistry returned empty for {prompt_key} — cannot compose")
-                return None
+            system_msg = PromptRegistry.get(prompt_key, context=prompt_ctx)
+        except Exception as e:
+            logger.error(f"PromptRegistry FAILED for {prompt_key}: {e}")
+            return None
 
-            user_msg = _build_task_message(prompt_key, user_input)
+        if not system_msg:
+            logger.error(f"PromptRegistry returned empty for {prompt_key} — cannot compose")
+            return None
 
-            try:
-                response = provider.invoke(
-                    prompt="",
-                    model=None,  # Config default (deepseek/deepseek-v3.2)
-                    max_tokens=128,
-                    temperature=0.7,
-                    messages=[
-                        {"role": "system", "content": system_msg},
-                        {"role": "user", "content": user_msg},
-                    ],
-                )
-                if response and response.content and not response.content.startswith("# ERROR"):
-                    return response.content.strip()
-            except Exception as e:
-                logger.warning(f"LLM: {e}")
+        user_msg = _build_task_message(prompt_key, user_input)
 
-        # Step 5: No LLM — MahaComposition output only (not raw resonant words)
-        if composed:
-            return composed
+        try:
+            response = provider.invoke(
+                prompt="",
+                model=None,  # Config default (deepseek/deepseek-v3.2)
+                max_tokens=128,
+                temperature=0.7,
+                messages=[
+                    {"role": "system", "content": system_msg},
+                    {"role": "user", "content": user_msg},
+                ],
+            )
+            if response and response.content and not response.content.startswith("# ERROR"):
+                return response.content.strip()
+        except Exception as e:
+            logger.warning(f"LLM call failed: {e}")
 
-        # Step 6: Last resort — kirtan rendering
-        if pipeline_result:
-            try:
-                from vibe_core.mahamantra.render import render
-
-                return render(pipeline_result)
-            except Exception:
-                pass
-
+        # LLM produced nothing — fail hard, no fallback
+        logger.warning("LLM returned no content — refusing (fail-hard)")
         return None
 
     # =========================================================================

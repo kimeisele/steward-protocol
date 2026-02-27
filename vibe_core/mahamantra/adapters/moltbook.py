@@ -13,8 +13,6 @@ import time
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 
-import httpx
-
 from vibe_core.mahamantra.adapters.captcha_decoder import CaptchaChamber
 from vibe_core.protocols.moltbook import (
     DMMessage,
@@ -482,6 +480,8 @@ class MoltbookClient:
         is_slow = any(endpoint.startswith(s) for s in self._SLOW_ENDPOINTS)
         timeout = 30.0 if is_slow else 10.0
 
+        import httpx
+
         async with httpx.AsyncClient() as client:
             url = f"{self.base_url}{endpoint}"
             try:
@@ -680,6 +680,8 @@ class MoltbookClient:
             }
 
         # Registration does NOT use Bearer auth — override _request
+        import httpx
+
         self.limits.requests_this_minute += 1
         async with httpx.AsyncClient() as client:
             url = f"{self.base_url}/agents/register"

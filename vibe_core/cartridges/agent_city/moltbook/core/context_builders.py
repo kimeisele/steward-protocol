@@ -51,7 +51,8 @@ def guardian_vocabulary_short(guardian_name: str) -> str:
         if not profile.vocabulary:
             return ""
         return ", ".join(w.first_meaning for w in profile.vocabulary[:5])
-    except Exception:
+    except Exception as e:
+        logger.warning(f"Guardian vocabulary lookup failed: {e}")
         return ""
 
 
@@ -84,5 +85,6 @@ def engagement_context(content_type: str = "") -> str:
         if stats.total_signals < 3:
             return ""
         return f"Success rate: {stats.success_rate:.0%}. Total: {stats.total_signals}."
-    except Exception:
+    except Exception as e:
+        logger.warning(f"Engagement context query failed: {e}")
         return ""

@@ -79,7 +79,7 @@ class ContextResolver:
                 ctx = f"{ctx}\n{moltbook_ctx}" if ctx else moltbook_ctx
             return ctx
         except Exception as e:
-            logger.debug(f"Knowledge query failed: {e}")
+            logger.warning(f"Knowledge query failed: {e}")
             return ""
 
     def _query_kernel(self, topic: str) -> Optional[Dict[str, Any]]:
@@ -108,7 +108,7 @@ class ContextResolver:
 
             return result if result else None
         except Exception as e:
-            logger.debug(f"Kernel query failed: {e}")
+            logger.warning(f"Kernel query failed: {e}")
             return None
 
     def _discover_capabilities(self) -> Optional[Dict[str, List[str]]]:
@@ -136,5 +136,5 @@ class ContextResolver:
 
             return available if available else None
         except Exception as e:
-            logger.debug(f"Capability discovery failed: {e}")
+            logger.warning(f"Capability discovery failed: {e}")
             return None

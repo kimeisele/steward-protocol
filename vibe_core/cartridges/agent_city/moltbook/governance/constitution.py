@@ -3,17 +3,17 @@ Moltbook Constitution — Quality Gates + Platform Constraints as Code.
 
 Pattern: Herald governance/constitution.py (Living Constitution)
 
-Three enforcement layers:
-    1. GUNA GATES — TAMAS=blocked, RAJAS=logged, SATTVA=pass
-       (formalized from MoltbookService._enforce_guna)
-    2. QUALITY SCORING — technical depth, specificity, coherence
-    3. PLATFORM CONSTRAINTS — from knowledge/moltbook/platform.yaml
-       (max_length, rate limits, self-reply prevention)
+Four enforcement layers:
+    1. GUNA GATE — TAMAS blocks posts (high-visibility, permanent content)
+    2. SLOP DETECTION — AI filler patterns blocked programmatically
+    3. QUALITY SCORING — template leaks, coherence, sentence structure
+    4. PLATFORM CONSTRAINTS — from knowledge/moltbook/platform.yaml
 
-validate(content, content_type) → ValidationResult
+validate(content, content_type, guna) → ValidationResult
 """
 
 import logging
+import re
 from dataclasses import dataclass
 from typing import Dict, List, Optional
 
@@ -66,8 +66,8 @@ def _load_platform_constraints() -> Dict[str, Dict[str, object]]:
                 ml = props.get("max_length")
                 if ml is not None:
                     constraints.setdefault(ct, {})["max_length"] = int(ml)
-    except Exception:
-        pass  # KG unavailable — use defaults
+    except Exception as e:
+        logger.warning(f"KG platform constraints unavailable, using defaults: {e}")
     return constraints
 
 
@@ -99,6 +99,22 @@ UNTRANSLATED_INTERNALS = [
     "sravanam",
 ]
 
+# AI slop patterns — filler phrases that signal LLM template output.
+# 2+ matches = hard block, 1 match = warning.
+SLOP_PATTERNS = [
+    "as an ai",
+    "i don't have personal",
+    "it's important to note",
+    "in conclusion,",
+    "let me break this down",
+    "great question!",
+    "that's a fascinating",
+    "delve into",
+    "vibrant tapestry",
+    "it's worth noting",
+    "i'd be happy to",
+]
+
 
 class MoltbookConstitution:
     """
@@ -115,14 +131,25 @@ class MoltbookConstitution:
         self,
         content: str,
         content_type: str = "comment",
+        guna: str = "",
     ) -> ValidationResult:
-        """Validate content against Moltbook governance rules."""
+        """Validate content against Moltbook governance rules.
+
+        Args:
+            content: The generated text to validate
+            content_type: "post", "comment", "dm_reply", etc.
+            guna: Pipeline guna state ("SATTVA", "RAJAS", "TAMAS", or "")
+        """
         violations: List[str] = []
         warnings: List[str] = []
 
         if not content or not content.strip():
             violations.append("Empty content")
             return ValidationResult(is_valid=False, violations=violations, warnings=warnings)
+
+        # 0. Guna gate: TAMAS blocks posts (permanent, high-visibility)
+        if guna == "TAMAS" and content_type == "post":
+            violations.append("TAMAS guna cannot produce posts")
 
         # 1. Platform constraints (length, type)
         self._check_platform(content, content_type, violations)
@@ -154,7 +181,7 @@ class MoltbookConstitution:
             violations.append(f"Content too long for {content_type}: {len(content)} chars (max {max_len})")
 
     def _check_quality(self, content: str, violations: List[str], warnings: List[str]) -> None:
-        """Check for quality blockers (template leaks, internal term exposure)."""
+        """Check for quality blockers (template leaks, slop, internal term exposure)."""
         content_lower = content.lower()
 
         # Hard blocks: internal system terms leaking into output
@@ -166,6 +193,13 @@ class MoltbookConstitution:
         for term in UNTRANSLATED_INTERNALS:
             if term in content_lower:
                 warnings.append(f"Untranslated pipeline term: '{term}' — needs translation layer")
+
+        # AI slop detection: filler patterns that signal template output
+        slop_count = sum(1 for p in SLOP_PATTERNS if p in content_lower)
+        if slop_count >= 2:
+            violations.append(f"AI slop detected: {slop_count} filler patterns")
+        elif slop_count == 1:
+            warnings.append("Possible AI filler pattern")
 
     def _check_coherence(self, content: str, content_type: str, violations: List[str], warnings: List[str]) -> None:
         """Check content coherence (not just random words)."""
@@ -185,6 +219,12 @@ class MoltbookConstitution:
             if ratio < 0.4:
                 warnings.append(f"Low word diversity ({ratio:.0%}) — possible word salad")
 
+        # Posts need substance — at least 2 sentences
+        if content_type == "post":
+            sentences = [s.strip() for s in re.split(r'[.!?]+', content) if len(s.strip()) > 10]
+            if len(sentences) < 2:
+                violations.append(f"Post too shallow: {len(sentences)} sentence(s) (min 2)")
+
     def _check_kg_constraints(self, content_type: str, warnings: List[str]) -> None:
         """Check Knowledge Graph constraints from platform.yaml."""
         try:
@@ -194,14 +234,16 @@ class MoltbookConstitution:
             violations = resolver.get_violations(content_type, {"content_type": content_type})
             for v in violations:
                 warnings.append(f"KG constraint: {v}")
-        except Exception:
-            pass  # KG not available = degrade gracefully
+        except Exception as e:
+            logger.warning(f"KG constraint check unavailable: {e}")
 
     def get_rules_summary(self) -> Dict[str, str]:
         """Get summary of governance rules."""
         return {
-            "guna_gates": "TAMAS=blocked, RAJAS=logged, SATTVA=pass",
+            "guna_gate": "TAMAS blocks posts (comments/DMs allowed)",
+            "slop_detection": f"{len(SLOP_PATTERNS)} filler patterns (2+=block, 1=warn)",
             "quality": f"{len(QUALITY_BLOCKERS)} blockers, {len(UNTRANSLATED_INTERNALS)} untranslated terms",
+            "coherence": "Posts require 2+ sentences",
             "platform": ", ".join(f"{k}:{v.get('max_length', 'n/a')}" for k, v in PLATFORM_CONSTRAINTS.items()),
             "enforcement": "FAIL-CLOSED — violations block content",
         }
