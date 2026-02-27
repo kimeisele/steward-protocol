@@ -4,24 +4,21 @@ SHABDA DECODER — Deterministic Speech-to-Text
 
 "śabda-brahma" — Sound is the ultimate reality.
 
-Audio → uint32 frames → RAMA coordinates → pronunciation dictionary → transcript.
-
-NOT resonance matching (that's ResonanceRanker). This is LITERAL TRANSCRIPTION:
-"So Krishna consciousness is not something artificial..."
+Audio → uint32 frames → ARPAbet phonemes → RAMA coordinates → dictionary → transcript.
 
 Pipeline:
     Audio Frames (10ms, uint32)
         → unpack_frame() → RMS, Varga, F0, Centroid  [shabda_intake.py]
-        → extract_formants() → F1, F2               [shabda_intake.py]
-    Enhanced Features
-        → score_frame() against PhonemeTemplates      [this file]
-    Per-frame phoneme candidates (top-3 ARPAbet)
-        → segment_stream()                            [this file]
-    Word-length segments (bounded by silence/energy dips)
-        → RAMA edit distance vs PronunciationDict     [this file]
-    Scored word candidates per segment
-        → greedy selection
-    Transcript: "dharma yoga consciousness..."
+    Per-frame features
+        → score_frame() against PhonemeTemplates       [this file]
+        → top-1 ARPAbet → ARPABET_TO_RAMA             [this file]
+    Per-frame RAMA coords
+        → CTC-dedup → phoneme-level sequence           [this file]
+        → segment by silence/energy dips               [this file]
+    Word-length segments
+        → RAMA edit distance vs PronunciationDict      [this file]
+        → greedy best match per segment
+    Transcript: "not exactly but I came to preach..."
 
 No ML models. No external APIs. Pure phonetic algebra + dictionary lookup.
 """
@@ -58,10 +55,7 @@ logger = logging.getLogger("SHABDA_DECODER")
 
 @dataclass(frozen=True)
 class PhonemeTemplate:
-    """Acoustic template for a single ARPAbet phoneme.
-
-    Used to score how well an audio frame matches this phoneme.
-    """
+    """Acoustic template for a single ARPAbet phoneme."""
 
     arpabet: str
     rama_coord: int
@@ -118,24 +112,18 @@ def _build_templates() -> Tuple[PhonemeTemplate, ...]:
         varga_idx = ARPABET_TO_VARGA.get(arpabet, VargaIndex.KANTHYA)
         sthana_idx = ARPABET_TO_STHANA.get(arpabet, SthanaIndex.GHOSHAVAT)
 
-        # Determine sound class from RAMA coordinate
-        if rama < WORDS:  # 0-15 = svara
+        if rama < WORDS:
             sound_class = 0
-        elif rama < WORDS + PANCHA * PANCHA:  # 16-40 = sparsha
+        elif rama < WORDS + PANCHA * PANCHA:
             sound_class = 1
-        else:  # 41-48 = shesha
+        else:
             sound_class = 2
 
-        # F0 required = voiced
         f0_required = sthana_idx != SthanaIndex.SPARSHA
-
-        # Formant centers
         f1, f2 = _VOWEL_FORMANTS.get(arpabet, (0, 0))
-
-        # Centroid range
         c_min, c_max = _CONSONANT_CENTROID.get(arpabet, (0, 511))
         if sound_class == 0:
-            c_min, c_max = 0, 511  # vowels have broad centroid
+            c_min, c_max = 0, 511
 
         templates.append(PhonemeTemplate(
             arpabet=arpabet,
@@ -204,13 +192,12 @@ def score_frame(
             score += 0.3
         elif not t.f0_required and not is_voiced:
             score += 0.3
-        # Mismatch: don't add
 
         # Varga match (0.2 weight)
         if t.varga == varga:
             score += 0.2
         else:
-            score += 0.05  # neighbor varga, small credit
+            score += 0.05
 
         # Centroid range (0.2 weight)
         if t.centroid_min <= centroid_100 <= t.centroid_max:
@@ -238,6 +225,86 @@ def score_frame(
     return candidates[:3]
 
 
+def _frames_to_phoneme_coords(
+    frames: Sequence[int],
+    raw_samples: object = None,
+    sample_rate: int = 44100,
+    hop_ms: int = 10,
+    n_fft: int = 1024,
+) -> Tuple[int, ...]:
+    """Convert packed audio frames to RAMA coords via ARPAbet template scoring.
+
+    For each voiced frame:
+        1. Extract formants from raw_samples (if available)
+        2. score_frame(packed, f1, f2) → top-1 ARPAbet phoneme
+        3. ARPABET_TO_RAMA[phoneme] → RAMA coordinate
+        4. Majority-vote smoothing (window=5) to reduce frame-level noise
+
+    This is the PHONEME DETECTION path (not the resonance path).
+    """
+    import numpy as np
+    from vibe_core.mahamantra.sound.shabda_intake import extract_formants
+
+    hop = int(sample_rate * hop_ms / 1000)
+    has_raw = raw_samples is not None and isinstance(raw_samples, np.ndarray)
+
+    # Phase 1: Per-frame best phoneme
+    raw_arpabets: List[str] = []
+    for i, frame in enumerate(frames):
+        rms = frame & 0xFF
+        if rms < 15:
+            raw_arpabets.append("")  # silence marker
+            continue
+
+        # Extract formants if raw audio available
+        f1, f2 = 0, 0
+        if has_raw:
+            start_sample = i * hop
+            end_sample = start_sample + n_fft
+            if end_sample <= len(raw_samples):
+                audio_frame = raw_samples[start_sample:end_sample]
+                f1, f2 = extract_formants(audio_frame, sample_rate)
+
+        candidates = score_frame(frame, f1, f2)
+        if candidates:
+            raw_arpabets.append(candidates[0][0])
+        else:
+            raw_arpabets.append("")
+
+    if not raw_arpabets:
+        return ()
+
+    # Phase 2: Majority-vote smoothing (window=5)
+    smoothed: List[str] = []
+    window = 5
+    half_w = window // 2
+    for i in range(len(raw_arpabets)):
+        if not raw_arpabets[i]:
+            smoothed.append("")
+            continue
+        # Count phonemes in window
+        counts: Dict[str, int] = {}
+        for j in range(max(0, i - half_w), min(len(raw_arpabets), i + half_w + 1)):
+            p = raw_arpabets[j]
+            if p:
+                counts[p] = counts.get(p, 0) + 1
+        if counts:
+            best = max(counts, key=lambda k: counts[k])
+            smoothed.append(best)
+        else:
+            smoothed.append("")
+
+    # Phase 3: Convert to RAMA coords
+    coords: List[int] = []
+    for arpabet in smoothed:
+        if not arpabet:
+            continue
+        rama = ARPABET_TO_RAMA.get(arpabet)
+        if rama is not None:
+            coords.append(rama)
+    return tuple(coords)
+
+
 # =============================================================================
 # SEGMENTATION (stream → word-length segments)
 # =============================================================================
@@ -256,25 +323,25 @@ class Segment:
 
     @property
     def duration_ms(self) -> int:
-        return self.length * 10  # 10ms per frame
+        return self.length * 10
 
 
-# Segmentation thresholds
-_SILENCE_RMS = 20         # frames below this = silence
-_SILENCE_GAP = 3          # 3+ silent frames = word boundary
-_ENERGY_DIP_RMS = 80      # energy dip threshold
-_ENERGY_DIP_GAP = 8       # 8+ low-energy frames = word boundary
+# Segmentation thresholds — tuned for Prabhupada's speaking style
+_SILENCE_RMS = 15         # lower threshold catches quieter pauses
+_SILENCE_GAP = 2          # 2+ silent frames = word boundary (20ms)
+_ENERGY_DIP_RMS = 50      # energy dip at 50 (was 80) — more sensitive
+_ENERGY_DIP_GAP = 5       # 5+ low-energy frames = boundary (was 8)
 _MIN_SEGMENT_FRAMES = 5   # 50ms minimum (discard shorter)
-_MAX_SEGMENT_FRAMES = 200 # 2s maximum (force split)
+_MAX_SEGMENT_FRAMES = 80  # 800ms maximum (was 2s — force split earlier)
 
 
 def segment_stream(frames: Sequence[int]) -> List[Segment]:
     """Segment audio frames into word-length chunks.
 
     Word boundaries detected by:
-    - Silence (3+ frames with RMS < 20)
-    - Energy dip (8+ frames with RMS < 80)
-    - Max length (force split at 200 frames / 2s)
+    - Silence (2+ frames with RMS < 15)
+    - Energy dip (5+ frames with RMS < 50)
+    - Max length (force split at 80 frames / 800ms)
 
     Returns list of Segments, each containing the packed frames.
     """
@@ -299,7 +366,6 @@ def segment_stream(frames: Sequence[int]) -> List[Segment]:
             silence_count = 0
             dip_count = 0
 
-        # Start a segment on voiced frame
         if seg_start < 0 and rms >= _SILENCE_RMS:
             seg_start = i
             silence_count = 0
@@ -309,7 +375,6 @@ def segment_stream(frames: Sequence[int]) -> List[Segment]:
         if seg_start < 0:
             continue
 
-        # Check boundary conditions
         is_boundary = (
             silence_count >= _SILENCE_GAP
             or dip_count >= _ENERGY_DIP_GAP
@@ -317,7 +382,6 @@ def segment_stream(frames: Sequence[int]) -> List[Segment]:
         )
 
         if is_boundary:
-            # Trim trailing silence from segment end
             seg_end = i - silence_count + 1
             if seg_end <= seg_start:
                 seg_end = seg_start + 1
@@ -335,7 +399,6 @@ def segment_stream(frames: Sequence[int]) -> List[Segment]:
     # Flush final segment
     if seg_start >= 0:
         seg_end = len(frames)
-        # Trim trailing silence
         while seg_end > seg_start and (frames[seg_end - 1] & 0xFF) < _SILENCE_RMS:
             seg_end -= 1
         if seg_end - seg_start >= _MIN_SEGMENT_FRAMES:
@@ -349,6 +412,82 @@ def segment_stream(frames: Sequence[int]) -> List[Segment]:
 
 
 # =============================================================================
+# COMMON ENGLISH VOCABULARY (top ~350 words for spoken English coverage)
+# =============================================================================
+
+_COMMON_ENGLISH: Final[Tuple[str, ...]] = (
+    # Function words (articles, pronouns, prepositions, conjunctions)
+    "a", "an", "the", "this", "that", "these", "those",
+    "i", "me", "my", "we", "us", "our", "you", "your",
+    "he", "him", "his", "she", "her", "it", "its", "they", "them", "their",
+    "who", "what", "which", "where", "when", "how", "why",
+    "in", "on", "at", "to", "for", "of", "with", "from", "by", "as",
+    "up", "out", "about", "into", "over", "after", "under", "between",
+    "and", "or", "but", "not", "no", "so", "if", "then", "than", "because",
+    # Common verbs
+    "is", "am", "are", "was", "were", "be", "been", "being",
+    "have", "has", "had", "do", "does", "did", "will", "would", "shall",
+    "should", "can", "could", "may", "might", "must",
+    "say", "said", "go", "went", "gone", "come", "came",
+    "get", "got", "give", "gave", "take", "took", "make", "made",
+    "know", "knew", "think", "thought", "see", "saw", "want", "wanted",
+    "look", "looked", "find", "found", "tell", "told", "ask", "asked",
+    "use", "used", "try", "tried", "leave", "left", "call", "called",
+    "keep", "kept", "let", "begin", "began", "seem", "seemed",
+    "help", "show", "hear", "heard", "play", "run", "ran",
+    "move", "live", "believe", "bring", "brought", "happen",
+    "write", "wrote", "sit", "sat", "stand", "stood", "lose", "lost",
+    "pay", "paid", "meet", "met", "set", "learn", "learned",
+    "lead", "led", "understand", "understood", "watch", "follow",
+    "stop", "stopped", "speak", "spoke", "read", "spend", "spent",
+    "grow", "grew", "open", "opened", "walk", "walked",
+    "win", "won", "teach", "develop", "preach", "preached",
+    # Common nouns
+    "time", "year", "people", "way", "day", "man", "woman",
+    "child", "children", "world", "life", "hand", "part", "place",
+    "case", "week", "company", "system", "program", "question",
+    "work", "government", "number", "night", "point", "home", "water",
+    "room", "mother", "area", "money", "story", "fact", "month",
+    "lot", "right", "study", "book", "eye", "job", "word",
+    "business", "issue", "side", "kind", "head", "house", "service",
+    "friend", "father", "power", "hour", "game", "line", "end",
+    "members", "family", "law", "car", "city", "community", "name",
+    "boy", "boys", "girl", "girls", "group", "country", "problem",
+    "god", "lord", "soul", "spirit", "mind", "body", "heart",
+    "love", "truth", "peace", "light", "faith", "hope",
+    # Common adjectives
+    "good", "new", "first", "last", "long", "great", "little",
+    "own", "other", "old", "right", "big", "high", "different",
+    "small", "large", "next", "early", "young", "important", "few",
+    "public", "bad", "same", "able", "real", "best", "better",
+    "sure", "free", "true", "whole", "nice", "dear",
+    # Common adverbs
+    "just", "also", "very", "often", "however", "too", "usually",
+    "really", "already", "always", "never", "sometimes", "together",
+    "likely", "simply", "generally", "instead", "actually", "exactly",
+    "enough", "well", "here", "there", "now", "only", "quite",
+    "still", "back", "even", "ever", "ago", "once", "much",
+    "far", "away", "again", "perhaps", "maybe", "soon",
+    "fortunately", "unfortunately", "certainly", "definitely",
+    # Prabhupada-specific vocabulary
+    "consciousness", "spiritual", "material", "devotional",
+    "transcendental", "transcendentalists", "supreme", "absolute",
+    "devotee", "devotees", "temple", "chanting", "mantra",
+    "meditation", "philosophy", "knowledge", "ignorance",
+    "liberation", "bondage", "karma", "dharma", "yoga",
+    "guru", "master", "disciple", "student", "teacher",
+    "preaching", "mission", "movement", "society", "international",
+    "enthusiastic", "wonderful", "beautiful", "merciful",
+    "gospel", "message", "instruction", "scripture",
+    "bhagavad", "gita", "vedic", "vedas", "upanishad",
+    "india", "america", "new", "york", "san", "francisco",
+    "eh", "ehm", "um", "uh", "oh", "yes", "no",
+    "some", "every", "many", "much", "more", "most", "any",
+    "all", "each", "both", "few", "several",
+)
+
+
+# =============================================================================
 # PRONUNCIATION DICTIONARY (word → RAMA coords)
 # =============================================================================
 
@@ -357,7 +496,7 @@ class PronunciationDict:
     """Pronunciation dictionary mapping words to RAMA coordinate sequences.
 
     Sanskrit words loaded from rama_lexicon.json (4,127 entries, exact coords).
-    English words derived via encode_text() from lexicon meanings.
+    English words from lexicon meanings + common English vocabulary.
 
     Lazy-initialized, cached.
     """
@@ -368,6 +507,16 @@ class PronunciationDict:
         self._by_first_coord: Optional[Dict[int, List[str]]] = None
         self._by_length: Optional[Dict[int, List[str]]] = None
 
+    def _add_english_word(self, token: str, coords: Tuple[int, ...]) -> None:
+        """Register a single English word in the dictionary."""
+        assert self._english is not None
+        assert self._by_first_coord is not None
+        assert self._by_length is not None
+        self._english[token] = coords
+        fc = coords[0]
+        self._by_first_coord.setdefault(fc, []).append(token)
+        self._by_length.setdefault(len(coords), []).append(token)
+
     def _ensure_loaded(self) -> None:
         if self._sanskrit is not None:
             return
@@ -377,7 +526,7 @@ class PronunciationDict:
         self._by_first_coord = {}
         self._by_length = {}
 
-        # Load Sanskrit from SemanticIndex
+        # 1. Load Sanskrit from SemanticIndex
         from vibe_core.mahamantra.substrate.encoding.semantic_index import get_index
 
         index = get_index()
@@ -388,7 +537,7 @@ class PronunciationDict:
                 self._by_first_coord.setdefault(fc, []).append(word.sanskrit)
                 self._by_length.setdefault(len(word.coords), []).append(word.sanskrit)
 
-        # Derive English from lexicon meanings
+        # 2. English from lexicon meanings
         from vibe_core.mahamantra.substrate.encoding.phonetic_encoder import encode_text
 
         seen_english: set = set()
@@ -402,10 +551,14 @@ class PronunciationDict:
                         seen_english.add(token)
                         coords = encode_text(token)
                         if coords:
-                            self._english[token] = coords
-                            fc = coords[0]
-                            self._by_first_coord.setdefault(fc, []).append(token)
-                            self._by_length.setdefault(len(coords), []).append(token)
+                            self._add_english_word(token, coords)
+
+        # 3. Common English vocabulary
+        for token in _COMMON_ENGLISH:
+            if token not in seen_english and token not in self._english:
+                coords = encode_text(token)
+                if coords:
+                    self._add_english_word(token, coords)
 
         logger.info(
             "PronunciationDict loaded: %d Sanskrit, %d English",
@@ -424,24 +577,17 @@ class PronunciationDict:
         length: int,
         length_tolerance: int = 2,
     ) -> List[Tuple[str, Tuple[int, ...]]]:
-        """Get candidate words matching first coordinate and approximate length.
-
-        Prefilter: words starting at first_coord with length ± tolerance.
-        Returns list of (word, coords) pairs.
-        """
+        """Get candidate words matching first coordinate and approximate length."""
         self._ensure_loaded()
         assert self._by_first_coord is not None and self._by_length is not None
         assert self._sanskrit is not None and self._english is not None
 
-        # Words matching first coordinate
         by_coord = set(self._by_first_coord.get(first_coord, []))
 
-        # Words matching length range
         by_len: set = set()
         for l in range(max(1, length - length_tolerance), length + length_tolerance + 1):
             by_len.update(self._by_length.get(l, []))
 
-        # Intersection
         matches = by_coord & by_len
         result: List[Tuple[str, Tuple[int, ...]]] = []
         for w in matches:
@@ -449,6 +595,28 @@ class PronunciationDict:
             if coords is not None:
                 result.append((w, coords))
 
+        return result
+
+    def all_candidates_for_length(
+        self,
+        length: int,
+        length_tolerance: int = 2,
+    ) -> List[Tuple[str, Tuple[int, ...]]]:
+        """Get ALL candidate words matching approximate length (no coord filter)."""
+        self._ensure_loaded()
+        assert self._by_length is not None
+        assert self._sanskrit is not None and self._english is not None
+
+        result: List[Tuple[str, Tuple[int, ...]]] = []
+        seen: set = set()
+        for l in range(max(1, length - length_tolerance), length + length_tolerance + 1):
+            for w in self._by_length.get(l, []):
+                if w in seen:
+                    continue
+                seen.add(w)
+                coords = self._sanskrit.get(w) or self._english.get(w.lower())
+                if coords is not None:
+                    result.append((w, coords))
         return result
 
     @property
@@ -508,7 +676,6 @@ def _score_candidate(
 
     # Dynamic programming edit distance with weighted substitution costs
     # Use integer-scaled costs (*10) to avoid float accumulation
-    INF = (n + m + 1) * 10
     prev = list(range(0, (m + 1) * 10, 10))
     curr = [0] * (m + 1)
 
@@ -623,19 +790,18 @@ class ShabdaDecoder:
         self._dict = get_pronunciation_dict()
 
     def transcribe(self, stream: ShabdaStream) -> Transcript:
-        """Transcribe a full ShabdaStream to text.
-
-        Args:
-            stream: ShabdaStream from ShabdaIntake
-
-        Returns:
-            Transcript with recognized words and confidence scores.
-        """
+        """Transcribe a full ShabdaStream to text."""
         segments = segment_stream(stream.frames)
         words: List[TranscriptWord] = []
 
         for seg in segments:
-            result = self._decode_segment(seg)
+            result = self._decode_segment(
+                seg,
+                raw_samples=stream.raw_samples,
+                sample_rate=stream.sample_rate,
+                hop_ms=stream.hop_ms,
+                n_fft=stream.n_fft,
+            )
             if result is not None:
                 words.append(result)
 
@@ -651,16 +817,7 @@ class ShabdaDecoder:
         raw_samples: object = None,
         sr: int = 44100,
     ) -> List[TranscriptWord]:
-        """Transcribe a pre-segmented sequence of packed frames.
-
-        Args:
-            frames: packed uint32 audio frames
-            raw_samples: optional raw audio for formant extraction
-            sr: sample rate
-
-        Returns:
-            List of TranscriptWord (may be empty).
-        """
+        """Transcribe a pre-segmented sequence of packed frames."""
         segments = segment_stream(frames)
         words: List[TranscriptWord] = []
         for seg in segments:
@@ -669,44 +826,59 @@ class ShabdaDecoder:
                 words.append(result)
         return words
 
-    def _decode_segment(self, seg: Segment) -> Optional[TranscriptWord]:
+    def _decode_segment(
+        self,
+        seg: Segment,
+        raw_samples: object = None,
+        sample_rate: int = 44100,
+        hop_ms: int = 10,
+        n_fft: int = 1024,
+    ) -> Optional[TranscriptWord]:
         """Decode a single segment into a word.
 
-        Steps:
-        1. Extract RAMA coords from frames (via shabda_processor)
-        2. CTC-style dedup: collapse consecutive identical coords → phoneme sequence
-        3. Get candidates from PronunciationDict (prefiltered by first coord + length)
-        4. Score candidates via weighted edit distance
-        5. Return best match above confidence threshold
+        Uses the PHONEME TEMPLATE path with formant extraction:
+            score_frame(packed, f1, f2) → top-1 ARPAbet → ARPABET_TO_RAMA
+            → majority-vote smoothing → CTC-dedup → dictionary lookup
         """
-        from vibe_core.mahamantra.sound.shabda_processor import stream_to_rama
+        import numpy as np
 
-        # Extract RAMA coordinates from segment frames
-        raw_coords = stream_to_rama(seg.frames)
+        # Slice raw samples for this segment (if available)
+        seg_raw = None
+        if raw_samples is not None and isinstance(raw_samples, np.ndarray):
+            hop = int(sample_rate * hop_ms / 1000)
+            start_sample = seg.start * hop
+            end_sample = (seg.end + 1) * hop + n_fft
+            if end_sample <= len(raw_samples):
+                seg_raw = raw_samples[start_sample:end_sample]
+
+        raw_coords = _frames_to_phoneme_coords(
+            seg.frames, seg_raw, sample_rate, hop_ms, n_fft,
+        )
         if not raw_coords:
             return None
 
         # CTC-style dedup: collapse consecutive identical coords → phoneme-level
-        # (32, 32, 32, 12, 12, 5) → (32, 12, 5)
         rama_coords = _dedup_coords(raw_coords)
         if not rama_coords:
             return None
 
-        # Get candidates from dictionary
+        # Get candidates from dictionary — try coord-filtered first, then broad
         first_coord = rama_coords[0]
         coord_len = len(rama_coords)
-        candidates = self._dict.candidates_for_segment(
-            first_coord, coord_len, length_tolerance=3,
-        )
+        candidates: List[Tuple[str, Tuple[int, ...]]] = []
 
-        # Also try neighbors of first coord (acoustic noise tolerance)
-        for neighbor in (first_coord - 1, first_coord + 1):
-            if 0 <= neighbor < 49:
+        # Primary: match by first coord + length
+        for fc in (first_coord, first_coord - 1, first_coord + 1):
+            if 0 <= fc < 49:
                 candidates.extend(
-                    self._dict.candidates_for_segment(
-                        neighbor, coord_len, length_tolerance=3,
-                    )
+                    self._dict.candidates_for_segment(fc, coord_len, length_tolerance=3)
                 )
+
+        # Fallback: if too few candidates, search by length only
+        if len(candidates) < 10:
+            candidates.extend(
+                self._dict.all_candidates_for_length(coord_len, length_tolerance=2)
+            )
 
         if not candidates:
             return None
@@ -760,4 +932,5 @@ __all__ = [
     "score_frame",
     "segment_stream",
     "_dedup_coords",
+    "_frames_to_phoneme_coords",
 ]

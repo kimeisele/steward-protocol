@@ -247,7 +247,7 @@ class ShabdaStream:
     """
 
     __slots__ = ("frames", "sample_rate", "hop_ms", "n_fft",
-                 "chant_start", "chant_end", "source")
+                 "chant_start", "chant_end", "source", "raw_samples")
 
     def __init__(
         self,
@@ -258,6 +258,7 @@ class ShabdaStream:
         chant_start: int = 0,
         chant_end: int = 0,
         source: str = "",
+        raw_samples: "np.ndarray | None" = None,
     ):
         self.frames = frames
         self.sample_rate = sample_rate
@@ -266,6 +267,7 @@ class ShabdaStream:
         self.chant_start = chant_start
         self.chant_end = chant_end or (len(frames) - 1)
         self.source = source
+        self.raw_samples = raw_samples
 
     def __len__(self) -> int:
         return len(self.frames)
@@ -348,6 +350,7 @@ class ShabdaIntake:
             chant_start=chant_start,
             chant_end=chant_end,
             source=str(path.name),
+            raw_samples=samples,
         )
 
     def process_samples(
@@ -361,6 +364,7 @@ class ShabdaIntake:
             hop_ms=self.hop_ms,
             n_fft=self.n_fft,
             source=source,
+            raw_samples=samples,
         )
 
     def record(self, duration_seconds: float = 6.0, sample_rate: int = DEFAULT_SAMPLE_RATE) -> ShabdaStream:
