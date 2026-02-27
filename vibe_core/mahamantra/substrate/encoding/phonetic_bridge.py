@@ -174,6 +174,51 @@ CATEGORY_TO_VARGA: Final[Dict[str, VargaIndex]] = {
 # =============================================================================
 
 
+def _varga_from_consonant_mappings(mapping: Dict[str, VargaIndex]) -> None:
+    """Step 1: Populate varga from language.py CONSONANT_MAPPINGS (category → varga)."""
+    for cm in CONSONANT_MAPPINGS:
+        if cm.category in CATEGORY_TO_VARGA:
+            varga = CATEGORY_TO_VARGA[cm.category]
+            if cm.western:
+                mapping[cm.western.lower()] = varga
+            if cm.phoneme:
+                mapping[cm.phoneme] = varga
+
+
+def _varga_from_vowel_mappings(mapping: Dict[str, VargaIndex]) -> None:
+    """Step 2: Populate varga from language.py VOWEL_MAPPINGS (category → varga)."""
+    for vm in VOWEL_MAPPINGS:
+        if vm.category in CATEGORY_TO_VARGA:
+            varga = CATEGORY_TO_VARGA[vm.category]
+            if vm.western:
+                mapping[vm.western.lower()] = varga
+            if vm.phoneme:
+                mapping[vm.phoneme] = varga
+
+
+def _varga_from_translation_phonemes(
+    mapping: Dict[str, VargaIndex],
+    phoneme_dict: Dict,
+) -> None:
+    """Steps 3+4: Populate varga from translation.py phonemes (sthana → varga)."""
+    for key, phoneme in phoneme_dict.items():
+        if phoneme.sthana in STHANA_TO_VARGA:
+            varga = STHANA_TO_VARGA[phoneme.sthana]
+            mapping[key.lower()] = varga
+            if phoneme.ipa:
+                mapping[phoneme.ipa] = varga
+
+
+def _varga_from_pancha_varga(mapping: Dict[str, VargaIndex]) -> None:
+    """Step 5: Populate varga from varna.py PANCHA_VARGA (Sanskrit consonants)."""
+    for varga_idx, varga_tuple in enumerate(PANCHA_VARGA):
+        for varna in varga_tuple:
+            if varna.iast:
+                mapping[varna.iast.lower()] = VargaIndex(varga_idx)
+            if varna.roman:
+                mapping[varna.roman.lower()] = VargaIndex(varga_idx)
+
+
 def _build_phoneme_varga_from_protocols() -> Dict[str, VargaIndex]:
     """
     Build phoneme → Varga mapping from existing protocol data.
@@ -189,49 +234,11 @@ def _build_phoneme_varga_from_protocols() -> Dict[str, VargaIndex]:
     """
     mapping: Dict[str, VargaIndex] = {}
 
-    # 1. From CONSONANT_MAPPINGS (language.py)
-    for cm in CONSONANT_MAPPINGS:
-        if cm.category in CATEGORY_TO_VARGA:
-            varga = CATEGORY_TO_VARGA[cm.category]
-            # Map western, phoneme (IPA)
-            if cm.western:
-                mapping[cm.western.lower()] = varga
-            if cm.phoneme:
-                mapping[cm.phoneme] = varga
-
-    # 2. From VOWEL_MAPPINGS (language.py)
-    for vm in VOWEL_MAPPINGS:
-        if vm.category in CATEGORY_TO_VARGA:
-            varga = CATEGORY_TO_VARGA[vm.category]
-            if vm.western:
-                mapping[vm.western.lower()] = varga
-            if vm.phoneme:
-                mapping[vm.phoneme] = varga
-
-    # 3. From GERMAN_PHONEMES (translation.py)
-    for key, phoneme in GERMAN_PHONEMES.items():
-        if phoneme.sthana in STHANA_TO_VARGA:
-            varga = STHANA_TO_VARGA[phoneme.sthana]
-            mapping[key.lower()] = varga
-            if phoneme.ipa:
-                mapping[phoneme.ipa] = varga
-
-    # 4. From ENGLISH_PHONEMES (translation.py)
-    for key, phoneme in ENGLISH_PHONEMES.items():
-        if phoneme.sthana in STHANA_TO_VARGA:
-            varga = STHANA_TO_VARGA[phoneme.sthana]
-            mapping[key.lower()] = varga
-            if phoneme.ipa:
-                mapping[phoneme.ipa] = varga
-
-    # 5. From PANCHA_VARGA (varna.py) - Sanskrit consonants
-    for varga_idx, varga_tuple in enumerate(PANCHA_VARGA):
-        for varna in varga_tuple:
-            # Map IAST and Roman forms
-            if varna.iast:
-                mapping[varna.iast.lower()] = VargaIndex(varga_idx)
-            if varna.roman:
-                mapping[varna.roman.lower()] = VargaIndex(varga_idx)
+    _varga_from_consonant_mappings(mapping)
+    _varga_from_vowel_mappings(mapping)
+    _varga_from_translation_phonemes(mapping, GERMAN_PHONEMES)
+    _varga_from_translation_phonemes(mapping, ENGLISH_PHONEMES)
+    _varga_from_pancha_varga(mapping)
 
     # 6. ANTAHSTHA (Semivowels) - Override generic "semivowel" category
     # Each semivowel has a specific articulation point in Sanskrit phonetics:
@@ -239,29 +246,27 @@ def _build_phoneme_varga_from_protocols() -> Dict[str, VargaIndex]:
     # र (ra) = retroflex → MURDHANYA
     # ल (la) = dental → DANTYA
     # व (va) = labial → OSHTHYA
-    semivowel_varga = {
+    mapping.update({
         "y": VargaIndex.TALAVYA,  # Palatal
         "r": VargaIndex.MURDHANYA,  # Retroflex
         "l": VargaIndex.DANTYA,  # Dental
         "v": VargaIndex.OSHTHYA,  # Labial
         "w": VargaIndex.OSHTHYA,  # W is labial (Western approximation of व)
-    }
-    mapping.update(semivowel_varga)
+    })
 
     # 7. USHMAN (Sibilants + H) - From varna.py
     # श (śa) = palatal → TALAVYA
     # ष (ṣa) = retroflex → MURDHANYA
     # स (sa) = dental → DANTYA
     # ह (ha) = glottal → KANTHYA
-    sibilant_varga = {
+    mapping.update({
         "ś": VargaIndex.TALAVYA,  # Palatal sibilant
         "sh": VargaIndex.TALAVYA,  # Western approximation
         "ṣ": VargaIndex.MURDHANYA,  # Retroflex sibilant
         "shh": VargaIndex.MURDHANYA,  # Retroflex (alternative)
         "s": VargaIndex.DANTYA,  # Dental sibilant
         "h": VargaIndex.KANTHYA,  # Glottal aspirate
-    }
-    mapping.update(sibilant_varga)
+    })
 
     return mapping
 
@@ -408,24 +413,8 @@ CATEGORY_TO_STHANA: Final[Dict[str, SthanaIndex]] = {
 # =============================================================================
 
 
-def _build_phoneme_sthana_from_protocols() -> Dict[str, SthanaIndex]:
-    """
-    Build phoneme → Sthana (energy level) mapping from existing protocol data.
-
-    DERIVES from:
-    - varna.py PANCHA_VARGA (position within varga = sthana)
-    - varna.py SVARA (vowel ordering → energy)
-    - varna.py ANTAHSTHA/USHMAN (semi-vowels/sibilants)
-    - language.py CONSONANT_MAPPINGS (category suffix → sthana)
-    - language.py VOWEL_MAPPINGS (category → sthana)
-    - translation.py GERMAN/ENGLISH_PHONEMES (prayatna → sthana)
-
-    NO HARDCODING - all from protocols!
-    """
-    mapping: Dict[str, SthanaIndex] = {}
-
-    # 1. From PANCHA_VARGA (varna.py) - Position within Varga = Sthana!
-    # This is the SSOT: each Varga has 5 consonants in fixed phonation order
+def _sthana_from_pancha_varga(mapping: Dict[str, SthanaIndex]) -> None:
+    """Step 1: Position within Varga = Sthana directly (SSOT)."""
     for varga_tuple in PANCHA_VARGA:
         for position, varna in enumerate(varga_tuple):
             sthana = SthanaIndex(position)  # Position 0-4 = Sthana directly!
@@ -434,8 +423,9 @@ def _build_phoneme_sthana_from_protocols() -> Dict[str, SthanaIndex]:
             if varna.iast:
                 mapping[varna.iast.lower()] = sthana
 
-    # 2. From SVARA (varna.py) - Vowel energy from position
-    # Position in SVARA encodes openness: open vowels first, closed later
+
+def _sthana_from_svara(mapping: Dict[str, SthanaIndex]) -> None:
+    """Step 2: Vowel energy from position in SVARA ordering."""
     for idx, varna in enumerate(SVARA):
         # Derive energy from vowel ordering:
         # 1-2: a/ā (open) → MAHAPRANA (expansion)
@@ -458,15 +448,18 @@ def _build_phoneme_sthana_from_protocols() -> Dict[str, SthanaIndex]:
         if varna.iast:
             mapping[varna.iast.lower()] = sthana
 
-    # 3. From ANTAHSTHA (varna.py) - Semi-vowels = all voiced
+
+def _sthana_from_special_consonants(mapping: Dict[str, SthanaIndex]) -> None:
+    """Steps 3+4: ANTAHSTHA (semi-vowels) and USHMAN (sibilants+H)."""
+    # 3. ANTAHSTHA - Semi-vowels = all voiced
     for varna in ANTAHSTHA:
-        sthana = SthanaIndex.GHOSHAVAT  # Semi-vowels are voiced
+        sthana = SthanaIndex.GHOSHAVAT
         if varna.roman:
             mapping[varna.roman.lower()] = sthana
         if varna.iast:
             mapping[varna.iast.lower()] = sthana
 
-    # 4. From USHMAN (varna.py) - Sibilants + H
+    # 4. USHMAN - Sibilants + H
     # śa/ṣa/sa = fricatives (GHOSHAVAT), ha = aspirate (MAHAPRANA)
     for idx, varna in enumerate(USHMAN):
         sthana = SthanaIndex.MAHAPRANA if idx == TRINITY else SthanaIndex.GHOSHAVAT
@@ -475,7 +468,10 @@ def _build_phoneme_sthana_from_protocols() -> Dict[str, SthanaIndex]:
         if varna.iast:
             mapping[varna.iast.lower()] = sthana
 
-    # 5. From CONSONANT_MAPPINGS (language.py) - Category suffix → Sthana
+
+def _sthana_from_language_mappings(mapping: Dict[str, SthanaIndex]) -> None:
+    """Steps 5+6: language.py CONSONANT_MAPPINGS and VOWEL_MAPPINGS (category → sthana)."""
+    # 5. CONSONANT_MAPPINGS - Category suffix → Sthana
     for cm in CONSONANT_MAPPINGS:
         if cm.category in CATEGORY_TO_STHANA:
             sthana = CATEGORY_TO_STHANA[cm.category]
@@ -484,7 +480,7 @@ def _build_phoneme_sthana_from_protocols() -> Dict[str, SthanaIndex]:
             if cm.phoneme and cm.phoneme not in mapping:
                 mapping[cm.phoneme] = sthana
 
-    # 6. From VOWEL_MAPPINGS (language.py) - Category → Sthana
+    # 6. VOWEL_MAPPINGS - Category → Sthana
     for vm in VOWEL_MAPPINGS:
         if vm.category in CATEGORY_TO_STHANA:
             sthana = CATEGORY_TO_STHANA[vm.category]
@@ -493,8 +489,13 @@ def _build_phoneme_sthana_from_protocols() -> Dict[str, SthanaIndex]:
             if vm.phoneme and vm.phoneme not in mapping:
                 mapping[vm.phoneme] = sthana
 
-    # 7. From GERMAN_PHONEMES (translation.py) - Prayatna → Sthana
-    for key, phoneme in GERMAN_PHONEMES.items():
+
+def _sthana_from_translation_phonemes(
+    mapping: Dict[str, SthanaIndex],
+    phoneme_dict: Dict,
+) -> None:
+    """Steps 7+8: translation.py phonemes (prayatna → sthana). No-clobber."""
+    for key, phoneme in phoneme_dict.items():
         if phoneme.prayatna in PRAYATNA_TO_STHANA:
             sthana = PRAYATNA_TO_STHANA[phoneme.prayatna]
             if key.lower() not in mapping:
@@ -502,14 +503,29 @@ def _build_phoneme_sthana_from_protocols() -> Dict[str, SthanaIndex]:
             if phoneme.ipa and phoneme.ipa not in mapping:
                 mapping[phoneme.ipa] = sthana
 
-    # 8. From ENGLISH_PHONEMES (translation.py) - Prayatna → Sthana
-    for key, phoneme in ENGLISH_PHONEMES.items():
-        if phoneme.prayatna in PRAYATNA_TO_STHANA:
-            sthana = PRAYATNA_TO_STHANA[phoneme.prayatna]
-            if key.lower() not in mapping:
-                mapping[key.lower()] = sthana
-            if phoneme.ipa and phoneme.ipa not in mapping:
-                mapping[phoneme.ipa] = sthana
+
+def _build_phoneme_sthana_from_protocols() -> Dict[str, SthanaIndex]:
+    """
+    Build phoneme → Sthana (energy level) mapping from existing protocol data.
+
+    DERIVES from:
+    - varna.py PANCHA_VARGA (position within varga = sthana)
+    - varna.py SVARA (vowel ordering → energy)
+    - varna.py ANTAHSTHA/USHMAN (semi-vowels/sibilants)
+    - language.py CONSONANT_MAPPINGS (category suffix → sthana)
+    - language.py VOWEL_MAPPINGS (category → sthana)
+    - translation.py GERMAN/ENGLISH_PHONEMES (prayatna → sthana)
+
+    NO HARDCODING - all from protocols!
+    """
+    mapping: Dict[str, SthanaIndex] = {}
+
+    _sthana_from_pancha_varga(mapping)
+    _sthana_from_svara(mapping)
+    _sthana_from_special_consonants(mapping)
+    _sthana_from_language_mappings(mapping)
+    _sthana_from_translation_phonemes(mapping, GERMAN_PHONEMES)
+    _sthana_from_translation_phonemes(mapping, ENGLISH_PHONEMES)
 
     return mapping
 
