@@ -241,6 +241,45 @@ class TestSegmentation:
 
 
 # =============================================================================
+# TEST: CTC Deduplication
+# =============================================================================
+
+
+class TestDedup:
+    """Verify _dedup_coords() CTC-style deduplication."""
+
+    def test_empty(self):
+        from vibe_core.mahamantra.sound.shabda_decoder import _dedup_coords
+        assert _dedup_coords(()) == ()
+
+    def test_single(self):
+        from vibe_core.mahamantra.sound.shabda_decoder import _dedup_coords
+        assert _dedup_coords((5,)) == (5,)
+
+    def test_all_same(self):
+        from vibe_core.mahamantra.sound.shabda_decoder import _dedup_coords
+        assert _dedup_coords((12, 12, 12, 12, 12)) == (12,)
+
+    def test_alternating(self):
+        from vibe_core.mahamantra.sound.shabda_decoder import _dedup_coords
+        assert _dedup_coords((5, 12, 5, 12)) == (5, 12, 5, 12)
+
+    def test_realistic_speech(self):
+        """Simulated frame-level output: each phoneme repeated ~5-10 frames."""
+        from vibe_core.mahamantra.sound.shabda_decoder import _dedup_coords
+        # "dha-r-ma" → coords 34, 42, 40, each held for multiple frames
+        raw = (34,)*8 + (42,)*5 + (40,)*7
+        assert _dedup_coords(raw) == (34, 42, 40)
+
+    def test_preserves_repeated_phonemes(self):
+        """Same coord appearing non-consecutively must be preserved."""
+        from vibe_core.mahamantra.sound.shabda_decoder import _dedup_coords
+        # "a-ka-a" → 0, 16, 0 (a appears twice, not consecutive)
+        raw = (0,)*5 + (16,)*3 + (0,)*5
+        assert _dedup_coords(raw) == (0, 16, 0)
+
+
+# =============================================================================
 # TEST: Scoring (RAMA edit distance)
 # =============================================================================
 
