@@ -45,6 +45,7 @@ from typing import Generator, List, Tuple
 
 import numpy as np
 from scipy.fft import fft, fftfreq
+from scipy.linalg import solve_toeplitz
 
 # =============================================================================
 # CONSTANTS
@@ -83,6 +84,65 @@ def unpack_frame(packed: int) -> Tuple[int, int, int, int]:
         (packed >> 11) & 0xFFF,
         (packed >> 23) & 0x1FF,
     )
+
+
+# =============================================================================
+# FORMANT EXTRACTION (LPC-based, supplementary channel for decoder)
+# =============================================================================
+
+
+def extract_formants(
+    frame: np.ndarray, sr: int, order: int = 12,
+) -> Tuple[int, int]:
+    """Extract F1 and F2 formant frequencies via LPC analysis.
+
+    Uses pre-emphasis → autocorrelation → Levinson-Durbin (via Toeplitz solver)
+    → polynomial roots → select formant candidates by frequency band.
+
+    Args:
+        frame: mono audio frame (float64, [-1, 1])
+        sr: sample rate in Hz
+        order: LPC order (default 12, good for 44.1kHz)
+
+    Returns:
+        (f1_hz, f2_hz) as integers. (0, 0) on failure or silence.
+    """
+    if len(frame) < order + 1:
+        return (0, 0)
+
+    # Pre-emphasis (boost high frequencies)
+    emphasized = np.append(frame[0], frame[1:] - 0.97 * frame[:-1])
+
+    # Autocorrelation
+    autocorr = np.correlate(emphasized, emphasized, mode="full")
+    autocorr = autocorr[len(autocorr) // 2:]
+
+    if autocorr[0] < 1e-10:
+        return (0, 0)
+
+    # Levinson-Durbin via Toeplitz solver
+    try:
+        lpc_coeffs = solve_toeplitz(autocorr[:order], autocorr[1:order + 1])
+    except (np.linalg.LinAlgError, ValueError):
+        return (0, 0)
+
+    # Find roots of LPC polynomial: 1 + a1*z^-1 + a2*z^-2 + ...
+    poly = np.concatenate(([1.0], -lpc_coeffs))
+    roots = np.roots(poly)
+
+    # Keep roots inside unit circle with positive imaginary part
+    formant_freqs: List[float] = []
+    for r in roots:
+        if np.abs(r) < 1.0 and np.imag(r) > 0:
+            freq = np.angle(r) * sr / (2 * np.pi)
+            if 90 < freq < sr / 2:
+                formant_freqs.append(freq)
+
+    formant_freqs.sort()
+
+    f1 = int(formant_freqs[0]) if len(formant_freqs) >= 1 else 0
+    f2 = int(formant_freqs[1]) if len(formant_freqs) >= 2 else 0
+    return (f1, f2)
 
 
 # =============================================================================
