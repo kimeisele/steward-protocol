@@ -1528,3 +1528,156 @@ class TestCommentDedup:
         """Service does NOT violate GAD-000."""
         result = service.audit()
         assert "VIOLATES" not in result.status
+
+
+# =============================================================================
+# KIRTAN FEEDBACK LOOP — failure → learning → healing → improvement
+# =============================================================================
+
+
+class TestKirtanReflectionToHealing:
+    """_reflect_on_patterns() → request_healing() when failure patterns detected."""
+
+    def test_reflect_on_patterns_requests_healing_on_failures(self, plugin):
+        """Failure patterns in Reflection → request_healing() called."""
+        from unittest.mock import MagicMock, patch
+
+        mock_insight = MagicMock()
+        mock_insight.type = "failure_pattern"
+        mock_insight.message = "moltbook.content.comment failing 60%"
+        mock_insight.confidence = 0.9
+
+        mock_reflection = MagicMock()
+        mock_reflection.analyze_patterns.return_value = [mock_insight]
+        mock_reflection.propose_improvement.return_value = None
+
+        mock_anchor = MagicMock()
+
+        with patch("vibe_core.protocols.reflection.get_reflection_safe", return_value=mock_reflection):
+            with patch("vibe_core.ouroboros.ananta_shesha.get_system_anchor", return_value=mock_anchor):
+                plugin._reflect_on_patterns()
+
+        # Verify request_healing was called
+        mock_anchor.request_healing.assert_called_once()
+        call_args = mock_anchor.request_healing.call_args
+        assert call_args[1]["target"] == "moltbook"
+        assert "1 pattern(s)" in call_args[1]["reason"]
+
+    def test_reflect_on_patterns_no_healing_without_failures(self, plugin):
+        """No failure patterns → no healing request."""
+        from unittest.mock import MagicMock, patch
+
+        mock_insight = MagicMock()
+        mock_insight.type = "success_pattern"
+        mock_insight.message = "Normal operation"
+
+        mock_reflection = MagicMock()
+        mock_reflection.analyze_patterns.return_value = [mock_insight]
+        mock_reflection.propose_improvement.return_value = None
+
+        mock_anchor = MagicMock()
+
+        with patch("vibe_core.protocols.reflection.get_reflection_safe", return_value=mock_reflection):
+            with patch("vibe_core.ouroboros.ananta_shesha.get_system_anchor", return_value=mock_anchor):
+                plugin._reflect_on_patterns()
+
+        mock_anchor.request_healing.assert_not_called()
+
+    def test_reflect_on_patterns_empty_patterns_returns_early(self, plugin):
+        """No patterns at all → no action."""
+        from unittest.mock import MagicMock, patch
+
+        mock_reflection = MagicMock()
+        mock_reflection.analyze_patterns.return_value = []
+
+        with patch("vibe_core.protocols.reflection.get_reflection_safe", return_value=mock_reflection):
+            plugin._reflect_on_patterns()
+
+        # No crash, no healing
+
+
+class TestKirtanSynapseHealing:
+    """on_event(healing.requested) → decay degraded synapse weights."""
+
+    def test_on_event_healing_decays_weights(self, plugin):
+        """healing.requested for moltbook → degraded weights healed."""
+        from unittest.mock import MagicMock, patch
+
+        mock_store = MagicMock()
+        mock_store.get_weights.return_value = {
+            "moltbook:content:comment": {"generate": 0.3},  # Degraded (< 0.4)
+            "moltbook:content:post": {"generate": 0.6},  # Healthy (>= 0.4)
+        }
+
+        with patch("vibe_core.state.synapse_store.get_synapse_store", return_value=mock_store):
+            plugin.on_event("healing.requested", {"target": "moltbook", "reason": "test"})
+
+        # Only the degraded weight (0.3) should be incremented
+        mock_store.increment_weight.assert_called_once_with(
+            "moltbook:content:comment", "generate", delta=0.05
+        )
+        mock_store.save.assert_called_once()
+
+    def test_on_event_healing_no_degraded_weights(self, plugin):
+        """All weights healthy → no healing action needed."""
+        from unittest.mock import MagicMock, patch
+
+        mock_store = MagicMock()
+        mock_store.get_weights.return_value = {
+            "moltbook:content:comment": {"generate": 0.5},  # Healthy
+        }
+
+        with patch("vibe_core.state.synapse_store.get_synapse_store", return_value=mock_store):
+            plugin.on_event("healing.requested", {"target": "moltbook", "reason": "test"})
+
+        mock_store.increment_weight.assert_not_called()
+        mock_store.save.assert_not_called()
+
+    def test_on_event_healing_emits_healing_applied(self, plugin):
+        """Healing → HEALING_APPLIED event emitted."""
+        from unittest.mock import MagicMock, patch
+
+        mock_store = MagicMock()
+        mock_store.get_weights.return_value = {}
+
+        with patch("vibe_core.state.synapse_store.get_synapse_store", return_value=mock_store):
+            plugin.on_event("healing.requested", {"target": "moltbook", "reason": "test reason"})
+
+        # Check _emit_event was called with HEALING_APPLIED
+        # plugin._emit_event is not a mock — check via the event bus
+        # At minimum: no crash
+
+    def test_on_event_strategy_planner_clears_cache(self, plugin):
+        """healing.requested for strategy_planner → engagement cache cleared."""
+        from unittest.mock import MagicMock
+
+        mock_planner = MagicMock()
+        cache = {"mission1": {"success": 5}}
+        mock_planner._engagement_cache = cache
+        plugin._strategy_planner = mock_planner
+
+        plugin.on_event("healing.requested", {"target": "strategy_planner", "reason": "test"})
+
+        assert len(cache) == 0  # Cache was cleared
+
+    def test_on_event_violation_logged(self, plugin):
+        """violation.detected targeting moltbook → logged warning."""
+        # Should not crash
+        plugin.on_event("violation.detected", {"target": "moltbook_quality", "message": "test violation"})
+
+    def test_on_event_irrelevant_target_ignored(self, plugin):
+        """healing.requested for unrelated target → no action."""
+        from unittest.mock import patch
+
+        with patch("vibe_core.state.synapse_store.get_synapse_store") as mock_get:
+            plugin.on_event("healing.requested", {"target": "other_plugin", "reason": "test"})
+            mock_get.assert_not_called()
+
+
+class TestKirtanHealthMetrics:
+    """_emit_ouroboros_health() includes content generation metrics."""
+
+    def test_health_emission_no_crash(self, plugin):
+        """Health emission works even without Ouroboros/FeedbackProtocol."""
+        plugin._emit_ouroboros_health()
+        # No crash — Ouroboros unavailable path

@@ -25,12 +25,15 @@ class ContentCircuitExecutor:
     - Handle low-integrity skips (emit event, return None)
     - Convert CycleResult → dict format for callers
     - Return None on any failure (no fallbacks)
+    - KIRTAN: Record failures → Reflection + SynapseStore for system learning
+    - KIRTAN: Record successes → SynapseStore for positive reinforcement
 
     YANTRA Discipline:
     - ONE path: AgencyDirector.run_retry_loop() IS the state machine
     - Explicit event emission on integrity skip
     - Clear status handling (SKIPPED_LOW_INTEGRITY vs. SUCCESS vs. other)
     - No fallbacks: None on any non-success state
+    - Every outcome (success/failure) feeds back into the learning system
     """
 
     def __init__(self, plugin: "ContentCircuitCallbacks") -> None:
@@ -95,11 +98,16 @@ class ContentCircuitExecutor:
                     "content_type": content_type,
                 },
             )
+            self._record_content_failure(content_type, result)
             return None
 
         # Handle other failures
         if result.status != "SUCCESS" or not result.content:
+            self._record_content_failure(content_type, result)
             return None
+
+        # KIRTAN: Record success for positive reinforcement
+        self._record_content_success(content_type)
 
         # Convert CycleResult → dict format
         return {
@@ -108,3 +116,63 @@ class ContentCircuitExecutor:
             "guardian": result.guardian,
             "duration_ms": result.duration_ms,
         }
+
+    def _record_content_failure(self, content_type: str, result: object) -> None:
+        """Kirtan: content generation failed → signal Reflection + SynapseStore.
+
+        Every failure feeds back into the system:
+        1. Reflection: records ExecutionRecord for pattern detection
+        2. SynapseStore: decrements weight so strategy adapts
+        3. Event: emits CONTENT_FAILURE for Ouroboros visibility
+        """
+        status = getattr(result, "status", "UNKNOWN")
+        guna = getattr(result, "guna", "")
+        guardian = getattr(result, "guardian", "")
+        duration_ms = getattr(result, "duration_ms", 0)
+
+        # Reflection: record for pattern analysis (MOKSHA will detect trends)
+        try:
+            from vibe_core.protocols.reflection import ExecutionRecord, get_reflection_safe
+
+            reflection = get_reflection_safe()
+            reflection.record_execution(
+                ExecutionRecord(
+                    command=f"moltbook.content.{content_type}",
+                    success=False,
+                    error=status,
+                    duration_ms=duration_ms,
+                    context={
+                        "content_type": content_type,
+                        "status": status,
+                        "guna": guna,
+                        "guardian": guardian,
+                    },
+                )
+            )
+        except Exception as e:
+            logger.warning(f"Reflection recording failed: {e}")
+
+        # SynapseStore: learn that this content_type is failing
+        try:
+            from vibe_core.state.synapse_store import get_synapse_store
+
+            store = get_synapse_store()
+            store.decrement_weight(f"moltbook:content:{content_type}", "generate", delta=0.03)
+        except Exception as e:
+            logger.warning(f"SynapseStore failure learning failed: {e}")
+
+        self._plugin._emit_event(
+            "CONTENT_FAILURE",
+            f"Content generation failed: {status} ({content_type})",
+            {"status": status, "content_type": content_type, "guna": guna},
+        )
+
+    def _record_content_success(self, content_type: str) -> None:
+        """Kirtan: content generation succeeded → SynapseStore positive reinforcement."""
+        try:
+            from vibe_core.state.synapse_store import get_synapse_store
+
+            store = get_synapse_store()
+            store.increment_weight(f"moltbook:content:{content_type}", "generate", delta=0.02)
+        except Exception as e:
+            logger.warning(f"SynapseStore success learning failed: {e}")
