@@ -312,3 +312,57 @@ Options being considered:
   B. Build an Antaranga-based imprint that both audio and text can produce (shared surface)
   C. Use Prabhupada's 6 syllable signatures as calibration anchors for acoustic→RAMA
   D. Something else entirely that leverages the architecture more naturally
+
+---
+
+## SESSION 4b FINDINGS (Experiments 16-21)
+
+### Critical Discovery: TWO PATHS exist
+
+```
+PATH 1 (shabda_processor): frame → centroid→varga→element → RAMA coord
+  - Used by: stream_to_rama(), experiments 9-14
+  - Problem: element mapping wrong for vowels (centroid ≠ articulation)
+  - STATUS: NOT used by the actual decoder
+
+PATH 2 (shabda_decoder): frame → score_frame(formants) → ARPAbet → ARPABET_TO_RAMA
+  - Used by: ShabdaDecoder.transcribe(), _frames_to_phoneme_coords()
+  - Problem: formant templates are textbook American English, not this speaker
+  - STATUS: THIS is what matters
+```
+
+We were debugging the wrong path for 14 experiments.
+
+### Three concrete bugs found in PATH 2 (the actual decoder)
+
+**BUG 1: Formant templates wrong for speaker** (exp 21)
+  Prabhupada's F2 is +300-450 Hz higher than Peterson & Barney textbook.
+  Japa calibration data:
+    ha: F1=453 F2=1543 (textbook AH: F1=520 F2=1200, diff F2=+343)
+    kṛ: F1=395 F2=1672 (textbook ER: F1=490 F2=1350, diff F2=+322)
+    ṣṇa: F1=419 F2=1656 (textbook AH: F1=520 F2=1200, diff F2=+456)
+  Talk data confirms: "but" vowel F2=1633 vs textbook AH F2=1200.
+
+**BUG 2: Formant scoring has F2 bias** (exp 20)
+  Formula: `f2_err = abs(f2 - center) / center`
+  For f2=1650: AH(1200) err=0.375, EY(2200) err=0.25 — EY wins wrongly.
+  Higher F2 centers get lower relative error. Should use absolute Hz distance.
+
+**BUG 3: Stops confused with same-varga continuants** (exp 20)
+  B→M, T→S, K→NG. Frame-by-frame scoring can't see temporal burst.
+  A stop is silence→burst (1-2 frames). Nasals/fricatives are sustained.
+  score_frame() has no prev_rms context for onset detection.
+
+### Formant extraction WORKS (exp 20)
+  F1 extraction: 78-100% success rate per segment.
+  F2 extraction: 100% success rate.
+  The formant path IS the right approach — just needs calibrated templates.
+
+### What to fix (consolidated, not incremental)
+
+All three bugs must be fixed together in shabda_decoder.py:
+1. Calibrate _VOWEL_FORMANTS from japa data (F2 +350 Hz shift)
+2. Fix formant scoring: absolute Hz distance / fixed range, not relative
+3. Add prev_rms to score_frame() for temporal stop detection
+
+Test with experiment_19 (actual decoder) before committing.
