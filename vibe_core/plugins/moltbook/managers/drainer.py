@@ -65,8 +65,17 @@ class ContentDrainer:
         self._comment_post_map = comment_post_map
         self._followed_agents = followed_agents
         self._subscribed_submolts = subscribed_submolts
-        # Rate-limit state
+        # Rate-limit state — restore from persisted own_post_ids
         self._last_post_ts: float = 0.0
+        if own_post_ids:
+            latest = max(
+                (v.get("created_at", 0.0) for v in own_post_ids.values()
+                 if isinstance(v, dict)),
+                default=0.0,
+            )
+            if latest > 0:
+                self._last_post_ts = latest
+                logger.info(f"Rate limit restored: last post {time.time() - latest:.0f}s ago")
         self._comment_timestamps: List[float] = []
         self._dm_timestamps: List[float] = []
         # Queue health monitoring
@@ -299,12 +308,13 @@ class ContentDrainer:
         if title and content:
             post_result = service.create_post(title, content, submolt)
             post_id = post_result.get("id", "") if isinstance(post_result, dict) else ""
-            if post_id:
-                self._own_post_ids[post_id] = {
-                    "submolt": submolt or "",
-                    "created_at": time.time(),
-                    "title": title[:80],
-                }
+            # Track ALL posts for rate limit persistence — even without API post_id
+            track_key = post_id or f"noid_{int(time.time())}"
+            self._own_post_ids[track_key] = {
+                "submolt": submolt or "",
+                "created_at": time.time(),
+                "title": title[:80],
+            }
             self._log_activity("post_created", {"title": title[:80], "submolt": submolt, "post_id": post_id})
             self._broadcast_to_agora("post", content, {"title": title[:80], "submolt": submolt})
             self._emit_event(

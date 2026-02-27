@@ -7,7 +7,8 @@ the agent plans missions, evaluates topics, and produces prioritized intents.
 
 Uses:
     - SankalpaOrchestrator (substrate/sankalpa/will.py) — mission registry + planner
-    - KnowledgeResolver (knowledge/resolver.py) — topic seeding from KG
+    - MahaBuddhi (substrate/buddhi.py) — cognitive frame for format selection
+    - Lotus RAMA coordinates + basin_cosine/hkr_similarity — semantic matching
     - FeedbackProtocol (protocols/feedback.py) — engagement stats for priority adjustment
 """
 
@@ -24,46 +25,44 @@ logger = logging.getLogger("MOLTBOOK.STRATEGY")
 
 
 
-def _derive_seed_topics() -> tuple:
-    """Derive mission topics from Knowledge Graph + existing Sankalpa missions.
+def _derive_seed_topics(feed_topics: Optional[List[Dict[str, Any]]] = None) -> tuple:
+    """Derive mission topics from feed content + existing Sankalpa missions.
 
     Priority order:
-    1. KnowledgeResolver → KG nodes with moltbook domain concepts
+    1. Feed topics → BG chapter clustering via Lotus VM (what the community discusses)
     2. Existing Sankalpa missions (persisted from previous runs)
 
+    No hardcoded query strings. No KG queries. Feed is truth.
     Returns tuple of (topic_id, description) pairs.
-    Empty tuple = agent has nothing to talk about yet (needs KG or Sankalpa).
     """
     topics: list = []
 
-    # Source 1: Knowledge Graph — search for moltbook-related domain concepts
-    try:
-        from vibe_core.knowledge.resolver import get_resolver
+    # Source 1: Feed topics → cluster by BG chapter via Lotus VM
+    if feed_topics:
+        try:
+            from vibe_core.mahamantra.substrate.lotus_core import get_mahamantra
 
-        resolver = get_resolver()
-        if resolver and hasattr(resolver, "graph"):
-            # Search for moltbook domain nodes
-            nodes = resolver.graph.search_nodes("moltbook")
-            for node in nodes:
-                desc = getattr(node, "description", "")
-                node_id = getattr(node, "id", "")
-                if desc and node_id and len(desc) > 20:
-                    topics.append((f"kg_{node_id}", desc[:200]))
+            lotus = get_mahamantra()
+            chapter_posts: Dict[int, List[str]] = {}
+            for post in feed_topics[:20]:
+                title = str(post.get("title", ""))
+                if not title or len(title) < 10:
+                    continue
+                vm_result = lotus(title)
+                chapter = int(vm_result.get("chapter", 0))
+                if chapter > 0:
+                    chapter_posts.setdefault(chapter, []).append(title[:200])
 
-            # Also search for broader agent/protocol concepts
-            for query in ("agent coordination", "autonomous systems", "decentralized"):
-                extra_nodes = resolver.graph.search_nodes(query)
-                for node in extra_nodes[:2]:
-                    desc = getattr(node, "description", "")
-                    node_id = getattr(node, "id", "")
-                    if desc and node_id and (node_id, desc[:200]) not in [(t[0], t[1]) for t in topics]:
-                        topics.append((f"kg_{node_id}", desc[:200]))
-    except Exception as e:
-        logger.warning(f"KG topic derivation failed: {e}")
+            for chapter, titles in chapter_posts.items():
+                if titles:
+                    slug = titles[0][:30].replace(" ", "_").lower()
+                    topic_id = f"ch{chapter}_{slug}"
+                    topics.append((topic_id, titles[0]))
+        except Exception as e:
+            logger.warning(f"Feed topic clustering failed: {e}")
 
-    # Source 2: Existing Sankalpa missions — only NON-moltbook missions as new topics.
-    # Moltbook missions are already seeded — re-adding them causes infinite nesting
-    # (moltbook_X → moltbook_moltbook_X → moltbook_moltbook_moltbook_X).
+    # Source 2: Existing Sankalpa missions — only NON-moltbook missions.
+    # Moltbook missions are already seeded — re-adding causes infinite nesting.
     try:
         from vibe_core.mahamantra.substrate.sankalpa.will import SankalpaOrchestrator
 
@@ -72,7 +71,6 @@ def _derive_seed_topics() -> tuple:
         for mission in existing:
             mid = mission.id
             desc = mission.description
-            # Skip moltbook-owned missions — they're already seeded
             if mid.startswith("moltbook_"):
                 continue
             if desc and mid not in {t[0] for t in topics}:
@@ -81,11 +79,10 @@ def _derive_seed_topics() -> tuple:
         logger.warning(f"Sankalpa topic derivation failed: {e}")
 
     if topics:
-        logger.info(f"Derived {len(topics)} seed topics from KG + Sankalpa")
+        logger.info(f"Derived {len(topics)} seed topics from feed + Sankalpa")
         return tuple(topics)
 
-    # No fallback — autonomous agent discovers topics or stays silent
-    logger.warning("No seed topics: KG + Sankalpa both empty. Agent will wait.")
+    logger.warning("No seed topics: feed + Sankalpa both empty. Agent will wait.")
     return ()
 
 
@@ -134,6 +131,9 @@ class MoltbookStrategyPlanner:
         self._state_dir = state_dir
         self._attention = None  # MahaAttention instance (lazy)
         self._attention_mission_ids: set = set()  # Missions already memorized
+        # Semantic matching caches (RAMA coordinates)
+        self._mission_coords: Dict[str, tuple] = {}  # mission_id → RAMA coords
+        self._coord_cache: Dict[str, tuple] = {}  # text[:200] → RAMA coords
         # Cache: mission_id → engagement stats
         self._engagement_cache: Dict[str, Dict[str, float]] = {}
         # Restore from disk
@@ -147,16 +147,17 @@ class MoltbookStrategyPlanner:
                 from vibe_core.mahamantra.substrate.sankalpa.will import SankalpaOrchestrator
 
                 self._orchestrator = SankalpaOrchestrator()
-                if not self._missions_seeded:
-                    self._seed_missions()
+                # Seeding deferred to plan_cycle() where feed_topics are available
             except Exception as e:
                 logger.warning(f"SankalpaOrchestrator unavailable: {e}")
         return self._orchestrator
 
-    def _seed_missions(self) -> None:
-        """Load initial missions from dynamically derived topics.
+    def _seed_missions(
+        self, feed_topics: Optional[List[Dict[str, Any]]] = None,
+    ) -> None:
+        """Load initial missions from feed-derived topics.
 
-        Sources: KG domain nodes → Sankalpa missions → fallback topics.
+        Sources: Feed topics (BG chapter clusters) → Sankalpa missions.
         Creates missions for each topic area. Only seeds once —
         subsequent calls are no-ops (missions persist in registry).
         """
@@ -181,8 +182,7 @@ class MoltbookStrategyPlanner:
 
             existing = {m.id for m in orch.registry.get_all_missions()}
 
-            # Derive topics dynamically instead of hardcoded list
-            seed_topics = _derive_seed_topics()
+            seed_topics = _derive_seed_topics(feed_topics)
 
             for topic_id, description in seed_topics:
                 mission_id = f"moltbook_{topic_id}"
@@ -238,30 +238,46 @@ class MoltbookStrategyPlanner:
             logger.warning(f"Active missions query failed: {e}")
             return []
 
-    # Format pools per action type — weighted random selection for diversity
-    _COMMENT_FORMATS = ["question", "observation", "opinion", "analysis"]
-    _POST_FORMATS = ["analysis", "opinion", "tutorial", "observation"]
+    @staticmethod
+    def _buddhi_select_format(action_type: str, mode: str) -> str:
+        """Select content format from BuddhiResult cognitive mode.
 
-    def _select_format(self, action_type: str, cycle_index: int = 0) -> str:
-        """Select content format — rotates through formats for diversity."""
-        pool = self._COMMENT_FORMATS if action_type == "comment" else self._POST_FORMATS
-        return pool[cycle_index % len(pool)]
+        SATTVA (contemplative) → analysis/observation
+        RAJAS  (active)        → opinion/question
+        TAMAS  (transformative) → tutorial/opinion
+        """
+        if action_type == "comment":
+            return {
+                "SATTVA": "observation",
+                "RAJAS": "question",
+                "TAMAS": "opinion",
+            }.get(mode, "observation")
+        return {
+            "SATTVA": "analysis",
+            "RAJAS": "opinion",
+            "TAMAS": "tutorial",
+        }.get(mode, "analysis")
 
     def plan_cycle(
         self,
         feed_topics: List[Dict[str, Any]],
         engagement_stats: Dict[str, Any],
+        own_post_ids: Optional[Dict[str, Dict[str, object]]] = None,
     ) -> List[StrategicIntent]:
         """DHARMA phase: evaluate missions → prioritized action list.
 
-        1. Get active missions from registry
-        2. Match feed_topics against mission goals
-        3. Weight by engagement_stats (what worked)
-        4. Return top-3 prioritized intents
+        1. Seed missions from feed (first call)
+        2. Match feed_topics against missions (semantic via RAMA coords)
+        3. Buddhi.think() on top matches → format selection
+        4. Weight by engagement_stats
+        5. Return top-3 prioritized intents (comment-first)
         """
+        # Seed missions from feed on first call
+        if not self._missions_seeded and feed_topics:
+            self._seed_missions(feed_topics=feed_topics)
+
         missions = self.get_active_missions()
         if not missions:
-            # No missions available — generate a single default post intent
             if feed_topics:
                 best = feed_topics[0]
                 return [
@@ -278,7 +294,7 @@ class MoltbookStrategyPlanner:
 
         intents: List[StrategicIntent] = []
 
-        # Global engagement fallback (from FeedbackProtocol)
+        # Global engagement context
         global_eng = ""
         if engagement_stats:
             rate = engagement_stats.get("success_rate", 0)
@@ -286,14 +302,27 @@ class MoltbookStrategyPlanner:
             if total > 0:
                 global_eng = f"Overall: {rate:.0%} success ({total} signals)"
 
-        # Match feed topics against missions
+        # Match feed topics against missions (semantic)
         matches = self._match_topics(feed_topics, missions)
 
-        # Build intents from matches (comments on matching posts)
-        # Shuffle matches so format rotation creates actual diversity
-        shuffled = list(matches)
-        random.shuffle(shuffled)
-        for idx, match in enumerate(shuffled):
+        # Buddhi.think() on top matches for cognitive format selection
+        match_cognitions: Dict[str, str] = {}  # post_id → mode
+        try:
+            from vibe_core.mahamantra.substrate.buddhi import get_buddhi
+
+            buddhi = get_buddhi()
+            shuffled = list(matches)
+            random.shuffle(shuffled)
+            for match in shuffled[:TRINITY]:
+                cognition = buddhi.think(match.topic)
+                match_cognitions[match.post_id] = cognition.mode
+        except Exception as e:
+            logger.warning(f"Buddhi format selection failed: {e}")
+            shuffled = list(matches)
+            random.shuffle(shuffled)
+
+        # Build comment intents from matches
+        for match in shuffled:
             eng = self._engagement_cache.get(match.mission_id, {})
             eng_context = ""
             if eng:
@@ -301,6 +330,7 @@ class MoltbookStrategyPlanner:
             elif global_eng:
                 eng_context = global_eng
 
+            mode = match_cognitions.get(match.post_id, "SATTVA")
             intents.append(
                 StrategicIntent(
                     action_type="comment",
@@ -310,30 +340,18 @@ class MoltbookStrategyPlanner:
                     mission_id=match.mission_id,
                     target_post_id=match.post_id,
                     engagement_context=eng_context,
-                    content_format=self._select_format("comment", idx),
+                    content_format=self._buddhi_select_format("comment", mode),
                 )
             )
 
-        # Always include at least 1 post intent per cycle
-        # First try: unmatched mission → proactive post
+        # COMMENT-FIRST: Only add a post when there's an unmatched mission
+        # AND the topic doesn't semantically overlap recent posts.
         matched_mission_ids = {m.mission_id for m in matches}
-        logger.info(f"Post diversity: {len(matches)} matches, {len(matched_mission_ids)} matched missions, {len(missions)} total missions")
-        post_added = False
-        # Compute highest comment priority for post boost
         highest_prio = max((i.priority for i in intents), default=5)
+
         for mission in missions:
             if mission.id not in matched_mission_ids:
-                eng = self._engagement_cache.get(mission.id, {})
-                eng_context = ""
-                if eng:
-                    eng_context = f"Success rate: {eng.get('success_rate', 0):.0%}"
-                elif global_eng:
-                    eng_context = global_eng
-
-                # Post topic: derive from feed discussions, NOT KG platform ontology.
-                # KG describes WHAT Moltbook IS (platform topology).
-                # Feed shows WHAT the community DISCUSSES (actual topics).
-                post_topic = mission.description  # fallback if feed empty
+                post_topic = ""
                 if feed_topics:
                     top_by_engagement = sorted(
                         feed_topics, key=lambda t: t.get("upvotes", 0), reverse=True
@@ -343,35 +361,64 @@ class MoltbookStrategyPlanner:
                     ]
                     if theme_titles:
                         post_topic = "; ".join(theme_titles)[:300]
+                if not post_topic:
+                    logger.info(f"No feed topics for post — staying silent (mission '{mission.name}')")
+                    continue
+
+                # Semantic dedup via basin_cosine against own recent posts
+                if own_post_ids and self._semantic_dedup(post_topic, own_post_ids):
+                    logger.info(f"Semantic dedup: '{post_topic[:60]}' similar to recent post")
+                    continue
+
+                eng = self._engagement_cache.get(mission.id, {})
+                eng_context = ""
+                if eng:
+                    eng_context = f"Success rate: {eng.get('success_rate', 0):.0%}"
+                elif global_eng:
+                    eng_context = global_eng
+
+                # Buddhi-driven format for post
+                post_mode = "SATTVA"
+                try:
+                    from vibe_core.mahamantra.substrate.buddhi import get_buddhi
+                    post_mode = get_buddhi().think(post_topic).mode
+                except Exception:
+                    pass
 
                 intents.append(
                     StrategicIntent(
                         action_type="post",
                         topic=post_topic,
                         reasoning=f"Mission '{mission.name}' — proactive post, themes from feed",
-                        priority=highest_prio + 1,  # Strictly higher to survive stable sort
+                        priority=highest_prio + 1,
                         mission_id=mission.id,
                         engagement_context=eng_context,
-                        content_format=self._select_format("post", len(intents)),
+                        content_format=self._buddhi_select_format("post", post_mode),
                     )
                 )
-                post_added = True
-                logger.info(f"Post diversity: proactive post from unmatched mission '{mission.name}'")
+                logger.info(f"Post from unmatched mission '{mission.name}'")
                 break
 
-        # If all missions matched, convert lowest comment to post
-        if not post_added and intents:
-            lowest = min(intents, key=lambda i: i.priority)
-            lowest.action_type = "post"
-            lowest.reasoning = f"{lowest.reasoning} (converted to post for diversity)"
-            lowest.target_post_id = ""
-            lowest.content_format = self._select_format("post", len(intents))
-            lowest.priority = highest_prio + 1
-            logger.info(f"Post diversity: converted comment to post (all missions matched)")
-
-        # Sort by priority (descending), take top 3
         intents.sort(key=lambda i: i.priority, reverse=True)
         return intents[:TRINITY]
+
+    def _semantic_dedup(
+        self, topic: str, own_post_ids: Dict[str, Dict[str, object]],
+    ) -> bool:
+        """Check if topic semantically overlaps with recent posts via basin_cosine."""
+        from vibe_core.mahamantra.substrate.core.basin_map import basin_cosine
+
+        topic_coords = self._get_coords(topic.lower())
+        for post_info in own_post_ids.values():
+            if not isinstance(post_info, dict):
+                continue
+            prev_title = post_info.get("title", "")
+            if not prev_title or not isinstance(prev_title, str):
+                continue
+            prev_coords = self._get_coords(prev_title.lower())
+            if basin_cosine(topic_coords, prev_coords) > 0.85:
+                return True
+        return False
 
     def _ensure_attention(self, missions: List[Any]) -> None:
         """Lazy-init MahaAttention and memorize mission descriptions.
@@ -397,11 +444,13 @@ class MoltbookStrategyPlanner:
         feed_topics: List[Dict[str, Any]],
         missions: List[Any],
     ) -> List[TopicMatch]:
-        """Match feed topics against missions via MahaAttention O(1) lookup.
+        """Match feed topics against missions.
 
-        Falls back to keyword overlap if MahaAttention is unavailable.
+        1. MahaAttention O(1) hash lookup (exact semantic address)
+        2. Semantic fallback via RAMA coordinates + basin_cosine + hkr_similarity
         """
         self._ensure_attention(missions)
+        self._ensure_mission_coords(missions)
         mission_map = {m.id: m for m in missions}
         matches: List[TopicMatch] = []
 
@@ -414,22 +463,22 @@ class MoltbookStrategyPlanner:
             if not post_text:
                 continue
 
-            # O(1) attention lookup
             matched_mission_id = None
             relevance = 0.0
 
+            # O(1) attention lookup
             if self._attention is not None:
                 result = self._attention.attend(post_text)
                 if result.found and result.handler in mission_map:
                     matched_mission_id = result.handler
-                    relevance = 1.0  # Hash match = exact semantic address
+                    relevance = 1.0
 
-            # Keyword overlap fallback (if attention unavailable or no hit)
+            # Semantic fallback via RAMA coordinates
             if matched_mission_id is None:
-                best_id, best_rel = self._keyword_match(post_text, missions)
-                if best_id:
-                    matched_mission_id = best_id
-                    relevance = best_rel
+                post_coords = self._get_coords(post_text)
+                matched_mission_id, relevance = self._semantic_match(
+                    post_coords, missions, self._mission_coords,
+                )
 
             if matched_mission_id and matched_mission_id in mission_map:
                 mission = mission_map[matched_mission_id]
@@ -450,21 +499,56 @@ class MoltbookStrategyPlanner:
         matches.sort(key=lambda m: m.relevance, reverse=True)
         return matches
 
-    @staticmethod
-    def _keyword_match(post_text: str, missions: List[Any]) -> tuple:
-        """Keyword overlap fallback — used when MahaAttention has no hit."""
-        post_words = set(post_text.split())
-        best_id = None
-        best_rel = 0.0
+    def _get_coords(self, text: str) -> tuple:
+        """Get RAMA coordinates for text. Cached by first 200 chars."""
+        key = text[:200]
+        if key not in self._coord_cache:
+            from vibe_core.mahamantra.substrate.lotus_core import get_mahamantra
+
+            lotus = get_mahamantra()
+            self._coord_cache[key] = lotus.nama(key)
+        return self._coord_cache[key]
+
+    def _ensure_mission_coords(self, missions: List[Any]) -> None:
+        """Precompute RAMA coordinates for mission descriptions. Cached."""
         for mission in missions:
-            desc_words = set(mission.description.lower().split())
-            if not desc_words:
+            if mission.id not in self._mission_coords:
+                self._mission_coords[mission.id] = self._get_coords(
+                    mission.description.lower()
+                )
+
+    @staticmethod
+    def _semantic_match(
+        post_coords: tuple,
+        missions: List[Any],
+        mission_coords: Dict[str, tuple],
+    ) -> tuple:
+        """Semantic matching via RAMA coordinates. Returns (mission_id, similarity).
+
+        Combined metric: 60% basin_cosine (coarse field) + 40% hkr_similarity (fine fingerprint).
+        Threshold 0.75 — verified: "Byzantine fault tolerance" vs "distributed consensus" = 0.95,
+        vs "chocolate chip cookies" = 0.63.
+        """
+        from vibe_core.mahamantra.substrate.core.basin_map import (
+            basin_cosine,
+            hkr_similarity,
+        )
+
+        best_id = None
+        best_sim = 0.0
+        for mission in missions:
+            m_coords = mission_coords.get(mission.id)
+            if not m_coords:
                 continue
-            relevance = len(post_words & desc_words) / len(desc_words)
-            if relevance > best_rel and relevance > 0.1:
-                best_rel = relevance
+            bc = basin_cosine(post_coords, m_coords)
+            hkr = hkr_similarity(post_coords, m_coords)
+            sim = 0.6 * bc + 0.4 * hkr
+            if sim > best_sim:
+                best_sim = sim
                 best_id = mission.id
-        return best_id, best_rel
+        if best_sim < 0.75:
+            return None, 0.0
+        return best_id, best_sim
 
     def _mission_priority_score(self, mission_id: str, missions: List[Any]) -> int:
         """Convert mission priority enum to integer score (0-10).
@@ -505,14 +589,18 @@ class MoltbookStrategyPlanner:
         if not topic:
             return
 
-        # Find matching mission by keyword overlap
+        # Find matching mission by semantic similarity (RAMA coordinates)
         missions = self.get_active_missions()
-        topic_words = set(topic.lower().split())
+        self._ensure_mission_coords(missions)
+        topic_coords = self._get_coords(topic.lower())
+
+        from vibe_core.mahamantra.substrate.core.basin_map import basin_cosine
 
         for mission in missions:
-            desc_words = set(mission.description.lower().split())
-            overlap = len(topic_words & desc_words)
-            if overlap >= 2 or (desc_words and overlap / len(desc_words) > 0.2):
+            m_coords = self._mission_coords.get(mission.id)
+            if not m_coords:
+                continue
+            if basin_cosine(topic_coords, m_coords) > 0.7:
                 # Update engagement cache
                 cache = self._engagement_cache.setdefault(
                     mission.id,

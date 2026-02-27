@@ -1326,7 +1326,10 @@ class MoltbookPlugin(KernelPlugin):
             pass
 
         try:
-            intents = planner.plan_cycle(self._current_feed_topics, engagement_stats)
+            intents = planner.plan_cycle(
+                self._current_feed_topics, engagement_stats,
+                own_post_ids=self._own_post_ids,
+            )
             self._current_intents = intents
             if intents:
                 logger.info(f"Strategy: {len(intents)} intents planned ({', '.join(i.action_type for i in intents)})")

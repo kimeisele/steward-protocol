@@ -413,69 +413,57 @@ class AgencyDirector:
         input_ctx: Dict[str, Any],
         **ctx: Any,
     ) -> tuple:
-        """PROCESS phase: generate content using Mahamantra infrastructure.
+        """PROCESS phase: MahaBuddhi.think() → ContentComposer → content.
 
-        1. Run mahamantra(text) → pipeline result (guna, guardian, resonant words)
-        2. Minimal gate: TAMAS + dead cell = skip. Everything else produces content.
-        3. Guna → style (contemplative/active), guardian from pipeline
-        4. Delegate to ContentComposer for LLM composition
-        5. SravanamCheck advisory + smart truncation
+        1. buddhi.think(text) → BuddhiResult (ONE VM call, ONE composition)
+        2. Integrity gate: dead cell or low integrity = skip
+        3. Compose via ContentComposer (BuddhiResult drives everything)
+        4. SravanamCheck advisory + safety truncation
         """
         seed_text = raw_input or ctx.get("trigger", content_type)
 
-        # Run Mahamantra VM pipeline
-        pipeline_result = self._content_composer._run_pipeline(seed_text)
-        if not pipeline_result:
-            return None, {"error": "Pipeline returned None", "status": "ERROR"}
+        # MahaBuddhi: ONE cognitive call (VM + Composition, no redundancy)
+        from vibe_core.mahamantra.substrate.buddhi import get_buddhi
 
-        # Extract physics
-        guna = pipeline_result.get("guna", {}).get("mode", "RAJAS")
-        alive = pipeline_result.get("cell", {}).get("is_alive", True)
-        integrity = float(pipeline_result.get("cell", {}).get("integrity", 1.0))
-        guardian = str(pipeline_result.get("guardian", "unknown"))
+        try:
+            cognition = get_buddhi().think(seed_text)
+        except Exception as e:
+            logger.error(f"MahaBuddhi.think() failed: {e}")
+            return None, {"error": str(e), "status": "ERROR"}
+
+        # Extract physics from cognition
+        guna = cognition.mode
+        guardian = str(cognition.vm_result.get("guardian", "unknown"))
+        integrity = cognition.integrity
 
         # Semantic skip: ALL gunas check integrity, not just TAMAS.
-        # Dead cells always skip. Low-integrity content = silence is better than garbage.
         integrity_cf = int(integrity * COSMIC_FRAME)
         threshold = _INTEGRITY_THRESHOLDS.get(guna, _INTEGRITY_THRESHOLDS["RAJAS"])
-        if not alive or integrity_cf < threshold:
+        if not cognition.is_alive or integrity_cf < threshold:
             logger.info(f"Skip: {guna} integrity={integrity_cf}/{COSMIC_FRAME} (threshold={threshold})")
             return None, {"guna": guna, "guardian": guardian, "skipped": True, "status": "SKIPPED_LOW_INTEGRITY"}
 
         style = _GUNA_STYLE.get(guna, "active")
 
-        # Resonance classification — zone (integer CF) + rasa (emotional tone)
+        # Resonance classification (observability)
         resonance_zone = ResonanceHarmonics.get_zone(integrity_cf)
-        rasa_name, rasa_meaning = VedicScaleMapping.resonance_to_rasa(integrity)
+        rasa_name, _ = VedicScaleMapping.resonance_to_rasa(integrity)
         logger.info(
             f"PROCESS: guna={guna} style={style} guardian={guardian} "
             f"integrity={integrity:.3f} zone={resonance_zone} rasa={rasa_name}"
         )
 
-        # Compose content via ContentComposer — all harmonics data flows as CONTEXT
-        content = self._content_composer.compose(
-            pipeline_result,
-            seed_text,
-            content_type,
-            input_ctx,
-            rasa_name=rasa_name,
-            rasa_meaning=rasa_meaning,
-            guna=guna,
-            style=style,
-            resonance_zone=resonance_zone,
-            integrity_cf=integrity_cf,
-        )
+        # Compose via ContentComposer — BuddhiResult drives everything
+        content = self._content_composer.compose(cognition, seed_text, content_type, input_ctx)
 
-        # SravanamCheck advisory — entropy verification (observability, not blocking)
+        # SravanamCheck advisory
         sravanam_ok = True
         sravanam_reason = ""
         if content:
             input_tokens = len(seed_text.split())
             output_tokens = len(content.split())
             sravanam_ok, sravanam_reason = SravanamCheck.can_emit(
-                input_tokens,
-                output_tokens,
-                integrity,
+                input_tokens, output_tokens, integrity,
             )
             if not sravanam_ok:
                 safe_size = SravanamCheck.compute_safe_output_size(input_tokens)
@@ -483,8 +471,7 @@ class AgencyDirector:
                     f"SravanamCheck advisory: {sravanam_reason} (safe_output={safe_size}, actual={output_tokens})"
                 )
 
-        # Safety-net truncation: only if content exceeds API hard limit (10KB)
-        # Length is FORMAT-DRIVEN (via token budget in composer), not hardcoded here.
+        # Safety-net truncation
         _API_SAFETY_LIMIT = 10000
         if content and len(content) > _API_SAFETY_LIMIT:
             content = self._content_composer.truncate_smart(content, _API_SAFETY_LIMIT)
@@ -502,7 +489,6 @@ class AgencyDirector:
         if not sravanam_ok:
             process_ctx["sravanam_advisory"] = sravanam_reason
 
-        # Explicit status when LLM produced no content
         if not content:
             process_ctx["status"] = "LLM_UNAVAILABLE"
             process_ctx["error"] = "LLM unavailable — no content generated"

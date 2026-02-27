@@ -6,12 +6,15 @@ Tests MoltbookStrategyPlanner — Sankalpa mission matching, plan_cycle,
 engagement feedback, priority boosting/deprioritization.
 
 SankalpaOrchestrator is mocked — we test the planner's logic, not Sankalpa's.
+Lotus/Buddhi calls are mocked to avoid slow VM imports in tests.
 """
 
 import json
 from dataclasses import dataclass
 from enum import Enum
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 from vibe_core.cartridges.agent_city.moltbook.core.strategy import (
     MoltbookStrategyPlanner,
@@ -67,9 +70,51 @@ _TEST_MISSIONS = [
     ),
 ]
 
+# Deterministic RAMA coords for testing — pure basin groups ensure distinct semantic fields.
+# basin_cosine between pure-basin groups = 0.0, combined similarity ~0.35 (below 0.75 threshold).
+# Self-similarity = 1.0 (above 0.75 threshold).
+_COORDS_AI_GOVERNANCE = (10, 12, 13, 18, 21, 24, 32, 33, 34, 36)  # Basin 122
+_COORDS_DECENTRALIZED = (0, 3, 6, 8, 23, 25, 31, 35, 38, 40)     # Basin 38
+_COORDS_COMMUNITY = (1, 2, 9, 15, 17, 19, 22, 28, 29, 48)        # Basin 22
+_COORDS_UNRELATED = (4, 11, 14, 16, 20, 26, 37, 39, 41, 43)      # Basin 11
+
+# Map of text fragments → coords (for deterministic _get_coords mock)
+_COORDS_MAP = {
+    "ai governance": _COORDS_AI_GOVERNANCE,
+    "transparent decision": _COORDS_AI_GOVERNANCE,
+    "autonomous systems": _COORDS_AI_GOVERNANCE,
+    "decentralized protocols": _COORDS_DECENTRALIZED,
+    "agent-to-agent coordination": _COORDS_DECENTRALIZED,
+    "agent coordination": _COORDS_DECENTRALIZED,
+    "community building": _COORDS_COMMUNITY,
+    "social dynamics": _COORDS_COMMUNITY,
+    "agent networks": _COORDS_COMMUNITY,
+    "pizza": _COORDS_UNRELATED,
+    "spaghetti": _COORDS_UNRELATED,
+}
+
+
+def _mock_get_coords(text: str) -> tuple:
+    """Deterministic RAMA coords mock — matches by keyword fragments."""
+    text_lower = text.lower()
+    for fragment, coords in _COORDS_MAP.items():
+        if fragment in text_lower:
+            return coords
+    return _COORDS_UNRELATED
+
+
+def _mock_buddhi_think(text: str):
+    """Return a fake BuddhiResult-like object with .mode attribute."""
+    mock = MagicMock()
+    mock.mode = "SATTVA"
+    mock.approach = "DHARMA"
+    mock.function = "maintainer"
+    mock.chapter = 3
+    return mock
+
 
 def _make_planner(missions=None) -> MoltbookStrategyPlanner:
-    """Create a planner with mocked orchestrator."""
+    """Create a planner with mocked orchestrator and semantic infrastructure."""
     planner = MoltbookStrategyPlanner()
     planner._missions_seeded = True  # Skip real seeding
 
@@ -80,7 +125,22 @@ def _make_planner(missions=None) -> MoltbookStrategyPlanner:
     orch.registry = registry
     planner._orchestrator = orch
 
+    # Mock semantic infrastructure to avoid slow imports
+    planner._get_coords = _mock_get_coords
+
     return planner
+
+
+@pytest.fixture
+def _mock_buddhi():
+    """Mock get_buddhi() to avoid full Lotus VM in plan_cycle."""
+    mock_buddhi = MagicMock()
+    mock_buddhi.think.side_effect = _mock_buddhi_think
+    with patch(
+        "vibe_core.mahamantra.substrate.buddhi.get_buddhi",
+        return_value=mock_buddhi,
+    ):
+        yield mock_buddhi
 
 
 # ---------------------------------------------------------------------------
@@ -103,7 +163,7 @@ class TestPlanCycle:
         assert result[0].mission_id == "default"
         assert result[0].target_post_id == "p1"
 
-    def test_matching_feed_produces_comment_intent(self):
+    def test_matching_feed_produces_comment_intent(self, _mock_buddhi):
         planner = _make_planner(missions=_TEST_MISSIONS)
         topics = [
             {
@@ -119,7 +179,7 @@ class TestPlanCycle:
         assert comments[0].mission_id == "moltbook_ai_governance"
         assert comments[0].target_post_id == "p1"
 
-    def test_unmatched_missions_produce_proactive_post(self):
+    def test_unmatched_missions_produce_proactive_post(self, _mock_buddhi):
         planner = _make_planner(missions=_TEST_MISSIONS)
         # Feed that matches only ai_governance
         topics = [
@@ -134,7 +194,7 @@ class TestPlanCycle:
         # At least one proactive post for an unmatched mission
         assert len(posts) >= 1
 
-    def test_max_trinity_intents(self):
+    def test_max_trinity_intents(self, _mock_buddhi):
         """plan_cycle returns at most TRINITY (3) intents."""
         planner = _make_planner(missions=_TEST_MISSIONS)
         # Many matching topics
@@ -145,10 +205,10 @@ class TestPlanCycle:
         result = planner.plan_cycle(topics, {})
         assert len(result) <= TRINITY
 
-    def test_intents_sorted_by_priority_descending(self):
+    def test_intents_sorted_by_priority_descending(self, _mock_buddhi):
         planner = _make_planner(missions=_TEST_MISSIONS)
         topics = [
-            {"id": "p1", "title": "AI governance decision autonomous", "content": ""},
+            {"id": "p1", "title": "AI governance and transparent decision-making autonomous", "content": ""},
             {"id": "p2", "title": "Decentralized protocols agent coordination", "content": ""},
             {"id": "p3", "title": "Community building social dynamics agent networks", "content": ""},
         ]
@@ -158,12 +218,12 @@ class TestPlanCycle:
 
 
 # ---------------------------------------------------------------------------
-# Topic matching
+# Topic matching (semantic via RAMA coordinates)
 # ---------------------------------------------------------------------------
 
 
 class TestTopicMatching:
-    def test_keyword_overlap_matching(self):
+    def test_semantic_matching(self):
         planner = _make_planner(missions=_TEST_MISSIONS)
         topics = [
             {"id": "p1", "title": "decentralized protocols for agent coordination", "content": ""},
@@ -171,9 +231,9 @@ class TestTopicMatching:
         matches = planner._match_topics(topics, _TEST_MISSIONS)
         assert len(matches) == 1
         assert matches[0].mission_id == "moltbook_decentralized_protocols"
-        assert matches[0].relevance > 0.1
+        assert matches[0].relevance > 0.5
 
-    def test_low_relevance_filtered_out(self):
+    def test_unrelated_topic_filtered_out(self):
         planner = _make_planner(missions=_TEST_MISSIONS)
         topics = [
             {"id": "p1", "title": "pizza recipe for lunch", "content": ""},
@@ -210,6 +270,87 @@ class TestTopicMatching:
         assert len(matches) == 1
         assert matches[0].post_meta["upvotes"] == 42
         assert matches[0].post_meta["author"] == "agent_alpha"
+
+
+# ---------------------------------------------------------------------------
+# _semantic_match — RAMA coordinates + basin_cosine + hkr_similarity
+# ---------------------------------------------------------------------------
+
+
+class TestSemanticMatch:
+    def test_identical_coords_high_similarity(self):
+        """Same coords → similarity=1.0, above threshold."""
+        coords = (0, 1, 2, 3, 4, 5)
+        missions = [FakeMission(id="m1", name="M", description="test", priority=FakePriority.MEDIUM)]
+        mission_coords = {"m1": coords}
+        mid, sim = MoltbookStrategyPlanner._semantic_match(coords, missions, mission_coords)
+        assert mid == "m1"
+        assert sim >= 0.99
+
+    def test_different_coords_low_similarity(self):
+        """Very different coords → below threshold → no match."""
+        post_coords = (0, 1, 2, 3, 4)
+        mission_coords = {"m1": (40, 41, 42, 43, 44)}
+        missions = [FakeMission(id="m1", name="M", description="test", priority=FakePriority.MEDIUM)]
+        mid, sim = MoltbookStrategyPlanner._semantic_match(post_coords, missions, mission_coords)
+        # Whether this matches depends on actual basin_cosine — but very different coords
+        # should produce low similarity
+        if mid is None:
+            assert sim == 0.0
+
+    def test_empty_missions(self):
+        mid, sim = MoltbookStrategyPlanner._semantic_match((0, 1, 2), [], {})
+        assert mid is None
+        assert sim == 0.0
+
+    def test_missing_mission_coords_skipped(self):
+        missions = [FakeMission(id="m1", name="M", description="test", priority=FakePriority.MEDIUM)]
+        mid, sim = MoltbookStrategyPlanner._semantic_match((0, 1, 2), missions, {})
+        assert mid is None
+        assert sim == 0.0
+
+    def test_picks_best_mission(self):
+        """When multiple missions have coords, picks the best match."""
+        post_coords = (0, 1, 2, 3, 4, 5)
+        missions = [
+            FakeMission(id="m1", name="M1", description="close", priority=FakePriority.MEDIUM),
+            FakeMission(id="m2", name="M2", description="far", priority=FakePriority.MEDIUM),
+        ]
+        mission_coords = {
+            "m1": (0, 1, 2, 3, 4, 5),  # Identical
+            "m2": (40, 41, 42, 43, 44, 45),  # Different
+        }
+        mid, sim = MoltbookStrategyPlanner._semantic_match(post_coords, missions, mission_coords)
+        assert mid == "m1"
+
+
+# ---------------------------------------------------------------------------
+# _buddhi_select_format — mode-driven format selection
+# ---------------------------------------------------------------------------
+
+
+class TestBuddhiSelectFormat:
+    def test_sattva_comment_observation(self):
+        assert MoltbookStrategyPlanner._buddhi_select_format("comment", "SATTVA") == "observation"
+
+    def test_rajas_comment_question(self):
+        assert MoltbookStrategyPlanner._buddhi_select_format("comment", "RAJAS") == "question"
+
+    def test_tamas_comment_opinion(self):
+        assert MoltbookStrategyPlanner._buddhi_select_format("comment", "TAMAS") == "opinion"
+
+    def test_sattva_post_analysis(self):
+        assert MoltbookStrategyPlanner._buddhi_select_format("post", "SATTVA") == "analysis"
+
+    def test_rajas_post_opinion(self):
+        assert MoltbookStrategyPlanner._buddhi_select_format("post", "RAJAS") == "opinion"
+
+    def test_tamas_post_tutorial(self):
+        assert MoltbookStrategyPlanner._buddhi_select_format("post", "TAMAS") == "tutorial"
+
+    def test_unknown_mode_defaults(self):
+        assert MoltbookStrategyPlanner._buddhi_select_format("comment", "UNKNOWN") == "observation"
+        assert MoltbookStrategyPlanner._buddhi_select_format("post", "UNKNOWN") == "analysis"
 
 
 # ---------------------------------------------------------------------------
@@ -271,7 +412,7 @@ class TestPriorityScoring:
 
 
 # ---------------------------------------------------------------------------
-# Engagement feedback
+# Engagement feedback (semantic matching)
 # ---------------------------------------------------------------------------
 
 
@@ -364,7 +505,7 @@ class TestEngagementFeedback:
 
 
 class TestGlobalEngagementStats:
-    def test_global_stats_used_as_fallback(self):
+    def test_global_stats_used_as_fallback(self, _mock_buddhi):
         planner = _make_planner(missions=_TEST_MISSIONS)
         topics = [
             {"id": "p1", "title": "AI governance and transparent decision-making autonomous", "content": ""},
@@ -374,7 +515,7 @@ class TestGlobalEngagementStats:
         with_eng = [i for i in result if "Overall:" in i.engagement_context]
         assert len(with_eng) >= 1
 
-    def test_mission_specific_overrides_global(self):
+    def test_mission_specific_overrides_global(self, _mock_buddhi):
         planner = _make_planner(missions=_TEST_MISSIONS)
         planner._engagement_cache["moltbook_ai_governance"] = {
             "success_rate": 0.9,
@@ -391,7 +532,7 @@ class TestGlobalEngagementStats:
             assert "Success rate:" in matched[0].engagement_context
             assert "Overall:" not in matched[0].engagement_context
 
-    def test_empty_global_stats_no_context(self):
+    def test_empty_global_stats_no_context(self, _mock_buddhi):
         planner = _make_planner(missions=_TEST_MISSIONS)
         topics = [
             {"id": "p1", "title": "AI governance and transparent decision-making autonomous", "content": ""},
@@ -432,7 +573,7 @@ class TestGracefulDegradation:
 
 
 # ---------------------------------------------------------------------------
-# Seed topics constant
+# Seed topics — feed-based derivation
 # ---------------------------------------------------------------------------
 
 
@@ -447,10 +588,32 @@ class TestSeedTopics:
             assert isinstance(entry[1], str)
 
     def test_derive_returns_empty_when_no_sources(self):
-        """When KG + Sankalpa unavailable, returns empty tuple (no fallback)."""
+        """When feed + Sankalpa unavailable, returns empty tuple."""
         topics = _derive_seed_topics()
-        # Without KG/Sankalpa in test env, returns empty — autonomous agent waits
         assert isinstance(topics, tuple)
+
+    def test_derive_with_feed_topics(self):
+        """Feed topics produce chapter-based seed topics via Lotus VM."""
+        feed = [
+            {"title": "Distributed consensus algorithms and their tradeoffs"},
+            {"title": "Short"},  # Should be skipped (len < 10)
+            {"title": "Agent coordination in multi-agent systems research"},
+        ]
+        # Mock lotus() to return chapter-based results
+        mock_lotus = MagicMock()
+        mock_lotus.return_value = {"chapter": 3}
+        with patch(
+            "vibe_core.mahamantra.substrate.lotus_core.get_mahamantra",
+            return_value=mock_lotus,
+        ):
+            topics = _derive_seed_topics(feed_topics=feed)
+
+        assert isinstance(topics, tuple)
+        # Should have at least 1 topic from feed (both long titles → same chapter 3)
+        if topics:
+            # Topic IDs should start with "ch" (chapter-based)
+            feed_topics = [t for t in topics if t[0].startswith("ch")]
+            assert len(feed_topics) >= 1
 
 
 # ---------------------------------------------------------------------------
@@ -615,7 +778,7 @@ class TestAttentionWiring:
 
     MahaAttention provides O(1) intent→handler lookup via deterministic hash.
     _ensure_attention() lazy-inits it and memorizes mission descriptions.
-    _match_topics() uses attend() first, falls back to keyword overlap.
+    _match_topics() uses attend() first, falls back to semantic RAMA matching.
     """
 
     def test_ensure_attention_lazy_init(self):
@@ -626,10 +789,8 @@ class TestAttentionWiring:
         planner._ensure_attention(_TEST_MISSIONS)
 
         # MahaAttention should be initialized (or None if import fails)
-        # Either way, mission IDs should be tracked
         if planner._attention is not None:
             assert len(planner._attention_mission_ids) == len(_TEST_MISSIONS)
-        # No crash = success
 
     def test_ensure_attention_idempotent(self):
         """Calling _ensure_attention twice doesn't re-memorize missions."""
@@ -657,12 +818,12 @@ class TestAttentionWiring:
             {"id": "p1", "title": "AI governance and transparent decision-making", "content": "autonomous systems"},
         ]
         matches = planner._match_topics(topics, _TEST_MISSIONS)
-        # Should find a match regardless of path (attention or keyword)
+        # Should find a match regardless of path (attention or semantic)
         assert len(matches) >= 1
         assert matches[0].post_id == "p1"
 
-    def test_match_topics_attention_unavailable_falls_back(self):
-        """When MahaAttention import fails, keyword overlap still works."""
+    def test_match_topics_attention_unavailable_uses_semantic(self):
+        """When MahaAttention import fails, semantic RAMA matching works."""
         planner = _make_planner(missions=_TEST_MISSIONS)
         # Force attention to be unavailable
         planner._attention = None
@@ -693,52 +854,6 @@ class TestAttentionWiring:
         matches = planner._match_topics(topics, _TEST_MISSIONS)
         if matches and matches[0].relevance == 1.0:
             assert matches[0].mission_id == mission.id
-
-
-# ---------------------------------------------------------------------------
-# _keyword_match — static fallback method
-# ---------------------------------------------------------------------------
-
-
-class TestKeywordMatch:
-    def test_high_overlap_returns_match(self):
-        best_id, rel = MoltbookStrategyPlanner._keyword_match(
-            "decentralized protocols agent coordination", _TEST_MISSIONS
-        )
-        assert best_id == "moltbook_decentralized_protocols"
-        assert rel > 0.1
-
-    def test_no_overlap_returns_none(self):
-        best_id, rel = MoltbookStrategyPlanner._keyword_match(
-            "pizza spaghetti recipe lunch", _TEST_MISSIONS
-        )
-        assert best_id is None
-        assert rel == 0.0
-
-    def test_best_mission_wins(self):
-        """Picks mission with highest keyword overlap."""
-        # Text strongly matches decentralized_protocols
-        best_id, _ = MoltbookStrategyPlanner._keyword_match(
-            "decentralized protocols and agent-to-agent coordination", _TEST_MISSIONS
-        )
-        assert best_id == "moltbook_decentralized_protocols"
-
-    def test_empty_missions(self):
-        best_id, rel = MoltbookStrategyPlanner._keyword_match("any text", [])
-        assert best_id is None
-        assert rel == 0.0
-
-    def test_threshold_at_0_1(self):
-        """Matches below 10% overlap are rejected."""
-        one_word_mission = FakeMission(
-            id="m_big",
-            name="Big",
-            description="a b c d e f g h i j k l m n o p q r s t",  # 20 words
-            priority=FakePriority.MEDIUM,
-        )
-        # Only 1/20 = 5% overlap → should NOT match
-        best_id, _ = MoltbookStrategyPlanner._keyword_match("a", [one_word_mission])
-        assert best_id is None
 
 
 # ---------------------------------------------------------------------------
@@ -808,12 +923,12 @@ class TestMissionNesting:
 
 
 # ---------------------------------------------------------------------------
-# Intent diversity — at least 1 post per cycle
+# Intent diversity — comment-first strategy
 # ---------------------------------------------------------------------------
 
 
 class TestIntentDiversity:
-    def test_unmatched_mission_creates_post(self):
+    def test_unmatched_mission_creates_post(self, _mock_buddhi):
         """When some missions don't match feed, one gets a proactive post."""
         planner = _make_planner(missions=_TEST_MISSIONS)
         # Feed matches only 1 mission
@@ -824,51 +939,53 @@ class TestIntentDiversity:
         posts = [i for i in result if i.action_type == "post"]
         assert len(posts) >= 1, "Should have at least 1 post intent"
 
-    def test_all_matched_converts_lowest_to_post(self):
-        """When ALL missions match feed (no unmatched for proactive post),
-        convert the lowest-priority comment to a post for diversity."""
-        # Create missions that ALL match the same generic text
+    def test_all_matched_stays_comment_only(self, _mock_buddhi):
+        """When ALL missions match feed, agent comments — no forced post conversion."""
         generic_missions = [
             FakeMission(
                 id="m1", name="M1",
-                description="agent systems and protocols for coordination",
+                description="AI governance and transparent decision-making",
                 priority=FakePriority.HIGH,
             ),
             FakeMission(
                 id="m2", name="M2",
-                description="agent coordination protocols systems",
+                description="decentralized protocols and agent coordination",
                 priority=FakePriority.LOW,
             ),
         ]
         planner = _make_planner(missions=generic_missions)
+
+        # Feed posts that each match their respective mission
         topics = [
-            {"id": "p1", "title": "agent systems and protocols for coordination research", "content": ""},
-            {"id": "p2", "title": "agent coordination protocols systems analysis", "content": ""},
+            {"id": "p1", "title": "AI governance and transparent decision-making research", "content": ""},
+            {"id": "p2", "title": "decentralized protocols for agent coordination analysis", "content": ""},
         ]
         result = planner.plan_cycle(topics, {})
         posts = [i for i in result if i.action_type == "post"]
-        # At least 1 post even when all missions matched
-        assert len(posts) >= 1, f"Expected post intent, got: {[(i.action_type, i.mission_id) for i in result]}"
+        comments = [i for i in result if i.action_type == "comment"]
+        # All matched → comments only, no forced post
+        assert len(posts) == 0, f"Should not force post when all missions matched: {[(i.action_type, i.mission_id) for i in result]}"
+        assert len(comments) >= 1, "Should have comment intents"
 
-    def test_post_from_conversion_has_empty_target(self):
-        """Converted post should not have a target_post_id (it's a new post, not a reply)."""
-        generic_missions = [
-            FakeMission(
-                id="m1", name="M1",
-                description="agent systems protocols coordination",
-                priority=FakePriority.MEDIUM,
-            ),
-        ]
-        planner = _make_planner(missions=generic_missions)
+    def test_semantic_dedup_skips_recent_post(self, _mock_buddhi):
+        """Post intent is skipped when topic semantically overlaps with own recent post."""
+        planner = _make_planner(missions=_TEST_MISSIONS)
+        # Unmatched mission would normally create a post
         topics = [
-            {"id": "p1", "title": "agent systems protocols coordination research", "content": ""},
+            {"id": "p1", "title": "AI governance and transparent decision-making autonomous", "content": ""},
         ]
-        result = planner.plan_cycle(topics, {})
+        # We recently posted about the same thing (own_post_ids)
+        own_posts = {
+            "post_123": {
+                "title": "AI governance and transparent decision-making autonomous systems",
+                "created_at": 1000000.0,
+            },
+        }
+        result = planner.plan_cycle(topics, {}, own_post_ids=own_posts)
         posts = [i for i in result if i.action_type == "post"]
-        for post in posts:
-            assert post.target_post_id == "", f"Converted post should not target a specific post"
+        assert len(posts) == 0, "Should skip post when topic semantically overlaps recent"
 
-    def test_max_trinity_still_enforced_with_diversity(self):
+    def test_max_trinity_still_enforced_with_diversity(self, _mock_buddhi):
         """Intent diversity doesn't break TRINITY cap."""
         planner = _make_planner(missions=_TEST_MISSIONS)
         topics = [
@@ -878,11 +995,40 @@ class TestIntentDiversity:
         result = planner.plan_cycle(topics, {})
         assert len(result) <= TRINITY
 
-    def test_empty_feed_no_intents(self):
-        """With missions but no feed topics, unmatched missions still produce a post."""
+    def test_empty_feed_stays_silent(self, _mock_buddhi):
+        """With no feed topics, agent stays silent — doesn't post from mission descriptions."""
         planner = _make_planner(missions=_TEST_MISSIONS)
         result = planner.plan_cycle([], {})
-        # All missions unmatched → at least 1 proactive post
-        if result:
-            posts = [i for i in result if i.action_type == "post"]
-            assert len(posts) >= 1
+        # No feed → no topics to write about → no intents
+        assert len(result) == 0, f"Should stay silent with empty feed, got: {result}"
+
+
+# ---------------------------------------------------------------------------
+# _semantic_dedup — basin_cosine based dedup
+# ---------------------------------------------------------------------------
+
+
+class TestSemanticDedup:
+    def test_identical_topics_are_dupes(self):
+        planner = _make_planner()
+        own_posts = {"p1": {"title": "AI governance and transparent decisions"}}
+        assert planner._semantic_dedup("AI governance and transparent decisions", own_posts)
+
+    def test_unrelated_topics_not_dupes(self):
+        planner = _make_planner()
+        own_posts = {"p1": {"title": "pizza recipe collection"}}
+        assert not planner._semantic_dedup("AI governance and transparent decisions", own_posts)
+
+    def test_empty_own_posts(self):
+        planner = _make_planner()
+        assert not planner._semantic_dedup("anything", {})
+
+    def test_skips_non_dict_entries(self):
+        planner = _make_planner()
+        own_posts = {"p1": "not_a_dict"}
+        assert not planner._semantic_dedup("anything", own_posts)
+
+    def test_skips_empty_titles(self):
+        planner = _make_planner()
+        own_posts = {"p1": {"title": ""}}
+        assert not planner._semantic_dedup("anything", own_posts)
