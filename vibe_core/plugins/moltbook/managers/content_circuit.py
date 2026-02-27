@@ -164,7 +164,13 @@ class ContentCircuitExecutor:
         self._plugin._emit_event(
             "CONTENT_FAILURE",
             f"Content generation failed: {status} ({content_type})",
-            {"status": status, "content_type": content_type, "guna": guna},
+            {
+                "status": status,
+                "content_type": content_type,
+                "guna": guna,
+                "department_signal": True,
+                "healing_target": f"moltbook:content:{content_type}",
+            },
         )
 
     def _record_content_success(self, content_type: str) -> None:
