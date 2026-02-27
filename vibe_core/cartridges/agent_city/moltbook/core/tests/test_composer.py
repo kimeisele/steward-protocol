@@ -185,7 +185,7 @@ class TestBuildTask:
         )
         assert "POST:" not in msg
 
-    @patch.object(ContentComposer, "_build_resonance_context", return_value="RESONANCE:\n- agni (fire) — 0.91 [element]")
+    @patch.object(ContentComposer, "_build_resonance_context", return_value="RESONANCE:\n- fire — 0.91 [element]")
     def test_resonance_context_included(self, mock_res):
         composer = ContentComposer()
         msg = composer._build_task(
@@ -193,20 +193,21 @@ class TestBuildTask:
             {"content_format": "observation"},
         )
         assert "RESONANCE:" in msg
-        assert "agni (fire)" in msg
-        # When resonance is available, RESONANT CONCEPTS should NOT appear
+        assert "fire" in msg
+        # Sanskrit composed output must NOT leak into prompt
         assert "RESONANT CONCEPTS:" not in msg
 
     @patch.object(ContentComposer, "_build_resonance_context", return_value="")
-    def test_resonant_concepts_fallback(self, mock_res):
+    def test_composed_sanskrit_not_injected(self, mock_res):
         composer = ContentComposer()
         msg = composer._build_task(
             _make_cognition(composed="dharma karma action truth"), "post", "topic",
             {"content_format": "observation"},
         )
-        # Falls back to BuddhiResult.composed when resonance unavailable
-        assert "RESONANT CONCEPTS:" in msg
-        assert "dharma karma action truth" in msg
+        # cognition.composed contains Sanskrit words — must NOT appear in prompt
+        # (causes Sanskrit injection in LLM output: "viparītān", "śāśvat")
+        assert "RESONANT CONCEPTS:" not in msg
+        assert "dharma karma action truth" not in msg
 
     def test_knowledge_context_included(self):
         composer = ContentComposer()
@@ -271,10 +272,12 @@ class TestResonanceContext:
             result = ContentComposer._build_resonance_context(
                 "distributed systems architecture"
             )
-        # fire appears once (deduped), truth appears
-        assert "agni (fire)" in result
-        assert "satya (truth)" in result
-        assert result.count("(fire)") == 1  # deduped
+        # fire appears once (deduped), truth appears — English only (no Sanskrit)
+        assert "- fire" in result
+        assert "- truth" in result
+        assert "agni" not in result  # No Sanskrit in LLM prompt
+        assert "satya" not in result
+        assert result.count("fire") == 1  # deduped
 
     def test_includes_dimension_scores(self):
         """Resonance context shows top-scoring dimension for each word."""

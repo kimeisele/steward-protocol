@@ -357,10 +357,10 @@ class TestPromptConstruction:
         assert "Chapter" in prompt, f"No chapter in prompt: {prompt[:200]}"
 
     def test_prompt_has_verse_concepts(self):
-        """Verse concepts from MahaBuddhi must reach the system prompt."""
+        """Verse concepts from MahaBuddhi must reach the system prompt (English only)."""
         prompt = self._build_prompt(MOLTBOOK_POSTS[0])
-        # Should contain "Verse concepts:" with actual verse meanings
-        assert "Verse concepts:" in prompt, f"No verse concepts in prompt: {prompt[:200]}"
+        # Should contain "Concepts:" with English meanings (no Sanskrit)
+        assert "Concepts:" in prompt, f"No concepts in prompt: {prompt[:200]}"
 
     def test_prompt_under_800_chars(self):
         """System prompt must be dense, not verbose."""
@@ -395,6 +395,7 @@ class TestPromptConstruction:
 # ============================================================================
 
 
+@pytest.mark.timeout(30)
 class TestDirectorCycle:
     """Test AgencyDirector.run_cycle() with real pipeline, mocked LLM."""
 
