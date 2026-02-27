@@ -137,12 +137,17 @@ class ContentComposer:
         elif eng_ctx:
             reasoning = eng_ctx
         if reasoning:
-            parts.append(f"Context: {reasoning[:200]}")
+            parts.append(f"Context: {reasoning[:500]}")
 
         # Submolt context — WHERE this content goes
         submolt_ctx = input_ctx.get("submolt_context", "")
         if submolt_ctx:
-            parts.append(f"Community: {submolt_ctx[:150]}")
+            parts.append(f"Community: {submolt_ctx[:300]}")
+
+        # Rasa — aesthetic mood (from VedicScaleMapping, computed from integrity)
+        rasa = input_ctx.get("rasa", "")
+        if rasa:
+            parts.append(f"Rasa: {rasa}")
 
         # Anti-slop (universal — not content-specific)
         parts.append(
@@ -188,10 +193,12 @@ class ContentComposer:
         elif cognition.composed:
             parts.append(f"\nRESONANT CONCEPTS: {cognition.composed}")
 
-        # Knowledge context
+        # Knowledge context — full domain knowledge from Knowledge Graph
+        # The KG returns structured context (nodes, deps, constraints, scores).
+        # Previous limit of 300 chars used <2% of available knowledge.
         knowledge = input_ctx.get("knowledge_context", "")
         if knowledge:
-            parts.append(f"\nDOMAIN: {knowledge[:300]}")
+            parts.append(f"\nDOMAIN KNOWLEDGE:\n{knowledge[:2000]}")
 
         return "\n".join(parts)
 

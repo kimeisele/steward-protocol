@@ -132,6 +132,8 @@ class IntentExecutor:
                 "submolt_context": intent_dict.get("submolt_context", ""),
                 "content_format": intent_dict.get("content_format", ""),
                 "post_content": post_content,
+                "mission_id": intent_dict.get("mission_id", ""),
+                "priority": intent_dict.get("priority", 5),
             },
         )
         if proposal:
@@ -180,6 +182,8 @@ class IntentExecutor:
                 "engagement_context": intent_dict.get("engagement_context", ""),
                 "submolt_context": submolt_ctx,
                 "content_format": intent_dict.get("content_format", ""),
+                "mission_id": intent_dict.get("mission_id", ""),
+                "priority": intent_dict.get("priority", 5),
             },
         )
         if proposal:
