@@ -8,7 +8,7 @@ the agent plans missions, evaluates topics, and produces prioritized intents.
 Uses:
     - SankalpaOrchestrator (substrate/sankalpa/will.py) — mission registry + planner
     - MahaBuddhi (substrate/buddhi.py) — cognitive frame for format selection
-    - Lotus RAMA coordinates + basin_cosine/hkr_similarity — semantic matching
+    - Keyword Jaccard similarity (stop-word removal) — topic-to-mission matching
     - FeedbackProtocol (protocols/feedback.py) — engagement stats for priority adjustment
 """
 
@@ -302,7 +302,7 @@ class MoltbookStrategyPlanner:
 
         1. SravanamCheck: listen-before-speak gate (input ≥ 2× output)
         2. Seed missions from feed (first call)
-        3. Match feed_topics against missions (semantic via RAMA coords)
+        3. Match feed_topics against missions (keyword Jaccard)
         4. Buddhi.think() on top matches → format selection
         5. Weight by engagement_stats
         6. Engagement threshold: 0 engagement → comments only
@@ -421,7 +421,7 @@ class MoltbookStrategyPlanner:
                     logger.info(f"No feed topics for post — staying silent (mission '{mission.name}')")
                     continue
 
-                # Semantic dedup via basin_cosine against own recent posts
+                # Keyword Jaccard dedup against own recent posts
                 if own_post_ids and self._semantic_dedup(post_topic, own_post_ids):
                     logger.info(f"Semantic dedup: '{post_topic[:60]}' similar to recent post")
                     continue
@@ -558,7 +558,7 @@ class MoltbookStrategyPlanner:
         """Match feed topics against missions.
 
         1. MahaAttention O(1) hash lookup (exact semantic address)
-        2. Semantic fallback via RAMA coordinates + basin_cosine + hkr_similarity
+        2. Keyword Jaccard fallback (tokenized word overlap, stop-words removed)
         """
         self._ensure_attention(missions)
         self._ensure_mission_tokens(missions)
