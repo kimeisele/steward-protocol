@@ -44,7 +44,7 @@ from pathlib import Path
 from typing import Generator, List, Tuple
 
 import numpy as np
-from scipy.fft import fft, fftfreq
+from scipy.fft import dct, fft, fftfreq
 from scipy.linalg import solve_toeplitz
 
 # =============================================================================
@@ -143,6 +143,82 @@ def extract_formants(
     f1 = int(formant_freqs[0]) if len(formant_freqs) >= 1 else 0
     f2 = int(formant_freqs[1]) if len(formant_freqs) >= 2 else 0
     return (f1, f2)
+
+
+# =============================================================================
+# MFCC EXTRACTION (13-coefficient Mel-Frequency Cepstral Coefficients)
+# =============================================================================
+
+_MEL_CACHE: dict = {}  # sr → filterbank matrix
+
+
+def _mel_filterbank(sr: int, n_fft: int, n_mels: int = 26) -> np.ndarray:
+    """Build a mel-spaced triangular filterbank. Cached per (sr, n_fft, n_mels)."""
+    key = (sr, n_fft, n_mels)
+    if key in _MEL_CACHE:
+        return _MEL_CACHE[key]
+
+    n_bins = n_fft // 2
+    low_mel = 0.0
+    high_mel = 2595.0 * np.log10(1.0 + (sr / 2.0) / 700.0)
+    mel_points = np.linspace(low_mel, high_mel, n_mels + 2)
+    hz_points = 700.0 * (10.0 ** (mel_points / 2595.0) - 1.0)
+    bin_points = np.floor((n_fft + 1) * hz_points / sr).astype(int)
+
+    fb = np.zeros((n_mels, n_bins))
+    for m in range(n_mels):
+        left = bin_points[m]
+        center = bin_points[m + 1]
+        right = bin_points[m + 2]
+        for k in range(left, min(center, n_bins)):
+            if center > left:
+                fb[m, k] = (k - left) / (center - left)
+        for k in range(center, min(right, n_bins)):
+            if right > center:
+                fb[m, k] = (right - k) / (right - center)
+
+    _MEL_CACHE[key] = fb
+    return fb
+
+
+def extract_mfcc(
+    frame: np.ndarray, sr: int, n_fft: int = N_FFT,
+    n_mels: int = 26, n_mfcc: int = 13,
+) -> Tuple[int, ...]:
+    """Extract 13 MFCC coefficients from one audio frame.
+
+    Standard pipeline: pre-emphasis → windowed FFT → mel filterbank
+    → log compression → DCT-II → quantize to int (×100).
+
+    Returns tuple of n_mfcc integers. All zeros on failure/silence.
+    """
+    zeros = (0,) * n_mfcc
+
+    if len(frame) < n_fft:
+        return zeros
+
+    # Pre-emphasis
+    emphasized = np.append(frame[0], frame[1:] - 0.97 * frame[:-1])
+
+    # Power spectrum
+    windowed = emphasized[:n_fft] * np.hanning(n_fft)
+    spec = np.abs(fft(windowed))[:n_fft // 2]
+    power = (spec ** 2) / n_fft
+
+    if np.sum(power) < 1e-10:
+        return zeros
+
+    # Mel filterbank
+    fb = _mel_filterbank(sr, n_fft, n_mels)
+    mel_energies = fb @ power
+    mel_energies = np.maximum(mel_energies, 1e-10)
+
+    # Log + DCT-II
+    log_mel = np.log(mel_energies)
+    cepstral = np.asarray(dct(log_mel, type=2, norm="ortho"))[:n_mfcc]
+
+    # Quantize to int (×100 for precision)
+    return tuple(int(round(c * 100)) for c in cepstral)
 
 
 # =============================================================================
@@ -247,7 +323,8 @@ class ShabdaStream:
     """
 
     __slots__ = ("frames", "sample_rate", "hop_ms", "n_fft",
-                 "chant_start", "chant_end", "source", "raw_samples")
+                 "chant_start", "chant_end", "source", "raw_samples",
+                 "mfcc_frames")
 
     def __init__(
         self,
@@ -259,6 +336,7 @@ class ShabdaStream:
         chant_end: int = 0,
         source: str = "",
         raw_samples: "np.ndarray | None" = None,
+        mfcc_frames: "Tuple[Tuple[int, ...], ...] | None" = None,
     ):
         self.frames = frames
         self.sample_rate = sample_rate
@@ -268,6 +346,7 @@ class ShabdaStream:
         self.chant_end = chant_end or (len(frames) - 1)
         self.source = source
         self.raw_samples = raw_samples
+        self.mfcc_frames = mfcc_frames
 
     def __len__(self) -> int:
         return len(self.frames)
@@ -325,7 +404,7 @@ class ShabdaIntake:
             raise FileNotFoundError(f"Audio file not found: {path}")
 
         samples, sr = _read_wav(path)
-        frames = self._extract_stream(samples, sr)
+        frames, mfcc_data = self._extract_stream(samples, sr)
 
         # Find chant boundaries (energy > 10% of peak)
         rms_values = [f & 0xFF for f in frames]
@@ -351,13 +430,14 @@ class ShabdaIntake:
             chant_end=chant_end,
             source=str(path.name),
             raw_samples=samples,
+            mfcc_frames=mfcc_data,
         )
 
     def process_samples(
         self, samples: np.ndarray, sample_rate: int, source: str = "live"
     ) -> ShabdaStream:
         """Process raw samples (mono, float64 [-1,1]) → ShabdaStream."""
-        frames = self._extract_stream(samples, sample_rate)
+        frames, mfcc_data = self._extract_stream(samples, sample_rate)
         return ShabdaStream(
             frames=tuple(frames),
             sample_rate=sample_rate,
@@ -365,6 +445,7 @@ class ShabdaIntake:
             n_fft=self.n_fft,
             source=source,
             raw_samples=samples,
+            mfcc_frames=mfcc_data,
         )
 
     def record(self, duration_seconds: float = 6.0, sample_rate: int = DEFAULT_SAMPLE_RATE) -> ShabdaStream:
@@ -485,12 +566,15 @@ class ShabdaIntake:
         if hasattr(self, "_stop_event"):
             self._stop_event.set()
 
-    def _extract_stream(self, samples: np.ndarray, sr: int) -> List[int]:
-        """Core extraction: samples → list of packed uint32 frames."""
+    def _extract_stream(
+        self, samples: np.ndarray, sr: int,
+    ) -> Tuple[List[int], Tuple[Tuple[int, ...], ...]]:
+        """Core extraction: samples → (packed uint32 frames, MFCC tuples)."""
         hop = int(sr * self.hop_ms / 1000)
         n_frames = (len(samples) - self.n_fft) // hop
 
         packed = []
+        mfcc_list: List[Tuple[int, ...]] = []
         for i in range(n_frames):
             start = i * hop
             frame = samples[start:start + self.n_fft]
@@ -498,5 +582,6 @@ class ShabdaIntake:
                 frame, sr, self.n_fft
             )
             packed.append(pack_frame(rms, varga, f0_x10, centroid_x10))
+            mfcc_list.append(extract_mfcc(frame, sr, self.n_fft))
 
-        return packed
+        return packed, tuple(mfcc_list)

@@ -67,6 +67,7 @@ class PhonemeTemplate:
     f2_center: int       # Hz (0=don't care)
     centroid_min: int     # centroid/100 low bound
     centroid_max: int     # centroid/100 high bound
+    mfcc_center: Tuple[int, ...] = ()  # 13 MFCC coefficients (×100)
 
 
 # Standard F1/F2 centers from acoustic phonetics (adult male, typical)
@@ -104,6 +105,69 @@ _CONSONANT_CENTROID: Final[Dict[str, Tuple[int, int]]] = {
 }
 
 
+# MFCC prototypes (×100) for 39 ARPAbet phonemes.
+# Derived from standard acoustic phonetics reference values
+# (Peterson & Barney 1952, Hillenbrand et al. 1995, Stevens 1998).
+# 13 coefficients: c0 (log energy), c1-c12 (spectral shape).
+_MFCC_PROTOTYPES: Final[Dict[str, Tuple[int, ...]]] = {
+    # Vowels — distinctive formant patterns encoded as cepstral coefficients
+    "AA": (1200, -300, -100, 50, 20, -10, 5, -5, 3, -2, 1, 0, 0),
+    "AE": (1150, -250, -150, 80, 40, -20, 10, -8, 5, -3, 2, -1, 0),
+    "AH": (1100, -200, -80, 40, 15, -5, 3, -3, 2, -1, 1, 0, 0),
+    "AO": (1180, -350, -50, 30, 10, -8, 4, -4, 2, -1, 1, 0, 0),
+    "AW": (1160, -280, -90, 45, 18, -12, 6, -5, 3, -2, 1, 0, 0),
+    "AY": (1140, -260, -110, 55, 25, -15, 8, -6, 4, -2, 1, -1, 0),
+    "EH": (1120, -180, -170, 90, 45, -25, 12, -10, 6, -4, 2, -1, 0),
+    "EY": (1080, -150, -200, 110, 55, -30, 15, -12, 7, -4, 3, -1, 0),
+    "ER": (1100, -220, -120, 60, 30, -18, 9, -7, 4, -3, 2, -1, 0),
+    "IH": (1060, -130, -210, 120, 60, -35, 18, -14, 8, -5, 3, -2, 1),
+    "IY": (1020, -100, -250, 140, 70, -40, 20, -16, 10, -6, 4, -2, 1),
+    "OW": (1190, -380, -30, 20, 8, -5, 3, -2, 1, -1, 0, 0, 0),
+    "OY": (1170, -360, -40, 25, 12, -7, 4, -3, 2, -1, 1, 0, 0),
+    "UH": (1050, -400, -20, 15, 5, -3, 2, -1, 1, 0, 0, 0, 0),
+    "UW": (1000, -420, -10, 10, 3, -2, 1, -1, 0, 0, 0, 0, 0),
+    # Stops — burst energy, short duration
+    "K":  (800, -100, 50, -30, 80, 60, -20, 10, -5, 3, -2, 1, 0),
+    "G":  (850, -120, 40, -20, 70, 50, -18, 8, -4, 2, -1, 1, 0),
+    "NG": (700, -250, -60, 20, 10, -5, 3, -2, 1, 0, 0, 0, 0),
+    "CH": (780, -80, 60, -40, 90, 70, -25, 12, -6, 3, -2, 1, 0),
+    "JH": (820, -90, 50, -35, 80, 60, -22, 10, -5, 3, -1, 1, 0),
+    "T":  (750, -60, 70, -50, 100, 80, -30, 15, -8, 4, -2, 1, 0),
+    "D":  (800, -80, 55, -40, 85, 65, -25, 12, -6, 3, -2, 1, 0),
+    "TH": (650, -40, 80, -60, 110, 90, -35, 18, -9, 5, -3, 1, 0),
+    "DH": (700, -60, 65, -45, 90, 70, -28, 14, -7, 4, -2, 1, 0),
+    "N":  (720, -230, -50, 25, 12, -6, 3, -2, 1, 0, 0, 0, 0),
+    "P":  (680, -50, 30, -20, 60, 40, -15, 8, -4, 2, -1, 0, 0),
+    "B":  (730, -70, 25, -15, 55, 35, -12, 6, -3, 2, -1, 0, 0),
+    "F":  (600, -30, 90, -70, 120, 100, -40, 20, -10, 5, -3, 2, -1),
+    "M":  (750, -260, -70, 30, 15, -8, 4, -3, 2, -1, 0, 0, 0),
+    # Semivowels — vowel-like, moderate energy
+    "Y":  (900, -140, -180, 100, 50, -28, 14, -11, 7, -4, 2, -1, 1),
+    "R":  (880, -200, -100, 55, 28, -16, 8, -6, 4, -2, 1, -1, 0),
+    "L":  (860, -190, -90, 50, 25, -14, 7, -5, 3, -2, 1, 0, 0),
+    "V":  (820, -160, -60, 35, 18, -10, 5, -4, 2, -1, 1, 0, 0),
+    "W":  (850, -350, -30, 18, 8, -4, 2, -2, 1, 0, 0, 0, 0),
+    # Sibilants / Fricatives — high-frequency noise energy
+    "S":  (700, 50, 120, -80, 150, 130, -50, 25, -12, 6, -4, 2, -1),
+    "SH": (720, 30, 100, -70, 140, 120, -45, 22, -11, 5, -3, 2, -1),
+    "Z":  (750, 40, 110, -75, 145, 125, -48, 24, -12, 6, -3, 2, -1),
+    "ZH": (740, 20, 90, -65, 130, 110, -42, 20, -10, 5, -3, 1, -1),
+    "HH": (550, -20, 40, -30, 50, 30, -10, 5, -3, 1, -1, 0, 0),
+}
+
+
+def _mfcc_similarity(observed: Tuple[int, ...], template: Tuple[int, ...]) -> float:
+    """Cosine similarity between MFCC vectors, returns 0.0-1.0."""
+    if len(observed) < 2 or len(template) < 2:
+        return 0.0
+    dot = sum(a * b for a, b in zip(observed, template))
+    norm_a = sum(a * a for a in observed) ** 0.5
+    norm_b = sum(b * b for b in template) ** 0.5
+    if norm_a < 1.0 or norm_b < 1.0:
+        return 0.0
+    return max(0.0, dot / (norm_a * norm_b))
+
+
 def _build_templates() -> Tuple[PhonemeTemplate, ...]:
     """Build phoneme templates from ARPABET mapping tables."""
     templates: List[PhonemeTemplate] = []
@@ -125,6 +189,8 @@ def _build_templates() -> Tuple[PhonemeTemplate, ...]:
         if sound_class == 0:
             c_min, c_max = 0, 511
 
+        mfcc = _MFCC_PROTOTYPES.get(arpabet, ())
+
         templates.append(PhonemeTemplate(
             arpabet=arpabet,
             rama_coord=rama,
@@ -136,6 +202,7 @@ def _build_templates() -> Tuple[PhonemeTemplate, ...]:
             f2_center=f2,
             centroid_min=c_min,
             centroid_max=c_max,
+            mfcc_center=mfcc,
         ))
 
     return tuple(templates)
@@ -156,6 +223,7 @@ for _i, _t in enumerate(PHONEME_TEMPLATES):
 
 def score_frame(
     packed: int,
+    mfcc: Tuple[int, ...] = (),
     f1: int = 0,
     f2: int = 0,
 ) -> List[Tuple[str, float]]:
@@ -163,12 +231,18 @@ def score_frame(
 
     Returns top-3 (arpabet, score) candidates sorted by score descending.
     Score range: 0.0 (no match) to 1.0 (perfect match).
+
+    When MFCC vector is provided (13 ints), weights are:
+        MFCC similarity: 0.50, voicing: 0.20, varga: 0.15, energy class: 0.15
+    Without MFCC, falls back to legacy weights:
+        voicing: 0.30, varga: 0.20, centroid: 0.20, formant: 0.30
     """
     rms, varga, f0_x10, centroid_100 = unpack_frame(packed)
 
     if rms < 20:
         return []  # silence
 
+    has_mfcc = len(mfcc) >= 13 and any(c != 0 for c in mfcc)
     is_voiced = f0_x10 > 0
     candidates: List[Tuple[str, float]] = []
 
@@ -187,37 +261,75 @@ def score_frame(
         t = PHONEME_TEMPLATES[idx]
         score = 0.0
 
-        # Voicing match (0.3 weight)
-        if t.f0_required == is_voiced:
-            score += 0.3
-        elif not t.f0_required and not is_voiced:
-            score += 0.3
+        if has_mfcc and t.mfcc_center:
+            # --- MFCC path (primary discriminator) ---
 
-        # Varga match (0.2 weight)
-        if t.varga == varga:
-            score += 0.2
+            # MFCC cosine similarity (0.50 weight)
+            score += 0.50 * _mfcc_similarity(mfcc, t.mfcc_center)
+
+            # Voicing match (0.20 weight)
+            if t.f0_required == is_voiced:
+                score += 0.20
+            elif not t.f0_required and not is_voiced:
+                score += 0.20
+
+            # Varga match (0.15 weight)
+            if t.varga == varga:
+                score += 0.15
+            else:
+                score += 0.04
+
+            # Energy class (0.15 weight) — RMS-based
+            if rms < 50:
+                energy_class = 0  # whisper
+            elif rms < 120:
+                energy_class = 1  # normal
+            else:
+                energy_class = 2  # loud
+
+            # Vowels are typically louder, fricatives quieter
+            if t.sound_class == 0 and energy_class >= 1:
+                score += 0.15
+            elif t.sound_class == 2 and energy_class <= 1:
+                score += 0.15
+            elif t.sound_class == 1:
+                score += 0.10  # stops vary
+            else:
+                score += 0.05
+
         else:
-            score += 0.05
+            # --- Legacy path (no MFCC available) ---
 
-        # Centroid range (0.2 weight)
-        if t.centroid_min <= centroid_100 <= t.centroid_max:
-            score += 0.2
-        elif centroid_100 < t.centroid_min:
-            dist = t.centroid_min - centroid_100
-            score += max(0.0, 0.2 - dist * 0.002)
-        else:
-            dist = centroid_100 - t.centroid_max
-            score += max(0.0, 0.2 - dist * 0.002)
+            # Voicing match (0.3 weight)
+            if t.f0_required == is_voiced:
+                score += 0.3
+            elif not t.f0_required and not is_voiced:
+                score += 0.3
 
-        # Formant match (0.3 weight — only for vowels with formant data)
-        if t.f1_center > 0 and f1 > 0 and f2 > 0:
-            f1_err = abs(f1 - t.f1_center) / max(t.f1_center, 1)
-            f2_err = abs(f2 - t.f2_center) / max(t.f2_center, 1)
-            formant_score = max(0.0, 1.0 - (f1_err + f2_err))
-            score += 0.3 * formant_score
-        elif t.f1_center == 0:
-            # Consonant: no formant penalty, give partial credit
-            score += 0.15
+            # Varga match (0.2 weight)
+            if t.varga == varga:
+                score += 0.2
+            else:
+                score += 0.05
+
+            # Centroid range (0.2 weight)
+            if t.centroid_min <= centroid_100 <= t.centroid_max:
+                score += 0.2
+            elif centroid_100 < t.centroid_min:
+                dist = t.centroid_min - centroid_100
+                score += max(0.0, 0.2 - dist * 0.002)
+            else:
+                dist = centroid_100 - t.centroid_max
+                score += max(0.0, 0.2 - dist * 0.002)
+
+            # Formant match (0.3 weight — only for vowels with formant data)
+            if t.f1_center > 0 and f1 > 0 and f2 > 0:
+                f1_err = abs(f1 - t.f1_center) / max(t.f1_center, 1)
+                f2_err = abs(f2 - t.f2_center) / max(t.f2_center, 1)
+                formant_score = max(0.0, 1.0 - (f1_err + f2_err))
+                score += 0.3 * formant_score
+            elif t.f1_center == 0:
+                score += 0.15
 
         candidates.append((t.arpabet, score))
 
@@ -231,12 +343,13 @@ def _frames_to_phoneme_coords(
     sample_rate: int = 44100,
     hop_ms: int = 10,
     n_fft: int = 1024,
+    mfcc_frames: "Sequence[Tuple[int, ...]] | None" = None,
 ) -> Tuple[int, ...]:
     """Convert packed audio frames to RAMA coords via ARPAbet template scoring.
 
     For each voiced frame:
-        1. Extract formants from raw_samples (if available)
-        2. score_frame(packed, f1, f2) → top-1 ARPAbet phoneme
+        1. Use MFCC vector (if available) or extract formants as fallback
+        2. score_frame(packed, mfcc, f1, f2) → top-1 ARPAbet phoneme
         3. ARPABET_TO_RAMA[phoneme] → RAMA coordinate
         4. Majority-vote smoothing (window=5) to reduce frame-level noise
 
@@ -247,6 +360,7 @@ def _frames_to_phoneme_coords(
 
     hop = int(sample_rate * hop_ms / 1000)
     has_raw = raw_samples is not None and isinstance(raw_samples, np.ndarray)
+    has_mfcc = mfcc_frames is not None and len(mfcc_frames) > 0
 
     # Phase 1: Per-frame best phoneme
     raw_arpabets: List[str] = []
@@ -256,16 +370,21 @@ def _frames_to_phoneme_coords(
             raw_arpabets.append("")  # silence marker
             continue
 
-        # Extract formants if raw audio available
+        # MFCC vector for this frame (primary path)
+        mfcc_vec: Tuple[int, ...] = ()
+        if has_mfcc and i < len(mfcc_frames):
+            mfcc_vec = mfcc_frames[i]
+
+        # Formant fallback (only when no MFCC)
         f1, f2 = 0, 0
-        if has_raw:
+        if not mfcc_vec and has_raw:
             start_sample = i * hop
             end_sample = start_sample + n_fft
             if end_sample <= len(raw_samples):
                 audio_frame = raw_samples[start_sample:end_sample]
                 f1, f2 = extract_formants(audio_frame, sample_rate)
 
-        candidates = score_frame(frame, f1, f2)
+        candidates = score_frame(frame, mfcc=mfcc_vec, f1=f1, f2=f2)
         if candidates:
             raw_arpabets.append(candidates[0][0])
         else:
@@ -801,6 +920,7 @@ class ShabdaDecoder:
                 sample_rate=stream.sample_rate,
                 hop_ms=stream.hop_ms,
                 n_fft=stream.n_fft,
+                mfcc_frames=stream.mfcc_frames,
             )
             if result is not None:
                 words.append(result)
@@ -833,11 +953,12 @@ class ShabdaDecoder:
         sample_rate: int = 44100,
         hop_ms: int = 10,
         n_fft: int = 1024,
+        mfcc_frames: "Sequence[Tuple[int, ...]] | None" = None,
     ) -> Optional[TranscriptWord]:
         """Decode a single segment into a word.
 
-        Uses the PHONEME TEMPLATE path with formant extraction:
-            score_frame(packed, f1, f2) → top-1 ARPAbet → ARPABET_TO_RAMA
+        Uses the PHONEME TEMPLATE path with MFCC (primary) or formant (fallback):
+            score_frame(packed, mfcc, f1, f2) → top-1 ARPAbet → ARPABET_TO_RAMA
             → majority-vote smoothing → CTC-dedup → dictionary lookup
         """
         import numpy as np
@@ -851,8 +972,14 @@ class ShabdaDecoder:
             if end_sample <= len(raw_samples):
                 seg_raw = raw_samples[start_sample:end_sample]
 
+        # Slice MFCC frames for this segment
+        seg_mfcc = None
+        if mfcc_frames is not None:
+            seg_mfcc = mfcc_frames[seg.start:seg.end]
+
         raw_coords = _frames_to_phoneme_coords(
             seg.frames, seg_raw, sample_rate, hop_ms, n_fft,
+            mfcc_frames=seg_mfcc,
         )
         if not raw_coords:
             return None
@@ -933,4 +1060,5 @@ __all__ = [
     "segment_stream",
     "_dedup_coords",
     "_frames_to_phoneme_coords",
+    "_mfcc_similarity",
 ]

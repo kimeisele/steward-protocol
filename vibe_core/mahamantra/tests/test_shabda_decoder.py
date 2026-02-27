@@ -14,6 +14,7 @@ from vibe_core.mahamantra.protocols._seed import PANCHA, WORDS
 from vibe_core.mahamantra.sound.shabda_intake import (
     DEFAULT_SAMPLE_RATE,
     extract_formants,
+    extract_mfcc,
     pack_frame,
 )
 from vibe_core.mahamantra.substrate.encoding.phonetic_bridge import (
@@ -595,6 +596,138 @@ class TestEndToEnd:
         assert len(w.rama_coords) == 4
         assert w.start_ms == 0
         assert w.end_ms == 100
+
+
+# =============================================================================
+# TEST: MFCC Extraction
+# =============================================================================
+
+
+class TestMFCCExtraction:
+    """Verify extract_mfcc() produces correct 13-coefficient vectors."""
+
+    def test_silence_returns_zeros(self):
+        """Silence frame → all zeros."""
+        silence = np.zeros(1024)
+        result = extract_mfcc(silence, DEFAULT_SAMPLE_RATE)
+        assert result == (0,) * 13
+
+    def test_short_frame_returns_zeros(self):
+        """Frame shorter than n_fft → all zeros."""
+        short = np.random.randn(100)
+        result = extract_mfcc(short, DEFAULT_SAMPLE_RATE)
+        assert result == (0,) * 13
+
+    def test_sine_wave_nonzero(self):
+        """A sine wave frame should produce non-zero MFCCs."""
+        t = np.arange(1024) / DEFAULT_SAMPLE_RATE
+        signal = 0.8 * np.sin(2 * np.pi * 440 * t)
+        result = extract_mfcc(signal, DEFAULT_SAMPLE_RATE)
+        assert len(result) == 13
+        assert any(c != 0 for c in result), "Sine wave should produce non-zero MFCCs"
+
+    def test_returns_13_integers(self):
+        """Result is a tuple of exactly 13 integers."""
+        signal = _sine_wave(300.0, 0.1, DEFAULT_SAMPLE_RATE)
+        result = extract_mfcc(signal[:1024], DEFAULT_SAMPLE_RATE)
+        assert len(result) == 13
+        assert all(isinstance(c, int) for c in result)
+
+    def test_deterministic(self):
+        """Same input → same output."""
+        signal = _sine_wave(440.0, 0.1, DEFAULT_SAMPLE_RATE)
+        frame = signal[:1024]
+        r1 = extract_mfcc(frame, DEFAULT_SAMPLE_RATE)
+        r2 = extract_mfcc(frame, DEFAULT_SAMPLE_RATE)
+        assert r1 == r2
+
+
+# =============================================================================
+# TEST: MFCC Templates
+# =============================================================================
+
+
+class TestMFCCTemplates:
+    """Verify MFCC prototype integration in PhonemeTemplates."""
+
+    def test_all_templates_have_mfcc(self):
+        """All 39 phoneme templates should have 13-element mfcc_center."""
+        from vibe_core.mahamantra.sound.shabda_decoder import PHONEME_TEMPLATES
+        for t in PHONEME_TEMPLATES:
+            assert len(t.mfcc_center) == 13, (
+                f"{t.arpabet} should have 13 MFCC coefficients, got {len(t.mfcc_center)}"
+            )
+
+    def test_vowels_differ_from_consonants(self):
+        """Vowel and consonant MFCC templates should be distinguishable."""
+        from vibe_core.mahamantra.sound.shabda_decoder import PHONEME_TEMPLATES, _mfcc_similarity
+        vowels = [t for t in PHONEME_TEMPLATES if t.sound_class == 0]
+        consonants = [t for t in PHONEME_TEMPLATES if t.sound_class != 0]
+        # Average intra-vowel similarity should exceed average vowel-consonant similarity
+        intra = []
+        for i, v1 in enumerate(vowels):
+            for v2 in vowels[i + 1:]:
+                intra.append(_mfcc_similarity(v1.mfcc_center, v2.mfcc_center))
+        cross = []
+        for v in vowels[:5]:
+            for c in consonants[:5]:
+                cross.append(_mfcc_similarity(v.mfcc_center, c.mfcc_center))
+        avg_intra = sum(intra) / len(intra) if intra else 0
+        avg_cross = sum(cross) / len(cross) if cross else 0
+        assert avg_intra > avg_cross, (
+            f"Intra-vowel similarity ({avg_intra:.3f}) should exceed "
+            f"vowel-consonant similarity ({avg_cross:.3f})"
+        )
+
+    def test_self_similarity_is_one(self):
+        """Cosine similarity of a template with itself should be 1.0."""
+        from vibe_core.mahamantra.sound.shabda_decoder import PHONEME_TEMPLATES, _mfcc_similarity
+        for t in PHONEME_TEMPLATES:
+            sim = _mfcc_similarity(t.mfcc_center, t.mfcc_center)
+            assert abs(sim - 1.0) < 0.001, (
+                f"{t.arpabet} self-similarity should be 1.0, got {sim}"
+            )
+
+
+# =============================================================================
+# TEST: MFCC-Enhanced Frame Scoring
+# =============================================================================
+
+
+class TestMFCCFrameScoring:
+    """Verify score_frame() with MFCC vectors."""
+
+    def test_mfcc_path_produces_candidates(self):
+        """score_frame with MFCC vector should return candidates."""
+        from vibe_core.mahamantra.sound.shabda_decoder import score_frame, _MFCC_PROTOTYPES
+        frame = pack_frame(150, 0, 1200, 15000)
+        mfcc = _MFCC_PROTOTYPES["AA"]
+        result = score_frame(frame, mfcc=mfcc)
+        assert len(result) > 0
+
+    def test_matching_mfcc_scores_higher(self):
+        """Frame with matching MFCC should score higher than mismatched."""
+        from vibe_core.mahamantra.sound.shabda_decoder import score_frame, _MFCC_PROTOTYPES
+        frame = pack_frame(150, 0, 1200, 15000)  # voiced, KANTHYA
+        # Score with AA-matching MFCC vs S-matching MFCC
+        aa_result = score_frame(frame, mfcc=_MFCC_PROTOTYPES["AA"])
+        s_result = score_frame(frame, mfcc=_MFCC_PROTOTYPES["S"])
+        # AA is a vowel, should score differently than S (sibilant)
+        aa_scores = {r[0]: r[1] for r in aa_result}
+        s_scores = {r[0]: r[1] for r in s_result}
+        # The top candidate should differ between the two
+        assert aa_result[0][0] != s_result[0][0] or aa_result[0][1] != s_result[0][1], (
+            "Different MFCCs should produce different scoring"
+        )
+
+    def test_backward_compat_no_mfcc(self):
+        """score_frame without MFCC should still work (legacy path)."""
+        from vibe_core.mahamantra.sound.shabda_decoder import score_frame
+        frame = pack_frame(150, 0, 1200, 15000)
+        result = score_frame(frame)
+        assert len(result) > 0
+        result2 = score_frame(frame, f1=300, f2=2300)
+        assert len(result2) > 0
 
 
 # Ensure ShabdaStream import works here

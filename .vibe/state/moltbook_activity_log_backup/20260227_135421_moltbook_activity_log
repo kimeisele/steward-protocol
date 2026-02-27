@@ -1,0 +1,9 @@
+{
+  "t": "2026-02-27T12:48:58.142954+00:00",
+  "event": "proposal_dropped",
+  "hb": 0,
+  "data": {
+    "type": "vote",
+    "error": "API timeout"
+  }
+}

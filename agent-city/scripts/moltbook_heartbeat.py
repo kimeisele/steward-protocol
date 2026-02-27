@@ -116,7 +116,7 @@ def main() -> int:
     t0 = time.time()
     for i in range(args.cycles):
         try:
-            plugin._do_heartbeat()
+            plugin.on_pulse(kernel, None)
             logger.info(f"Heartbeat {i + 1}/{args.cycles} complete")
         except Exception as e:
             logger.error(f"Heartbeat {i + 1} failed: {e}")

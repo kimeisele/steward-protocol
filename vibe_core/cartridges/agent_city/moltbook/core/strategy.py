@@ -330,11 +330,25 @@ class MoltbookStrategyPlanner:
                 elif global_eng:
                     eng_context = global_eng
 
+                # Post topic: derive from feed discussions, NOT KG platform ontology.
+                # KG describes WHAT Moltbook IS (platform topology).
+                # Feed shows WHAT the community DISCUSSES (actual topics).
+                post_topic = mission.description  # fallback if feed empty
+                if feed_topics:
+                    top_by_engagement = sorted(
+                        feed_topics, key=lambda t: t.get("upvotes", 0), reverse=True
+                    )
+                    theme_titles = [
+                        str(t.get("title", "")) for t in top_by_engagement[:3] if t.get("title")
+                    ]
+                    if theme_titles:
+                        post_topic = "; ".join(theme_titles)[:300]
+
                 intents.append(
                     StrategicIntent(
                         action_type="post",
-                        topic=mission.description,
-                        reasoning=f"Mission '{mission.name}' — proactive post",
+                        topic=post_topic,
+                        reasoning=f"Mission '{mission.name}' — proactive post, themes from feed",
                         priority=highest_prio + 1,  # Strictly higher to survive stable sort
                         mission_id=mission.id,
                         engagement_context=eng_context,
