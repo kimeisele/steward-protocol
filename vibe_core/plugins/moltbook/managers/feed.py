@@ -265,19 +265,23 @@ class FeedAnalyzer:
                 )
 
     def select_submolt(self, seed_text: str, event_log_getter: Callable) -> Optional[str]:
-        """Select best submolt for content via RAMA coordinate similarity.
+        """Select best submolt for content via combined RAMA similarity + diversity.
 
-        Computes basin_cosine between content RAMA coords and each submolt's
-        description RAMA coords. Weights by engagement history.
+        Uses basin_cosine (60%) + hkr_similarity (40%) — basin_cosine alone has
+        only 0.03 spread across submolts (useless). The combined metric has
+        0.10-0.18 spread (workable).
 
-        Uses description (not just name) — "openclaw-explorers" alone has no
-        semantic meaning; "Open source law and regulation" does.
+        Diversity: applies recency penalty to recently-used submolts so the agent
+        doesn't post to the same community every time.
         """
         if not self._subscribed_submolts:
             return None
 
         try:
-            from vibe_core.mahamantra.substrate.core.basin_map import basin_cosine
+            from vibe_core.mahamantra.substrate.core.basin_map import (
+                basin_cosine,
+                hkr_similarity,
+            )
             from vibe_core.mahamantra.substrate.lotus_core import get_mahamantra
         except ImportError:
             return None
@@ -291,8 +295,9 @@ class FeedAnalyzer:
             logger.debug(f"Content RAMA coords failed: {e}")
             return None
 
-        # Build engagement history lookup (submolt → avg net_score)
+        # Build engagement history + recency penalty from event log
         engagement_weights: Dict[str, float] = {}
+        recent_submolts: Dict[str, int] = {}  # submolt → count in recent posts
         try:
             event_log = event_log_getter()
             metrics = event_log.get_events_by_type("engagement_metric", limit=50)
@@ -304,32 +309,48 @@ class FeedAnalyzer:
                     submolt_scores.setdefault(s, []).append(ns)
             for s, scores in submolt_scores.items():
                 engagement_weights[s] = sum(scores) / len(scores) if scores else 0.0
-        except Exception as e:
-            logger.debug(f"Engagement history unavailable: {e}")
 
-        # Score each subscribed submolt by semantic similarity to content
-        best_submolt: Optional[str] = None
-        best_score = 0.0
+            # Recency: count recent posts per submolt (last 20 events)
+            posts = event_log.get_events_by_type("content_generated", limit=20)
+            for e in posts:
+                s = e.payload.get("submolt", "")
+                if s:
+                    recent_submolts[s] = recent_submolts.get(s, 0) + 1
+        except Exception as e:
+            logger.debug(f"Engagement/recency history unavailable: {e}")
+
+        # Score each subscribed submolt by combined semantic similarity
+        scored: List[tuple] = []  # (submolt_name, weighted_score)
 
         for submolt_name in self._subscribed_submolts:
-            # Use description for semantic matching (not bare name)
             desc = self._submolt_descriptions.get(submolt_name, "")
             probe = f"{submolt_name} {desc}".strip() if desc else submolt_name
             try:
                 submolt_coords = lotus.nama(probe[:200])
-                sim = basin_cosine(content_coords, submolt_coords)
+                bc = basin_cosine(content_coords, submolt_coords)
+                hkr = hkr_similarity(content_coords, submolt_coords)
+                sim = 0.6 * bc + 0.4 * hkr
             except Exception as e:
                 logger.debug(f"Submolt scoring failed for {submolt_name}: {e}")
                 continue
 
-            # Weight by engagement history (1.0 + normalized avg)
+            # Engagement weight: boost submolts with positive engagement
             eng_weight = 1.0 + max(0.0, engagement_weights.get(submolt_name, 0.0) * 0.1)
-            weighted = sim * eng_weight
 
-            if weighted > best_score:
-                best_score = weighted
-                best_submolt = submolt_name
+            # Diversity penalty: reduce score for recently-used submolts
+            recency_count = recent_submolts.get(submolt_name, 0)
+            diversity_factor = 1.0 / (1.0 + recency_count * 0.3)
 
-        if best_submolt:
-            logger.debug(f"Selected submolt: {best_submolt} (sim={best_score:.3f})")
+            weighted = sim * eng_weight * diversity_factor
+            scored.append((submolt_name, weighted))
+
+        if not scored:
+            return None
+
+        scored.sort(key=lambda x: x[1], reverse=True)
+        best_submolt, best_score = scored[0]
+        logger.debug(
+            f"Submolt selection: {best_submolt} (score={best_score:.3f}), "
+            f"candidates={[(s, f'{sc:.3f}') for s, sc in scored[:4]]}"
+        )
         return best_submolt

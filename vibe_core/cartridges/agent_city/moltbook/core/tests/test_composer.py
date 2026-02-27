@@ -214,7 +214,7 @@ class TestBuildTask:
             _make_cognition(), "post", "topic",
             {"content_format": "observation", "knowledge_context": "Domain expertise in distributed systems"},
         )
-        assert "DOMAIN:" in msg
+        assert "DOMAIN KNOWLEDGE:" in msg
         assert "distributed systems" in msg
 
     def test_truncates_long_input(self):

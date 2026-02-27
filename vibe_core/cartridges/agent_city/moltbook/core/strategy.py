@@ -512,8 +512,16 @@ class MoltbookStrategyPlanner:
     def _semantic_dedup(
         self, topic: str, own_post_ids: Dict[str, Dict[str, object]],
     ) -> bool:
-        """Check if topic semantically overlaps with recent posts via basin_cosine."""
-        from vibe_core.mahamantra.substrate.core.basin_map import basin_cosine
+        """Check if topic semantically overlaps with recent posts.
+
+        Uses combined metric (basin_cosine + hkr_similarity) — basin_cosine alone
+        has only 0.03 spread, making any threshold meaningless. The combined metric
+        with 0.10-0.18 spread can actually discriminate.
+        """
+        from vibe_core.mahamantra.substrate.core.basin_map import (
+            basin_cosine,
+            hkr_similarity,
+        )
 
         topic_coords = self._get_coords(topic.lower())
         for post_info in own_post_ids.values():
@@ -523,7 +531,10 @@ class MoltbookStrategyPlanner:
             if not prev_title or not isinstance(prev_title, str):
                 continue
             prev_coords = self._get_coords(prev_title.lower())
-            if basin_cosine(topic_coords, prev_coords) > 0.85:
+            bc = basin_cosine(topic_coords, prev_coords)
+            hkr = hkr_similarity(topic_coords, prev_coords)
+            combined = 0.6 * bc + 0.4 * hkr
+            if combined > 0.95:
                 return True
         return False
 
@@ -633,16 +644,24 @@ class MoltbookStrategyPlanner:
         """Semantic matching via RAMA coordinates. Returns (mission_id, similarity).
 
         Combined metric: 60% basin_cosine (coarse field) + 40% hkr_similarity (fine fingerprint).
-        Threshold 0.75 — verified: "Byzantine fault tolerance" vs "distributed consensus" = 0.95,
-        vs "chocolate chip cookies" = 0.63.
+
+        Rank-based selection: picks the BEST match and requires a minimum margin
+        over the second-best. basin_cosine alone has only ~0.03 spread across all
+        texts — the combined metric has 0.10-0.18 spread. A flat threshold (0.75)
+        is useless when ALL scores exceed 0.89.
+
+        Selection criteria:
+        1. Absolute floor: combined similarity must exceed 0.5 (filters truly
+           unrelated content like "pizza" vs "distributed systems" = 0.38)
+        2. Margin: best match must have margin > 0.02 over second-best
+           (if all missions equally close, no discriminating signal → None)
         """
         from vibe_core.mahamantra.substrate.core.basin_map import (
             basin_cosine,
             hkr_similarity,
         )
 
-        best_id = None
-        best_sim = 0.0
+        scores: List[tuple] = []  # (mission_id, combined_sim)
         for mission in missions:
             m_coords = mission_coords.get(mission.id)
             if not m_coords:
@@ -650,11 +669,26 @@ class MoltbookStrategyPlanner:
             bc = basin_cosine(post_coords, m_coords)
             hkr = hkr_similarity(post_coords, m_coords)
             sim = 0.6 * bc + 0.4 * hkr
-            if sim > best_sim:
-                best_sim = sim
-                best_id = mission.id
-        if best_sim < 0.75:
+            scores.append((mission.id, sim))
+
+        if not scores:
             return None, 0.0
+
+        scores.sort(key=lambda x: x[1], reverse=True)
+        best_id, best_sim = scores[0]
+
+        # Floor: reject truly unrelated content
+        if best_sim < 0.5:
+            return None, 0.0
+
+        # Rank-based: require margin over second-best
+        if len(scores) > 1:
+            second_sim = scores[1][1]
+            margin = best_sim - second_sim
+            if margin < 0.02:
+                # All missions equally close — no discriminating signal
+                return None, 0.0
+
         return best_id, best_sim
 
     def _mission_priority_score(self, mission_id: str, missions: List[Any]) -> int:
@@ -696,48 +730,60 @@ class MoltbookStrategyPlanner:
         if not topic:
             return
 
-        # Find matching mission by semantic similarity (RAMA coordinates)
+        # Find matching mission by semantic similarity (combined RAMA metric)
         missions = self.get_active_missions()
         self._ensure_mission_coords(missions)
         topic_coords = self._get_coords(topic.lower())
 
-        from vibe_core.mahamantra.substrate.core.basin_map import basin_cosine
+        from vibe_core.mahamantra.substrate.core.basin_map import (
+            basin_cosine,
+            hkr_similarity,
+        )
 
+        best_mission = None
+        best_sim = 0.0
         for mission in missions:
             m_coords = self._mission_coords.get(mission.id)
             if not m_coords:
                 continue
-            if basin_cosine(topic_coords, m_coords) > 0.7:
-                # Update engagement cache
-                cache = self._engagement_cache.setdefault(
-                    mission.id,
-                    {
-                        "total": 0,
-                        "positive": 0,
-                        "success_rate": 0.5,
-                    },
-                )
-                cache["total"] += 1
-                if net_score > 0:
-                    cache["positive"] += 1
-                total = cache["total"]
-                cache["success_rate"] = cache["positive"] / total if total > 0 else 0.5
+            bc = basin_cosine(topic_coords, m_coords)
+            hkr = hkr_similarity(topic_coords, m_coords)
+            combined = 0.6 * bc + 0.4 * hkr
+            if combined > best_sim:
+                best_sim = combined
+                best_mission = mission
 
-                # Adjust mission priority if strong signal
-                if total >= TRINITY and cache["success_rate"] > 0.7:
-                    self._boost_mission(mission)
-                elif total >= TRINITY and cache["success_rate"] < 0.2:
-                    self._deprioritize_mission(mission)
+        if best_mission and best_sim >= 0.5:
+            mission = best_mission
+            # Update engagement cache
+            cache = self._engagement_cache.setdefault(
+                mission.id,
+                {
+                    "total": 0,
+                    "positive": 0,
+                    "success_rate": 0.5,
+                },
+            )
+            cache["total"] += 1
+            if net_score > 0:
+                cache["positive"] += 1
+            total = cache["total"]
+            cache["success_rate"] = cache["positive"] / total if total > 0 else 0.5
 
-                logger.debug(
-                    f"Engagement update for {mission.id}: "
-                    f"rate={cache['success_rate']:.2f} ({cache['positive']}/{total})"
-                )
-                self._save_engagement_cache()
+            # Adjust mission priority if strong signal
+            if total >= TRINITY and cache["success_rate"] > 0.7:
+                self._boost_mission(mission)
+            elif total >= TRINITY and cache["success_rate"] < 0.2:
+                self._deprioritize_mission(mission)
 
-                # SynapseStore: persistent cross-session learning
-                self._update_synapse_weight(mission.id, net_score > 0)
-                break
+            logger.debug(
+                f"Engagement update for {mission.id}: "
+                f"rate={cache['success_rate']:.2f} ({cache['positive']}/{total})"
+            )
+            self._save_engagement_cache()
+
+            # SynapseStore: persistent cross-session learning
+            self._update_synapse_weight(mission.id, net_score > 0)
 
     def _persist_registry(self) -> None:
         """Persist registry to disk if available."""

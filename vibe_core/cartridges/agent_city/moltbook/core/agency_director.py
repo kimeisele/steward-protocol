@@ -453,6 +453,10 @@ class AgencyDirector:
             f"integrity={integrity:.3f} zone={resonance_zone} rasa={rasa_name}"
         )
 
+        # Inject computed signals into input_ctx so composer can use them
+        input_ctx["rasa"] = rasa_name
+        input_ctx["resonance_zone"] = resonance_zone
+
         # Compose via ContentComposer — BuddhiResult drives everything
         content = self._content_composer.compose(cognition, seed_text, content_type, input_ctx)
 
