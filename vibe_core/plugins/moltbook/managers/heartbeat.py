@@ -27,6 +27,10 @@ class HeartbeatCallbacks(Protocol):
         """Scan the feed for new topics."""
         ...
 
+    def _gather_broadcast_intelligence(self) -> None:
+        """Gather AGORA broadcasts + EventBus trending topics into feed context."""
+        ...
+
     def _evaluate_strategy(self) -> None:
         """Evaluate strategy based on current state."""
         ...
@@ -163,25 +167,23 @@ class HeartbeatOrchestrator:
             self._safe_call(self._plugin._process_inbound_dms, "inbound_dms")
             self._safe_call(self._plugin._process_dm_requests, "dm_requests")
 
-        # === STEP 2: Core pipeline (runs every heartbeat) ===
-        self._safe_call(self._plugin._scan_feed, "feed_scan")
-        self._safe_call(self._plugin._evaluate_strategy, "strategy_evaluation")
-        self._safe_call(self._plugin._execute_intents, "intent_execution")
-        self._safe_call(self._plugin._track_engagement, "engagement_tracking")
+        # === STEP 2: Department-specific work (MURALI: each heartbeat = one job) ===
+        # GENESIS → gather intelligence
+        # DHARMA  → plan strategy
+        # KARMA   → produce content
+        # MOKSHA  → learn + heal
+        self._dispatch_department(department)
 
-        # === STEP 3: Sub-frequency tasks (MURALI phase determines scheduling) ===
-        self._dispatch_department_tasks(department)
+        # === STEP 3: Always-on systems (reactive, lightweight) ===
+        self._safe_call(self._plugin._monitor_queue_health, "queue_health")
+        self._safe_call(self._plugin._drain_content_queue, "queue_drain")
 
-        # === STEP 4: Maintenance cycles ===
+        # === STEP 4: Maintenance cycles (low frequency) ===
         if self._heartbeat_count % MAHAJANA_COUNT == 0:
             self._safe_call(self._plugin._update_profile, "profile_update")
             self._safe_call(self._plugin._trim_memory, "memory_trim")
 
-        # === STEP 5: Queue and monitoring ===
-        self._safe_call(self._plugin._monitor_queue_health, "queue_health")
-        self._safe_call(self._plugin._drain_content_queue, "queue_drain")
-
-        # === STEP 6: Observability ===
+        # === STEP 5: Observability (record BEFORE reflect, not after) ===
         duration_s = time.time() - now
         self._safe_call(
             lambda: self._plugin._record_heartbeat_reflection(department, duration_s),
@@ -189,32 +191,36 @@ class HeartbeatOrchestrator:
         )
         self._safe_call(self._plugin._emit_ouroboros_health, "ouroboros_emit")
 
-        logger.debug(f"Heartbeat complete in {duration_s:.3f}s")
+        logger.info(f"HB#{self._heartbeat_count} {department.upper()} complete in {duration_s:.3f}s")
 
-    def _dispatch_department_tasks(self, department: str) -> None:
-        """Execute sub-frequency tasks for the current MURALI phase.
+    def _dispatch_department(self, department: str) -> None:
+        """Execute the ONE department job for this heartbeat.
 
-        Args:
-            department: One of (research, planning, execution, learning)
+        Each heartbeat = one workday. 4 heartbeats = 1 full MURALI cycle.
+        GENESIS gathers intelligence. DHARMA plans. KARMA produces. MOKSHA learns.
         """
         if department == "research":
-            # GENESIS: discover new submolts
+            # GENESIS: gather ALL intelligence — feed, AGORA, submolts
+            self._safe_call(self._plugin._scan_feed, "feed_scan")
+            self._safe_call(self._plugin._gather_broadcast_intelligence, "agora_listen")
             if self._heartbeat_count <= QUARTERS or self._genesis_tick % SHARANAGATI == 0:
                 self._safe_call(self._plugin._discover_submolts, "submolt_discovery")
             self._genesis_tick += 1
 
         elif department == "planning":
-            # DHARMA: strategy planning (core pipeline handles this)
-            pass
+            # DHARMA: evaluate strategy from gathered intelligence → intents
+            self._safe_call(self._plugin._evaluate_strategy, "strategy_evaluation")
 
         elif department == "execution":
-            # KARMA: execute and monitor replies
+            # KARMA: produce content from intents + monitor replies
+            self._safe_call(self._plugin._execute_intents, "intent_execution")
             if self._karma_tick % HALVES == 0:
                 self._safe_call(self._plugin._check_own_comment_replies, "reply_monitoring")
             self._karma_tick += 1
 
         elif department == "learning":
-            # MOKSHA: reflect on patterns and adjust
+            # MOKSHA: measure engagement → reflect → adjust → heal
+            self._safe_call(self._plugin._track_engagement, "engagement_tracking")
             if self._moksha_tick % TRINITY == 0:
                 self._safe_call(self._plugin._adjust_intervals, "interval_adjustment")
             self._safe_call(self._plugin._reflect_on_patterns, "reflection_analysis")

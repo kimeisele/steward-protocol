@@ -64,6 +64,10 @@ class BootCallbacks(Protocol):
         """Wire Ouroboros self-healing gene."""
         ...
 
+    def _gather_broadcast_intelligence(self) -> None:
+        """Gather AGORA broadcasts + EventBus trending topics into feed context."""
+        ...
+
     def _wire_event_listener(self) -> None:
         """Wire EventBus listener for inter-agent events."""
         ...

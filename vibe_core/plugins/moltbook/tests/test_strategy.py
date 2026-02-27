@@ -361,27 +361,32 @@ class TestBuddhiSelectFormat:
 class TestPriorityScoring:
     def test_medium_mission_scores_5(self):
         planner = _make_planner()
+        planner._get_synapse_boost = lambda _: 0  # Isolate from persisted weights
         score = planner._mission_priority_score("moltbook_ai_governance", _TEST_MISSIONS)
         assert score == 5
 
     def test_high_mission_scores_8(self):
         planner = _make_planner()
+        planner._get_synapse_boost = lambda _: 0
         score = planner._mission_priority_score("moltbook_decentralized_protocols", _TEST_MISSIONS)
         assert score == 8
 
     def test_low_mission_scores_3(self):
         planner = _make_planner()
+        planner._get_synapse_boost = lambda _: 0
         score = planner._mission_priority_score("moltbook_community_building", _TEST_MISSIONS)
         assert score == 3
 
     def test_engagement_boost(self):
         planner = _make_planner()
+        planner._get_synapse_boost = lambda _: 0
         planner._engagement_cache["moltbook_ai_governance"] = {"success_rate": 0.8}
         score = planner._mission_priority_score("moltbook_ai_governance", _TEST_MISSIONS)
         assert score == 7  # 5 + 2
 
     def test_engagement_penalty(self):
         planner = _make_planner()
+        planner._get_synapse_boost = lambda _: 0
         planner._engagement_cache["moltbook_decentralized_protocols"] = {"success_rate": 0.1}
         score = planner._mission_priority_score("moltbook_decentralized_protocols", _TEST_MISSIONS)
         assert score == 6  # 8 - 2

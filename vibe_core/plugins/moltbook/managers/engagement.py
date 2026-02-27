@@ -32,6 +32,8 @@ class EngagementTracker:
 
     Args:
         log_activity: Callable(event_type, payload) for JSONL audit log.
+        bank: Optional CivicBank instance for credit rewards.
+        agent_id: Agent name for credit transactions.
     """
 
     # Interval bounds (min/max heartbeats) — SEED-derived
@@ -45,8 +47,22 @@ class EngagementTracker:
     _LOW_FEED_CF = COSMIC_FRAME // SHARANAGATI  # 3600 ≈ 0.167 ≈ 0.2
     _LOW_POST_CF = COSMIC_FRAME * SHARANAGATI // (QUARTERS * PANCHA)  # 6480 ≈ 0.3
 
-    def __init__(self, log_activity: Callable):
+    # Credit rewards per engagement type — sustainable economy
+    _REWARD_PER_UPVOTE = 1
+    _REWARD_PER_REPLY = 2
+
+    def __init__(
+        self,
+        log_activity: Callable,
+        bank: Optional[object] = None,
+        agent_id: str = "moltbook",
+    ):
         self._log_activity = log_activity
+        self._bank = bank
+        self._agent_id = agent_id
+        # Track already-rewarded engagement to prevent double-counting
+        self._rewarded_posts: Dict[str, int] = {}  # post_id → last rewarded net_score
+        self._rewarded_comments: Dict[str, int] = {}  # comment_id → last rewarded net_score
 
     def track(
         self,
@@ -102,9 +118,16 @@ class EngagementTracker:
                 submolt=submolt,
             )
 
+            # Update own_post_ids with live engagement data (for SravanamCheck + zero-engagement-streak)
+            if isinstance(meta, dict):
+                meta["upvotes"] = upvotes
+                meta["replies"] = replies
+
             ctx = {"submolt": submolt, "upvotes": upvotes, "replies": replies, "net_score": net_score}
             if net_score > 0 or replies > 0:
                 feedback.signal_success("moltbook.post", ctx, duration_ms=0.0)
+                # Credit reward for engagement received
+                self._reward_engagement(post_id, upvotes + replies, "post")
             elif net_score < 0:
                 feedback.signal_failure("moltbook.post", "negative_engagement", ctx, duration_ms=0.0)
 
@@ -136,6 +159,7 @@ class EngagementTracker:
                     ctx = {"upvotes": upvotes, "net_score": net_score}
                     if net_score > 0:
                         feedback.signal_success("moltbook.comment", ctx, duration_ms=0.0)
+                        self._reward_engagement(comment_id, upvotes, "comment")
                     elif net_score < 0:
                         feedback.signal_failure("moltbook.comment", "negative_engagement", ctx, duration_ms=0.0)
                     break
@@ -158,6 +182,31 @@ class EngagementTracker:
                     logger.debug(f"Strategy planner update failed for {post_id}: {e}")
 
         logger.debug(f"Engagement tracked: {len(recent_posts)} posts, {len(comment_ids)} comments")
+
+    def _reward_engagement(self, content_id: str, total_score: int, content_type: str) -> None:
+        """Credit reward for engagement received on own content.
+
+        Only rewards the DELTA since last check — prevents double-counting.
+        1 credit per upvote received, 2 per reply received.
+        """
+        if self._bank is None or total_score <= 0:
+            return
+        tracker = self._rewarded_posts if content_type == "post" else self._rewarded_comments
+        prev = tracker.get(content_id, 0)
+        delta = total_score - prev
+        if delta <= 0:
+            return
+        tracker[content_id] = total_score
+        reward = delta * self._REWARD_PER_UPVOTE
+        try:
+            self._bank.transfer(
+                "ENGAGEMENT_REWARD", self._agent_id, reward,
+                f"moltbook_{content_type}_engagement",
+                service_type="reward",
+            )
+            logger.info(f"Credit reward: +{reward} for {content_type} {content_id} (delta={delta})")
+        except Exception as e:
+            logger.warning(f"Credit reward failed: {e}")
 
     def adjust_intervals(
         self,
