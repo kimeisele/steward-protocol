@@ -42,7 +42,7 @@ from typing import List, Sequence, Tuple
 
 from vibe_core.mahamantra.protocols._seed import PANCHA
 from vibe_core.mahamantra.sound.shabda_intake import unpack_frame
-from vibe_core.mahamantra.substrate.encoding.pancha_walk import (
+from vibe_core.mahamantra.substrate import (
     COORD_ELEMENT,
     COORD_SUB,
     COORD_VARGA,
@@ -93,23 +93,55 @@ _RMS_VOICED_THRESHOLD = 20
 _RMS_VOWEL_THRESHOLD = 80
 _CENTROID_SIBILANT_THRESHOLD = 150
 
+# Transition detection thresholds (consonants within voiced speech)
+_RMS_DIP_NUMER = 6       # rms < prev_rms * 6 // 10 → 40% energy drop = closure
+_RMS_DIP_DENOM = 10
+_CENTROID_JUMP = 25       # |Δcentroid_100| > 25 (≈250 Hz shift) = articulation change
+
 
 def _classify_sound(
     rms: int, f0_x10: int, centroid_100: int,
-    prev_rms: int = 0,
+    prev_rms: int = 0, prev_f0_x10: int = 0, prev_centroid_100: int = 0,
 ) -> int:
     """Classify a frame into sound class.
 
+    Uses BOTH single-frame features AND frame-to-frame transitions.
+    Transition detection catches consonants within voiced speech that
+    single-frame analysis misses (the speaker doesn't go silent between
+    syllables — energy dips, centroid shifts, and F0 drops mark consonants).
+
     Returns:
         0 = SVARA (vowel-like: high energy, stable pitch)
-        1 = SPARSHA (stop-like: energy onset, brief)
+        1 = SPARSHA (stop-like: energy onset or closure dip)
         2 = SHESHA (continuant: sibilant or semivowel)
        -1 = silence (below voiced threshold)
     """
     if rms < _RMS_VOICED_THRESHOLD:
         return -1  # silence
 
-    # Vowel-like: high sustained energy with pitch (check FIRST)
+    # === TRANSITION DETECTION (consonants within voiced speech) ===
+    prev_voiced = prev_rms > _RMS_VOWEL_THRESHOLD
+
+    if prev_voiced:
+        # RMS dip: energy dropped >40% from vowel → stop closure (ka, ta, pa...)
+        if rms < prev_rms * _RMS_DIP_NUMER // _RMS_DIP_DENOM:
+            return 1  # SPARSHA
+
+        # Centroid jump: spectral shift → articulation boundary
+        cent_delta = centroid_100 - prev_centroid_100
+        if abs(cent_delta) > _CENTROID_JUMP:
+            if centroid_100 > _CENTROID_SIBILANT_THRESHOLD:
+                return 2  # SHESHA (sibilant/fricative after shift)
+            if f0_x10 == 0:
+                return 1  # SPARSHA (unvoiced during transition)
+
+        # F0 drop to 0 within voiced region → unvoiced consonant
+        if prev_f0_x10 > 0 and f0_x10 == 0:
+            return 1  # SPARSHA (voicing lost)
+
+    # === SINGLE-FRAME CLASSIFICATION ===
+
+    # Vowel-like: high sustained energy with pitch
     if rms > _RMS_VOWEL_THRESHOLD and f0_x10 > 0:
         return 0  # SVARA
 
@@ -117,7 +149,7 @@ def _classify_sound(
     if centroid_100 > _CENTROID_SIBILANT_THRESHOLD and f0_x10 == 0:
         return 2  # SHESHA
 
-    # Plosive onset: energy jump from low (only for non-vowel energy)
+    # Plosive onset: energy jump from low
     if prev_rms < _RMS_VOICED_THRESHOLD and rms > _RMS_VOICED_THRESHOLD:
         return 1  # SPARSHA (onset)
 
@@ -225,10 +257,16 @@ def frame_to_rama(
         RAMA coordinate (0-48), or -1 for silence
     """
     rms, varga, f0_x10, centroid_100 = unpack_frame(packed)
-    prev_rms = unpack_frame(prev_packed)[0] if prev_packed else 0
+    if prev_packed:
+        prev_rms, _, prev_f0, prev_cent = unpack_frame(prev_packed)
+    else:
+        prev_rms, prev_f0, prev_cent = 0, 0, 0
 
     # Silence → no coordinate
-    sound_class = _classify_sound(rms, f0_x10, centroid_100, prev_rms)
+    sound_class = _classify_sound(
+        rms, f0_x10, centroid_100,
+        prev_rms, prev_f0, prev_cent,
+    )
     if sound_class < 0:
         return -1
 

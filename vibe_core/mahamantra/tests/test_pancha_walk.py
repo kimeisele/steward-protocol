@@ -28,6 +28,7 @@ from vibe_core.mahamantra.substrate.pancha_walk import (
     element_transitions,
     element_walk,
     full_signature,
+    pancha_signature,
     walk_direction,
     walk_distance,
     walk_signature,
@@ -314,6 +315,49 @@ class TestFullSignature:
         assert derived_signature(encode("paramaḥ")) == derived_signature(encode("paramaṁ"))
         # But NOT in full_signature (4D)
         assert full_signature(encode("paramaḥ")) != full_signature(encode("paramaṁ"))
+
+
+class TestPanchaSignature:
+    """pancha_signature(): 5D phoneme walk (Pancha Tattva)."""
+
+    def test_pancha_sig_longer_than_full(self):
+        coords = encode("dharma")
+        assert len(pancha_signature(coords)) > len(full_signature(coords))
+
+    def test_pancha_sig_ends_with_s_or_n(self):
+        """Each phoneme block ends with S (shruti) or N (nakshatra)."""
+        coords = encode("dharma")
+        sig = pancha_signature(coords)
+        # Each phoneme = 6 chars: element(1) + varga(1) + sub(1) + harmonic(2) + S/N(1)
+        for i in range(len(coords)):
+            char = sig[i * 6 + 5]
+            assert char in ("S", "N")
+
+    def test_pancha_sig_per_phoneme_length(self):
+        """6 chars per phoneme (vs 5 for full_signature)."""
+        coords = encode("yoga")
+        assert len(pancha_signature(coords)) == len(coords) * 6
+
+    def test_pancha_sig_resolves_3d_collision(self):
+        """Same as full_signature — must still resolve 3D collisions."""
+        assert pancha_signature(encode("paramaḥ")) != pancha_signature(encode("paramaṁ"))
+
+    def test_pancha_sig_empty(self):
+        assert pancha_signature(()) == ""
+
+    def test_5d_bijection(self):
+        """5D tuple is unique for all 49 phonemes."""
+        sigs = set()
+        for c in range(VARNAMALA_TOTAL):
+            sigs.add(pancha_signature((c,)))
+        assert len(sigs) == VARNAMALA_TOTAL
+
+    def test_shruti_dimension_counts(self):
+        """22 Shruti + 27 Nakshatra in single-phoneme signatures."""
+        s_count = sum(1 for c in range(VARNAMALA_TOTAL) if pancha_signature((c,)).endswith("S"))
+        n_count = sum(1 for c in range(VARNAMALA_TOTAL) if pancha_signature((c,)).endswith("N"))
+        assert s_count == 22
+        assert n_count == 27
 
 
 class TestShrutiPartition:

@@ -48,7 +48,7 @@ from vibe_core.mahamantra.protocols._seed import (
     WORDS,
 )
 from vibe_core.mahamantra.substrate._paths import DATA_DIR
-from vibe_core.mahamantra.substrate.encoding.pancha_walk import (
+from vibe_core.mahamantra.substrate import (
     COORD_ELEMENT,
     COORD_VARGA,
     IS_SHRUTI,

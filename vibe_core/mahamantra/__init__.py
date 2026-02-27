@@ -78,6 +78,7 @@ CORE_MODULES = [
     "vibe_core.mahamantra.substrate.samskara",  # Samskara types
     "vibe_core.mahamantra.substrate.harmonics",  # ResonanceHarmonics, compute_*
     "vibe_core.mahamantra.substrate.phonetic_bridge",  # phonetic encoding/decoding
+    "vibe_core.mahamantra.substrate.pancha_walk",  # COORD_ELEMENT, full_signature, IS_SHRUTI
     "vibe_core.mahamantra.substrate.mantra",  # PersonAnchoredOperator, MahaKirtan
     # === PROTOCOLS (The Standard) ===
     "vibe_core.mahamantra.protocols._gad",  # GADBase
