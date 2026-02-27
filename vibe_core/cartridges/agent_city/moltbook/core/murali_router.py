@@ -3,7 +3,11 @@
 Extracted from agency_director.py. Pure read-only router, no state mutation.
 """
 
+import logging
+
 from vibe_core.mahamantra.substrate.core.seed import QUARTERS, WORDS
+
+logger = logging.getLogger("MOLTBOOK_MURALI")
 
 # MURALI 4-bit phase (0-3) → department name
 _MURALI_DEPARTMENTS = {
@@ -41,8 +45,8 @@ class MuraliRouter:
                 quarter_size = WORDS // QUARTERS  # 4
                 murali = min(tick % WORDS // quarter_size, QUARTERS - 1)
                 return _MURALI_DEPARTMENTS.get(murali, "execution")
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning(f"VenuOrchestrator access failed, using fallback_tick: {e}")
 
         # Fallback: cycle through departments using fallback_tick
         murali = fallback_tick % QUARTERS

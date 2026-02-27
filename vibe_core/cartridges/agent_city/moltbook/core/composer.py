@@ -185,10 +185,13 @@ class ContentComposer:
         sravanam_status: str = "",
         integrity_cf: int = 0,
         prana: int = 0,
-    ) -> str:
+    ) -> Optional[str]:
         """Deterministic pre-processing → atomic LLM call.
 
-        1. MahaComposition (5 scorers) → resonant context for LLM
+        Returns content string on success, None on failure.
+        NEVER returns empty string — None means "no content, don't post".
+
+        1. MahaComposition (5 scorers) → resonant context for LLM (backend only)
         2. Pipeline data (guna→style, topic, reasoning) fills YAML template slots
         3. Tier-based model routing: (content_type, format, integrity, prana) → model
         4. Atomic LLM call: identity + style + topic + context → content
@@ -202,8 +205,8 @@ class ContentComposer:
                 from vibe_core.mahamantra.substrate.cell_system.chamber import get_chamber
 
                 prana = get_chamber().antaranga.total_prana()
-            except Exception:
-                pass  # prana=0 → cheapest tier
+            except Exception as e:
+                logger.warning(f"Antaranga prana lookup failed, using cheapest tier: {e}")
 
         engine_result = self._run_engine(input_text)
 
@@ -219,10 +222,8 @@ class ContentComposer:
         except Exception as e:
             logger.warning(f"MahaComposition failed: {e}")
 
-        # Fallback: resonant words from engine if composition empty
-        if not composed_words and engine_result:
-            words = getattr(engine_result, "resonant_words", ()) or ()
-            composed_words = ", ".join(m for _, m, _ in words[:5])
+        # No fallback: if MahaComposition is empty, LLM gets no resonant context.
+        # MahaComposition is backend analytics — never falls back to raw resonant words.
 
         # Step 2: Extract engine data for context
         guardian_name = ""
@@ -289,14 +290,23 @@ class ContentComposer:
         # Step 6: Atomic LLM call (tier-routed)
         content = self._try_llm(prompt_ctx, task_input, content_type, integrity_cf=integrity_cf, prana=prana)
         if content:
+            # Post-LLM hard gate: echo detection
+            if task_input and len(task_input) > 20 and content.strip().lower().startswith(task_input.strip().lower()[:50]):
+                logger.warning("LLM echoed input — rejecting")
+                return None
+            # Post-LLM hard gate: no substance (just punctuation/whitespace)
+            alnum_words = [w for w in content.split() if any(c.isalnum() for c in w)]
+            if len(alnum_words) < 3:
+                logger.warning("LLM output has no substance — rejecting")
+                return None
             # Clean up mid-sentence cuts from max_tokens limit
             if not content.rstrip().endswith((".", "!", "?", ":", "```")):
                 content = self.truncate_smart(content, len(content))
             return content
 
-        # No LLM = no content. Not word salad. Not kirtan dump.
-        logger.warning("LLM unavailable — no content generated")
-        return ""
+        # No LLM = no content. Fail hard. No fallback to MahaComposition or kirtan.
+        logger.warning("LLM unavailable — no content generated (fail-hard)")
+        return None
 
     def _try_llm(
         self,
@@ -366,7 +376,7 @@ class ContentComposer:
             logger.warning(f"Quota exceeded: {e}")
             return None
         except Exception as e:
-            logger.debug(f"Quota check skipped: {e}")
+            logger.warning(f"Quota check skipped: {e}")
 
         try:
             response = provider.invoke(
@@ -392,7 +402,7 @@ class ContentComposer:
                         operation=f"moltbook.{content_type}",
                     )
                 except Exception as e:
-                    logger.debug(f"Quota record skipped: {e}")
+                    logger.warning(f"Quota record skipped: {e}")
                 return content
         except Exception as e:
             logger.warning(f"LLM [{tier_name}]: {e}")

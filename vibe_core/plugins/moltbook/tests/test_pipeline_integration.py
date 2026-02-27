@@ -147,12 +147,31 @@ def mock_llm():
 
 
 @pytest.fixture
-def director(mock_llm):
-    """AgencyDirector with real pipeline, mocked LLM."""
+def _isolated_event_log(tmp_path):
+    """Isolate EventLog to tmp_path — prevents test contamination of production events.jsonl.
+
+    Without this, mock LLM responses get logged as production events (88% test data).
+    Patches the singleton factory so ALL code paths get the isolated EventLog.
+    """
+    from vibe_core.cartridges.agent_city.moltbook.core.memory import EventLog, reset_event_log
+
+    reset_event_log()  # Clear singleton from previous tests
+    isolated = EventLog(ledger_path=tmp_path / "test_events.jsonl")
+    with patch(
+        "vibe_core.cartridges.agent_city.moltbook.core.memory.get_event_log",
+        return_value=isolated,
+    ):
+        yield isolated
+    reset_event_log()  # Clean up after test
+
+
+@pytest.fixture
+def director(mock_llm, _isolated_event_log):
+    """AgencyDirector with real pipeline, mocked LLM, isolated EventLog."""
     from vibe_core.cartridges.agent_city.moltbook.core.agency_director import AgencyDirector
 
     d = AgencyDirector()
-    # Patch the factory function where it's imported inside _try_llm_compose
+    d._event_log = _isolated_event_log
     with patch(
         "vibe_core.runtime.providers.factory.get_llm_provider",
         return_value=mock_llm,
@@ -161,8 +180,8 @@ def director(mock_llm):
 
 
 @pytest.fixture
-def cartridge(mock_llm):
-    """MoltbookCartridge with real pipeline, mocked LLM."""
+def cartridge(mock_llm, _isolated_event_log):
+    """MoltbookCartridge with real pipeline, mocked LLM, isolated EventLog."""
     from vibe_core.cartridges.agent_city.moltbook.cartridge_main import MoltbookCartridge
 
     c = MoltbookCartridge()
@@ -411,7 +430,8 @@ class TestDirectorCycle:
 
     def test_post_cycle_succeeds(self, director):
         result = director.run_cycle("post", MOLTBOOK_POSTS[5])
-        assert result.status in ("SUCCESS", "SKIPPED", "LLM_UNAVAILABLE"), (
+        # VALIDATION_FAILED is valid: guna gate blocks TAMAS posts (constitution hard gate)
+        assert result.status in ("SUCCESS", "SKIPPED", "LLM_UNAVAILABLE", "VALIDATION_FAILED"), (
             f"Unexpected status: {result.status}, error: {result.error}"
         )
 

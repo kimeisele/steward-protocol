@@ -1155,7 +1155,7 @@ class MoltbookPlugin(KernelPlugin):
                 reflection.approve_proposal(proposal.id)
                 logger.info(f"Reflection: auto-approved improvement '{proposal.title}'")
         except Exception as e:
-            logger.debug(f"Reflection analysis failed: {e}")
+            logger.warning(f"Reflection analysis failed: {e}")
 
     # =========================================================================
     # on_pulse — backward compat (delegates to same heartbeat)
@@ -1173,7 +1173,15 @@ class MoltbookPlugin(KernelPlugin):
         if not self._client:
             return HookResult.error("Client not initialized")
 
-        self._do_heartbeat()
+        # Same path as _on_mahamantra_tick: check heartbeat API first
+        try:
+            heartbeat = self._client.sync_check_heartbeat()
+            self._last_heartbeat_error = None
+        except Exception as e:
+            self._last_heartbeat_error = f"[{type(e).__name__}] {e!r}"
+            heartbeat = {}
+
+        self._heartbeat.dispatch_heartbeat(heartbeat)
 
         return HookResult.ok(
             data={
@@ -1318,7 +1326,7 @@ class MoltbookPlugin(KernelPlugin):
             with self._activity_log_path.open("a") as f:
                 f.write(line + "\n")
         except Exception as e:
-            logger.debug(f"Activity log write failed: {e}")
+            logger.warning(f"Activity log write failed: {e}")
 
     def _emit_event(self, event_type_name: str, message: str, data: Optional[Dict[str, Any]] = None) -> None:
         """Emit event to system EventBus. Fire-and-forget."""

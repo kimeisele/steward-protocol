@@ -302,7 +302,7 @@ class AgencyDirector:
         )
 
         # ===== VALIDATE =====
-        validation = self.constitution.validate(content, content_type)
+        validation = self.constitution.validate(content, content_type, guna=guna)
         if not validation.is_valid:
             logger.info(f"VALIDATE failed: {validation.violations}")
             self.event_log.record_content_rejected(content, "governance_violation", validation.violations)
@@ -426,7 +426,7 @@ class AgencyDirector:
         # Run Mahamantra VM pipeline
         pipeline_result = self._content_composer._run_pipeline(seed_text)
         if not pipeline_result:
-            return "", {"error": "Pipeline returned None"}
+            return None, {"error": "Pipeline returned None", "status": "ERROR"}
 
         # Extract physics
         guna = pipeline_result.get("guna", {}).get("mode", "RAJAS")
@@ -440,7 +440,7 @@ class AgencyDirector:
         threshold = _INTEGRITY_THRESHOLDS.get(guna, _INTEGRITY_THRESHOLDS["RAJAS"])
         if not alive or integrity_cf < threshold:
             logger.info(f"Skip: {guna} integrity={integrity_cf}/{COSMIC_FRAME} (threshold={threshold})")
-            return "", {"guna": guna, "guardian": guardian, "skipped": True, "status": "SKIPPED_LOW_INTEGRITY"}
+            return None, {"guna": guna, "guardian": guardian, "skipped": True, "status": "SKIPPED_LOW_INTEGRITY"}
 
         style = _GUNA_STYLE.get(guna, "active")
 

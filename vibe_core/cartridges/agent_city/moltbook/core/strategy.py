@@ -59,7 +59,7 @@ def _derive_seed_topics() -> tuple:
                     if desc and node_id and (node_id, desc[:200]) not in [(t[0], t[1]) for t in topics]:
                         topics.append((f"kg_{node_id}", desc[:200]))
     except Exception as e:
-        logger.debug(f"KG topic derivation failed: {e}")
+        logger.warning(f"KG topic derivation failed: {e}")
 
     # Source 2: Existing Sankalpa missions — only NON-moltbook missions as new topics.
     # Moltbook missions are already seeded — re-adding them causes infinite nesting
@@ -78,7 +78,7 @@ def _derive_seed_topics() -> tuple:
             if desc and mid not in {t[0] for t in topics}:
                 topics.append((mid, desc[:200]))
     except Exception as e:
-        logger.debug(f"Sankalpa topic derivation failed: {e}")
+        logger.warning(f"Sankalpa topic derivation failed: {e}")
 
     if topics:
         logger.info(f"Derived {len(topics)} seed topics from KG + Sankalpa")
@@ -234,7 +234,8 @@ class MoltbookStrategyPlanner:
             return []
         try:
             return orch.registry.get_active_missions()
-        except Exception:
+        except Exception as e:
+            logger.warning(f"Active missions query failed: {e}")
             return []
 
     # Format pools per action type — weighted random selection for diversity
@@ -547,8 +548,8 @@ class MoltbookStrategyPlanner:
                 mission.priority = MissionPriority.HIGH
             logger.info(f"Mission boosted: {mission.id} → {mission.priority.value}")
             self._persist_registry()
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning(f"Mission boost failed: {e}")
 
     def _deprioritize_mission(self, mission) -> None:
         """Deprioritize mission (high → medium, medium → low)."""
@@ -564,8 +565,8 @@ class MoltbookStrategyPlanner:
                 mission.priority = MissionPriority.LOW
             logger.info(f"Mission deprioritized: {mission.id} → {mission.priority.value}")
             self._persist_registry()
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning(f"Mission deprioritize failed: {e}")
 
     # -----------------------------------------------------------------------
     # Engagement cache persistence (survives GitHub Actions restarts)
@@ -579,7 +580,7 @@ class MoltbookStrategyPlanner:
             cache_path = self._state_dir / self._CACHE_FILE
             cache_path.write_text(json.dumps(self._engagement_cache, indent=2))
         except Exception as e:
-            logger.debug(f"Engagement cache save failed: {e}")
+            logger.warning(f"Engagement cache save failed: {e}")
 
     def _restore_engagement_cache(self) -> None:
         """Restore engagement cache from JSON file on init."""
@@ -593,7 +594,7 @@ class MoltbookStrategyPlanner:
                     self._engagement_cache = data
                     logger.info(f"Engagement cache restored: {len(data)} missions")
         except Exception as e:
-            logger.debug(f"Engagement cache restore failed: {e}")
+            logger.warning(f"Engagement cache restore failed: {e}")
 
     # -----------------------------------------------------------------------
     # SynapseStore — persistent cross-session learning
@@ -613,7 +614,7 @@ class MoltbookStrategyPlanner:
                 w = store.decrement_weight(trigger, action, delta=0.03)
             logger.debug(f"Synapse weight {trigger}→{action}: {w:.2f}")
         except Exception as e:
-            logger.debug(f"SynapseStore update failed: {e}")
+            logger.warning(f"SynapseStore update failed: {e}")
 
     def _get_synapse_boost(self, mission_id: str) -> int:
         """Read learned synapse weight → priority boost (-2 to +2)."""
@@ -626,5 +627,6 @@ class MoltbookStrategyPlanner:
                 return 0
             # weight 0.1-0.95 → boost -2 to +2 (centered at 0.5)
             return round((weight - 0.5) * 4)
-        except Exception:
+        except Exception as e:
+            logger.warning(f"SynapseStore read failed: {e}")
             return 0

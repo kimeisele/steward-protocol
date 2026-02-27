@@ -104,9 +104,13 @@ class ContentQueue:
     Drains highest-priority proposals first (DM=9 > Post=7 > Comment=6 > Vote=4).
     Within same priority level, FIFO order is preserved.
     Priorities come from Knowledge Graph metrics (knowledge/moltbook/platform.yaml).
+
+    Content dedup: rejects proposals with identical content that were recently enqueued.
+    Prevents the same LLM response from being posted multiple times.
     """
 
     DEFAULT_MAX_SIZE = 50
+    _DEDUP_WINDOW = 128  # Remember last N content hashes
 
     def __init__(self, max_size: int = DEFAULT_MAX_SIZE):
         self._queue: deque[ContentProposal] = deque(maxlen=max_size)
@@ -114,15 +118,27 @@ class ContentQueue:
         self._total_enqueued: int = 0
         self._total_drained: int = 0
         self._total_dropped: int = 0
+        self._total_deduped: int = 0
+        self._recent_hashes: deque[int] = deque(maxlen=self._DEDUP_WINDOW)
 
     def enqueue(self, proposal: ContentProposal) -> bool:
         """
         Add a proposal to the queue.
 
-        Returns True if enqueued, False if dropped (queue full and oldest evicted).
+        Returns True if enqueued, False if rejected.
+        Rejects: missing content_type, duplicate content (same text recently enqueued).
         """
         if not proposal.get("content_type"):
             return False
+
+        # Content dedup: skip proposals with identical content text
+        content = proposal.get("content", "")
+        if content and len(content) > 10:
+            h = hash(content)
+            if h in self._recent_hashes:
+                self._total_deduped += 1
+                return False
+            self._recent_hashes.append(h)
 
         was_full = len(self._queue) >= self._max_size
         self._queue.append(proposal)
@@ -172,6 +188,7 @@ class ContentQueue:
             "total_enqueued": self._total_enqueued,
             "total_drained": self._total_drained,
             "total_dropped": self._total_dropped,
+            "total_deduped": self._total_deduped,
             "max_size": self._max_size,
         }
 

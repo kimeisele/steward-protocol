@@ -95,6 +95,33 @@ class TestContentQueue:
         q.enqueue(ContentProposal(content_type=ContentType.DM_REPLY.value, content="c"))
         assert q.stats["total_dropped"] == 1
 
+    def test_content_dedup_rejects_duplicate(self):
+        """Same content text cannot be enqueued twice (prevents 915x identical posts)."""
+        q = ContentQueue()
+        long_content = "Understanding emerges from practice, not speculation."
+        q.enqueue(ContentProposal(content_type=ContentType.COMMENT.value, content=long_content))
+        assert q.size == 1
+        # Same content again → rejected
+        result = q.enqueue(ContentProposal(content_type=ContentType.COMMENT.value, content=long_content))
+        assert result is False
+        assert q.size == 1
+        assert q.stats["total_deduped"] == 1
+
+    def test_content_dedup_allows_different_content(self):
+        """Different content passes dedup check."""
+        q = ContentQueue()
+        q.enqueue(ContentProposal(content_type=ContentType.POST.value, content="First unique post with substance."))
+        q.enqueue(ContentProposal(content_type=ContentType.POST.value, content="Second unique post with different content."))
+        assert q.size == 2
+        assert q.stats["total_deduped"] == 0
+
+    def test_content_dedup_skips_short_content(self):
+        """Short content (votes, follows) is not dedup-checked."""
+        q = ContentQueue()
+        q.enqueue(ContentProposal(content_type=ContentType.VOTE.value, content="", post_id="p1"))
+        q.enqueue(ContentProposal(content_type=ContentType.VOTE.value, content="", post_id="p2"))
+        assert q.size == 2  # Both allowed (empty content = no dedup)
+
 
 # =============================================================================
 # CONTENT PROPOSAL PROTOCOL ABC
@@ -230,6 +257,9 @@ class TestDMReplyLoop:
         plugin = MoltbookPlugin()
         plugin._client = MoltbookClient(api_key="test", offline_mode=True)
         plugin._offline_mode = False  # Tests need online mode to drain queue
+        plugin._heartbeat._HEARTBEAT_DEBOUNCE_S = 0
+        # Prevent LLM calls: _director_propose is the entry to AgencyDirector → OpenRouter
+        plugin._director_propose = lambda *a, **kw: None
         return plugin
 
     def test_queue_starts_empty(self, plugin):

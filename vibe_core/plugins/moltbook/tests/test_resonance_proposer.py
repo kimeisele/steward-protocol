@@ -8,7 +8,7 @@ Tests that ResonanceProposer:
 3. Gates by Cell alive status (dead = skip)
 4. Uses MahaLanguageEngine.generate() for EngineResult
 5. Context-only prompts (no instructions, just data slots)
-6. No LLM provider = kirtan rendering fallback
+6. No LLM provider = None (fail-hard, no fallback)
 7. Loads YAML prompts from config/prompts/moltbook.yaml
 
 No MagicMock. Real pipeline. Real EngineResult. Test provider via LLMProvider.
@@ -530,13 +530,12 @@ class TestGunaGates:
         with patch.object(p, "_run_pipeline", return_value=_make_pipeline_result(guna_mode="TAMAS")):
             assert p.propose_dm_reply("conv1", "SpamBot", "buy my token") is None
 
-    def test_dm_reply_no_llm_returns_fallback(self):
-        """No LLM = MahaComposition or kirtan rendering fallback (not None)."""
+    def test_dm_reply_no_llm_returns_none(self):
+        """No LLM = None (fail-hard, no fallback to MahaComposition/kirtan)."""
         p = _proposer_no_llm()
         with patch.object(p, "_run_pipeline", return_value=_make_pipeline_result(guna_mode="RAJAS")):
             result = p.propose_dm_reply("conv1", "GoodBot", "hello")
-            assert result is not None
-            assert result["content"]  # Non-empty content from fallback pipeline
+            assert result is None  # Fail-hard: no LLM = no content
 
     def test_dm_request_rejects_tamas(self):
         p = ResonanceProposer()
@@ -633,7 +632,8 @@ class TestCompose:
         # Balanced: not 900 tokens, not 50 tokens
         assert len(ctx) < 500, f"System prompt too long ({len(ctx)} chars)"
 
-    def test_compose_no_provider_with_pipeline_result_returns_fallback(self):
+    def test_compose_no_provider_with_pipeline_result_returns_none(self):
+        """No LLM = None. No fallback to MahaComposition or kirtan (fail-hard)."""
         p = _proposer_no_llm()
         result = p._compose(
             "moltbook.dm_reply",
@@ -641,14 +641,14 @@ class TestCompose:
             "test",
             pipeline_result=_make_pipeline_result(),
         )
-        assert result is not None
-        assert result.strip()  # Non-empty fallback (MahaComposition or kirtan)
+        assert result is None  # Fail-hard: no LLM = no content
 
     def test_compose_no_provider_no_pipeline_returns_none(self):
         p = _proposer_no_llm()
         assert p._compose("moltbook.dm_reply", _make_engine_result(), "test") is None
 
-    def test_compose_error_provider_with_pipeline_returns_kirtan(self):
+    def test_compose_error_provider_with_pipeline_returns_none(self):
+        """LLM error = None. No fallback to kirtan (fail-hard)."""
         p = ResonanceProposer()
         p._llm = _ErrorProvider()
         p._llm_resolved = True
@@ -658,8 +658,8 @@ class TestCompose:
             "test",
             pipeline_result=_make_pipeline_result(),
         )
-        # Error response starts with "# ERROR" → falls through to kirtan
-        assert result is not None
+        # Error response starts with "# ERROR" → fail-hard, no kirtan fallback
+        assert result is None
 
     def test_compose_context_has_no_instructions(self):
         """Context-only. System physics enforce quality, not prompts."""
@@ -730,12 +730,12 @@ class TestProposeComment:
         assert proposal["post_id"] == "p1"
         assert len(proposal["content"]) <= 280
 
-    def test_comment_no_provider_returns_fallback(self):
+    def test_comment_no_provider_returns_none(self):
+        """No LLM = None (fail-hard, no fallback)."""
         p = _proposer_no_llm()
         with patch.object(p, "_run_pipeline", return_value=_make_pipeline_result()):
             result = p.propose_comment("p1", "deep content", "feed")
-            assert result is not None
-            assert result["content"]  # Non-empty fallback content
+            assert result is None  # Fail-hard: no LLM = no content
 
 
 # =========================================================================
@@ -751,12 +751,12 @@ class TestProposePost:
         assert proposal is not None
         assert proposal["content_type"] == ContentType.POST.value
 
-    def test_post_no_provider_returns_kirtan_fallback(self):
+    def test_post_no_provider_returns_none(self):
+        """No LLM = None (fail-hard, no kirtan fallback)."""
         p = _proposer_no_llm()
         with patch.object(p, "_run_pipeline", return_value=_make_pipeline_result(guna_mode="RAJAS", integrity=0.95)):
             result = p.propose_post("scheduled")
-            assert result is not None
-            assert result["content"]  # has content from kirtan rendering
+            assert result is None  # Fail-hard: no LLM = no content
 
     def test_post_none_when_pipeline_fails(self):
         p = _proposer_no_llm()

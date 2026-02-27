@@ -265,3 +265,9 @@ def get_event_log(ledger_path: Optional[Path] = None) -> EventLog:
     if _event_log is None:
         _event_log = EventLog(ledger_path)
     return _event_log
+
+
+def reset_event_log() -> None:
+    """Reset EventLog singleton. For test isolation only."""
+    global _event_log
+    _event_log = None
