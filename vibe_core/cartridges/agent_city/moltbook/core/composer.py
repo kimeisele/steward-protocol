@@ -115,10 +115,10 @@ _TASK_TEMPLATES = {
     ("post", "opinion"): "Take a strong engineering stance on: {input}. Back it with concrete examples from real systems.",
     ("post", "observation"): "Share a non-obvious technical insight about: {input}. Be specific — what did you build or observe?",
     ("post", "tutorial"): "Write a practical how-to for: {input}. Include concrete steps, tools, and gotchas.",
-    ("comment", "question"): "Ask the author one specific technical follow-up about: {input}. What tradeoff did they miss?",
-    ("comment", "analysis"): "Add a concrete technical angle the author missed about: {input}. Name a specific tool, pattern, or failure mode.",
-    ("comment", "opinion"): "Disagree or build on this with a specific technical counterpoint: {input}. Give a real-world example.",
-    ("comment", "observation"): "Point out a non-obvious connection or implication in: {input}. Be concrete — reference specific systems or patterns.",
+    ("comment", "question"): "Ask the author one specific technical follow-up. What tradeoff or edge case did they miss?\nTOPIC: {input}",
+    ("comment", "analysis"): "Add a concrete technical angle the author missed. Name a specific tool, pattern, or failure mode.\nTOPIC: {input}",
+    ("comment", "opinion"): "Disagree or build on this with a specific technical counterpoint. Give a real-world example.\nTOPIC: {input}",
+    ("comment", "observation"): "Point out a non-obvious connection or implication. Reference specific systems or patterns.\nTOPIC: {input}",
     ("dm_reply", None): "Reply to this message: {input}",
     ("dm_request", None): "Send a message about: {input}",
 }
@@ -143,10 +143,17 @@ def _load_yaml_prompts() -> None:
         _YAML_LOADED = True  # Don't retry on every cycle
 
 
-def _build_task_message(content_type: str, input_text: str, knowledge: str = "", content_format: str = "") -> str:
+def _build_task_message(
+    content_type: str,
+    input_text: str,
+    knowledge: str = "",
+    content_format: str = "",
+    post_content: str = "",
+) -> str:
     """Build atomic task message for LLM user role.
 
     Format-aware: (content_type, format) determines the instruction.
+    For comments: includes the actual post text so LLM responds to real content.
     Includes KG domain context when available.
     """
     # Format-aware lookup: (content_type, format) → specific instruction
@@ -155,6 +162,9 @@ def _build_task_message(content_type: str, input_text: str, knowledge: str = "",
         # Fallback: (content_type, None) for DMs, or generic
         template = _TASK_TEMPLATES.get((content_type, None), "Write about: {input}")
     msg = template.format(input=input_text[:300] if input_text else content_type)
+    # For comments: include the actual post so LLM can respond to what the author wrote
+    if post_content and content_type == "comment":
+        msg += f"\n\nPOST:\n{post_content[:1500]}"
     if knowledge:
         msg += f"\n\nDomain context: {knowledge[:300]}"
     return msg
@@ -276,6 +286,7 @@ class ContentComposer:
             "content_format": content_format,
             "resonant_context": resonant_context,
             "resonance_mode": resonance_mode,
+            "post_content": input_ctx.get("post_content", ""),
         }
 
         # Step 5: Task input (content-type-specific fragment)
@@ -346,15 +357,28 @@ class ContentComposer:
             logger.error(f"PromptRegistry returned empty for {prompt_key} — cannot compose")
             return None
 
-        # Atomic task message (format-aware, includes KG domain context)
+        # Atomic task message (format-aware, includes KG + post content for comments)
         content_format = prompt_ctx.get("content_format", "")
-        user_msg = _build_task_message(content_type, task_input, prompt_ctx.get("knowledge_context", ""), content_format)
+        user_msg = _build_task_message(
+            content_type,
+            task_input,
+            prompt_ctx.get("knowledge_context", ""),
+            content_format,
+            post_content=prompt_ctx.get("post_content", ""),
+        )
 
         # Token budget: FORMAT determines length, not content_type
         max_tokens = _FORMAT_TOKENS.get(content_format, _DEFAULT_TOKENS)
 
         # Tier-based model routing — atomic per task
         tier, model = _resolve_model_tier(content_type, content_format, integrity_cf, prana)
+
+        # Post depth → tier boost: substantive posts deserve deeper responses
+        post_content_len = len(prompt_ctx.get("post_content", ""))
+        if content_type == "comment" and post_content_len > 800 and tier < 1:
+            tier = 1
+            model = _TIER_MODELS.get(tier)
+
         tier_name = _TIER_NAMES.get(tier, "unknown")
         logger.info(f"Tier routing: {content_type}/{content_format} → tier={tier_name} model={model or 'default'}")
 

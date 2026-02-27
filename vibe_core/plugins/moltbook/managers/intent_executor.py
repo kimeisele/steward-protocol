@@ -113,6 +113,13 @@ class IntentExecutor:
             logger.info(f"Already commented on {target_post_id}, skipping")
             return
 
+        # Look up full post content from feed cache
+        post_content = ""
+        for post in getattr(self._plugin, "_current_feed_topics", []):
+            if isinstance(post, dict) and post.get("id") == target_post_id:
+                post_content = str(post.get("content", ""))
+                break
+
         proposal = self._plugin._director_propose(
             content_type="comment",
             raw_input=intent_dict.get("topic", ""),
@@ -124,6 +131,7 @@ class IntentExecutor:
                 "engagement_context": intent_dict.get("engagement_context", ""),
                 "submolt_context": intent_dict.get("submolt_context", ""),
                 "content_format": intent_dict.get("content_format", ""),
+                "post_content": post_content,
             },
         )
         if proposal:
