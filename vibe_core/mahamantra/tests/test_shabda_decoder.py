@@ -197,10 +197,10 @@ class TestSegmentation:
     def test_continuous_voiced_is_one_segment(self):
         """Continuous voiced audio → single segment."""
         from vibe_core.mahamantra.sound.shabda_decoder import segment_stream
-        frames = _voiced_frames(50)
+        frames = _voiced_frames(30)
         segments = segment_stream(frames)
         assert len(segments) == 1
-        assert segments[0].length == 50
+        assert segments[0].length == 30
 
     def test_silence_splits_segments(self):
         """Silence gap splits into two segments."""
@@ -222,7 +222,7 @@ class TestSegmentation:
     def test_max_segment_length(self):
         """Segments longer than max frames are force-split."""
         from vibe_core.mahamantra.sound.shabda_decoder import segment_stream
-        frames = _voiced_frames(120)  # > 80 frame max
+        frames = _voiced_frames(60)  # > 40 frame max
         segments = segment_stream(frames)
         assert len(segments) >= 2
 
