@@ -1,49 +1,278 @@
-"""Tests for ContentComposer — extracted from agency_director.py."""
+"""Tests for ContentComposer — BuddhiResult-driven content generation."""
 
 from unittest.mock import MagicMock, patch
 
 from vibe_core.cartridges.agent_city.moltbook.core.composer import (
     ContentComposer,
-    _GENESIS_PRANA,
-    _TIER_MAP,
-    _TIER_MODELS,
-    _build_task_message,
-    _resolve_model_tier,
+    _FORMAT_TOKENS,
 )
-from vibe_core.mahamantra.substrate.core.seed import COSMIC_FRAME, PANCHA, TRINITY
+from vibe_core.mahamantra.protocols._buddhi import BuddhiResult
 from vibe_core.runtime.quota_manager import OperationalQuota
 
 
-class TestBuildTaskMessage:
-    def test_comment_with_format(self):
-        msg = _build_task_message("comment", "Hello world", content_format="question")
-        assert "Hello world" in msg
+def _make_cognition(**overrides):
+    """Create a BuddhiResult with sensible defaults."""
+    defaults = {
+        "perspective": "Karma Yoga - Action",
+        "focus": "field",
+        "approach": "dharma",
+        "mode": "RAJAS",
+        "function": "maintainer",
+        "chapter": 3,
+        "verse_concepts": (
+            {"sanskrit": "karma", "meaning": "action"},
+            {"sanskrit": "dharma", "meaning": "duty"},
+        ),
+        "resonant_words": (),
+        "prana": 13581,
+        "integrity": 0.987,
+        "is_alive": True,
+        "composed": "dharma karma action truth",
+        "vm_result": {
+            "guna": {"mode": "RAJAS"},
+            "cell": {"prana": 13581, "integrity": 0.987, "is_alive": True},
+            "guardian": "prahlada",
+        },
+    }
+    defaults.update(overrides)
+    return BuddhiResult(**defaults)
 
-    def test_post_with_format(self):
-        msg = _build_task_message("post", "AI agents", content_format="analysis")
-        assert "AI agents" in msg
 
-    def test_dm_reply_template(self):
-        msg = _build_task_message("dm_reply", "Thanks for your message")
-        assert "Reply to this message: Thanks for your message" in msg
+# =============================================================================
+# SYSTEM MESSAGE — Cognitive prompt from BuddhiResult
+# =============================================================================
 
-    def test_with_knowledge_context(self):
-        msg = _build_task_message("post", "topic", knowledge="Some domain context", content_format="opinion")
-        assert "Domain context: Some domain context" in msg
 
-    def test_without_knowledge_context(self):
-        msg = _build_task_message("post", "topic", content_format="observation")
-        assert "Domain context" not in msg
+class TestBuildSystem:
+    def test_includes_agent_name(self):
+        composer = ContentComposer(plugin=None)
+        msg = composer._build_system(_make_cognition(), {})
+        assert "steward-protocol" in msg
+
+    def test_custom_agent_name(self):
+        mock_plugin = MagicMock()
+        mock_plugin._agent_name = "my-agent"
+        composer = ContentComposer(plugin=mock_plugin)
+        msg = composer._build_system(_make_cognition(), {})
+        assert "my-agent" in msg
+
+    def test_mode_voice_rajas(self):
+        composer = ContentComposer()
+        msg = composer._build_system(_make_cognition(mode="RAJAS"), {})
+        assert "energy" in msg.lower() or "direct" in msg.lower()
+
+    def test_mode_voice_sattva(self):
+        composer = ContentComposer()
+        msg = composer._build_system(_make_cognition(mode="SATTVA"), {})
+        assert "precision" in msg.lower() or "depth" in msg.lower()
+
+    def test_mode_voice_tamas(self):
+        composer = ContentComposer()
+        msg = composer._build_system(_make_cognition(mode="TAMAS"), {})
+        assert "challenge" in msg.lower()
+
+    def test_function_role_included(self):
+        composer = ContentComposer()
+        msg = composer._build_system(_make_cognition(function="maintainer"), {})
+        assert "Sustain" in msg
+
+    def test_verse_concepts_included(self):
+        composer = ContentComposer()
+        cognition = _make_cognition(
+            verse_concepts=({"sanskrit": "dharma", "meaning": "duty"}, {"sanskrit": "yoga", "meaning": "practice"}),
+        )
+        msg = composer._build_system(cognition, {})
+        assert "duty" in msg
+        assert "practice" in msg
+
+    def test_no_verse_concepts_no_crash(self):
+        composer = ContentComposer()
+        msg = composer._build_system(_make_cognition(verse_concepts=()), {})
+        assert "steward-protocol" in msg
+
+    def test_strategic_reasoning_included(self):
+        composer = ContentComposer()
+        msg = composer._build_system(_make_cognition(), {"strategic_reasoning": "Target emerging tech discussions"})
+        assert "Target emerging tech" in msg
+
+    def test_anti_slop_rules(self):
+        composer = ContentComposer()
+        msg = composer._build_system(_make_cognition(), {})
+        assert "No AI filler" in msg
+        assert "as an AI" in msg
+
+
+# =============================================================================
+# TASK MESSAGE — Format-aware instruction + BuddhiResult enrichment
+# =============================================================================
+
+
+class TestBuildTask:
+    def test_comment_question_format(self):
+        composer = ContentComposer()
+        msg = composer._build_task(
+            _make_cognition(), "comment", "topic", {"content_format": "question"},
+        )
+        assert "Ask the author one specific" in msg
+
+    def test_comment_analysis_format(self):
+        composer = ContentComposer()
+        msg = composer._build_task(
+            _make_cognition(), "comment", "topic", {"content_format": "analysis"},
+        )
+        assert "Add a concrete technical angle" in msg
+
+    def test_post_analysis_format(self):
+        composer = ContentComposer()
+        msg = composer._build_task(
+            _make_cognition(), "post", "distributed systems", {"content_format": "analysis"},
+        )
+        assert "Analyze the technical tradeoffs" in msg
+        assert "distributed systems" in msg
+
+    def test_post_opinion_format(self):
+        composer = ContentComposer()
+        msg = composer._build_task(
+            _make_cognition(), "post", "microservices", {"content_format": "opinion"},
+        )
+        assert "Take a strong engineering stance" in msg
+
+    def test_dm_reply(self):
+        composer = ContentComposer()
+        msg = composer._build_task(
+            _make_cognition(), "dm_reply", "Thanks for your message", {},
+        )
+        assert "Reply to this message:" in msg
+        assert "Thanks for your message" in msg
+
+    def test_dm_request(self):
+        composer = ContentComposer()
+        msg = composer._build_task(
+            _make_cognition(), "dm_request", "collaboration", {},
+        )
+        assert "Send a message about:" in msg
+
+    def test_post_content_included_for_comments(self):
+        composer = ContentComposer()
+        msg = composer._build_task(
+            _make_cognition(), "comment", "topic",
+            {"content_format": "observation", "post_content": "The author wrote about consensus algorithms."},
+        )
+        assert "POST:" in msg
+        assert "consensus algorithms" in msg
+
+    def test_post_content_not_included_for_posts(self):
+        composer = ContentComposer()
+        msg = composer._build_task(
+            _make_cognition(), "post", "topic",
+            {"content_format": "observation", "post_content": "Should not appear"},
+        )
+        assert "POST:" not in msg
+
+    def test_resonant_concepts_included(self):
+        composer = ContentComposer()
+        msg = composer._build_task(
+            _make_cognition(composed="dharma karma action truth"), "post", "topic",
+            {"content_format": "observation"},
+        )
+        assert "RESONANT CONCEPTS:" in msg
+        assert "dharma karma action truth" in msg
+
+    def test_knowledge_context_included(self):
+        composer = ContentComposer()
+        msg = composer._build_task(
+            _make_cognition(), "post", "topic",
+            {"content_format": "observation", "knowledge_context": "Domain expertise in distributed systems"},
+        )
+        assert "DOMAIN:" in msg
+        assert "distributed systems" in msg
 
     def test_truncates_long_input(self):
+        composer = ContentComposer()
         long_input = "x" * 500
-        msg = _build_task_message("post", long_input, content_format="observation")
-        # Template uses input_text[:300]
-        assert len(msg) < 500
+        msg = composer._build_task(
+            _make_cognition(), "post", long_input, {"content_format": "observation"},
+        )
+        assert "x" * 300 in msg
+        assert "x" * 400 not in msg
 
-    def test_fallback_template(self):
-        msg = _build_task_message("unknown_type", "some input")
-        assert "Write about: some input" in msg
+
+# =============================================================================
+# MODEL ROUTING — Prana/integrity driven
+# =============================================================================
+
+
+class TestModelRouting:
+    def test_comment_uses_default_model(self):
+        composer = ContentComposer()
+        model, tokens = composer._route_model(_make_cognition(), "comment", "question")
+        assert model is None  # Config default
+
+    def test_post_analysis_uses_reasoning_model(self):
+        composer = ContentComposer()
+        model, tokens = composer._route_model(
+            _make_cognition(is_alive=True, integrity=0.8), "post", "analysis",
+        )
+        assert model == "deepseek/deepseek-r1"
+
+    def test_post_opinion_uses_reasoning_model(self):
+        composer = ContentComposer()
+        model, _ = composer._route_model(
+            _make_cognition(is_alive=True, integrity=0.8), "post", "opinion",
+        )
+        assert model == "deepseek/deepseek-r1"
+
+    def test_post_tutorial_uses_reasoning_model(self):
+        composer = ContentComposer()
+        model, _ = composer._route_model(
+            _make_cognition(is_alive=True, integrity=0.8), "post", "tutorial",
+        )
+        assert model == "deepseek/deepseek-r1"
+
+    def test_post_question_uses_default(self):
+        composer = ContentComposer()
+        model, _ = composer._route_model(_make_cognition(), "post", "question")
+        assert model is None
+
+    def test_dead_cell_uses_default(self):
+        composer = ContentComposer()
+        model, _ = composer._route_model(
+            _make_cognition(is_alive=False), "post", "analysis",
+        )
+        assert model is None
+
+    def test_low_integrity_uses_default(self):
+        composer = ContentComposer()
+        model, _ = composer._route_model(
+            _make_cognition(integrity=0.3), "post", "analysis",
+        )
+        assert model is None
+
+    def test_reasoning_model_gets_bonus_tokens(self):
+        composer = ContentComposer()
+        _, tokens_default = composer._route_model(_make_cognition(), "post", "question")
+        _, tokens_reasoning = composer._route_model(
+            _make_cognition(integrity=0.8), "post", "analysis",
+        )
+        assert tokens_reasoning > tokens_default
+
+    def test_format_determines_base_tokens(self):
+        composer = ContentComposer()
+        _, tokens_q = composer._route_model(_make_cognition(), "comment", "question")
+        _, tokens_a = composer._route_model(_make_cognition(), "comment", "analysis")
+        assert tokens_q == _FORMAT_TOKENS["question"]
+        assert tokens_a == _FORMAT_TOKENS["analysis"]
+        assert tokens_a > tokens_q
+
+    def test_dm_uses_default(self):
+        composer = ContentComposer()
+        model, _ = composer._route_model(_make_cognition(), "dm_reply", "")
+        assert model is None
+
+
+# =============================================================================
+# TRUNCATE SMART (unchanged)
+# =============================================================================
 
 
 class TestTruncateSmart:
@@ -73,167 +302,74 @@ class TestTruncateSmart:
         assert len(result) == 100
 
 
+# =============================================================================
+# COMPOSE — Full pipeline (mocked LLM)
+# =============================================================================
+
+
 class TestContentComposer:
     def test_compose_returns_none_when_no_llm(self):
-        """No LLM provider → None (fail-hard, no fallback)."""
         composer = ContentComposer(plugin=None)
-        # Mock to avoid actual infrastructure
-        with patch.object(composer, "_run_engine", return_value=None):
-            with patch("vibe_core.cartridges.agent_city.moltbook.core.composer._load_yaml_prompts"):
-                with patch.object(composer, "_try_llm", return_value=None):
-                    result = composer.compose(
-                        pipeline_result={"guna": {"mode": "RAJAS"}},
-                        input_text="test topic",
-                        content_type="post",
-                        input_ctx={"raw_input": "test topic"},
-                    )
+        with patch.object(composer, "_call_llm", return_value=None):
+            result = composer.compose(
+                _make_cognition(),
+                "test topic",
+                "post",
+                {"content_format": "observation"},
+            )
         assert result is None
 
     def test_compose_returns_llm_content(self):
-        """LLM content is returned when available."""
         llm_output = "The tradeoff between consistency and availability is fundamental. CAP theorem defines the boundary."
         composer = ContentComposer(plugin=None)
-        with patch.object(composer, "_run_engine", return_value=None):
-            with patch("vibe_core.cartridges.agent_city.moltbook.core.composer._load_yaml_prompts"):
-                with patch.object(composer, "_try_llm", return_value=llm_output):
-                    result = composer.compose(
-                        pipeline_result={"guna": {"mode": "RAJAS"}},
-                        input_text="test topic",
-                        content_type="post",
-                        input_ctx={"raw_input": "test topic"},
-                    )
+        with patch.object(composer, "_call_llm", return_value=llm_output):
+            result = composer.compose(
+                _make_cognition(),
+                "test topic",
+                "post",
+                {"content_format": "observation"},
+            )
         assert result == llm_output
 
+    def test_compose_rejects_echo(self):
+        composer = ContentComposer(plugin=None)
+        input_text = "This is a substantial input text for testing"
+        with patch.object(composer, "_call_llm", return_value=f"{input_text} and some more text here."):
+            result = composer.compose(
+                _make_cognition(),
+                input_text,
+                "post",
+                {"content_format": "observation"},
+            )
+        assert result is None
+
+    def test_compose_rejects_no_substance(self):
+        composer = ContentComposer(plugin=None)
+        with patch.object(composer, "_call_llm", return_value="...  "):
+            result = composer.compose(
+                _make_cognition(),
+                "test",
+                "post",
+                {"content_format": "observation"},
+            )
+        assert result is None
+
     def test_compose_extracts_agent_name(self):
-        """Agent name extracted from plugin._agent_name."""
         mock_plugin = MagicMock()
         mock_plugin._agent_name = "my-cool-agent"
         composer = ContentComposer(plugin=mock_plugin)
 
-        prompt_ctx_captured = {}
+        system_captured = {}
 
-        def capture_try_llm(ctx, task_input, content_type, **kwargs):
-            prompt_ctx_captured.update(ctx)
-            return "content"
+        def capture_llm(system_msg, user_msg, model, max_tokens, content_type):
+            system_captured["msg"] = system_msg
+            return "Real content with substance here."
 
-        with patch.object(composer, "_run_engine", return_value=None):
-            with patch("vibe_core.cartridges.agent_city.moltbook.core.composer._load_yaml_prompts"):
-                with patch.object(composer, "_try_llm", side_effect=capture_try_llm):
-                    composer.compose(
-                        pipeline_result={},
-                        input_text="topic",
-                        content_type="post",
-                        input_ctx={},
-                    )
-        assert prompt_ctx_captured.get("agent_name") == "my-cool-agent"
-
-    def test_run_pipeline_empty_text(self):
-        composer = ContentComposer()
-        assert composer._run_pipeline("") is None
-        assert composer._run_pipeline("   ") is None
-
-
-# =============================================================================
-# TIER-BASED MODEL ROUTING
-# =============================================================================
-
-
-class TestModelTierRouting:
-    """Atomic per-task model routing. Like an agency: Chef/Senior/Azubi."""
-
-    def test_comment_question_is_azubi(self):
-        tier, model = _resolve_model_tier("comment", "question")
-        assert tier == 0
-        assert model is None  # Config default
-
-    def test_comment_observation_is_azubi(self):
-        tier, model = _resolve_model_tier("comment", "observation")
-        assert tier == 0
-
-    def test_dm_reply_is_azubi(self):
-        tier, model = _resolve_model_tier("dm_reply", "")
-        assert tier == 0
-
-    def test_dm_request_is_azubi(self):
-        tier, model = _resolve_model_tier("dm_request", "whatever")
-        assert tier == 0
-
-    def test_comment_analysis_is_senior(self):
-        tier, model = _resolve_model_tier("comment", "analysis")
-        assert tier == 1
-
-    def test_post_question_is_senior(self):
-        tier, model = _resolve_model_tier("post", "question")
-        assert tier == 1
-
-    def test_post_analysis_is_chef(self):
-        tier, model = _resolve_model_tier("post", "analysis")
-        assert tier == 2
-        assert model == "deepseek/deepseek-r1"
-
-    def test_post_opinion_is_chef(self):
-        tier, model = _resolve_model_tier("post", "opinion")
-        assert tier == 2
-
-    def test_post_tutorial_is_chef(self):
-        tier, model = _resolve_model_tier("post", "tutorial")
-        assert tier == 2
-
-    def test_unknown_type_defaults_to_azubi(self):
-        tier, model = _resolve_model_tier("unknown", "whatever")
-        assert tier == 0
-
-    def test_low_prana_downgrades_chef_to_azubi(self):
-        """Explicitly low prana (0 < prana < GENESIS_PRANA) forces Azubi."""
-        tier, model = _resolve_model_tier("post", "analysis", prana=100)
-        assert tier == 0
-        assert model is None  # Downgraded from chef
-
-    def test_low_prana_downgrades_senior_to_azubi(self):
-        tier, _ = _resolve_model_tier("comment", "analysis", prana=50)
-        assert tier == 0
-
-    def test_zero_prana_means_unknown_no_downgrade(self):
-        """prana=0 means 'unknown' (chamber unavailable) — no downgrade."""
-        tier, _ = _resolve_model_tier("comment", "analysis", prana=0)
-        assert tier == 1  # Stays senior — zero is unknown, not low
-
-    def test_zero_prana_no_downgrade_for_azubi(self):
-        """Azubi stays azubi even with zero prana."""
-        tier, _ = _resolve_model_tier("comment", "question", prana=0)
-        assert tier == 0
-
-    def test_high_prana_high_integrity_upgrades_senior(self):
-        """High prana + high integrity upgrades senior → chef."""
-        high_prana = _GENESIS_PRANA * 11  # > 10× GENESIS
-        high_integrity = COSMIC_FRAME * TRINITY // PANCHA + 1  # Above threshold
-        tier, model = _resolve_model_tier("comment", "analysis", integrity_cf=high_integrity, prana=high_prana)
-        assert tier == 2  # Upgraded from senior to chef
-        assert model == "deepseek/deepseek-r1"
-
-    def test_high_prana_low_integrity_no_upgrade(self):
-        """High prana but low integrity → no upgrade."""
-        high_prana = _GENESIS_PRANA * 11
-        low_integrity = 1000  # Below threshold
-        tier, _ = _resolve_model_tier("comment", "analysis", integrity_cf=low_integrity, prana=high_prana)
-        assert tier == 1  # Stays senior
-
-    def test_chef_not_downgraded_with_high_prana(self):
-        """Already-chef tier is not downgraded when prana is high."""
-        tier, _ = _resolve_model_tier("post", "analysis", prana=_GENESIS_PRANA * 5)
-        assert tier == 2
-
-    def test_tier_map_covers_all_content_types(self):
-        """All main content_type/format combos are in the tier map."""
-        assert ("comment", "question") in _TIER_MAP
-        assert ("post", "analysis") in _TIER_MAP
-        assert ("dm_reply", None) in _TIER_MAP
-        assert ("dm_request", None) in _TIER_MAP
-
-    def test_all_tiers_have_models(self):
-        """Every tier has a model entry (None = config default)."""
-        for tier_level in (0, 1, 2):
-            assert tier_level in _TIER_MODELS
+        with patch.object(composer, "_call_llm", side_effect=capture_llm):
+            composer.compose(
+                _make_cognition(), "topic", "post", {"content_format": "observation"},
+            )
+        assert "my-cool-agent" in system_captured["msg"]
 
 
 # =============================================================================
@@ -242,19 +378,15 @@ class TestModelTierRouting:
 
 
 class TestQuotaModelAwareness:
-    """QuotaManager uses correct per-model pricing (not hardcoded Claude)."""
-
     def test_deepseek_cheaper_than_claude(self):
         quota = OperationalQuota()
         claude_cost = quota._estimate_cost(10000, model="anthropic/claude-sonnet-4")
         deepseek_cost = quota._estimate_cost(10000, model="deepseek/deepseek-v3.2")
-        # DeepSeek is ~10× cheaper than Claude at minimum
         assert deepseek_cost < claude_cost / 5
 
     def test_unknown_model_uses_default(self):
         quota = OperationalQuota()
         cost = quota._estimate_cost(10000, model="unknown/model-xyz")
-        # Should use default pricing (not crash)
         assert cost > 0
 
     def test_no_model_uses_default(self):
@@ -266,25 +398,21 @@ class TestQuotaModelAwareness:
         quota = OperationalQuota()
         r1_cost = quota._estimate_cost(10000, model="deepseek/deepseek-r1")
         v3_cost = quota._estimate_cost(10000, model="deepseek/deepseek-v3.2")
-        # R1 is more expensive than v3.2
         assert r1_cost > v3_cost
 
 
 # =============================================================================
-# CONSTITUTION HARD GATES — Guna, Slop, Coherence
+# CONSTITUTION HARD GATES
 # =============================================================================
 
 
 class TestConstitutionHardGates:
-    """Programmatic content gates — not prompt strings, actual code blocks."""
-
     def setup_method(self):
         from vibe_core.cartridges.agent_city.moltbook.governance.constitution import MoltbookConstitution
 
         self.constitution = MoltbookConstitution()
 
     def test_tamas_blocks_post(self):
-        """TAMAS guna cannot produce posts (permanent, high-visibility)."""
         result = self.constitution.validate(
             "Valid content here with multiple sentences. This should be enough.",
             "post",
@@ -294,7 +422,6 @@ class TestConstitutionHardGates:
         assert any("TAMAS" in v for v in result.violations)
 
     def test_tamas_allows_comment(self):
-        """TAMAS guna can still produce comments (low-visibility, transient)."""
         result = self.constitution.validate(
             "Valid comment content here with substance.",
             "comment",
@@ -303,7 +430,6 @@ class TestConstitutionHardGates:
         assert result.is_valid
 
     def test_rajas_allows_post(self):
-        """RAJAS guna can produce posts."""
         result = self.constitution.validate(
             "Valid post with real substance. Two sentences make it pass.",
             "post",
@@ -312,7 +438,6 @@ class TestConstitutionHardGates:
         assert result.is_valid
 
     def test_sattva_allows_post(self):
-        """SATTVA guna can produce posts."""
         result = self.constitution.validate(
             "Contemplative insight on system design. Architectural clarity matters.",
             "post",
@@ -321,7 +446,6 @@ class TestConstitutionHardGates:
         assert result.is_valid
 
     def test_no_guna_allows_all(self):
-        """Missing guna does not block (backward compat)."""
         result = self.constitution.validate(
             "Content without guna context provided. Still valid if checks pass.",
             "post",
@@ -329,7 +453,6 @@ class TestConstitutionHardGates:
         assert result.is_valid
 
     def test_slop_two_patterns_blocks(self):
-        """Two AI filler patterns = hard block."""
         result = self.constitution.validate(
             "As an AI, let me break this down for you today.",
             "comment",
@@ -338,7 +461,6 @@ class TestConstitutionHardGates:
         assert any("slop" in v.lower() for v in result.violations)
 
     def test_slop_one_pattern_warns(self):
-        """One AI filler pattern = warning only, not a block."""
         result = self.constitution.validate(
             "It's important to note that distributed systems scale differently.",
             "comment",
@@ -347,7 +469,6 @@ class TestConstitutionHardGates:
         assert len(result.warnings) > 0
 
     def test_shallow_post_blocks(self):
-        """Posts need at least 2 sentences (substance gate)."""
         result = self.constitution.validate(
             "Just one short sentence",
             "post",
@@ -357,7 +478,6 @@ class TestConstitutionHardGates:
         assert any("shallow" in v.lower() for v in result.violations)
 
     def test_clean_content_passes(self):
-        """Well-formed content with no slop passes all gates."""
         result = self.constitution.validate(
             "The tradeoff between consistency and availability is fundamental. "
             "CAP theorem defines the boundary condition for distributed systems.",
@@ -367,12 +487,10 @@ class TestConstitutionHardGates:
         assert len(result.violations) == 0
 
     def test_empty_content_blocks(self):
-        """Empty content is always blocked."""
         result = self.constitution.validate("", "comment")
         assert not result.is_valid
 
     def test_internal_term_leak_blocks(self):
-        """Internal system terms leaking into output are blocked."""
         result = self.constitution.validate(
             "The SATTVA mode enables read operations through the gateway.",
             "comment",
