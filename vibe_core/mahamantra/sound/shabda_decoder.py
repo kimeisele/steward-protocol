@@ -235,6 +235,7 @@ def score_frame(
     mfcc: Tuple[int, ...] = (),
     f1: int = 0,
     f2: int = 0,
+    prev_rms: int = -1,
 ) -> List[Tuple[str, float]]:
     """Score an audio frame against all phoneme templates.
 
@@ -245,6 +246,10 @@ def score_frame(
         MFCC similarity: 0.50, voicing: 0.20, varga: 0.15, energy class: 0.15
     Without MFCC, falls back to legacy weights:
         voicing: 0.30, varga: 0.20, centroid: 0.20, formant: 0.30
+
+    prev_rms: RMS of previous frame (-1 = unknown). Used for temporal
+    stop detection: a burst onset (prev_rms < 20, current > 20) strongly
+    indicates a stop consonant (P/T/K/B/D/G), not a nasal or continuant.
     """
     rms, varga, f0_x10, centroid_100 = unpack_frame(packed)
 
@@ -253,6 +258,9 @@ def score_frame(
 
     has_mfcc = len(mfcc) >= 13 and any(c != 0 for c in mfcc)
     is_voiced = f0_x10 > 0
+    # Temporal context: detect stop burst onset
+    is_onset = prev_rms >= 0 and prev_rms < 20 and rms >= 20
+    is_rms_dip = prev_rms >= 0 and rms < prev_rms * 6 // 10 and prev_rms > 80
     candidates: List[Tuple[str, float]] = []
 
     # Pre-filter: only templates matching frame varga (± 1 neighbor)
@@ -338,7 +346,9 @@ def score_frame(
             is_low_centroid = centroid_100 < 80
 
             if t.sound_class == 0:  # SVARA (vowel)
-                if is_voiced and is_high_rms and not is_high_centroid:
+                if is_onset or is_rms_dip:
+                    score += 0.01  # vowels don't start from silence/dip
+                elif is_voiced and is_high_rms and not is_high_centroid:
                     score += 0.15  # strong vowel evidence
                 elif is_voiced and is_mid_rms:
                     score += 0.08  # weak vowel
@@ -347,24 +357,33 @@ def score_frame(
             elif t.sound_class == 1:  # SPARSHA (stop/nasal)
                 is_nasal = t.sthana == int(SthanaIndex.ANUNASIKA)
                 if is_nasal:
-                    if is_voiced and is_low_centroid and is_mid_rms:
+                    if is_onset or is_rms_dip:
+                        score += 0.01  # nasals don't burst from silence
+                    elif is_voiced and is_low_centroid and is_mid_rms:
                         score += 0.15
                     elif is_voiced and is_low_centroid:
                         score += 0.08
                     else:
                         score += 0.01
                 else:
-                    if not is_voiced and is_low_rms:
+                    # Stop consonants — temporal context is THE discriminator
+                    if is_onset:
+                        score += 0.15  # burst from silence = stop
+                    elif is_rms_dip:
+                        score += 0.12  # energy dip = stop closure
+                    elif not is_voiced and is_low_rms:
                         score += 0.15  # unvoiced stop
                     elif is_voiced and not is_high_rms:
                         score += 0.10  # voiced stop
                     elif not is_voiced:
                         score += 0.08
                     else:
-                        score += 0.01
+                        score += 0.03
             else:  # SHESHA (semivowel/sibilant/fricative)
                 is_sibilant = t.arpabet in ("S", "SH", "Z", "ZH", "HH")
-                if is_sibilant:
+                if is_onset or is_rms_dip:
+                    score += 0.01  # fricatives/semivowels don't burst
+                elif is_sibilant:
                     if is_high_centroid:
                         score += 0.15
                     elif centroid_100 > 150:
@@ -391,9 +410,11 @@ def score_frame(
 
             # Formant match (0.40 weight — THE vowel discriminator)
             # F1 = jaw height (open/close), F2 = tongue position (front/back)
+            # Use absolute Hz distance normalized by vowel space range,
+            # not relative error (which biases toward higher-F2 templates).
             if t.f1_center > 0 and f1 > 0 and f2 > 0:
-                f1_err = abs(f1 - t.f1_center) / max(t.f1_center, 1)
-                f2_err = abs(f2 - t.f2_center) / max(t.f2_center, 1)
+                f1_err = abs(f1 - t.f1_center) / 500.0   # F1 range ~200-800
+                f2_err = abs(f2 - t.f2_center) / 1500.0   # F2 range ~800-2500
                 formant_score = max(0.0, 1.0 - (f1_err + f2_err))
                 score += 0.40 * formant_score
             elif t.f1_center == 0:
@@ -433,10 +454,12 @@ def _frames_to_phoneme_coords(
 
     # Phase 1: Per-frame best phoneme
     raw_arpabets: List[str] = []
+    prev_frame_rms = 0
     for i, frame in enumerate(frames):
         rms = frame & 0xFF
         if rms < 15:
             raw_arpabets.append("")  # silence marker
+            prev_frame_rms = rms
             continue
 
         # Extract formants from raw audio (primary vowel discriminator)
@@ -448,11 +471,12 @@ def _frames_to_phoneme_coords(
                 audio_frame = raw_samples[start_sample:end_sample]
                 f1, f2 = extract_formants(audio_frame, sample_rate)
 
-        candidates = score_frame(frame, f1=f1, f2=f2)
+        candidates = score_frame(frame, f1=f1, f2=f2, prev_rms=prev_frame_rms)
         if candidates:
             raw_arpabets.append(candidates[0][0])
         else:
             raw_arpabets.append("")
+        prev_frame_rms = rms
 
     if not raw_arpabets:
         return ()
