@@ -1,5 +1,5 @@
-from typing import Protocol, runtime_checkable, TypeVar, Generic, Optional, Dict
 from dataclasses import dataclass
+from typing import Dict, Generic, Optional, Protocol, TypeVar, runtime_checkable
 
 S = TypeVar("S")  # State Type
 M = TypeVar("M")  # Message/Signal Type

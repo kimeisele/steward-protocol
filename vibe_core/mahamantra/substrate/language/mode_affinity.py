@@ -14,14 +14,14 @@ from __future__ import annotations
 from functools import lru_cache
 from typing import Dict, Optional
 
+from vibe_core.mahamantra.protocols.seed._extended import get_trinity_function
+from vibe_core.mahamantra.substrate.language.mantra_grid import get_holyname_mode
 from vibe_core.mahamantra.substrate.seed import (
-    HolyName,
     HARE_POSITIONS,
     KRISHNA_POSITIONS,
     RAMA_POSITIONS,
+    HolyName,
 )
-from vibe_core.mahamantra.substrate.language.mantra_grid import get_holyname_mode
-from vibe_core.mahamantra.protocols.seed._extended import get_trinity_function
 
 
 @lru_cache(maxsize=1)

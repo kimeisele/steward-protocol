@@ -14,7 +14,7 @@ __mahajana__ = "yamaraja"
 __position__ = 15
 __genesis__ = "0x8000000f"
 
-from typing import List, Dict, Any
+from typing import Any, Dict, List
 
 from vibe_core.mahamantra.protocols._seed import PARAMPARA
 

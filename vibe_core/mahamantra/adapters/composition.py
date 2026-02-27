@@ -328,8 +328,8 @@ class MahaComposition:
             used_sanskrit.add(sk)
 
         # ASSEMBLE: role-aware SVO ordering + phrase chunking
-        from vibe_core.mahamantra.substrate.language.section_router import infer_role
         from vibe_core.mahamantra.substrate.language.composer import chunk_sentence
+        from vibe_core.mahamantra.substrate.language.section_router import infer_role
 
         # SVO role ordering for English output
         _ROLE_ORDER = {

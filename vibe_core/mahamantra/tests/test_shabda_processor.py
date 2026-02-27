@@ -12,13 +12,13 @@ from vibe_core.mahamantra.sound.shabda_intake import (
     pack_frame,
 )
 from vibe_core.mahamantra.sound.shabda_processor import (
-    STHANA_ENERGY,
     _ASPIRATION_CENTROID_FLOOR,
     _CENTROID_SIBILANT_THRESHOLD,
     _GHOSHMAHA_RMS_FLOOR,
     _NASAL_CENTROID_CEILING,
     _RMS_VOICED_THRESHOLD,
     _RMS_VOWEL_THRESHOLD,
+    STHANA_ENERGY,
     _audio_to_sthana,
     _classify_sound,
     _refine_sub_index,
@@ -37,7 +37,6 @@ from vibe_core.mahamantra.substrate.encoding.pancha_walk import (
     COORD_SUB,
     COORD_VARGA,
 )
-
 
 # =============================================================================
 # HELPERS
@@ -267,7 +266,9 @@ class TestStreamToRama:
     def test_prabhupada_stream(self):
         """Process Prabhupada's actual stream — should produce coordinates."""
         from vibe_core.mahamantra.substrate.encoding.shabda_bridge import (
-            stream_frame, stream_length, _ensure_loaded,
+            _ensure_loaded,
+            stream_frame,
+            stream_length,
         )
         _ensure_loaded()
         frames = [stream_frame(i) for i in range(stream_length())]
@@ -390,7 +391,9 @@ class TestSthanaProfile:
     def test_prabhupada_sthana_profile(self):
         """Prabhupada's stream has all 5 Sthana levels."""
         from vibe_core.mahamantra.substrate.encoding.shabda_bridge import (
-            stream_frame, stream_length, _ensure_loaded,
+            _ensure_loaded,
+            stream_frame,
+            stream_length,
         )
         _ensure_loaded()
         frames = [stream_frame(i) for i in range(stream_length())]
@@ -402,7 +405,9 @@ class TestSthanaProfile:
     def test_prabhupada_energy_contour(self):
         """Energy contour has variation (not all same level)."""
         from vibe_core.mahamantra.substrate.encoding.shabda_bridge import (
-            stream_frame, stream_length, _ensure_loaded,
+            _ensure_loaded,
+            stream_frame,
+            stream_length,
         )
         _ensure_loaded()
         frames = [stream_frame(i) for i in range(stream_length())]
@@ -443,7 +448,9 @@ class TestCompareStreams:
     def test_prabhupada_self_distance(self):
         """Prabhupada vs himself = near-zero distance."""
         from vibe_core.mahamantra.substrate.encoding.shabda_bridge import (
-            stream_frame, stream_length, _ensure_loaded,
+            _ensure_loaded,
+            stream_frame,
+            stream_length,
         )
         _ensure_loaded()
         frames = [stream_frame(i) for i in range(stream_length())]
@@ -477,6 +484,8 @@ class TestFullPipeline:
         # These coords should be valid input for pancha_walk functions
         from vibe_core.mahamantra.substrate.encoding.pancha_walk import (
             element_histogram as eh,
+        )
+        from vibe_core.mahamantra.substrate.encoding.pancha_walk import (
             walk_signature as ws,
         )
         hist = eh(coords)

@@ -8,7 +8,6 @@ running their own parallel pipelines. This test file proves the rewire works.
 
 import pytest
 
-from vibe_core.mahamantra.protocols._seed import PARAMPARA, WORDS
 from vibe_core.mahamantra.protocols.resonance import (
     ExpansionResponse,
     GuardianProfile,
@@ -17,12 +16,11 @@ from vibe_core.mahamantra.protocols.resonance import (
 from vibe_core.mahamantra.substrate.maha_llm_kernel import (
     DIVINE_NAMES,
     MahaLLMKernel,
-    get_kernel,
-    resonate,
     expand,
+    get_kernel,
     guardian,
+    resonate,
 )
-
 
 # =============================================================================
 # CONSTRUCTION

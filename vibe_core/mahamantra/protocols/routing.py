@@ -1,5 +1,5 @@
-from typing import Protocol, runtime_checkable, TypeVar, Generic, Tuple, Optional, Iterator, Dict
 from dataclasses import dataclass
+from typing import Dict, Generic, Iterator, Optional, Protocol, Tuple, TypeVar, runtime_checkable
 
 V = TypeVar("V", covariant=True)
 
@@ -64,6 +64,7 @@ class RangeResult(Generic[V]):
 
 
 from dataclasses import dataclass
+
 from vibe_core.mahamantra.protocols.types import PhoneticClass
 
 

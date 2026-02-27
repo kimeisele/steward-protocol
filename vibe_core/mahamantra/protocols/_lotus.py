@@ -53,20 +53,17 @@ __mahajana__ = "janaka"
 __position__ = TEN
 __genesis__ = "0x3413af82"  # GenesisByte: parampara % 37 == 0
 
-from abc import ABC, abstractmethod
+from abc import ABC
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import (
     ClassVar,
     Dict,
-    Final,
-    FrozenSet,
     Generic,
     List,
     Optional,
     Protocol,
     Tuple,
-    Type,
     TypeVar,
     runtime_checkable,
 )
@@ -85,7 +82,6 @@ from vibe_core.mahamantra.protocols._fractal import (
     FractalTree,
 )
 from vibe_core.mahamantra.protocols._holographic import (
-    Hologram,
     HolographicSystem,
 )
 from vibe_core.mahamantra.protocols._seed import MALA as MALA_BEADS

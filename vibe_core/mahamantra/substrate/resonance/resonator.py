@@ -13,8 +13,8 @@ NOTE: Uses maha_oscillate() from algorithm/ - NO DUPLICATION.
 """
 
 from __future__ import annotations
-from vibe_core.mahamantra.protocols._seed import KSETRAJNA
 
+from vibe_core.mahamantra.protocols._seed import KSETRAJNA
 
 # === MAHAJANA DECLARATION ===
 __mahajana__ = "vyasa"
@@ -22,18 +22,17 @@ __position__ = 0
 __genesis__ = "0x672435f8"
 
 from dataclasses import dataclass
-from typing import Final, Dict, List, Tuple
+from typing import Dict, Final, List, Tuple
 
+from vibe_core.mahamantra.protocols._pancha import TattvaDict
 from vibe_core.mahamantra.protocols._seed import (
     MAHA_QUANTUM,
+    MALA_COMPLETE,
     PARAMPARA,
     POSITION_SUM_KRISHNA,
-    MALA_COMPLETE,
 )
-from vibe_core.mahamantra.protocols._pancha import TattvaDict
 
 # THE ALGORITHM - imported from SSOT, not reimplemented!
-from vibe_core.mahamantra.substrate.algorithm import maha_oscillate
 
 
 @dataclass(frozen=True)

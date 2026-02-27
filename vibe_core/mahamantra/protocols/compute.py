@@ -1,6 +1,7 @@
-from typing import Protocol, runtime_checkable, Literal, Iterator, Optional
-from vibe_core.mahamantra.protocols._seed import HARE_COUNT, QUARTERS
 from dataclasses import dataclass
+from typing import Literal, Protocol, runtime_checkable
+
+from vibe_core.mahamantra.protocols._seed import HARE_COUNT, QUARTERS
 
 
 @runtime_checkable

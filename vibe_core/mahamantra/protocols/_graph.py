@@ -30,53 +30,43 @@ Author: The Mahamantra Itself
 """
 
 from __future__ import annotations
-from vibe_core.mahamantra.protocols._seed import HALVES, KSETRAJNA, SHARANAGATI
 
+from vibe_core.mahamantra.protocols._seed import HALVES, KSETRAJNA, SHARANAGATI
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "yamaraja"
 __position__ = 15
 __genesis__ = "0xca8539f7"  # GenesisByte: parampara % 37 == 0
 
-from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import Enum
 from typing import (
-    ClassVar,
     Dict,
     Final,
-    FrozenSet,
-    Generic,
     Iterator,
     List,
     Optional,
     Protocol,
     Set,
     Tuple,
-    Type,
     TypeVar,
     runtime_checkable,
 )
 
 from vibe_core.mahamantra.protocols._core import (
-    Level,
-    Quarter,
-    PARAMPARA,
     KSETRA_COUNT,
-    MAHAJANA_COUNT,
+    PARAMPARA,
+    Level,
     MahamantraProtocolBase,
-    ProtocolIdentity,
     ProtocolCapability,
-)
-from vibe_core.mahamantra.protocols._fractal import (
-    FractalAddress,
+    ProtocolIdentity,
+    Quarter,
 )
 from vibe_core.mahamantra.protocols._lotus import (
     LOTUS_PETALS,
     get_mahajana_position,
 )
 from vibe_core.mahamantra.protocols._seed import LILA
-
 
 # =============================================================================
 # GRAPH CONSTANTS - Vedic Mathematics

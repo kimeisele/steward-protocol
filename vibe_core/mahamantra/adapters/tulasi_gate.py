@@ -11,16 +11,15 @@ It handles the BHOGA -> PRASADAM transformation logic.
 
 __all__ = ["TulasiGate"]
 
-from typing import Final, Optional
-from vibe_core.mahamantra.protocols.offering import GraceProtocol
 from vibe_core.mahamantra.protocols._seed import (
+    HARE_COUNT,
     KSETRAJNA,
+    KSHETRA,
     MAHA_QUANTUM,
     POSITION_SUM_TOTAL,
-    KSHETRA,
     PRASADAM,
-    HARE_COUNT,
 )
+from vibe_core.mahamantra.protocols.offering import GraceProtocol
 
 
 class TulasiGate(GraceProtocol):

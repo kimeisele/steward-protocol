@@ -68,45 +68,45 @@ ENTERPRISE USAGE:
 __mahajana__ = "vyasa"  # Position 0 - The Compiler
 __position__ = 0
 __genesis__ = "0xc0400014"  # GenesisByte: parampara % 37 == 0
-from typing import Dict, Final, List, Union
 import hashlib
 import json
+from typing import Dict, Final, List, Union
 
-from vibe_core.mahamantra.protocols.compression import (
-    MahaCompressionProtocol,
-    CompressionResult,
-    SamskaraResult,
-    PhysicsVerification,
-    IntentLevel,
-    IntentGuna,
-    SamskaraLevel,
-    SamskaraScope,
-    INTENT_TAMAS,
-    INTENT_RAJAS,
-    INTENT_SATTVA,
-    INTENT_SUDDHA,
-    ALL_INTENT_LEVELS,
-    ALL_SAMSKARA_LEVELS,
+from vibe_core.mahamantra.protocols._seed import (
+    AKSARA_COUNT as AKSARA,  # 32 - Syllables
 )
+
 # NOTE: IntentLevel/IntentGuna are still imported for type compatibility.
 # But MahaCompression no longer COMPUTES intent from text content.
 # Guna is a property of PRAKRITI (OpCode), not KSHETRA (data).
 # See substrate/guna.py: "The Guna is DERIVED from the OpCode, not decorated."
-
-
 # =============================================================================
 # MAHAMANTRA CONSTANTS (FROM SEED - NO HARDCODING!)
 # =============================================================================
 # MAHAPROMPT: "Tod durch Import" - wer am seed.py vorbei importiert, stirbt
-
 from vibe_core.mahamantra.protocols._seed import (
-    WORDS,  # 16 - The 16 words
+    GITA_CHAPTERS,  # 18 - Bhagavad Gita chapters
+    MAHA_QUANTUM,  # 137 - Fine structure constant ≈ α⁻¹
+    QUALITIES,  # 64 - Characters
     QUARTERS,  # 4 - Genesis, Dharma, Karma, Moksha
     TRINITY,  # 3 - Observer levels
-    AKSARA_COUNT as AKSARA,  # 32 - Syllables
-    QUALITIES,  # 64 - Characters
-    MAHA_QUANTUM,  # 137 - Fine structure constant ≈ α⁻¹
-    GITA_CHAPTERS,  # 18 - Bhagavad Gita chapters
+    WORDS,  # 16 - The 16 words
+)
+from vibe_core.mahamantra.protocols.compression import (
+    ALL_INTENT_LEVELS,
+    ALL_SAMSKARA_LEVELS,
+    INTENT_RAJAS,
+    INTENT_SATTVA,
+    INTENT_SUDDHA,
+    INTENT_TAMAS,
+    CompressionResult,
+    IntentGuna,
+    IntentLevel,
+    MahaCompressionProtocol,
+    PhysicsVerification,
+    SamskaraLevel,
+    SamskaraResult,
+    SamskaraScope,
 )
 
 # Compression reference ratios (derived from GITA_CHAPTERS × factors)
@@ -526,7 +526,7 @@ if __name__ == "__main__":
     2024-01-15 10:23:47 PANIC: Unable to recover, system halting
     """
     result = compressor.compress(error_log)
-    print(f"Error log compression:")
+    print("Error log compression:")
     print(f"  Seed: {result.seed}")
     print(f"  Position: {result.position}")
     print(f"  Ratio: {result.compression_ratio:.1f}×")
@@ -541,7 +541,7 @@ if __name__ == "__main__":
     2024-01-15 10:23:47 INFO: Tests verified, documentation updated
     """
     result = compressor.compress(healthy_log)
-    print(f"Healthy log compression:")
+    print("Healthy log compression:")
     print(f"  Seed: {result.seed}")
     print(f"  Position: {result.position}")
     print(f"  Ratio: {result.compression_ratio:.1f}×")
@@ -554,7 +554,7 @@ if __name__ == "__main__":
         "context": "Previous conversation about deployment..." * 50,
     }
     samskara = compressor.encode_samskara(state)
-    print(f"Samskara encoding:")
+    print("Samskara encoding:")
     print(f"  Seed: {samskara.seed}")
     print(f"  Compression: {samskara.compression_ratio:.1f}×")
     print()

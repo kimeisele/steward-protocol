@@ -35,13 +35,12 @@ __position__ = 0
 __genesis__ = "0x5ad7f6c5"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass, field
-from typing import Dict, Final, Iterator, Optional, Tuple, TYPE_CHECKING
+from typing import TYPE_CHECKING, Dict, Final, Iterator, Optional, Tuple
 
-from vibe_core.mahamantra.protocols._seed import WORDS, PARAMPARA
+from vibe_core.mahamantra.protocols._seed import WORDS
 from vibe_core.mahamantra.protocols.routing import (
-    MahaRoutingProtocol,
-    RouteEntry,
     RangeResult,
+    RouteEntry,
 )
 
 if TYPE_CHECKING:

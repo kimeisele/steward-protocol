@@ -32,18 +32,17 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum, IntEnum
 from typing import (
-    Callable,
-    ClassVar,
     Dict,
     Final,
     List,
     Optional,
     Protocol,
     Tuple,
-    TypedDict,
     Union,
     runtime_checkable,
 )
+
+from vibe_core.mahamantra.protocols._core import PARAMPARA
 
 # =============================================================================
 # CHAITANYA LILA BOUNDARIES - Protocol-Based Enforcement
@@ -66,18 +65,16 @@ from typing import (
 #
 #   boundary = LilaBoundary[str](signature=37)
 #   boundary.add(item, strict=True)  # THROWS if > 24
-
 # Import from LilaProtocol (THE SSOT for boundaries)
 from vibe_core.mahamantra.protocols._lila import (
     LILA_BOUNDARY,
     LILA_LIMIT,
-    LilaPhase,
     LilaBoundary,
-    LilaBoundedOutput,
     LilaBoundaryViolation,
+    LilaBoundedOutput,
+    LilaPhase,
     ParamparaDisconnection,
 )
-from vibe_core.mahamantra.protocols._core import PARAMPARA
 
 # Re-export for backward compatibility (but prefer direct import from _lila)
 NAVADVIPA_LIMIT: Final[int] = LILA_BOUNDARY  # 24 = Strict boundary

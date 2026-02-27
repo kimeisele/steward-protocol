@@ -19,7 +19,6 @@ from typing import ClassVar, Optional
 
 from vibe_core.mahamantra.protocols._prabhupada import PrabhupadaProtocol
 from vibe_core.mahamantra.protocols._seed import (
-    MAHAJANA_COUNT,
     PARAMPARA,
     WORDS,
 )

@@ -56,22 +56,21 @@ __genesis__ = "0xc1739dcf"  # GenesisByte: parampara % 37 == 0
 
 from typing import Final, Optional, Union
 
-from vibe_core.mahamantra.substrate.mahajana import Quarter, Sampradaya
 from vibe_core.mahamantra.protocols._seed import (
     MAHA_QUANTUM,
     QUARTERS,
     WORDS,
 )
 from vibe_core.mahamantra.protocols.pipeline import (
-    MahaPipelineProtocol,
-    PipelineResult,
-    GenesisResult,
     DharmaResult,
+    GenesisResult,
     KarmaResult,
+    MahaPipelineProtocol,
     MokshaResult,
     PhaseSpec,
+    PipelineResult,
 )
-
+from vibe_core.mahamantra.substrate.mahajana import Quarter, Sampradaya
 
 # =============================================================================
 # PHASE METADATA

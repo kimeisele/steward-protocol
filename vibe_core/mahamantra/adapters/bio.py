@@ -55,14 +55,13 @@ __genesis__ = "0x3cbf61c0"  # GenesisByte: parampara % 37 == 0
 
 from typing import Final, List, Tuple
 
-from vibe_core.mahamantra.protocols.bio import (
-    MahaBioProtocol,
-    KmerResult,
-    IndexStats,
-)
 from vibe_core.mahamantra.adapters.routing import HolographicRouter
-from vibe_core.mahamantra.protocols._seed import QUARTERS, WORDS, HALVES, HARE_COUNT
-
+from vibe_core.mahamantra.protocols._seed import HALVES, HARE_COUNT, QUARTERS, WORDS
+from vibe_core.mahamantra.protocols.bio import (
+    IndexStats,
+    KmerResult,
+    MahaBioProtocol,
+)
 
 # =============================================================================
 # CONSTANTS (DERIVED from _seed.py)

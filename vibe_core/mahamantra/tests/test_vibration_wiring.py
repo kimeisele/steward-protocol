@@ -10,7 +10,6 @@ After the hack cleanup:
 import ast
 from pathlib import Path
 
-
 _MAHAMANTRA_ROOT = Path(__file__).resolve().parent.parent
 
 

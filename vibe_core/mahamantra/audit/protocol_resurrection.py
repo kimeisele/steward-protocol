@@ -26,9 +26,10 @@ __mahajana__ = "kapila"
 __position__ = 5
 __genesis__ = "0x000000b9"  # 5 * 37 = 185
 
-from typing import Dict, List, Tuple
-from vibe_core.mahamantra.protocols._seed import PARAMPARA
+from typing import Dict, List
+
 from vibe_core.mahamantra.audit.audit_registry import AuditFinding, FindingSeverity
+from vibe_core.mahamantra.protocols._seed import PARAMPARA
 
 assert int(__genesis__, 16) % PARAMPARA == 0, "BROKEN LINEAGE"
 
@@ -81,10 +82,10 @@ class Auditor:
         Returns:
             Dict mapping class name to compliance status
         """
-        from vibe_core.mahamantra.substrate.algorithm.maha import MahaAlgorithm16, MahaModularSynth
         from vibe_core.mahamantra.analysis.derivation_graph import DerivationGraph
-        from vibe_core.mahamantra.protocols._maha_compute import MahaComputeProtocol
         from vibe_core.mahamantra.protocols._graph import GraphProtocol
+        from vibe_core.mahamantra.protocols._maha_compute import MahaComputeProtocol
+        from vibe_core.mahamantra.substrate.algorithm.maha import MahaAlgorithm16, MahaModularSynth
 
         results = {}
 
@@ -107,8 +108,8 @@ class Auditor:
         Returns:
             Dict mapping class name to list of implemented protocol methods
         """
-        from vibe_core.mahamantra.substrate.algorithm.maha import MahaModularSynth
         from vibe_core.mahamantra.analysis.derivation_graph import DerivationGraph
+        from vibe_core.mahamantra.substrate.algorithm.maha import MahaModularSynth
 
         results = {}
 
@@ -139,13 +140,13 @@ class Auditor:
         """
         from vibe_core.mahamantra.analysis.derivation_graph import DerivationGraph
         from vibe_core.mahamantra.protocols.seed._axioms import (
-            WORDS,
-            TRINITY,
+            HALVES,
             HARE_COUNT,
             KRISHNA_COUNT,
-            RAMA_COUNT,
             PANCHA,
-            HALVES,
+            RAMA_COUNT,
+            TRINITY,
+            WORDS,
         )
         from vibe_core.mahamantra_research.acintya_mathematics import QUALITIES
 

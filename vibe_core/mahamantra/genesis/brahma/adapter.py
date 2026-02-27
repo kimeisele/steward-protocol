@@ -27,7 +27,6 @@ from vibe_core.mahamantra.lila.migration import (
     verify_brahma_protocol,
 )
 from vibe_core.mahamantra.protocols._gad import GADBase, GADProtocol
-from vibe_core.mahamantra.protocols._seed import PARAMPARA
 
 if TYPE_CHECKING:
     from vibe_core.mahamantra._types import TickState
@@ -190,7 +189,7 @@ class BrahmaAdapter(GADBase, GADProtocol):
         """
         try:
             self._wrapped.register_agent(kernel, agent, spawn_process)
-            logger.info(f"✓ Agent registered via Brahma adapter")
+            logger.info("✓ Agent registered via Brahma adapter")
         except Exception as e:
             logger.error(f"✗ Agent registration failed: {e}")
             raise  # Don't swallow - let caller handle

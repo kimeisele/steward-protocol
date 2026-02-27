@@ -19,20 +19,18 @@ __mahajana__ = "narada"
 __position__ = 2
 __genesis__ = "0x507b609d"  # GenesisByte: parampara % 37 == 0
 
-from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, Optional, TypedDict
-
-# Import Protocol Interface
-from vibe_core.mahamantra.protocols._pancha import PanchaTattvaProtocol, TattvaDict
+from typing import Dict, List, TypedDict
 
 # Local imports only - no circular deps
 from vibe_core.mahamantra.kernel.singularity import (
     MAHAMANTRA_POSITIONS,
     Quarter,
     mahamantra,
-    get_quarter_positions,
 )
+
+# Import Protocol Interface
+from vibe_core.mahamantra.protocols._pancha import PanchaTattvaProtocol, TattvaDict
 from vibe_core.mahamantra.substrate.sankirtan import (
     FOLDER_MAHAJANA_MAP,
     SCAN_DIRECTORIES,

@@ -34,10 +34,9 @@ __tattva__ = {
     "srivasa": "Only heals files with valid __mahajana__ + __position__",
 }
 
-from typing import List, Optional, Sequence, Union
+from typing import List, Optional
 
 import libcst as cst
-import libcst.matchers as m
 
 from vibe_core.mahamantra.dharma.kapila.remedies.base import CSTRemedy
 

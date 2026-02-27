@@ -45,7 +45,6 @@ from typing import TYPE_CHECKING, Any, Dict, Iterator, Optional, Tuple
 if TYPE_CHECKING:
     from vibe_core.kernel_impl import RealVibeKernel
 
-from vibe_core.mahamantra.substrate.lotus_types import LotusNode, LotusPath
 
 logger = logging.getLogger("LOTUS_PROJECTION")
 
@@ -203,12 +202,12 @@ def project_lotus(kernel: "RealVibeKernel") -> PositionRegistry:
     Returns:
         PositionRegistry with all discovered+instantiated+wired guardians
     """
-    from vibe_core.vajra.auto_wire import auto_wire
     from vibe_core.mahamantra.substrate.seed import (
         ALL_GUARDIANS,
         QUARTER_NAMES,
         WORDS_PER_QUARTER,
     )
+    from vibe_core.vajra.auto_wire import auto_wire
 
     registry = PositionRegistry()
     projected_count = 0
@@ -272,12 +271,12 @@ def project_minimal(kernel: "RealVibeKernel") -> PositionRegistry:
     For fast boot when full lotus not needed.
     HEAD positions derived from SSOT: HEAD_POSITIONS = (0, 4, 8, 12).
     """
-    from vibe_core.vajra.auto_wire import auto_wire
+    from vibe_core.mahamantra.protocols._seed import HEAD_POSITIONS
     from vibe_core.mahamantra.substrate.seed import (
         ALL_GUARDIANS,
         get_quarter_name,
     )
-    from vibe_core.mahamantra.protocols._seed import HEAD_POSITIONS
+    from vibe_core.vajra.auto_wire import auto_wire
 
     registry = PositionRegistry()
 

@@ -25,7 +25,6 @@ from vibe_core.mahamantra.dharma.kumaras.healing_intent import (
 )
 from vibe_core.mahamantra.substrate.shuddhi import ShuddhiStatus
 
-
 # =============================================================================
 # TEST FIXTURES
 # =============================================================================

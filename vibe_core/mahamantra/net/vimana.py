@@ -10,9 +10,9 @@ Protocol: Length-prefixed binary.
 """
 
 import asyncio
-import struct
 import logging
-from typing import Optional, Callable, Awaitable
+import struct
+from typing import Callable, Optional
 
 from vibe_core.mahamantra.substrate.cell import MahaCellUnified
 from vibe_core.mahamantra.substrate.chamber import SankirtanChamber

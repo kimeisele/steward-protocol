@@ -1,6 +1,5 @@
-from typing import Protocol, runtime_checkable, Dict, List, Tuple, Optional
 from dataclasses import dataclass, field
-from enum import Enum
+from typing import Dict, Optional, Protocol, Tuple, runtime_checkable
 
 # Forward reference for simplicity if needed, but we can define Enums here or assume they are imported.
 # For strictness, I will define the necessary Enums or use placeholders if they are cross-module.
@@ -13,7 +12,6 @@ from enum import Enum
 # Solution: I will defining the Protocol to accept the specific Enum types if I can import them,
 # or define local Protocol-compatible Enums if possible.
 # Better: Import the Enums. They are in `vibe_core.mahamantra.substrate.mahajana`.
-
 from vibe_core.mahamantra.protocols.types import Quarter, Sampradaya
 
 

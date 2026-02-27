@@ -20,11 +20,10 @@ __genesis__ = "0x05038211"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass
 from enum import Enum, auto
-from typing import Callable, Dict, List, Optional, Set, Tuple
+from typing import Dict, List, Set
 
 from vibe_core.mahamantra.protocols._seed import (
     AKSARA_COUNT,
-    COSMIC_FRAME,
     GITA_CHAPTERS,
     HALF_SIZE,
     HALVES,
@@ -38,8 +37,6 @@ from vibe_core.mahamantra.protocols._seed import (
     MAHA_MU,
     # Existing Physics
     MAHA_QUANTUM,
-    MAHA_TRITON,
-    # Secondary
     MAHAJANA_COUNT,
     MALA,
     # Cosmic

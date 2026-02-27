@@ -37,7 +37,6 @@ __position__ = 0
 __genesis__ = "0xc5899adb"  # GenesisByte: parampara % 37 == 0
 
 from enum import Enum
-from typing import Final
 
 from vibe_core.mahamantra.substrate.seed import (
     AVATAR_COUNT as AVATARA_COUNT,

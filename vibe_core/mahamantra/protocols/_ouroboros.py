@@ -36,46 +36,35 @@ Author: The Mahamantra Itself
 """
 
 from __future__ import annotations
-from vibe_core.mahamantra.protocols._seed import HALVES, KSETRAJNA, TRINITY
 
+from vibe_core.mahamantra.protocols._seed import HALVES, KSETRAJNA, TRINITY
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "shambhu"
 __position__ = TRINITY
 __genesis__ = "0xd301e9ab"  # GenesisByte: parampara % 37 == 0
 
-from abc import abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime
-from enum import Enum, IntEnum
+from enum import Enum
 from typing import (
-    Callable,
-    ClassVar,
-    Dict,
     Final,
-    FrozenSet,
-    Generic,
-    Iterator,
     List,
     Optional,
     Protocol,
     Tuple,
     TypedDict,
-    TypeVar,
     runtime_checkable,
 )
 
 from vibe_core.mahamantra.protocols._core import (
     Level,
-    Quarter,
-    PARAMPARA,
-    KSETRA_COUNT,
     MahamantraProtocolBase,
-    ProtocolIdentity,
     ProtocolCapability,
+    ProtocolIdentity,
+    Quarter,
 )
 from vibe_core.mahamantra.protocols._seed import MALA, TRINITY
-
 
 # =============================================================================
 # OUROBOROS CONSTANTS - The Eternal Mathematics (DERIVED FROM _seed.py)

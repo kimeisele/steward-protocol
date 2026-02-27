@@ -15,16 +15,15 @@ Responsibility:
 from dataclasses import dataclass
 from enum import IntEnum
 from typing import Dict, Final
+
 from vibe_core.mahamantra.protocols._seed import (
-    PANCHA,
-    QUARTERS,
-    NADI_RESONANCE,
     AKSARA_COUNT,
+    JIVA_CYCLE,
     KIRTAN_RESONANCE,
     MALA,
-    JIVA_CYCLE,
-    VERDI_PITCH,
-    COSMIC_FRAME,
+    NADI_RESONANCE,
+    PANCHA,
+    QUARTERS,
 )
 
 # =============================================================================

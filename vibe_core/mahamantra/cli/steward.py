@@ -28,35 +28,29 @@ __genesis__ = "0xf950ff6c"  # GenesisByte: parampara % 37 == 0
 from dataclasses import dataclass
 from typing import Any, Dict, Final, Optional
 
+from vibe_core.mahamantra.protocols._maha_compute import (
+    get_gita_chapter,  # SSOT for attractor → chapter
+    get_gita_insight,  # SSOT for chapter → insight
+)
+from vibe_core.mahamantra.protocols._seed import (
+    GITA_CHAPTERS,
+    TRANSCENDENTAL_1096,  # 8 × 137 = HARE_COUNT × MAHA_QUANTUM
+)
+
 # =============================================================================
 # SSOT IMPORTS - NO DUPLICATION!
 # =============================================================================
 from vibe_core.mahamantra.substrate.seed import (
-    Quarter,  # The 4 quarters (GENESIS, DHARMA, KARMA, MOKSHA)
-    QUARTERS,
-    WORDS,
-    HALVES,  # 2
     MALA,  # 108 = japa beads (completion boundary)
-)
-from vibe_core.mahamantra.protocols._seed import (
-    GITA_CHAPTERS,
-    PARAMPARA,  # 37 = the lineage number
-    TRANSCENDENTAL_1096,  # 8 × 137 = HARE_COUNT × MAHA_QUANTUM
-)
-from vibe_core.mahamantra.protocols._maha_compute import (
-    GITA_INSIGHTS,  # SSOT for chapter descriptions
-    get_gita_chapter,  # SSOT for attractor → chapter
-    get_gita_insight,  # SSOT for chapter → insight
+    Quarter,  # The 4 quarters (GENESIS, DHARMA, KARMA, MOKSHA)
 )
 
 # =============================================================================
 # MAHA CELL - Universal Data Format (TOP-DOWN INTEGRATION)
 # =============================================================================
 # ONE import at the TOP entry point. Everything flows through MahaCell.
-from vibe_core.mahamantra.substrate.bridge import wrap_cell
 
 # PayloadType for SSOT chapter references (NO HARDCODED NUMBERS!)
-from vibe_core.mahamantra.protocols._payload import PayloadType
 
 
 # Lazy imports to avoid circular dependencies
@@ -328,8 +322,8 @@ class Steward:
         # Extract values
         success = exec_result.get("success", False)
         position = exec_result.get("position", 0)
-        guardian = exec_result.get("guardian", "unknown")
-        quarter = exec_result.get("quarter", "genesis")
+        _guardian = exec_result.get("guardian", "unknown")
+        _quarter = exec_result.get("quarter", "genesis")
         guna = exec_result.get("guna", "sattva")
         output = exec_result.get("output", "")
         vibration = exec_result.get("vibration", {})

@@ -7,7 +7,7 @@ No logic. No imports beyond typing and stdlib.
 
 from __future__ import annotations
 
-from typing import NamedTuple, Optional, Tuple
+from typing import NamedTuple, Tuple
 
 
 class SyllableVector(NamedTuple):

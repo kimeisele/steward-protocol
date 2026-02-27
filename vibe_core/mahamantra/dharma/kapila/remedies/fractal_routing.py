@@ -25,7 +25,7 @@ __mahajana__ = "kapila"
 __position__ = 6
 __genesis__ = "0x3da84200"  # GenesisByte: parampara % 37 == 0
 
-from typing import List, Sequence, Union
+from typing import List, Union
 
 import libcst as cst
 
@@ -134,7 +134,7 @@ class FractalRoutingRemedy(CSTRemedy):
         getattr_func = getattr_module.body[0]
 
         # Add blank lines before the function for readability
-        getattr_with_spacing = cst.EmptyLine(whitespace=cst.SimpleWhitespace(""))
+        _getattr_with_spacing = cst.EmptyLine(whitespace=cst.SimpleWhitespace(""))
 
         # Find where to insert
         new_body: List[Union[cst.SimpleStatementLine, cst.BaseCompoundStatement]] = []

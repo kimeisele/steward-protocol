@@ -1,6 +1,7 @@
-from typing import Protocol, runtime_checkable, List, Union, Callable, Dict, Literal
-from vibe_core.mahamantra.protocols._seed import KSETRAJNA
 from dataclasses import dataclass
+from typing import Callable, Dict, List, Literal, Protocol, Union, runtime_checkable
+
+from vibe_core.mahamantra.protocols._seed import KSETRAJNA
 
 # Type Aliases
 AlignmentLiteral = Literal["perfect", "partial", "none", "hostile"]

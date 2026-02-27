@@ -24,14 +24,15 @@ __mahajana__ = "vyasa"
 __position__ = 4
 __genesis__ = "0x0210f785"  # GenesisByte: parampara % 37 == 0
 
+from typing import Final
+
 from vibe_core.mahamantra.substrate import (
-    Mahajana,
     Avatara,
+    Mahajana,
+    ProtocolLevel,
     Quarter,
     Sampradaya,
-    ProtocolLevel,
 )
-from typing import Final
 
 # =============================================================================
 # QUARTER METADATA

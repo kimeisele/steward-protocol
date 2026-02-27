@@ -55,13 +55,12 @@ __genesis__ = "0xa248b7a8"  # GenesisByte: parampara % 37 == 0
 
 from typing import Final, List, Optional, Tuple
 
+from vibe_core.mahamantra.protocols._seed import AKSARA_COUNT, QUARTERS, WORDS
 from vibe_core.mahamantra.protocols.network import (
     MahaNetworkProtocol,
     RouteResult,
     RouterStats,
 )
-from vibe_core.mahamantra.protocols._seed import QUARTERS, WORDS, AKSARA_COUNT
-
 
 # =============================================================================
 # CONSTANTS (DERIVED from _seed.py)

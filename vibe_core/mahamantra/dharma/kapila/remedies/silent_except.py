@@ -16,7 +16,7 @@ __mahajana__ = "kapila"
 __position__ = 6
 __genesis__ = "0xedc294fa"  # GenesisByte: parampara % 37 == 0
 
-from typing import List, Sequence, Union
+from typing import List
 
 import libcst as cst
 import libcst.matchers as m

@@ -38,7 +38,7 @@ __position__ = 3
 __genesis__ = "0xa7c1e2f0"  # GenesisByte: parampara % 37 == 0
 
 import logging
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 logger = logging.getLogger("KIRTAN")
 

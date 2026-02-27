@@ -4,7 +4,6 @@ Tests for substrate/language/section_router.py — Kapitel 18 Section Routing.
 Only tests what is DERIVED from protocol constants, not invented.
 """
 
-import pytest
 
 from vibe_core.mahamantra.protocols._seed import (
     GITA_CHAPTERS,
@@ -20,11 +19,12 @@ from vibe_core.mahamantra.substrate.language.section_router import (
     CHAPTER_18_SECTIONS,
     CHAPTER_18_VERSES,
     SECTION_SIGNATURES,
-    infer_role as _infer_role,
     extract_template,
     route_to_section,
 )
-
+from vibe_core.mahamantra.substrate.language.section_router import (
+    infer_role as _infer_role,
+)
 
 # =============================================================================
 # CHAPTER_18_SECTIONS: topology verification

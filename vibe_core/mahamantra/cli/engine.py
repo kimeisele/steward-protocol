@@ -50,10 +50,8 @@ from typing import Callable, Dict, List, Optional, Set, Tuple
 from vibe_core.mahamantra.cli.protocol import (
     CLICapability,
     CLIContext,
-    CLIError,
     CLIErrorCode,
     CLIHealth,
-    CLIOutput,
     CLIResult,
     CLIState,
 )
@@ -61,7 +59,6 @@ from vibe_core.mahamantra.protocols._pancha import PanchaTattvaProtocol, TattvaD
 
 # SSOT - WORDS derives from Mahamantra counting
 from vibe_core.mahamantra.substrate.seed import WORDS
-
 
 # =============================================================================
 # HANDLER TYPE

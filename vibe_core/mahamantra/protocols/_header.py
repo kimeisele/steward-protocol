@@ -69,7 +69,6 @@ from typing import Final, Tuple
 from vibe_core.mahamantra.protocols._seed_cell import (
     COSMIC_FRAME,  # 21600 - Daily resolution
     HALF_SIZE,  # 8 - Bytes per field
-    JIVA_CYCLE,  # 432 - Harmonic frequency
     NADI_RESONANCE,  # 72 - Header size
     NAVA,  # 9 - Number of fields
     PARAMPARA,  # 37 - Verification modulus

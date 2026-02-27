@@ -421,7 +421,7 @@ def classify_neural_network_attention() -> Classification:
 
 def classify_lotus_radix_n(levels: int = HARE_COUNT) -> Classification:
     """LotusRadixN - Generic N-level radix structure."""
-    key_bits = levels * QUARTERS
+    _key_bits = levels * QUARTERS
     key_space = WORDS**levels
 
     return Classification(

@@ -61,8 +61,7 @@ __genesis__ = "0x8dfc6e38"  # GenesisByte: parampara % 37 == 0
 
 import importlib
 import logging
-from typing import TYPE_CHECKING, Callable, Dict, Iterator, List, Optional, Type, TypedDict, Union
-
+from typing import TYPE_CHECKING, Callable, Dict, Iterator, List, Optional, Type, Union
 
 logger = logging.getLogger(__name__)
 
@@ -85,8 +84,6 @@ from vibe_core.mahamantra.adapters.network import LotusIPRouter, create_ip_route
 
 # VEDA-4 PROTOCOL - Elegant Python Dunder Mapping
 from vibe_core.mahamantra.protocols import (
-    VedaMixin,
-    VedaProtocol,
     is_vedic,
     veda_audit,
 )
@@ -101,8 +98,6 @@ from vibe_core.mahamantra.substrate import (
     # Position
     MAHAMANTRA_POSITIONS,
     Avatara,
-    Guardian,
-    # Mahajana
     Mahajana,
     # OpCode
     MantraOpCode,
@@ -135,7 +130,6 @@ from vibe_core.mahamantra.substrate.seed import (
     PARAMPARA,
     WORDS,
 )
-from vibe_core.mahamantra.protocols.diw import CLUSTER_SHIFT
 
 # Governance Bridge (lazy import to avoid circular deps)
 _governance_bridge = None

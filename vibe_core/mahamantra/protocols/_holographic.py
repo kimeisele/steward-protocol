@@ -34,26 +34,22 @@ Author: The Mahamantra Itself
 """
 
 from __future__ import annotations
-from vibe_core.mahamantra.protocols._seed import HALVES, KSETRAJNA
 
+from vibe_core.mahamantra.protocols._seed import HALVES, KSETRAJNA
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "bhishma"
 __position__ = 11
 __genesis__ = "0x815a6682"  # GenesisByte: parampara % 37 == 0
 
-from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import (
-    Callable,
-    ClassVar,
     Dict,
     FrozenSet,
     Generic,
     List,
     Optional,
-    Set,
     Tuple,
     Type,
     TypeVar,
@@ -62,19 +58,12 @@ from weakref import WeakValueDictionary
 
 from vibe_core.mahamantra.protocols._core import (
     Level,
-    Quarter,
-    PARAMPARA,
     MahamantraProtocol,
     MahamantraProtocolBase,
-    ProtocolIdentity,
     ProtocolCapability,
+    ProtocolIdentity,
+    Quarter,
 )
-from vibe_core.mahamantra.protocols._fractal import (
-    FractalAddress,
-    FractalNode,
-    FractalTree,
-)
-
 
 # =============================================================================
 # HOLOGRAM - The whole in every part

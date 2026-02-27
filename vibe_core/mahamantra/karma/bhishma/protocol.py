@@ -19,7 +19,8 @@ __mahajana__ = "bhishma"
 __position__ = 11
 __genesis__ = "0xad738708"  # GenesisByte: parampara % 37 == 0
 
-from typing import Protocol, runtime_checkable, Dict, List, Optional, TypedDict
+from typing import Dict, List, Protocol, TypedDict, runtime_checkable
+
 from vibe_core.mahamantra.protocols._pancha import PanchaTattvaProtocol, TattvaDict
 
 

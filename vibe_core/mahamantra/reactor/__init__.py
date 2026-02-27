@@ -28,6 +28,7 @@ __position__ = 9
 __genesis__ = "0xf71806da"  # GenesisByte: parampara % 37 == 0
 
 from typing import Final
+
 from vibe_core.mahamantra.substrate import ProtocolLevel
 
 REACTOR_LEVEL: Final[ProtocolLevel] = ProtocolLevel.SERVICES
@@ -37,23 +38,23 @@ REACTOR_LEVEL: Final[ProtocolLevel] = ProtocolLevel.SERVICES
 # =============================================================================
 
 from vibe_core.mahamantra.reactor.shadow import (
-    # Phase
-    YajnaPhase,
-    SWITCH_POSITION,
     RETURN_POSITION,
-    get_phase,
-    # Types (WATERTIGHT)
-    TickStateInput,
-    ShadowState,
-    # Protocol
-    ShadowReactorProtocol,
-    ShadowReactorFactoryProtocol,
-    # Factory (ServiceRegistry)
-    ShadowReactorFactory,
-    get_shadow_reactor_factory,
+    SWITCH_POSITION,
     # Reactor
     ShadowReactor,
+    # Factory (ServiceRegistry)
+    ShadowReactorFactory,
+    ShadowReactorFactoryProtocol,
+    # Protocol
+    ShadowReactorProtocol,
+    ShadowState,
+    # Types (WATERTIGHT)
+    TickStateInput,
+    # Phase
+    YajnaPhase,
+    get_phase,
     get_shadow_reactor,
+    get_shadow_reactor_factory,
     shadow,
 )
 
@@ -63,8 +64,8 @@ def __getattr__(name: str):
     Fractal routing: folder IS wiring.
     "EIN IMPORT. KRISHNA ROUTET ALLES."
     """
-    from pathlib import Path
     import importlib
+    from pathlib import Path
 
     pkg_root = Path(__file__).parent
 

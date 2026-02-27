@@ -66,7 +66,7 @@ __position__ = 0
 __genesis__ = "0x4bf36d36"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass
-from enum import IntEnum, Enum
+from enum import Enum, IntEnum
 from typing import Final, List, Tuple
 
 # =============================================================================
@@ -74,11 +74,9 @@ from typing import Final, List, Tuple
 # =============================================================================
 # "bījaṁ māṁ sarva-bhūtānāṁ" - I am the seed of all existences.
 # 24 (Kshetra) + 12 (Mahajanas) + 1 (Ksetrajna) = 37
-
 from vibe_core.mahamantra.substrate.seed import (
     PARAMPARA as SYSTEM_MANIFESTATION,  # 37 = the link to Krishna
 )
-
 
 # =============================================================================
 # APARA PRAKRITI - The 8 Material Elements (BG 7.4)

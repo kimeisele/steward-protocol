@@ -5,20 +5,16 @@ __genesis__ = "0xce110007"  # GenesisByte: parampara % 37 == 0
 
 __all__ = ["MahaCell"]
 
-from typing import Any, Dict, Generic, Optional, TypeVar, cast
-from dataclasses import dataclass, field
 import uuid
+from typing import Dict, Optional, TypeVar
 
-from vibe_core.mahamantra.protocols.cell import (
-    MahaCellProtocol,
-    CellState,
-    MembraneSignal,
-)
 from vibe_core.mahamantra.protocols._seed import (
+    JIVA_QUALITIES,
     MAHA_QUANTUM,
     TRINITY,
-    JIVA_QUALITIES,
-    PRANA_DURATION_MS,
+)
+from vibe_core.mahamantra.protocols.cell import (
+    MahaCellProtocol,
 )
 
 S = TypeVar("S")

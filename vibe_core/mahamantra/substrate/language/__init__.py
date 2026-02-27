@@ -19,16 +19,16 @@ SUBSTRATE LEVEL: Pure math. Composition lives in adapters/composition.py.
 Protocol lives in protocols/_composition.py.
 """
 
+from vibe_core.mahamantra.substrate.language.engine import (
+    MahaLanguageEngine,
+    generate,
+    get_engine,
+)
 from vibe_core.mahamantra.substrate.language.types import (
     EngineResult,
     RhythmProfile,
     StateVector,
     SyllableVector,
-)
-from vibe_core.mahamantra.substrate.language.engine import (
-    MahaLanguageEngine,
-    generate,
-    get_engine,
 )
 
 __all__ = [

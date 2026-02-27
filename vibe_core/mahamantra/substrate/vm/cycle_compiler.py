@@ -29,7 +29,7 @@ USAGE:
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, Callable, Dict, Final, List, Optional, Tuple
 
 if TYPE_CHECKING:
@@ -41,7 +41,6 @@ from vibe_core.mahamantra.protocols._navabhakti import (
 from vibe_core.mahamantra.protocols._navabhakti import (
     GATE_INDEX,
     VAMSI_ADDR,
-    NavaBhaktiOp,
 )
 from vibe_core.mahamantra.protocols._seed import (
     NAVA,

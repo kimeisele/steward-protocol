@@ -57,15 +57,11 @@ __position__ = 0
 __genesis__ = "0xbcb3ba1b"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass
-from enum import Enum, IntEnum
+from enum import IntEnum
 from typing import (
-    ClassVar,
     Dict,
     Final,
-    List,
-    Protocol,
     Tuple,
-    runtime_checkable,
 )
 
 from vibe_core.mahamantra.protocols._core import (
@@ -122,10 +118,10 @@ from vibe_core.mahamantra.substrate.seed import (
     LILA as LILA_LIMIT,
 )
 from vibe_core.mahamantra.substrate.seed import (
-    PARAMPARA,
+    NAVADVIPA as NAVADVIPA_PHASE,
 )
 from vibe_core.mahamantra.substrate.seed import (
-    NAVADVIPA as NAVADVIPA_PHASE,
+    PARAMPARA,
 )
 from vibe_core.mahamantra.substrate.seed import (
     PURI as PURI_PHASE,

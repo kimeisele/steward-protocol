@@ -23,7 +23,6 @@ from vibe_core.mahamantra.substrate.encoding.shabda_bridge import (
     vibration_alignment,
 )
 
-
 # =============================================================================
 # DATA FILE
 # =============================================================================

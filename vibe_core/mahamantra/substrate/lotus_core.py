@@ -23,7 +23,7 @@ if TYPE_CHECKING:
 
 # These imports are needed for class definition
 from vibe_core.mahamantra.protocols._gad import GADBase, GADProtocol
-from vibe_core.mahamantra.protocols._header import HEADER_DAILY_CYCLES, HEADER_SIZE_BYTES, MahaCell, MahaHeader
+from vibe_core.mahamantra.protocols._header import MahaCell
 from vibe_core.mahamantra.protocols._pancha import TattvaDict
 from vibe_core.mahamantra.seed.types import (
     AkashState,
@@ -489,7 +489,7 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         if not lazy:
             # EAGER mode (old behavior) - load everything now
             try:
-                from vibe_core.services import maha_compute_service
+                from vibe_core.services import maha_compute_service  # noqa: F401 (re-export: maha_compute_service)
 
                 if not silent:
                     _log.info("MahaComputeService activated")

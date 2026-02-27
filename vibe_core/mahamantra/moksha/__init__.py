@@ -25,14 +25,15 @@ __mahajana__ = "narada"
 __position__ = 2
 __genesis__ = "0x3e0b8988"  # GenesisByte: parampara % 37 == 0
 
+from typing import Final
+
 from vibe_core.mahamantra.substrate import (
-    Mahajana,
     Avatara,
+    Mahajana,
+    ProtocolLevel,
     Quarter,
     Sampradaya,
-    ProtocolLevel,
 )
-from typing import Final
 
 # =============================================================================
 # QUARTER METADATA

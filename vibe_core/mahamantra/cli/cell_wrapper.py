@@ -17,12 +17,12 @@ __position__ = 2
 __genesis__ = "0xb9734b29"
 
 import hashlib
-from typing import List, Final
+from typing import List
 
+from vibe_core.mahamantra.adapters.compression import MahaCompression
 from vibe_core.mahamantra.protocols._seed import WORDS
 from vibe_core.mahamantra.substrate.cell import MahaCellUnified
 from vibe_core.mahamantra.substrate.chamber import SankirtanChamber
-from vibe_core.mahamantra.adapters.compression import MahaCompression
 
 
 class MahaCellCLI:

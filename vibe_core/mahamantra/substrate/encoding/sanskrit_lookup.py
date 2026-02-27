@@ -27,23 +27,17 @@ from pathlib import Path
 from typing import Final, Optional, Sequence
 
 from vibe_core.mahamantra.protocols._seed import (
-    GITA_CHAPTERS,
-    MALA,
-    NAVA,
     WORDS,
-)
-from vibe_core.mahamantra.substrate.varnamala_codec import (
-    decode,
-    encode,
-    pack_word,
-    unpack_word,
 )
 
 # =============================================================================
 # DATA PATH
 # =============================================================================
-
 from vibe_core.mahamantra.substrate._paths import DATA_DIR
+from vibe_core.mahamantra.substrate.varnamala_codec import (
+    encode,
+    pack_word,
+)
 
 _DATA_DIR: Final[Path] = DATA_DIR
 _LEXICON_PATH: Final[Path] = _DATA_DIR / "rama_lexicon.json"
@@ -165,7 +159,7 @@ def verse_words(chapter: int, verse: int) -> Optional[VerseWords]:
         entries = []
         for w in v.get("words", []):
             packed_hex = w["packed"]
-            length = w["length"]
+            _length = w["length"]
             entry = vocab.get(packed_hex)
             if not entry:
                 continue

@@ -40,19 +40,18 @@ ALL VALUES DERIVED FROM SSOT. NO HARDCODING.
 from typing import Final, NamedTuple
 
 from vibe_core.mahamantra.protocols._seed import (
-    # Flute structure (SSOT)
-    VENU_HOLES,  # 6 = SHARANAGATI
-    VAMSI_HOLES,  # 9 = NAVA
-    MURALI_HOLES,  # 4 = QUARTERS
     FLUTE_HOLES_SUM,  # 19
     # Verification constants
     GITA_CHAPTERS,  # 18
     KSETRAJNA,  # 1
-    SHARANAGATI,  # 6
+    MURALI_HOLES,  # 4 = QUARTERS
     NAVA,  # 9
     QUARTERS,  # 4
+    SHARANAGATI,  # 6
+    VAMSI_HOLES,  # 9 = NAVA
+    # Flute structure (SSOT)
+    VENU_HOLES,  # 6 = SHARANAGATI
 )
-
 
 # =============================================================================
 # VERIFICATION: The Isomorphism (19 = 18 + 1)

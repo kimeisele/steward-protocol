@@ -25,8 +25,8 @@ WATERTIGHT: No Any types. All typed explicitly.
 """
 
 from __future__ import annotations
-from vibe_core.mahamantra.protocols._seed import KSETRAJNA, TEN, TRINITY
 
+from vibe_core.mahamantra.protocols._seed import KSETRAJNA, TEN, TRINITY
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "prithu"
@@ -48,20 +48,21 @@ if TYPE_CHECKING:
     from vibe_core.mahamantra.dharma.prithu import PrithuService
 
 # === DERIVE FROM SSOT ===
+from vibe_core.mahamantra.substrate.mahajana import (
+    Avatara,
+)
+from vibe_core.mahamantra.substrate.opcode import MantraOpCode
 from vibe_core.mahamantra.substrate.position import (
     MAHAMANTRA_POSITIONS,
     MantraPosition,
 )
-from vibe_core.mahamantra.substrate.mahajana import (
-    Mahajana,
-    Avatara,
-    Quarter,
-)
-from vibe_core.mahamantra.substrate.opcode import MantraOpCode
 from vibe_core.mahamantra.substrate.seed import (
-    PARAMPARA,
-    WORDS as TOTAL_POSITIONS,
     QUARTERS as QUARTER_COUNT,
+)
+from vibe_core.mahamantra.substrate.seed import (
+    WORDS as TOTAL_POSITIONS,
+)
+from vibe_core.mahamantra.substrate.seed import (
     WORDS_PER_QUARTER as POSITIONS_PER_QUARTER,
 )
 
@@ -545,7 +546,6 @@ def create_universal_getattr(
         A __getattr__ function.
     """
     import importlib
-    import sys
 
     # 1. Fractal Discovery (Folder = Wiring)
     _fractal = fractal_getattr(caller_file)

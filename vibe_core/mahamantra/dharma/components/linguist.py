@@ -9,23 +9,18 @@ Responsibility:
 - Definition Lookup (V7-based Axiom Trace)
 """
 
-from dataclasses import dataclass
-from typing import Dict, Final, List, Optional, Tuple
+from typing import Dict, Final, List, Tuple
 
 from vibe_core.mahamantra.protocols._seed import (
     HALVES,
-    HARE_COUNT,
-    KRISHNA_COUNT,
     KSETRAJNA,
     KSHETRA,
     LILA,
-    RAMA_COUNT,
     SHARANAGATI,
     TEN,
-    TRINITY,
     WORDS,
 )
-from vibe_core.mahamantra.protocols.dharma_protocol import AksharaData, LinguistProtocol, SwarupaData
+from vibe_core.mahamantra.protocols.dharma_protocol import AksharaData, SwarupaData
 
 
 # --- THE GRAMMAR ---

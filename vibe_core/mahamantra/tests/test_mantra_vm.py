@@ -24,11 +24,7 @@ from vibe_core.mahamantra.substrate.mantra_vm import (
     _w_dasyam,
     _w_kirtanam,
     _w_pada_sevanam,
-    _w_sakhyam,
-    _w_smaranam,
     _w_sravanam,
-    _w_vandanam,
-    execute_cycle,
 )
 
 # =============================================================================
@@ -318,14 +314,13 @@ class TestVMRegisters:
 
     def test_registers_in_ctx(self, lotus):
         """vm_registers dict is available in ctx during execution."""
-        result = lotus("test registers")
+        _result = lotus("test registers")
         assert hasattr(lotus, "_vm_registers")
         assert isinstance(lotus._vm_registers, dict)
 
     def test_registers_persist_across_cycles(self):
         """State written to vm_registers survives between cycles."""
         import vibe_core.mahamantra.substrate.cycle_compiler as cc_mod
-        from vibe_core.mahamantra.protocols._navabhakti import VMOpDeclaration
 
         old_compiler = cc_mod._COMPILER
         cc_mod._COMPILER = None
@@ -369,7 +364,6 @@ class TestVMRegisters:
     def test_registers_condition_reads_register(self):
         """Condition bits can read vm_registers for dynamic behavior."""
         import vibe_core.mahamantra.substrate.cycle_compiler as cc_mod
-        from vibe_core.mahamantra.protocols._navabhakti import VMOpDeclaration
 
         old_compiler = cc_mod._COMPILER
         cc_mod._COMPILER = None

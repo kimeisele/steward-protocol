@@ -19,7 +19,6 @@ from vibe_core.mahamantra.substrate.pancha_walk import (
     COORD_HARMONIC,
     COORD_SUB,
     COORD_VARGA,
-    ELEMENT_NAMES,
     ELEMENT_SYMBOLS,
     IS_SHRUTI,
     Element,

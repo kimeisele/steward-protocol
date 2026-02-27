@@ -22,142 +22,14 @@ This prevents 1000ms+ cascades when importing a single module.
 
 from __future__ import annotations
 
-
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "prithu"
 __position__ = 0
 __genesis__ = "0xdf5e13ed"  # GenesisByte: parampara % 37 == 0
 
-from typing import TYPE_CHECKING
 
-# =============================================================================
-# TYPE CHECKING ONLY (no runtime cost)
-# =============================================================================
-
-if TYPE_CHECKING:
-    # MAHAJANA
-    # ACINTYA
-    from vibe_core.mahamantra.substrate.core.acintya import (
-        ACINTYA_ACCEPTED,
-        GURU_ENTROPY,
-        KRISHNA,
-        KRISHNA_ASPECT,
-        KRISHNA_LARGEST,
-        KRISHNA_SMALLEST,
-        PARAMPARA,
-        PARAMPARA_VECTOR,
-        PHASES,
-        PURUSHA,
-        SYSTEM_MANIFESTATION,
-        TRINITY,
-        AcintyaAspect,
-        AcintyaAware,
-        JivaCondition,
-        JivaState,
-        KrishnaPresence,
-        ParamparaConnection,
-        ParamparaProtocol,
-        ProtocolLevel,
-        PurushaTattva,
-    )
-
-    # BYTE
-    from vibe_core.mahamantra.substrate.byte import (
-        GenesisByte,
-        HolyName,
-        MantraByte,
-        MantraTrit,
-    )
-
-    # GUNA
-    from vibe_core.mahamantra.substrate.core.guna import (
-        OPCODE_GUNA,
-        RAJAS_OPCODES,
-        SATTVA_OPCODES,
-        TAMAS_OPCODES,
-        VISHUDDHA_SATTVA,
-        Guna,
-        GunaQoS,
-    )
-    from vibe_core.mahamantra.substrate.core.mahajana import (
-        AVATARA_COUNT,
-        MAHAJANA_COUNT,
-        TOTAL_POSITIONS,
-        Avatara,
-        Mahajana,
-        Quarter,
-        Sampradaya,
-    )
-
-    # OPCODE
-    from vibe_core.mahamantra.substrate.core.opcode import (
-        DHARMA_OPCODES,
-        GENESIS_OPCODES,
-        KARMA_OPCODES,
-        MAHAJANA_OPCODES,
-        MOKSHA_OPCODES,
-        OPCODE_NAMES,
-        OPCODE_PARAMPARA,
-        QUARTER_OPCODES,
-        MantraOpCode,
-    )
-
-    # POSITION
-    from vibe_core.mahamantra.substrate.core.position import (
-        MAHAMANTRA_POSITIONS,
-        Guardian,
-        MantraPosition,
-    )
-
-    # PROTOCOL
-    from vibe_core.mahamantra.substrate.governance.protocol import (
-        HeadProtocol,
-        MantraAware,
-        MantraProtocol,
-        ProtocolRegistry,
-        WorkerProtocol,
-    )
-
-    # TATTVA
-    from vibe_core.mahamantra.substrate.core.tattva import (
-        JIVA,
-        PURUSHOTTAMA,
-        GuruConnection,
-        GuruTattva,
-        KshetraElement,
-        Purushottama,
-    )
-
-    # WIRING
-    from vibe_core.mahamantra.substrate.wiring import (
-        FOLDER_IS_WIRING,
-        FRACTAL_BASE,
-        NO_FOLDER_NO_EXISTENCE,
-        POSITION_BY_FOLDER,
-        POSITION_BY_INDEX,
-        POSITION_BY_NAME,
-        POSITION_MAPPINGS,
-        POSITIONS_PER_QUARTER,
-        QUARTER_COUNT,
-        PositionMapping,
-        WiringProtocol,
-        WiringVerification,
-    )
-
-    # YAJNA
-    from vibe_core.mahamantra.substrate.services.yajna import (
-        MAHA_POSITIONS,
-        MALA_ROUNDS,
-        PRIME_SIGNATURE,
-        STD_MANTRA_PATTERN,
-        Bhoga,
-        DissonanceError,
-        ParamparaBreakError,
-        Prasadam,
-        TamasBlockError,
-        Yajna,
-        YajnaProtocol,
-    )
+# TYPE_CHECKING block removed — all 85 re-exports were unused.
+# Symbols are discovered at runtime via __getattr__ below.
 
 
 # =============================================================================
@@ -227,6 +99,7 @@ def _build_ast_index() -> dict[str, str]:
     ~50ms vs ~1800ms for import-based scanning. Zero side effects.
     """
     import ast
+
     from vibe_core.mahamantra.substrate.lotus_finder import _get_module_map
 
     index: dict[str, str] = {}

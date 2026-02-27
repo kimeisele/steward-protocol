@@ -43,7 +43,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Dict, List, Optional
 
 if TYPE_CHECKING:
-    from vibe_core.protocols.lineage import CheckpointData, VerificationResult
+    pass
 
 logger = logging.getLogger("PARAMPARA")
 

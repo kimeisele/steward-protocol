@@ -14,7 +14,7 @@ __position__ = 15
 __genesis__ = "0x8000000f"
 
 from pathlib import Path
-from typing import Dict, Any
+from typing import Any, Dict
 
 from vibe_core.mahamantra.protocols._seed import PARAMPARA
 

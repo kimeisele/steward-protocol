@@ -50,19 +50,15 @@ DERIVED FROM SEED.PY:
 - PANCHA_VRTTI = PANCHA = 5 (the 5 mental modifications)
 """
 
-from abc import abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime
-from enum import Enum, IntEnum
+from enum import Enum
 from typing import (
-    Any,
-    Callable,
     Dict,
     Final,
     List,
     Optional,
     Protocol,
-    Tuple,
     Union,
     runtime_checkable,
 )
@@ -88,13 +84,9 @@ __genesis__ = "0x1c3dc0e4"  # GenesisByte: parampara % 37 == 0
 from vibe_core.mahamantra.protocols._sense import (
     # Constants
     JNANENDRIYA_COUNT,
-    MAHABHUTA_COUNT,
-    TANMATRA_COUNT,
     Jnanendriya,
     Mahabhuta,
     # Data classes
-    SensePerception,
-    # Enums (reuse, don't duplicate)
     Tanmatra,
 )
 

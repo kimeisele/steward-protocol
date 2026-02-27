@@ -450,7 +450,7 @@ def diagnose() -> None:
 
     print(f"\nHarmonic Series (VibIDs): {list(_harmonic_vib_ids)}")
 
-    print(f"\nSalt LUT (32 positions):")
+    print("\nSalt LUT (32 positions):")
     for i in range(0, len(_salt_lut), 8):
         chunk = _salt_lut[i:i + 8]
         syls = [_MAHAMANTRA_SYLLABLES[j] for j in range(i, min(i + 8, len(_salt_lut)))]

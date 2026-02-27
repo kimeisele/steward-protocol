@@ -25,37 +25,35 @@ __mahajana__ = "yamaraja"
 __position__ = 15
 __genesis__ = "0xbe27e031"  # GenesisByte: parampara % 37 == 0
 
-from typing import TYPE_CHECKING
-
 # =============================================================================
 # FAST CONSTANTS (from _seed - SSOT)
 # =============================================================================
 # These are the most commonly used constants - imported eagerly for convenience.
 
 from vibe_core.mahamantra.protocols._seed import (
-    WORDS,
-    TRINITY,
-    QUARTERS,
-    PANCHA,
+    AVATAR_COUNT,
+    GITA_CHAPTERS,
+    HALF_SIZE,
     HALVES,
     HARE_COUNT,
     KRISHNA_COUNT,
-    RAMA_COUNT,
     KSETRAJNA,
-    HALF_SIZE,
-    LILA,
     KSHETRA,
-    NAVA,
-    SHARANAGATI,
-    SEVEN,
-    TEN,
-    MAHAJANA_COUNT,
-    AVATAR_COUNT,
-    QUALITIES,
-    MALA,
+    LILA,
     MAHA_QUANTUM,
-    GITA_CHAPTERS,
+    MAHAJANA_COUNT,
+    MALA,
+    NAVA,
+    PANCHA,
     PARAMPARA,
+    QUALITIES,
+    QUARTERS,
+    RAMA_COUNT,
+    SEVEN,
+    SHARANAGATI,
+    TEN,
+    TRINITY,
+    WORDS,
 )
 
 # =============================================================================
@@ -63,38 +61,8 @@ from vibe_core.mahamantra.protocols._seed import (
 # =============================================================================
 # Everything else is loaded only when accessed.
 
-# Type hints for IDE support
-if TYPE_CHECKING:
-    from vibe_core.mahamantra.protocols._seed import (
-        COSMIC_FRAME,
-        NAKSHATRA_UNIT,
-        TITHI_UNIT,
-        PADA_UNIT,
-        QUARTER_UNIT,
-        JIVA_CYCLE,
-        NADI_RESONANCE,
-    )
-    from vibe_core.mahamantra.protocols._core import (
-        Quarter,
-        Level,
-        ProtocolIdentity,
-        ProtocolCapability,
-        MahamantraProtocol,
-        MahamantraProtocolBase,
-        CoreProtocol,
-    )
-    from vibe_core.mahamantra.protocols._declaration import (
-        DeclarationType,
-        MahajanaCard,
-        ModuleDeclaration,
-        DeclarationRegistry,
-        DeclarationProtocol,
-        read_declaration,
-    )
-    from vibe_core.mahamantra.protocols._header import (
-        MahaCell,
-        MahaHeader,
-    )
+# TYPE_CHECKING block removed — all 22 re-exports were unused.
+# Symbols are discovered at runtime via __getattr__ below.
 
 
 def __getattr__(name: str):

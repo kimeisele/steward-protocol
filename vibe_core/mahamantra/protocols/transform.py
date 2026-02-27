@@ -1,6 +1,7 @@
-from typing import Protocol, runtime_checkable, List, Tuple, Dict, Optional
-from vibe_core.mahamantra.protocols._seed import MAHA_QUANTUM
 from dataclasses import dataclass, field
+from typing import Dict, List, Protocol, Tuple, runtime_checkable
+
+from vibe_core.mahamantra.protocols._seed import MAHA_QUANTUM
 
 
 @runtime_checkable

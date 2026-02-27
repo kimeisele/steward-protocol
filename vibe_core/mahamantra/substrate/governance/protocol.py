@@ -23,8 +23,8 @@ WATERTIGHT: No Any types. All typed explicitly.
 """
 
 from __future__ import annotations
-from vibe_core.mahamantra.protocols._seed import KSETRAJNA
 
+from vibe_core.mahamantra.protocols._seed import KSETRAJNA
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "prithu"
@@ -38,26 +38,27 @@ from typing import (
     Dict,
     List,
     Optional,
-    Protocol as TypingProtocol,
     Type,
     TypeVar,
     runtime_checkable,
 )
+from typing import (
+    Protocol as TypingProtocol,
+)
 
+from vibe_core.mahamantra.protocols._seed import WORDS
 from vibe_core.mahamantra.substrate.mahajana import (
-    Mahajana,
     Avatara,
+    Mahajana,
     Quarter,
 )
 from vibe_core.mahamantra.substrate.opcode import MantraOpCode
 from vibe_core.mahamantra.substrate.position import (
-    Guardian,
-    MantraPosition,
     MAHAMANTRA_POSITIONS,
     PARAMPARA,
+    Guardian,
+    MantraPosition,
 )
-from vibe_core.mahamantra.protocols._seed import WORDS
-
 
 # =============================================================================
 # TYPE VARIABLES
@@ -129,7 +130,6 @@ class MantraProtocol(ABC):
 
         SSOT: Reads from knowledge/guardian_intents.yaml via intents.py
         """
-        from vibe_core.mahamantra.substrate.intents import get_intents
         from vibe_core.mahamantra.protocols._seed import (
             COSMIC_FRAME,
             JIVA_CYCLE,
@@ -139,6 +139,7 @@ class MantraProtocol(ABC):
             TEN,
             WORDS,
         )
+        from vibe_core.mahamantra.substrate.intents import get_intents
 
         # Get intents from YAML (SSOT)
         intents = get_intents(cls._position_index) or tuple(cls._intents)

@@ -11,22 +11,18 @@ through multiple sacred lenses (mod-spaces).
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Dict, Final, List, Optional, Tuple
+from typing import Dict, Final, Optional, Tuple
 
 from vibe_core.mahamantra.protocols._seed import (
     HALVES,
     KSETRAJNA,
     MAHA_QUANTUM,
-    MAHAMANTRA_NAME_HARE,
-    MAHAMANTRA_NAME_KRISHNA,
     MALA_COMPLETE,
     PARAMPARA,
-    PARAMPARA_CHANNEL_NAMES,
     PARAMPARA_CHANNELS,
     POSITION_SUM_KRISHNA,
     SEVEN,
     TEN,
-    TRINITY,
     WORDS,
 )
 from vibe_core.mahamantra.protocols._seed import (

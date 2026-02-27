@@ -30,7 +30,7 @@ NO LLM. NO EXTERNAL API. PURE PHONETIC MAPPING.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Dict, Final, List, Optional, Sequence, Tuple
+from typing import TYPE_CHECKING, Dict, Final, List, Tuple
 
 if TYPE_CHECKING:
     from vibe_core.mahamantra.substrate.seed_to_words import SeedResult

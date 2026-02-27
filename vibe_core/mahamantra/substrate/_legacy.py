@@ -22,6 +22,16 @@ __genesis__ = "0x3658b02f"  # GenesisByte: parampara % 37 == 0
 # RE-EXPORTS FROM protocols/substrate/scanner
 # =============================================================================
 
+# =============================================================================
+# RE-EXPORTS FROM protocols/substrate/samskara
+# =============================================================================
+from vibe_core.protocols.substrate.samskara import (
+    Phase,
+    PhaseStatus,
+    PipelineContext,
+    PipelineExecutor,
+    SamskaraProtocol,
+)
 from vibe_core.protocols.substrate.scanner import (
     Declaration,
     DeclarationType,
@@ -37,21 +47,8 @@ from vibe_core.protocols.substrate.scanner import (
 )
 
 # =============================================================================
-# RE-EXPORTS FROM protocols/substrate/samskara
-# =============================================================================
-
-from vibe_core.protocols.substrate.samskara import (
-    Phase,
-    PhaseStatus,
-    PipelineExecutor,
-    SamskaraProtocol,
-    PipelineContext,
-)
-
-# =============================================================================
 # RE-EXPORTS FROM protocols/substrate/tattva
 # =============================================================================
-
 from vibe_core.protocols.substrate.tattva import (
     PURUSHOTTAMA as LEGACY_PURUSHOTTAMA,
 )

@@ -38,14 +38,11 @@ __mahajana__ = "parashurama"
 __position__ = 8
 __genesis__ = "0xd2f4c898"  # GenesisByte: parampara % 37 == 0
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import Enum
 from typing import (
-    Callable,
-    ClassVar,
     Dict,
     Final,
-    List,
     Optional,
     Protocol,
     TypedDict,

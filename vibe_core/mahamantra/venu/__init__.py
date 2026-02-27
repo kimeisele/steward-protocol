@@ -24,9 +24,9 @@ __mahajana__ = "prithu"
 __position__ = 4
 __genesis__ = "0xa7fe2cf6"  # GenesisByte: parampara % 37 == 0
 
+from vibe_core.mahamantra.venu.clock import MantraClock
 from vibe_core.mahamantra.venu.tick import MantraTick
 from vibe_core.mahamantra.venu.voice import MantraVoice
-from vibe_core.mahamantra.venu.clock import MantraClock
 
 
 def __getattr__(name: str):
@@ -34,8 +34,8 @@ def __getattr__(name: str):
     Fractal routing: folder IS wiring.
     "EIN IMPORT. KRISHNA ROUTET ALLES."
     """
-    from pathlib import Path
     import importlib
+    from pathlib import Path
 
     pkg_root = Path(__file__).parent
 

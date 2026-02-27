@@ -32,9 +32,9 @@ from typing import Dict, List, Optional, Type
 
 import libcst as cst
 
-from vibe_core.mahamantra.substrate.shuddhi import ShuddhiProtocol, ShuddhiResult, ShuddhiStatus
 from vibe_core.mahamantra.dharma.kapila.remedies.base import CSTRemedy, ShuddhiScopeError
 from vibe_core.mahamantra.dharma.kapila.remedy_loader import get_remedy_loader
+from vibe_core.mahamantra.substrate.shuddhi import ShuddhiProtocol, ShuddhiResult, ShuddhiStatus
 
 logger = logging.getLogger("SHUDDHI")
 
@@ -584,9 +584,9 @@ class ShuddhiEngine(ShuddhiProtocol):
         This is the ONLY healing path. There is no fallback.
         """
         from vibe_core.mahamantra.kernel.intent import (
-            MantraIntent,
-            IntentType,
             IntentPriority,
+            IntentType,
+            MantraIntent,
             get_kernel,
         )
 

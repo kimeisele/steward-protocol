@@ -45,14 +45,9 @@ from vibe_core.mahamantra.protocols._seed import (
     CHAPTER_VERSES,
     GITA_CHAPTERS,
     MAHA_QUANTUM,
-    QUARTERS,
-    WORDS,
 )
 from vibe_core.mahamantra.protocols.gita import (
-    ChapterResult,
     GitaResonanceProtocol,
-    ResonanceStats,
-    VerseResult,
 )
 
 # =============================================================================

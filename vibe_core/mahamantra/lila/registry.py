@@ -38,7 +38,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from threading import Lock
-from typing import TYPE_CHECKING, Any, Dict, Final, List, Optional, Set
+from typing import TYPE_CHECKING, Any, Dict, Final, Optional, Set
 
 if TYPE_CHECKING:
     from vibe_core.mahamantra.lila.jiva_shadow import JivaShadow
@@ -46,8 +46,7 @@ if TYPE_CHECKING:
 # SSOT: Constants from seed
 from vibe_core.mahamantra.protocols._seed import (
     JIVA_QUALITIES,  # 50
-    PARAMPARA,  # 37
-)
+    )
 from vibe_core.mahamantra.substrate.seed import (
     COSMIC_FRAME,  # 21600
     NADI_RESONANCE,  # 72

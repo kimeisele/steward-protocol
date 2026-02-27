@@ -42,12 +42,11 @@ THIS FILE PROVIDES:
 """
 
 from enum import IntEnum
-from typing import Dict, Final, Tuple
+from typing import Dict, Final
 
 from vibe_core.mahamantra.protocols._seed import (
     GAURA_TITHI,
     GITA_CHAPTERS,
-    GITA_VERSES,
     HALVES,
     HARE_COUNT,
     KSETRAJNA,

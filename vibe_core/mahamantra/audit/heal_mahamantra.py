@@ -12,10 +12,10 @@ This script uses LibCST to:
 TARGET: vibe_core/mahamantra/substrate
 """
 
+from pathlib import Path
+
 import libcst as cst
 from libcst import matchers as m
-from pathlib import Path
-import sys
 
 # MAPPING: Value -> Constant Name
 CONSTANTS_MAP = {

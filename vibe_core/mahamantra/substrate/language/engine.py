@@ -16,7 +16,7 @@ __position__ = 2
 __genesis__ = "0x2c80316d"
 
 import logging
-from typing import Dict, Optional
+from typing import Optional
 
 from vibe_core.mahamantra.protocols._seed import (
     GITA_CHAPTERS,
@@ -46,14 +46,14 @@ class MahaLanguageEngine:
 
     def generate(self, text: str) -> EngineResult:
         """Lotus → MahaComposition.compose() → EngineResult."""
-        from vibe_core.mahamantra.substrate.lotus_core import get_mahamantra
-        from vibe_core.mahamantra.substrate.language.phonetics import scan_syllable_rhythm
         from vibe_core.mahamantra.adapters.composition import get_composition
+        from vibe_core.mahamantra.substrate.language.phonetics import scan_syllable_rhythm
         from vibe_core.mahamantra.substrate.language.section_router import (
             SECTION_SIGNATURES,
             extract_template,
             route_to_section,
         )
+        from vibe_core.mahamantra.substrate.lotus_core import get_mahamantra
 
         # === LOTUS: The real Maha Mantra computation ===
         lotus = get_mahamantra()

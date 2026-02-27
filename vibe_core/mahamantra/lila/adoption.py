@@ -27,7 +27,6 @@ from typing import Dict, List
 
 # Import OrbitalShadowReactor via convenience factory or direct
 from vibe_core.mahamantra.reactor.shadow import OrbitalShadowReactor, ShadowReactor
-from vibe_core.mahamantra.substrate.mahajana import Avatara, Mahajana
 from vibe_core.mahamantra.substrate.proxy import BalaramaProxy
 
 logger = logging.getLogger("MAHAMANTRA.ADOPTION")

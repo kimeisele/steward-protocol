@@ -4,10 +4,8 @@ Tests for Sanskrit Lookup - Verse Word-for-Word via RAMA Coordinates.
 Verifies production access to the Gita word-for-word lexicon.
 """
 
-import pytest
 
 from vibe_core.mahamantra.substrate.sanskrit_lookup import (
-    VerseWords,
     WordEntry,
     hkr_signature,
     lexicon_stats,
@@ -63,7 +61,7 @@ class TestWordLookup:
 
     def test_word_by_coords(self):
         coords = encode("yoga")
-        w = word_by_coords(coords)
+        _w = word_by_coords(coords)
         # May or may not exist in lexicon depending on exact form
         # The test validates the lookup path works without error
 

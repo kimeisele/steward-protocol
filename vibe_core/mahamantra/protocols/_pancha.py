@@ -20,7 +20,7 @@ THE 5 ASPECTS:
 5. SRIVASA (Rama Rama)        -> GOVERNANCE (Wer REGIERT es?)
 """
 
-from typing import Final, Protocol, TypedDict, runtime_checkable
+from typing import Protocol, TypedDict, runtime_checkable
 
 from vibe_core.mahamantra.protocols._seed import PANCHA
 

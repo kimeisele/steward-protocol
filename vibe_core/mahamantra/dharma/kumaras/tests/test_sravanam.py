@@ -6,7 +6,6 @@ Tests the atomic scan_cell() path and the SravanamScanner/Listener.
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
 
 import pytest
 

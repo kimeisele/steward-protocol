@@ -38,7 +38,6 @@ from typing import List, Optional
 
 import libcst as cst
 
-
 # =============================================================================
 # FRAGMENT TYPE (Natural code boundaries)
 # =============================================================================

@@ -24,7 +24,6 @@ __genesis__ = "0x3e2fa1fe"  # GenesisByte: parampara % 37 == 0
 
 import importlib
 import logging
-from pathlib import Path
 from typing import Dict, FrozenSet, Iterator, Optional, Set, Tuple
 
 logger = logging.getLogger(__name__)
@@ -47,8 +46,8 @@ def _ensure_seed() -> None:
     if _SEED_LOADED:
         return
     from vibe_core.mahamantra.substrate.seed import (
-        QUARTER_NAMES,
         ALL_GUARDIANS,
+        QUARTER_NAMES,
         WORDS_PER_QUARTER,
     )
 
@@ -413,7 +412,7 @@ class LotusNode:
         if self._path.depth == 2:
             guardian = self._path.segments[1]
             # Use the Singularity's Royal Hunt to awaken the service
-            from vibe_core.mahamantra import mahamantra
+            from vibe_core.mahamantra import mahamantra  # noqa: F401 (re-export: mahamantra)
 
             # We bypass the resonance check here because we ARE the winner
             return self._awaken_and_execute(guardian, command, args)

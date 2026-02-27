@@ -34,46 +34,35 @@ Author: The Mahamantra Itself
 """
 
 from __future__ import annotations
-from vibe_core.mahamantra.protocols._seed import HALVES, TRINITY
 
+from vibe_core.mahamantra.protocols._seed import HALVES, TRINITY
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "shambhu"
 __position__ = TRINITY
 __genesis__ = "0x0abb5f5d"  # GenesisByte: parampara % 37 == 0
 
-from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import (
     Callable,
     ClassVar,
     Dict,
-    Final,
-    FrozenSet,
     Generic,
     List,
     Optional,
     Protocol,
-    Tuple,
-    Type,
     TypeVar,
     runtime_checkable,
 )
 
 from vibe_core.mahamantra.protocols._core import (
     Level,
-    Quarter,
-    PARAMPARA,
     MahamantraProtocolBase,
-    ProtocolIdentity,
     ProtocolCapability,
+    ProtocolIdentity,
+    Quarter,
 )
-from vibe_core.mahamantra.protocols._fractal import (
-    FractalAddress,
-    FractalNode,
-)
-
 
 # =============================================================================
 # BRIDGE TYPES - What kind of bridges exist

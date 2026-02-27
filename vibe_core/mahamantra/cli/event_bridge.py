@@ -25,7 +25,6 @@ import json
 from pathlib import Path
 from typing import Dict, Final, List, Optional, TypedDict
 
-
 # =============================================================================
 # EVENT ENTRY (The Clean Offering)
 # =============================================================================

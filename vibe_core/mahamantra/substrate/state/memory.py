@@ -11,12 +11,12 @@ Persists to `.vibe/state/mahamantra/memory.json`.
 
 import json
 import logging
+from dataclasses import asdict
+from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional
-from datetime import datetime
-from dataclasses import asdict
 
-from vibe_core.protocols.memory import MemoryProtocol, MemoryEntry, Entity, MemoryStats
+from vibe_core.protocols.memory import Entity, MemoryEntry, MemoryStats
 
 logger = logging.getLogger("Mahamantra.Memory")
 

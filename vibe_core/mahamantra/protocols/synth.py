@@ -1,6 +1,7 @@
-from typing import Protocol, runtime_checkable, List, Tuple, Dict, Optional
-from vibe_core.mahamantra.protocols._seed import MAHAJANA_COUNT, PANCHA, QUARTERS
 from dataclasses import dataclass
+from typing import Dict, List, Protocol, Tuple, runtime_checkable
+
+from vibe_core.mahamantra.protocols._seed import MAHAJANA_COUNT, PANCHA, QUARTERS
 
 
 @runtime_checkable

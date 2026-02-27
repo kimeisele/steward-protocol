@@ -15,14 +15,12 @@ __all__ = ["RamaPhoneticRouter"]
 
 from typing import Optional
 
-from vibe_core.protocols.substrate.resonance import PhoneticClass, PHONETIC_MAP
 from vibe_core.mahamantra.protocols.routing import PhoneticRoutingProtocol
 from vibe_core.mahamantra.substrate.rama_grid import (
     krishna_route,
     rama_to_phoneme,
-    POSITION_SUM_RAMA,
-    POSITION_SUM_KRISHNA,
 )
+from vibe_core.protocols.substrate.resonance import PHONETIC_MAP, PhoneticClass
 
 
 class RamaPhoneticRouter:

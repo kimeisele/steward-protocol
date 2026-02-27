@@ -6,8 +6,7 @@ Tests what is DERIVED from protocol, not invented.
 
 import pytest
 
-from vibe_core.mahamantra.protocols._seed import KSETRAJNA, QUARTERS, SEVEN, WORDS
-from vibe_core.mahamantra.substrate.language.types import RhythmProfile, StateVector, SyllableVector
+from vibe_core.mahamantra.protocols._seed import QUARTERS, SEVEN, WORDS
 from vibe_core.mahamantra.substrate.language.composer import (
     chamber_boost,
     chunk_sentence,
@@ -16,7 +15,7 @@ from vibe_core.mahamantra.substrate.language.composer import (
     semantic_boost,
     state_affinity,
 )
-
+from vibe_core.mahamantra.substrate.language.types import RhythmProfile, StateVector, SyllableVector
 
 # =============================================================================
 # rhythm_bias: grid-aligned rhythmic emphasis
@@ -134,7 +133,7 @@ class TestChamberBoost:
 
         result = chamber_boost(MockAntaranga(), 5, 42)
         # Cap = PANCHA / (WORDS * HALVES) = 5/32 ≈ 0.15625
-        from vibe_core.mahamantra.protocols._seed import PANCHA, HALVES
+        from vibe_core.mahamantra.protocols._seed import HALVES, PANCHA
 
         assert result <= PANCHA / (WORDS * HALVES) + 1e-9
 
@@ -310,7 +309,7 @@ class TestStateAffinity:
         assert up_score >= down_score
 
     def test_capped(self):
-        from vibe_core.mahamantra.protocols._seed import PANCHA, HALVES
+        from vibe_core.mahamantra.protocols._seed import HALVES, PANCHA
 
         sv = StateVector(guna=2, entry_count=72, uptime_ratio=1.0, prana_level=999999)
         item = {"score": 1.0, "coords": tuple(range(10)), "packed_hex": ""}

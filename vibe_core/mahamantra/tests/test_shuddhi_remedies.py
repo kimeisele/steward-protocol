@@ -7,8 +7,8 @@ Every remedy that transforms code must produce output that:
 3. Doesn't duplicate existing imports
 """
 
-import tempfile
 import os
+import tempfile
 from pathlib import Path
 
 import pytest

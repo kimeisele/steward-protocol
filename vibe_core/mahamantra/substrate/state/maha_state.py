@@ -31,8 +31,8 @@ WATERTIGHT: No Any types.
 """
 
 from __future__ import annotations
-from vibe_core.mahamantra.protocols._seed import HALVES, KSETRAJNA, PANCHA, TRINITY, WORDS
 
+from vibe_core.mahamantra.protocols._seed import HALVES, KSETRAJNA, PANCHA, TRINITY, WORDS
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "brahma"

@@ -62,12 +62,12 @@ __mahajana__ = "vyasa"
 __position__ = 3
 __genesis__ = "0x6e44c339"  # GenesisByte: parampara % 37 == 0
 
-from typing import Dict, Final, List, Literal, Optional, Union
+from typing import Final, List, Literal, Union
 
 from vibe_core.mahamantra.protocols.classification import (
-    MahaClassificationProtocol,
     ClassificationResult,
     ComparisonResult,
+    MahaClassificationProtocol,
 )
 from vibe_core.mahamantra.substrate.classifier import (
     MAHAMANTRA_ADDRESS_SPACE,
@@ -87,7 +87,6 @@ from vibe_core.mahamantra.substrate.classifier import (
     classify_lotus_radix_n,
     classify_neural_network_attention,
     classify_python_dict,
-    is_golden_age_viable,
 )
 
 # =============================================================================

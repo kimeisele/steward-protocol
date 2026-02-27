@@ -8,12 +8,8 @@ Verifies that:
 4. install/uninstall is idempotent
 """
 
-import importlib
 import shutil
 import sys
-import tempfile
-from pathlib import Path
-from unittest import mock
 
 import pytest
 
@@ -233,7 +229,6 @@ class TestMovedFileResolution:
         If we add a .py file in a subdirectory and it doesn't exist
         at the top level, the module map finds it.
         """
-        from vibe_core.mahamantra.substrate.lotus_finder import _SUBSTRATE_ROOT
 
         # Create a fake substrate tree in tmp
         fake_root = tmp_path / "substrate"

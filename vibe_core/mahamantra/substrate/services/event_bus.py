@@ -32,13 +32,13 @@ import logging
 import time as time_module
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
-from typing import Callable, Dict, List, Optional, Set, TypedDict, Union
+from typing import Callable, Dict, List, Optional, Set, TypedDict
 from uuid import uuid4
 
 from vibe_core.mahamantra.substrate.event_types import (  # noqa: F401
-    EventType,
-    EventColor,
     EVENT_COLOR_MAP,
+    EventColor,
+    EventType,
 )
 from vibe_core.mahamantra.substrate.mahajana import Mahajana
 from vibe_core.protocols.mahajanas.narada.events import (

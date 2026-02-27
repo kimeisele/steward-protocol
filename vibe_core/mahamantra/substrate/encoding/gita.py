@@ -13,7 +13,7 @@ required for Mahamantra resonance.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Dict, Final
+from typing import Final
 
 # === MAHAJANA DECLARATION ===
 __mahajana__ = "vyasa"

@@ -16,6 +16,7 @@ WATERTIGHT: No Any types. All typed explicitly.
 """
 
 from __future__ import annotations
+
 from vibe_core.mahamantra.protocols._seed import (
     HALVES,
     HARE_COUNT,

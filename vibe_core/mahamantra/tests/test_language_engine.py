@@ -6,7 +6,7 @@ Tests the full pipeline end-to-end. Determinism is the core invariant.
 
 import pytest
 
-from vibe_core.mahamantra.protocols._seed import PARAMPARA, WORDS
+from vibe_core.mahamantra.protocols._seed import PARAMPARA
 from vibe_core.mahamantra.substrate.language.engine import (
     MahaLanguageEngine,
     generate,

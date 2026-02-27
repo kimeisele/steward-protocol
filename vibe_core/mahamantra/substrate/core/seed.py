@@ -79,15 +79,6 @@ from vibe_core.mahamantra.protocols._seed import (
     AMINO_ACIDS,  # 20 = QUARTERS × PANCHA
     ANTAHKARANA,  # 3 = TRINITY (mind/intellect/ego)
     AVATAR_COUNT,  # 4 Avataras
-    # Trinity Grouping (Functional categorization by Name)
-    HARE_POSITIONS,
-    KRISHNA_POSITIONS,
-    RAMA_POSITIONS,
-    get_name_at_position,
-    get_positions_for_name,
-    is_source_position,
-    is_vishnu_tattva,  # Backward compat alias for is_source_position
-    get_trinity_function,
     BALADEV_WHEELS,  # 14 = WORDS - HALVES
     BHAGAVATAM_VERSES,  # 18000 = GITA × TEN³
     CHAITANYA_BIRTH,  # 1486 = KSETRAJNA × TEN³ + LILA × TEN + SHARANAGATI
@@ -118,6 +109,8 @@ from vibe_core.mahamantra.protocols._seed import (
     GURU_CHAPTER,  # 4 = QUARTERS
     GURU_VERSE,  # 34 = 2 × KRISHNA_POS
     HARE_PER_QUARTER,  # 2
+    # Trinity Grouping (Functional categorization by Name)
+    HARE_POSITIONS,
     INDRIYA_TOTAL,  # 10 = TEN
     JAGANNATH_TRIAD,  # 3 = TRINITY
     JAGANNATH_WHEELS,  # 16 = WORDS
@@ -127,6 +120,7 @@ from vibe_core.mahamantra.protocols._seed import (
     KHALI_POSITION,  # 9 = NAVA
     KIRTAN_RESONANCE,  # 7344 = VINA × FLUTE = JIVA × KRISHNA
     KISHORA_NUMERATOR,  # 79 = PANCHA × WORDS - KSETRAJNA (Krishna's age = 15.8)
+    KRISHNA_POSITIONS,
     KRISHNA_QUEENS,  # 16108 = WORDS × TEN³ + MALA
     KSHETRA_BG13,  # 24 = KSHETRA
     LEPTON_TYPES,  # 6 = SHARANAGATI
@@ -186,6 +180,7 @@ from vibe_core.mahamantra.protocols._seed import (
     QUARK_FLAVORS,  # 6 = SHARANAGATI
     QUARK_STATES,  # 18 = GITA_CHAPTERS
     QUARTER_UNIT,
+    RAMA_POSITIONS,
     RATHAYATRA_WHEELS,  # 42 = SHARANAGATI × SEVEN
     REALITY_ROOT,  # 5 = PANCHA
     RED_TESTS_COUNT,  # 10 = TEN
@@ -211,6 +206,11 @@ from vibe_core.mahamantra.protocols._seed import (
     VIBHAG_COUNT,  # 4 = QUARTERS
     VINA_FUNDAMENTAL,  # 136 = T(WORDS)
     VINA_STRINGS,  # 5 = PANCHA
+    get_name_at_position,
+    get_positions_for_name,
+    get_trinity_function,
+    is_source_position,
+    is_vishnu_tattva,  # Backward compat alias for is_source_position
     maha_classical,
     maha_quantum,
 )

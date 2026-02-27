@@ -17,14 +17,13 @@ __mahajana__ = "vyasa"
 __position__ = 0
 __genesis__ = "0xb93c4f68"
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import Enum, auto
-from typing import Dict, List, Optional, Set, Tuple
+from typing import Dict, List, Optional
 
 from vibe_core.mahamantra.protocols._graph import (
     GraphEdge,
     GraphNode,
-    GraphProtocol,
     NodeType,
 )
 from vibe_core.mahamantra.protocols._seed import (

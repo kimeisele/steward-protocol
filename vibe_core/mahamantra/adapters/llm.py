@@ -65,31 +65,26 @@ __mahajana__ = "narada"  # Position 3 - The Messenger
 __position__ = 3
 __genesis__ = "0x838708c8"  # GenesisByte: parampara % 37 == 0  # LLM layer
 
-from typing import Any, Callable, Dict, Final, List, Optional, Union
 import hashlib
+from typing import Any, Callable, Dict, Final, List, Optional
 
+from vibe_core.mahamantra.protocols._seed import (
+    QUARTERS,  # 4 levels = 16 bits
+    WORDS,  # 16 branches per level
+)
+from vibe_core.mahamantra.protocols.llm import (
+    IntentCategory,
+    MahaLLMProtocol,
+    RegistrationResult,
+    RouteResult,
+    RouterStats,
+)
 from vibe_core.protocols.mahajanas.kapila.cognition import (
-    OperatorCognitiveProtocol,
-    CognitiveResult,
     CognitiveContext,
+    CognitiveResult,
     IntentType,
     SignedOperatorInput,
 )
-
-from vibe_core.mahamantra.protocols._seed import (
-    WORDS,  # 16 branches per level
-    QUARTERS,  # 4 levels = 16 bits
-)
-
-
-from vibe_core.mahamantra.protocols.llm import (
-    MahaLLMProtocol,
-    RouteResult,
-    RegistrationResult,
-    RouterStats,
-    IntentCategory,
-)
-
 
 # =============================================================================
 # MAHAMANTRA CONSTANTS (DERIVED from _seed.py)
@@ -424,7 +419,6 @@ class MahaLLM(MahaLLMProtocol):
         """
         from vibe_core.mahamantra.substrate.phonetics import (
             text_to_vibration,
-            SANSKRIT_PHONEME_MAP,
         )
 
         # 1. Convert text to vibration signatures

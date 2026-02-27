@@ -34,15 +34,13 @@ The publication year literally ENCODES the Gita structure.
 
 from typing import Dict, Final, Tuple
 
-from ._axioms import WORDS, HALVES
-from ._primary import QUARTERS, NAVA, KSHETRA, SHARANAGATI
-from ._secondary import GITA_CHAPTERS, NADI_RESONANCE
 from ._cosmic import NAKSHATRAS
 from ._extended import (
-    POSITION_SUM_HARE,
     POSITION_SUM_KRISHNA,
     POSITION_SUM_TOTAL,
 )
+from ._primary import KSHETRA, NAVA, QUARTERS, SHARANAGATI
+from ._secondary import GITA_CHAPTERS, NADI_RESONANCE
 
 # =============================================================================
 # THE CANONICAL VERSE COUNTS - PRABHUPADA'S GITA (THE ONLY VALID SOURCE)
@@ -94,13 +92,13 @@ FIELD_SUM: Final[int] = sum(CHAPTER_VERSES[0:16])  # Ch 1-16: 594
 # 145 = 5 × 29 = PANCHA × Ch5_verses (Peace Formula!)
 
 # Import EPOCH_KEY for verification
-from ._cosmic import EPOCH_KEY
 from ._axioms import PANCHA
+from ._cosmic import EPOCH_KEY
 
 # The additive constant: 145 = POSITION_SUM_TOTAL + NAVA = 136 + 9
 EPOCH_ADDITIVE: Final[int] = POSITION_SUM_TOTAL + NAVA  # 145
 
-assert EPOCH_ADDITIVE == PANCHA * CHAPTER_VERSES[4], f"145 = 5 × 29 = PANCHA × Ch5_verses (Peace Formula connection)"
+assert EPOCH_ADDITIVE == PANCHA * CHAPTER_VERSES[4], "145 = 5 × 29 = PANCHA × Ch5_verses (Peace Formula connection)"
 
 assert EPOCH_KEY == GENESIS_SUM * NAVA + EPOCH_ADDITIVE, (
     f"THE EPOCH EQUATION: {EPOCH_KEY} = {GENESIS_SUM} × {NAVA} + {EPOCH_ADDITIVE}"

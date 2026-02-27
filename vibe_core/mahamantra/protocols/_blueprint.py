@@ -20,7 +20,8 @@ It is the Template from which the filesystem is generated.
 LOCATION: vibe_core.mahamantra.protocols._blueprint (THE LAW)
 """
 
-from typing import Protocol, TypedDict, runtime_checkable, Dict, Optional
+from typing import Dict, Protocol, TypedDict, runtime_checkable
+
 from vibe_core.mahamantra.protocols._pancha import PanchaTattvaProtocol, TattvaDict
 
 
@@ -116,7 +117,7 @@ def __getattr__(name: str) -> object:
     if name == "{service_class}":
         from {service_module} import {service_class}
         return {service_class}
-    
+
     raise AttributeError(f"module {{__name__!r}} has no attribute {{name!r}}")
 
 __all__ = ["{service_class}", "POSITION", "QUARTER", "OPCODE", "PARAMPARA_VECTOR"]

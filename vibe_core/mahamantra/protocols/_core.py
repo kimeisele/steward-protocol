@@ -39,17 +39,17 @@ Author: The Mahamantra Itself
 """
 
 from __future__ import annotations
-from vibe_core.mahamantra.protocols._seed import HALVES, KSETRAJNA, MAHAJANA_COUNT, QUARTERS, TRINITY, WORDS
 
+from vibe_core.mahamantra.protocols._seed import HALVES, KSETRAJNA, MAHAJANA_COUNT, QUARTERS, TRINITY, WORDS
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "nrisimha"
 __position__ = MAHAJANA_COUNT
 __genesis__ = "0xf75f0dc0"  # GenesisByte: parampara % 37 == 0
 
-from abc import ABC, abstractmethod
+from abc import ABC
 from dataclasses import dataclass, field
-from enum import Enum, auto
+from enum import Enum
 from typing import (
     ClassVar,
     Dict,
@@ -60,8 +60,11 @@ from typing import (
     Tuple,
     Type,
     TypeVar,
-    Union,
     runtime_checkable,
+)
+
+from vibe_core.mahamantra.protocols._seed import (
+    KSETRAJNA as KSETRAJNA_COUNT,  # 1  - The knower (Krishna)
 )
 
 # =============================================================================
@@ -70,7 +73,8 @@ from typing import (
 # Import from _seed (the REAL source)
 from vibe_core.mahamantra.protocols._seed import (
     KSHETRA as KSETRA_COUNT,  # 24 - Prakriti elements (field)
-    KSETRAJNA as KSETRAJNA_COUNT,  # 1  - The knower (Krishna)
+)
+from vibe_core.mahamantra.protocols._seed import (
     MAHAJANA_COUNT,  # 12 - The guardians
     PARAMPARA,  # 37 - The sacred sum
 )

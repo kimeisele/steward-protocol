@@ -31,7 +31,6 @@ from vibe_core.mahamantra.protocols._seed import (
     HARE_COUNT,
     PANCHA,
     QUARTERS,
-    SEVEN,
     TRINITY,
 )
 from vibe_core.mahamantra.substrate.pancha_walk import (
@@ -313,10 +312,10 @@ def maha_respond(
         DeprecationWarning,
         stacklevel=2,
     )
+    from vibe_core.mahamantra.adapters.synth import create_synth
     from vibe_core.mahamantra.substrate.phonetic_encoder import encode_text
     from vibe_core.mahamantra.substrate.resonance_ranker import rank_words
     from vibe_core.mahamantra.substrate.semantic_index import get_index
-    from vibe_core.mahamantra.adapters.synth import create_synth
 
     # Step 1: Encode (unified — one path for all languages)
     input_coords = encode_text(text)
@@ -385,7 +384,8 @@ def maha_respond(
         )
 
     # Step 5: Build response
-    from vibe_core.mahamantra.substrate.pancha_walk import ELEMENT_NAMES as EN, COORD_ELEMENT as CE
+    from vibe_core.mahamantra.substrate.pancha_walk import COORD_ELEMENT as CE
+    from vibe_core.mahamantra.substrate.pancha_walk import ELEMENT_NAMES as EN
 
     elem_walk = tuple(EN[CE[c]] for c in input_coords)
 

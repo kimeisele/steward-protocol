@@ -22,32 +22,30 @@ __mahajana__ = "brahma"
 __position__ = KSETRAJNA
 __genesis__ = "0x7340d7d6"  # GenesisByte: parampara % 37 == 0
 
-from vibe_core.mahamantra.kernel.singularity import (
-    Mahamantra,
-    ProtocolRouter,
-    ModuleRouter,
-)
-
 from vibe_core.mahamantra.kernel.fractal import (
     FractalNode,
     FractalTree,
-    scale_up,
     scale_down,
+    scale_up,
     verify_fractal_integrity,
 )
-
 from vibe_core.mahamantra.kernel.intent import (
-    IntentType,
     IntentPriority,
-    IntentStatus,
-    MantraIntent,
-    IntentResult,
-    IntentResolver,
     IntentQueue,
+    IntentResolver,
+    IntentResult,
+    IntentStatus,
+    IntentType,
+    MantraIntent,
     MantraKernel,
     get_kernel,
     resolve,
     surrender,
+)
+from vibe_core.mahamantra.kernel.singularity import (
+    Mahamantra,
+    ModuleRouter,
+    ProtocolRouter,
 )
 
 
@@ -56,8 +54,8 @@ def __getattr__(name: str):
     Fractal routing: folder IS wiring.
     "EIN IMPORT. KRISHNA ROUTET ALLES."
     """
-    from pathlib import Path
     import importlib
+    from pathlib import Path
 
     pkg_root = Path(__file__).parent
 

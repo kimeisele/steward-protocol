@@ -5,7 +5,6 @@ Proves the 5 core gate observers wire correctly and that
 MahaAttention/MahaLLM (empty routers) are NOT wired.
 """
 
-import pytest
 
 
 class TestWireGateProviders:

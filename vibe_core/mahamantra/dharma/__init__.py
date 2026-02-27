@@ -24,8 +24,6 @@ __mahajana__ = "prithu"
 __position__ = 4
 __genesis__ = "0xf9a40bd3"  # GenesisByte: parampara % 37 == 0
 
-from .engine import DharmaEngine, dharma
-
 # =============================================================================
 # FRACTAL DISCOVERY - Folder IS Wiring
 # =============================================================================

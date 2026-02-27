@@ -1,7 +1,8 @@
-from typing import Protocol, runtime_checkable, List, Optional
-from vibe_core.mahamantra.protocols._seed import KSETRAJNA
 from dataclasses import dataclass
 from enum import Enum
+from typing import List, Optional, Protocol, runtime_checkable
+
+from vibe_core.mahamantra.protocols._seed import KSETRAJNA
 
 
 @runtime_checkable

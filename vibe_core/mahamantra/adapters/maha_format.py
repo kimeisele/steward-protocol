@@ -31,10 +31,8 @@ __genesis__ = "0xed874970"
 __all__ = ["MahaFile"]
 
 import struct
-import zlib
-from dataclasses import dataclass
 from pathlib import Path
-from typing import BinaryIO, Final, List
+from typing import BinaryIO, Final
 
 from vibe_core.mahamantra.protocols._header import HEADER_SIZE_BYTES, MahaHeader
 from vibe_core.mahamantra.substrate.cell import MahaCellUnified

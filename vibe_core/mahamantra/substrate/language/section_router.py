@@ -15,14 +15,13 @@ from __future__ import annotations
 from typing import Dict, Final, List, Sequence, Tuple
 
 from vibe_core.mahamantra.protocols._seed import (
-    GITA_CHAPTERS,
     HALVES,
     HARE_COUNT,
     KSETRAJNA,
     MAHAJANA_COUNT,
     PANCHA,
-    QUARTERS,
     QUALITIES,
+    QUARTERS,
     SEVEN,
     SHARANAGATI,
 )

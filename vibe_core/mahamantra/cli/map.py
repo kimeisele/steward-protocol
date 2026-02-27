@@ -30,8 +30,6 @@ import logging
 from typing import Dict, Final, List, Optional, TypedDict
 
 from vibe_core.mahamantra.substrate.guna import (
-    VISHUDDHA_SATTVA,
-    Guna,
     get_guna_by_position,
 )
 from vibe_core.mahamantra.substrate.position import MAHAMANTRA_POSITIONS

@@ -35,19 +35,17 @@ __mahajana__ = "vyasa"
 __position__ = 0
 __genesis__ = "0x2b3b3ee0"  # GenesisByte: parampara % 37 == 0
 
-from typing import Final, Protocol, Callable, List, TypeVar, TypedDict, runtime_checkable
+from typing import Callable, Final, List, Protocol, TypedDict, TypeVar, runtime_checkable
 
 from vibe_core.mahamantra.protocols._seed import (
-    PRANA_DURATION_S,
-    WORDS,
-    QUARTERS,
-    MALA,
-    TICK_INTERVAL_MS,
-    PRANA_DURATION_MS,
-    NADI_RESONANCE,
     FIELD_RESONANCE,
     KSHETRA,
     MAHAJANA_COUNT,
+    MALA,
+    NADI_RESONANCE,
+    QUARTERS,
+    TICK_INTERVAL_MS,
+    WORDS,
 )
 
 # =============================================================================

@@ -26,22 +26,15 @@ for Kali Yuga (maximum entropy reduction).
 
 from dataclasses import dataclass
 from enum import Enum, auto
-from typing import Dict, Final, List
+from typing import Final, List
 
 from vibe_core.mahamantra.protocols._seed import (
     GOLDEN_AGE_DURATION,
     HALF_SIZE,
-    HALVES,
     HARE_COUNT,
     KSETRAJNA,
-    LILA,
-    NAVA,
-    PANCHA,
-    QUALITIES,
     QUARTERS,
     SEVEN,
-    TEN,
-    WORDS,
 )
 
 # === MAHAJANA DECLARATION (machine-readable) ===

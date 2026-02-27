@@ -47,7 +47,6 @@ from vibe_core.mahamantra.substrate.pancha_tattva import (
     TattvaAspect,
 )
 
-from .engine import Prediction, generate_all_predictions
 from .knowledge import (
     KNOWN_CONSTANTS,
     CoverageStatus,

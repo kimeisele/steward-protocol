@@ -19,10 +19,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Dict, Final, Iterator, List, Optional, Tuple, Union
+from typing import Dict, Final, Iterator, List, Optional, Tuple
 
 from vibe_core.mahamantra.protocols._seed import (
-    AKSARA_COUNT,
     GITA_CHAPTERS,
     HALVES,
     HARE_COUNT,
@@ -36,7 +35,6 @@ from vibe_core.mahamantra.protocols._seed import (
     MAHAMANTRA_WORD_PATTERN,
     NAVA,
     PANCHA,
-    PARAMPARA,
     POSITION_SUM_HARE,
     POSITION_SUM_KRISHNA,
     POSITION_SUM_RAMA,
@@ -45,7 +43,6 @@ from vibe_core.mahamantra.protocols._seed import (
     QUARTERS,
     SEVEN,
     TEN,
-    TRANSCENDENTAL_1096,
     TRINITY,
     WORDS,
 )
@@ -57,12 +54,10 @@ __genesis__ = "0x672435f8"  # GenesisByte: parampara % 37 == 0
 
 from vibe_core.mahamantra.protocols._maha_compute import (
     AttractorType,
-    MahaComputeProtocol,
     MahaComputeResult,
     MahaComputeState,
     get_gita_chapter,
     get_gita_insight,
-    get_operation,
 )
 from vibe_core.mahamantra.protocols._seed import MAHA_ADD as _ADD
 from vibe_core.mahamantra.protocols._seed import MAHA_MULT as _MULT

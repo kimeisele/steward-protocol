@@ -4,14 +4,11 @@ Tests for substrate/language/mode_affinity.py — WordNet graph-distance classif
 Only tests what is DERIVED from protocol, not invented.
 """
 
-import pytest
 
 from vibe_core.mahamantra.substrate.language.mode_affinity import (
     classify_by_graph,
     mode_anchor_phrases,
 )
-from vibe_core.mahamantra.substrate.seed import HolyName
-
 
 # =============================================================================
 # mode_anchor_phrases: protocol-derived anchor phrases

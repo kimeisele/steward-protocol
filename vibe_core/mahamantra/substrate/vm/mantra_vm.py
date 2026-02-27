@@ -127,8 +127,8 @@ def _w_sakhyam(lotus: "MahamantraLotus", ctx: dict) -> None:
 
 def _w_atma_nivedanam(lotus: "MahamantraLotus", ctx: dict) -> None:
     """9. ATMA_NIVEDANAM — Self-surrender. Reactor + akash update + result."""
+    from vibe_core.mahamantra.protocols._header import HEADER_DAILY_CYCLES, MahaCell, MahaHeader
     from vibe_core.mahamantra.substrate.lotus_core import _get_pipeline
-    from vibe_core.mahamantra.protocols._header import MahaCell, MahaHeader, HEADER_DAILY_CYCLES
 
     P = _get_pipeline()
 

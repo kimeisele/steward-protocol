@@ -62,21 +62,19 @@ __mahajana__ = "vyasa"
 __position__ = 0
 __genesis__ = "0x11aaa682"  # GenesisByte: parampara % 37 == 0
 
-from typing import Any, Callable, Dict, Final, List, Optional, Tuple
+from typing import Any, Dict, Final, List, Optional
 
-from vibe_core.mahamantra.protocols.attention import (
-    MahaAttentionProtocol,
-    AttentionResult,
-    AttentionStats,
-)
 from vibe_core.mahamantra.adapters.hash import DeterministicHash
 from vibe_core.mahamantra.adapters.routing import HolographicRouter
 from vibe_core.mahamantra.protocols._seed import (
-    MAHA_QUANTUM,
     QUARTERS,
     WORDS,
 )
-
+from vibe_core.mahamantra.protocols.attention import (
+    AttentionResult,
+    AttentionStats,
+    MahaAttentionProtocol,
+)
 
 # =============================================================================
 # CONSTANTS

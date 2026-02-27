@@ -48,32 +48,35 @@ __mahajana__ = "narada"
 __position__ = 3
 __genesis__ = "0x7085cf9a"  # GenesisByte: parampara % 37 == 0
 
-from dataclasses import dataclass
-from typing import Final, List, Optional, Tuple, Dict
+from typing import Dict, Final, List, Optional, Tuple
 
-from vibe_core.mahamantra.protocols.transform import (
-    MahaTransformProtocol,
-    TransformResult,
-    AttractorResult,
-    BatchResult,
-)
 from vibe_core.mahamantra.protocols._seed import (
+    HALVES,
     MAHA_QUANTUM,
-    WORDS,
+    NAVA,
     SEVEN,
     TEN,
     TRINITY,
-    HALVES,
-    NAVA,
-    MAHAMANTRA_NAME_HARE,
-    MAHAMANTRA_NAME_KRISHNA,
-    # SSOT: Maha Algorithm Coefficients (imported, not duplicated!)
-    MAHA_OP_MAP as _OP_MAP,
-    MAHA_MULT as _MULT,
+    WORDS,
+)
+from vibe_core.mahamantra.protocols._seed import (
     MAHA_ADD as _ADD,
+)
+from vibe_core.mahamantra.protocols._seed import (
+    MAHA_MULT as _MULT,
+)
+from vibe_core.mahamantra.protocols._seed import (
+    MAHA_OP_MAP as _OP_MAP,
+)
+from vibe_core.mahamantra.protocols._seed import (
     MAHA_SQ as _SQ,
 )
-
+from vibe_core.mahamantra.protocols.transform import (
+    AttractorResult,
+    BatchResult,
+    MahaTransformProtocol,
+    TransformResult,
+)
 
 # =============================================================================
 # CONSTANTS (Derived from Mahamantra - see _seed.py)

@@ -15,35 +15,22 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import IntEnum
-from typing import Dict, Final, List, Optional
+from typing import Dict, Final, List
 
 from vibe_core.mahamantra.protocols._seed import (
-    ABHINNA_MATERIAL,
-    ABHINNA_SPIRITUAL,
     AKSARA_COUNT,
     FIELD_RESONANCE,
-    FLUTE_VENU_VAMSI,
     HALVES,
     HARE_COUNT,
-    JIVA_CYCLE,
     KIRTAN_RESONANCE,
     KSETRAJNA,
     LILA,
     MALA,
-    MURALI_FREQ,
     NADI_RESONANCE,
-    NAME_COMPLETE,
-    OCTAVE_RATIO,
     PANCHA,
-    POSITION_SUM_KRISHNA,
-    POSITION_SUM_RAMA,
-    PRASADAM,
     QUARTERS,
     SHARANAGATI,
     TRINITY,
-    VAMSI_FREQ,
-    VENU_FREQ,
-    VINA_FUNDAMENTAL,
     WORDS,
 )
 
