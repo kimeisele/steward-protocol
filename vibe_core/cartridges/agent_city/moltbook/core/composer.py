@@ -10,7 +10,7 @@ MahaBuddhi does the thinking. Composer does the talking.
 """
 
 import logging
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 from vibe_core.mahamantra.protocols._buddhi import BuddhiResult
 
@@ -185,8 +185,12 @@ class ContentComposer:
         if post_content and content_type == "comment":
             parts.append(f"\nPOST:\n{post_content[:1500]}")
 
-        # Resonant vocabulary from MahaBuddhi composition
-        if cognition.composed:
+        # Resonant vocabulary: 7D-ranked Gita words for unique voice
+        resonance_vocab = self._enrich_with_resonance(input_text)
+        if resonance_vocab:
+            parts.append(f"\nRESONANCE VOCABULARY: {resonance_vocab}")
+        elif cognition.composed:
+            # Fallback: BuddhiResult composition (less specific)
             parts.append(f"\nRESONANT CONCEPTS: {cognition.composed}")
 
         # Knowledge context
@@ -195,6 +199,34 @@ class ContentComposer:
             parts.append(f"\nDOMAIN: {knowledge[:300]}")
 
         return "\n".join(parts)
+
+    @staticmethod
+    def _enrich_with_resonance(text: str) -> str:
+        """7D resonance ranking over 4127 Gita words → unique vocabulary context.
+
+        Returns comma-separated English meanings of top-5 resonant words.
+        Pure math (<80ms), no LLM, deterministic. Same input → same vocabulary.
+        """
+        if not text or len(text) < 10:
+            return ""
+        try:
+            from vibe_core.mahamantra.substrate.encoding.resonance_ranker import resonate
+
+            ranked = resonate(text[:200], top_n=5)
+            if not ranked:
+                return ""
+            meanings: List[str] = []
+            seen: set = set()
+            for rw in ranked:
+                m = rw.first_meaning
+                if m and m.lower() not in seen:
+                    seen.add(m.lower())
+                    meanings.append(m)
+            if meanings:
+                return ", ".join(meanings)
+        except Exception as e:
+            logger.debug(f"Resonance enrichment skipped: {e}")
+        return ""
 
     def _route_model(
         self,

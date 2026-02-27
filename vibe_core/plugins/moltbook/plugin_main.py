@@ -911,6 +911,45 @@ class MoltbookPlugin(KernelPlugin):
         except Exception as e:
             logger.warning(f"Mahamantra connection failed: {e}")
 
+    def _wire_event_listener(self) -> None:
+        """Subscribe to EventBus — hear what other agents are doing.
+
+        Listens to ACTION events from other agents to discover trending topics.
+        Stores recent events for strategy planner context.
+        """
+        try:
+            from vibe_core.mahamantra.substrate.services.event_bus import get_event_bus
+            from vibe_core.mahamantra.substrate.event_types import EventType
+
+            bus = get_event_bus()
+            bus.subscribe(self._on_agent_action, [EventType.ACTION])
+            logger.info("EventBus subscribed: listening for ACTION events")
+        except ImportError:
+            logger.debug("EventBus not available — skipping subscription")
+        except Exception as e:
+            logger.debug(f"EventBus subscription failed: {e}")
+
+    def _on_agent_action(self, event: Any) -> None:
+        """Handle ACTION events from other agents — discover trending topics."""
+        agent_id = getattr(event, "agent_id", "")
+        if agent_id == "moltbook":
+            return  # Ignore own events
+        message = getattr(event, "message", "")
+        details = getattr(event, "details", {}) or {}
+        if not message:
+            return
+        # Store recent agent actions for strategy context (cap at 50)
+        if not hasattr(self, "_agent_events"):
+            self._agent_events: List[Dict[str, Any]] = []
+        self._agent_events.append({
+            "agent": agent_id,
+            "message": message[:200],
+            "type": details.get("content_type", ""),
+            "topic": details.get("topic", message[:100]),
+        })
+        if len(self._agent_events) > 50:
+            self._agent_events = self._agent_events[-50:]
+
     def _wire_ouroboros(self) -> None:
         """Register Moltbook as Ouroboros gene for self-healing + health monitoring."""
         try:
