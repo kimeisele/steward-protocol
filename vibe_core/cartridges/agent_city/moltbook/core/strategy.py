@@ -403,8 +403,8 @@ class MoltbookStrategyPlanner:
                 try:
                     from vibe_core.mahamantra.substrate.buddhi import get_buddhi
                     post_mode = get_buddhi().think(post_topic).mode
-                except Exception:
-                    pass
+                except Exception as e:
+                    logger.warning(f"Post Buddhi unavailable, using SATTVA: {e}")
 
                 intents.append(
                     StrategicIntent(
@@ -782,7 +782,8 @@ class MoltbookStrategyPlanner:
                 w = store.increment_weight(trigger, action, delta=0.05)
             else:
                 w = store.decrement_weight(trigger, action, delta=0.03)
-            logger.debug(f"Synapse weight {trigger}→{action}: {w:.2f}")
+            store.flush()  # Persist immediately — defer_save=True leaves weights in memory only
+            logger.debug(f"Synapse weight {trigger}→{action}: {w:.2f} (flushed)")
         except Exception as e:
             logger.warning(f"SynapseStore update failed: {e}")
 

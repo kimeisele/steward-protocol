@@ -630,6 +630,8 @@ class MoltbookPlugin(KernelPlugin):
 
             self._engagement_tracker = EngagementTracker(
                 log_activity=self._log_activity,
+                bank=self._bank,
+                agent_id=self._agent_name,
             )
         return self._engagement_tracker
 
@@ -1111,8 +1113,8 @@ class MoltbookPlugin(KernelPlugin):
                     "failure_count": stats.failure_count,
                     "total_signals": stats.total_signals,
                 }
-            except Exception:
-                pass  # FeedbackProtocol unavailable
+            except Exception as e:
+                logger.debug(f"FeedbackProtocol unavailable: {e}")
 
             anchor = get_system_anchor()
             anchor.emit_event("moltbook.health", {
@@ -1123,8 +1125,8 @@ class MoltbookPlugin(KernelPlugin):
                 "subscribed_submolts": len(self._subscribed_submolts),
                 **content_health,
             })
-        except Exception:
-            pass  # Ouroboros unavailable — degrade gracefully
+        except Exception as e:
+            logger.debug(f"Ouroboros health emit unavailable: {e}")
 
     @property
     def _wiring_module(self):
@@ -1292,8 +1294,8 @@ class MoltbookPlugin(KernelPlugin):
                 },
             )
             reflection.record_execution(record)
-        except Exception:
-            pass  # Reflection unavailable — degrade gracefully
+        except Exception as e:
+            logger.debug(f"Reflection recording unavailable: {e}")
 
     def _reflect_on_patterns(self) -> None:
         """MOKSHA: Analyze reflection patterns → trigger healing on failure.
@@ -1394,15 +1396,6 @@ class MoltbookPlugin(KernelPlugin):
         """Delegate to DMProcessor for DM request handling."""
         self._dm.process_dm_requests()
 
-    def _analyze_feed(self) -> None:
-        """Read personalized feed, score via proposer, generate via AgencyDirector."""
-        self._feed.analyze_feed(
-            client=self._client,
-            proposer=self._proposer,
-            content_queue=self._content_queue,
-            director_propose=self._director_propose,
-        )
-
     # =========================================================================
     # Phase-Aware Methods (MURALI routing)
     # =========================================================================
@@ -1414,6 +1407,43 @@ class MoltbookPlugin(KernelPlugin):
             proposer=self._proposer,
             content_queue=self._content_queue,
         )
+
+    def _gather_broadcast_intelligence(self) -> None:
+        """GENESIS phase: Listen to AGORA broadcasts + merge EventBus trending topics.
+
+        Feeds external intelligence into _current_feed_topics so the strategy
+        planner sees what the broader ecosystem is discussing — not just our feed.
+        """
+        # Source 1: AGORA broadcasts from herald/steward
+        broadcasts = self._listen_agora()
+        for msg in broadcasts:
+            content = msg.get("content", msg.get("message", ""))
+            source = msg.get("source", "broadcast")
+            if content and len(content) > 10:
+                self._current_feed_topics.append({
+                    "title": content[:200],
+                    "content": content,
+                    "id": f"agora_{source}_{self._agora_sequence}",
+                    "source": f"agora:{source}",
+                })
+
+        # Source 2: EventBus trending topics from other agents
+        if hasattr(self, "_agent_events") and self._agent_events:
+            for evt in self._agent_events[-10:]:  # Last 10 events
+                topic = evt.get("topic", "")
+                agent = evt.get("agent", "unknown")
+                if topic and len(topic) > 10:
+                    # Avoid duplicating topics already in feed
+                    existing_titles = {str(t.get("title", "")).lower() for t in self._current_feed_topics}
+                    if topic.lower()[:80] not in existing_titles:
+                        self._current_feed_topics.append({
+                            "title": topic[:200],
+                            "content": topic,
+                            "id": f"eventbus_{agent}_{hash(topic) % 10000}",
+                            "source": f"eventbus:{agent}",
+                        })
+            # Clear processed events
+            self._agent_events.clear()
 
     def _evaluate_strategy(self) -> None:
         """DHARMA phase: Sankalpa → prioritized strategic intents.
@@ -1435,8 +1465,8 @@ class MoltbookPlugin(KernelPlugin):
                 "success_rate": stats.success_rate,
                 "total_signals": stats.total_signals,
             }
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug(f"FeedbackProtocol stats unavailable: {e}")
 
         try:
             intents = planner.plan_cycle(
@@ -1452,10 +1482,6 @@ class MoltbookPlugin(KernelPlugin):
     def _execute_intents(self) -> None:
         """Delegate to IntentExecutor for strategic intent processing."""
         self._intent.execute_intents()
-
-    def _maybe_create_post(self) -> None:
-        """Delegate to PostOrchestrator for fallback post creation."""
-        self._post.maybe_create_fallback_post()
 
     def _check_own_comment_replies(self) -> None:
         """Delegate to PostOrchestrator for comment reply monitoring."""
@@ -1554,8 +1580,8 @@ class MoltbookPlugin(KernelPlugin):
             bus = get_event_bus()
             et = getattr(EventType, event_type_name, EventType.ACTION)
             bus.emit_sync(et, "moltbook", message, data or {})
-        except Exception:
-            pass  # EventBus unavailable — graceful degradation
+        except Exception as e:
+            logger.debug(f"EventBus emit unavailable: {e}")
 
     def _discover_submolts(self) -> None:
         """Ensure own submolt exists, then discover and subscribe to relevant submolts."""
