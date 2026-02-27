@@ -308,37 +308,88 @@ def score_frame(
 
         else:
             # --- Legacy path (no MFCC available) ---
+            # Weights: voicing(0.25) + varga(0.20) + sound_class(0.30) + centroid(0.25)
+            # Sound class (vowel/consonant/fricative) is the KEY discriminator.
 
-            # Voicing match (0.3 weight)
+            # Voicing match (0.25 weight)
             if t.f0_required == is_voiced:
-                score += 0.3
+                score += 0.25
             elif not t.f0_required and not is_voiced:
-                score += 0.3
+                score += 0.25
 
-            # Varga match (0.2 weight)
+            # Varga match (0.20 weight)
             if t.varga == varga:
-                score += 0.2
+                score += 0.20
             else:
-                score += 0.05
+                score += 0.04
 
-            # Centroid range (0.2 weight)
+            # Sound class match (0.30 weight) — vowel vs consonant vs fricative
+            # Determined by RMS + centroid pattern:
+            #   Vowels: high RMS (>100), voiced, moderate centroid
+            #   Stops:  RMS burst then drop, or low RMS
+            #   Nasals: medium RMS (40-120), voiced, low centroid (<80)
+            #   Fricatives/Sibilants: noise = high centroid (>200), any voicing
+            #   Semivowels: medium RMS, voiced, moderate centroid
+            is_high_rms = rms > 100
+            is_mid_rms = 40 <= rms <= 120
+            is_low_rms = rms < 50
+            is_high_centroid = centroid_100 > 200
+            is_low_centroid = centroid_100 < 80
+
+            if t.sound_class == 0:  # SVARA (vowel)
+                if is_voiced and is_high_rms and not is_high_centroid:
+                    score += 0.30  # strong vowel evidence
+                elif is_voiced and is_mid_rms:
+                    score += 0.15  # weak vowel
+                else:
+                    score += 0.02  # unlikely vowel
+            elif t.sound_class == 1:  # SPARSHA (stop/nasal)
+                # Nasals: voiced + low centroid + medium RMS
+                is_nasal = t.sthana == int(SthanaIndex.ANUNASIKA)
+                if is_nasal:
+                    if is_voiced and is_low_centroid and is_mid_rms:
+                        score += 0.30
+                    elif is_voiced and is_low_centroid:
+                        score += 0.15
+                    else:
+                        score += 0.02
+                else:
+                    # Stops: low-to-mid RMS, or unvoiced
+                    if not is_voiced and is_low_rms:
+                        score += 0.30  # unvoiced stop
+                    elif is_voiced and not is_high_rms:
+                        score += 0.20  # voiced stop
+                    elif not is_voiced:
+                        score += 0.15  # unvoiced but loud
+                    else:
+                        score += 0.02  # high RMS voiced = more likely vowel
+            else:  # SHESHA (semivowel/sibilant/fricative)
+                is_sibilant = t.arpabet in ("S", "SH", "Z", "ZH", "HH")
+                if is_sibilant:
+                    if is_high_centroid:
+                        score += 0.30  # noise = sibilant
+                    elif centroid_100 > 150:
+                        score += 0.15
+                    else:
+                        score += 0.02
+                else:
+                    # Semivowels (Y, R, L, V, W): voiced, mid RMS
+                    if is_voiced and is_mid_rms:
+                        score += 0.25
+                    elif is_voiced:
+                        score += 0.12
+                    else:
+                        score += 0.02
+
+            # Centroid detail (0.25 weight) — fine discrimination within class
             if t.centroid_min <= centroid_100 <= t.centroid_max:
-                score += 0.2
+                score += 0.25
             elif centroid_100 < t.centroid_min:
                 dist = t.centroid_min - centroid_100
-                score += max(0.0, 0.2 - dist * 0.002)
+                score += max(0.0, 0.25 - dist * 0.003)
             else:
                 dist = centroid_100 - t.centroid_max
-                score += max(0.0, 0.2 - dist * 0.002)
-
-            # Formant match (0.3 weight — only for vowels with formant data)
-            if t.f1_center > 0 and f1 > 0 and f2 > 0:
-                f1_err = abs(f1 - t.f1_center) / max(t.f1_center, 1)
-                f2_err = abs(f2 - t.f2_center) / max(t.f2_center, 1)
-                formant_score = max(0.0, 1.0 - (f1_err + f2_err))
-                score += 0.3 * formant_score
-            elif t.f1_center == 0:
-                score += 0.15
+                score += max(0.0, 0.25 - dist * 0.003)
 
         candidates.append((t.arpabet, score))
 
@@ -457,26 +508,60 @@ class Segment:
 # Segmentation thresholds — tuned for Prabhupada's speaking style
 _SILENCE_RMS = 15         # lower threshold catches quieter pauses
 _SILENCE_GAP = 2          # 2+ silent frames = word boundary (20ms)
-_ENERGY_DIP_RMS = 50      # energy dip at 50 (was 80) — more sensitive
-_ENERGY_DIP_GAP = 5       # 5+ low-energy frames = boundary (was 8)
+_ENERGY_DIP_RMS = 80      # energy dip threshold (catches inter-word dips)
+_ENERGY_DIP_GAP = 3       # 3+ low-energy frames = boundary (30ms)
 _MIN_SEGMENT_FRAMES = 5   # 50ms minimum (discard shorter)
-_MAX_SEGMENT_FRAMES = 80  # 800ms maximum (was 2s — force split earlier)
+_MAX_SEGMENT_FRAMES = 40  # 400ms maximum (typical max single-word length)
+
+
+def _split_at_rms_minimum(
+    frames: Sequence[int], start: int, end: int
+) -> List[Tuple[int, int]]:
+    """Split a long segment at its internal RMS minimum.
+
+    Finds the frame with lowest RMS in the middle third of the segment,
+    splits there. Recursively splits if pieces are still too long.
+    Returns list of (start, end) pairs.
+    """
+    length = end - start
+    if length <= _MAX_SEGMENT_FRAMES:
+        return [(start, end)]
+
+    # Search for RMS minimum in middle 60% of segment (avoid edges)
+    search_start = start + length // 5
+    search_end = end - length // 5
+    if search_start >= search_end:
+        search_start = start + 2
+        search_end = end - 2
+
+    min_rms = 256
+    min_idx = (search_start + search_end) // 2
+    for i in range(search_start, search_end):
+        rms = frames[i] & 0xFF
+        if rms < min_rms:
+            min_rms = rms
+            min_idx = i
+
+    # Split at the minimum
+    left = _split_at_rms_minimum(frames, start, min_idx)
+    right = _split_at_rms_minimum(frames, min_idx, end)
+    return left + right
 
 
 def segment_stream(frames: Sequence[int]) -> List[Segment]:
     """Segment audio frames into word-length chunks.
 
-    Word boundaries detected by:
-    - Silence (2+ frames with RMS < 15)
-    - Energy dip (5+ frames with RMS < 50)
-    - Max length (force split at 80 frames / 800ms)
+    Two-pass approach:
+    1. Find raw segments by silence (RMS < 15) and energy dips (RMS < 80)
+    2. Split oversized segments (> 400ms) at internal RMS minima
 
     Returns list of Segments, each containing the packed frames.
     """
     if not frames:
         return []
 
-    segments: List[Segment] = []
+    # Pass 1: Find raw segments by silence/dip boundaries
+    raw_segments: List[Tuple[int, int]] = []  # (start, end)
     seg_start = -1
     silence_count = 0
     dip_count = 0
@@ -506,20 +591,14 @@ def segment_stream(frames: Sequence[int]) -> List[Segment]:
         is_boundary = (
             silence_count >= _SILENCE_GAP
             or dip_count >= _ENERGY_DIP_GAP
-            or (i - seg_start) >= _MAX_SEGMENT_FRAMES
         )
 
         if is_boundary:
             seg_end = i - silence_count + 1
             if seg_end <= seg_start:
                 seg_end = seg_start + 1
-
             if seg_end - seg_start >= _MIN_SEGMENT_FRAMES:
-                segments.append(Segment(
-                    start=seg_start,
-                    end=seg_end,
-                    frames=tuple(frames[seg_start:seg_end]),
-                ))
+                raw_segments.append((seg_start, seg_end))
             seg_start = -1
             silence_count = 0
             dip_count = 0
@@ -530,11 +609,19 @@ def segment_stream(frames: Sequence[int]) -> List[Segment]:
         while seg_end > seg_start and (frames[seg_end - 1] & 0xFF) < _SILENCE_RMS:
             seg_end -= 1
         if seg_end - seg_start >= _MIN_SEGMENT_FRAMES:
-            segments.append(Segment(
-                start=seg_start,
-                end=seg_end,
-                frames=tuple(frames[seg_start:seg_end]),
-            ))
+            raw_segments.append((seg_start, seg_end))
+
+    # Pass 2: Split oversized segments at RMS minima
+    segments: List[Segment] = []
+    for s, e in raw_segments:
+        pieces = _split_at_rms_minimum(frames, s, e)
+        for ps, pe in pieces:
+            if pe - ps >= _MIN_SEGMENT_FRAMES:
+                segments.append(Segment(
+                    start=ps,
+                    end=pe,
+                    frames=tuple(frames[ps:pe]),
+                ))
 
     return segments
 
@@ -645,6 +732,21 @@ class PronunciationDict:
         self._by_first_coord.setdefault(fc, []).append(token)
         self._by_length.setdefault(len(coords), []).append(token)
 
+    @staticmethod
+    def _cmu_to_rama(arpabet_seq: Sequence[str]) -> Tuple[int, ...]:
+        """Convert CMU ARPAbet phoneme sequence to RAMA coords.
+
+        Strips stress markers (0/1/2) from vowels, maps via ARPABET_TO_RAMA.
+        Skips unknown phonemes.
+        """
+        coords: List[int] = []
+        for phone in arpabet_seq:
+            clean = phone.rstrip("012")
+            rama = ARPABET_TO_RAMA.get(clean)
+            if rama is not None:
+                coords.append(rama)
+        return tuple(coords)
+
     def _ensure_loaded(self) -> None:
         if self._sanskrit is not None:
             return
@@ -665,9 +767,20 @@ class PronunciationDict:
                 self._by_first_coord.setdefault(fc, []).append(word.sanskrit)
                 self._by_length.setdefault(len(word.coords), []).append(word.sanskrit)
 
-        # 2. English from lexicon meanings
+        # 2. Load CMU Pronouncing Dictionary for English words.
+        #    CMU dict gives ARPAbet phonemes → ARPABET_TO_RAMA → RAMA coords.
+        #    This aligns English dictionary coords with the audio decoder path
+        #    (both go through ARPAbet, not letter-by-letter encode_text).
+        cmu: dict = {}
+        try:
+            from nltk.corpus import cmudict
+            cmu = cmudict.dict()
+        except Exception:
+            logger.warning("CMU dict not available, falling back to encode_text")
+
         from vibe_core.mahamantra.substrate.encoding.phonetic_encoder import encode_text
 
+        # 2a. English from lexicon meanings
         seen_english: set = set()
         for coord in range(49):
             for word in index.by_rama_position(coord):
@@ -677,20 +790,29 @@ class PronunciationDict:
                         if len(token) < 2 or token in seen_english:
                             continue
                         seen_english.add(token)
-                        coords = encode_text(token)
+                        # CMU dict first (phoneme-accurate), encode_text fallback
+                        pronunciations = cmu.get(token)
+                        if pronunciations:
+                            coords = self._cmu_to_rama(pronunciations[0])
+                        else:
+                            coords = encode_text(token)
                         if coords:
                             self._add_english_word(token, coords)
 
-        # 3. Common English vocabulary
+        # 2b. Common English vocabulary
         for token in _COMMON_ENGLISH:
             if token not in seen_english and token not in self._english:
-                coords = encode_text(token)
+                pronunciations = cmu.get(token)
+                if pronunciations:
+                    coords = self._cmu_to_rama(pronunciations[0])
+                else:
+                    coords = encode_text(token)
                 if coords:
                     self._add_english_word(token, coords)
 
         logger.info(
-            "PronunciationDict loaded: %d Sanskrit, %d English",
-            len(self._sanskrit), len(self._english),
+            "PronunciationDict loaded: %d Sanskrit, %d English (CMU: %d available)",
+            len(self._sanskrit), len(self._english), len(cmu),
         )
 
     def lookup(self, word: str) -> Optional[Tuple[int, ...]]:
@@ -785,14 +907,16 @@ def _score_candidate(
     observed: Tuple[int, ...],
     candidate: Tuple[int, ...],
 ) -> float:
-    """Element-weighted edit distance between observed RAMA coords and candidate.
+    """Element-weighted edit distance with strict length gate.
 
     Scoring:
         Same coord: cost 0
         Same element: cost 0.3
         Same varga class: cost 0.6
         Different: cost 1.0
-        Length penalty: min(n,m)/max(n,m) factor
+
+    Length gate: candidates whose length differs by >60% are rejected (score 0).
+    Length penalty: score multiplied by min(n,m)/max(n,m).
 
     Returns: score in [0.0, 1.0], higher = better match.
     """
@@ -802,8 +926,13 @@ def _score_candidate(
     if n == 0 or m == 0:
         return 0.0
 
+    # Strict length gate: reject grossly mismatched lengths
+    max_len = max(n, m)
+    min_len = min(n, m)
+    if min_len / max_len < 0.4:
+        return 0.0
+
     # Dynamic programming edit distance with weighted substitution costs
-    # Use integer-scaled costs (*10) to avoid float accumulation
     prev = list(range(0, (m + 1) * 10, 10))
     curr = [0] * (m + 1)
 
@@ -827,11 +956,9 @@ def _score_candidate(
         prev, curr = curr, prev
 
     edit_dist = prev[m] / 10.0
-    max_len = max(n, m)
-    length_ratio = min(n, m) / max_len
-
     raw_score = 1.0 - (edit_dist / max_len)
-    return max(0.0, raw_score * length_ratio)
+    length_penalty = min_len / max_len
+    return max(0.0, min(1.0, raw_score * length_penalty))
 
 
 # =============================================================================
@@ -852,6 +979,51 @@ def _dedup_coords(coords: Tuple[int, ...]) -> Tuple[int, ...]:
         return ()
     result: List[int] = [coords[0]]
     for c in coords[1:]:
+        if c != result[-1]:
+            result.append(c)
+    return tuple(result)
+
+
+def _stable_coords(coords: Tuple[int, ...], min_run: int = 3) -> Tuple[int, ...]:
+    """Run-length filter: keep only coords that persist for ≥ min_run frames.
+
+    Phonemes last ~60-120ms (6-12 frames at 10ms). Transitional frames between
+    phonemes produce 1-2 frame blips of different coords. This filter removes
+    those blips, keeping only stable phoneme regions.
+
+    Example (min_run=3):
+        (5, 5, 5, 12, 5, 5, 5, 5, 42, 42, 42) → (5, 5, 42)
+        The single 12 is a transitional blip (1 frame), removed.
+        Both runs of 5 merge into one phoneme after dedup.
+        The 42 run (3 frames) qualifies.
+
+    Returns: deduped stable coords (no consecutive duplicates).
+    """
+    if not coords:
+        return ()
+
+    # Phase 1: Run-length encode
+    runs: List[Tuple[int, int]] = []  # (coord, count)
+    current = coords[0]
+    count = 1
+    for c in coords[1:]:
+        if c == current:
+            count += 1
+        else:
+            runs.append((current, count))
+            current = c
+            count = 1
+    runs.append((current, count))
+
+    # Phase 2: Keep only stable runs (≥ min_run frames)
+    stable = [coord for coord, cnt in runs if cnt >= min_run]
+
+    # Phase 3: Dedup (consecutive same coords from merged short-gap runs)
+    if not stable:
+        # Fallback: if nothing survives the filter, use regular dedup
+        return _dedup_coords(coords)
+    result: List[int] = [stable[0]]
+    for c in stable[1:]:
         if c != result[-1]:
             result.append(c)
     return tuple(result)
@@ -911,10 +1083,12 @@ class ShabdaDecoder:
         language: str = "both",
         min_confidence: float = 0.3,
         use_formants: bool = True,
+        language_preference: str = "english",
     ) -> None:
         self._language = language
         self._min_confidence = min_confidence
         self._use_formants = use_formants
+        self._language_preference = language_preference
         self._dict = get_pronunciation_dict()
 
     def transcribe(self, stream: ShabdaStream) -> Transcript:
@@ -966,9 +1140,11 @@ class ShabdaDecoder:
     ) -> Optional[TranscriptWord]:
         """Decode a single segment into a word.
 
-        Uses the PHONEME TEMPLATE path with MFCC (primary) or formant (fallback):
-            score_frame(packed, mfcc, f1, f2) → top-1 ARPAbet → ARPABET_TO_RAMA
-            → majority-vote smoothing → CTC-dedup → dictionary lookup
+        Uses _frames_to_phoneme_coords (ARPAbet template scoring path):
+            frame → score_frame() → top-1 ARPAbet → ARPABET_TO_RAMA → RAMA coord
+        Then matches against PronunciationDict (also ARPAbet → RAMA via CMU dict).
+
+        Both paths go through ARPAbet → ARPABET_TO_RAMA, so coords align.
         """
         import numpy as np
 
@@ -986,6 +1162,7 @@ class ShabdaDecoder:
         if mfcc_frames is not None:
             seg_mfcc = mfcc_frames[seg.start:seg.end]
 
+        # ARPAbet path: frame → score_frame → top-1 ARPAbet → ARPABET_TO_RAMA
         raw_coords = _frames_to_phoneme_coords(
             seg.frames, seg_raw, sample_rate, hop_ms, n_fft,
             mfcc_frames=seg_mfcc,
@@ -993,17 +1170,19 @@ class ShabdaDecoder:
         if not raw_coords:
             return None
 
-        # CTC-style dedup: collapse consecutive identical coords → phoneme-level
-        rama_coords = _dedup_coords(raw_coords)
+        # Stable-coord filter: keep only coords persisting ≥ 3 frames (30ms),
+        # removing transitional noise between phonemes.
+        rama_coords = _stable_coords(raw_coords, min_run=3)
         if not rama_coords:
             return None
 
-        # Get candidates from dictionary — try coord-filtered first, then broad
+        # Get candidates from dictionary.
+        # Both audio and dictionary coords go through ARPAbet → ARPABET_TO_RAMA,
+        # so first_coord matching is tight (±1 for minor varga neighbor tolerance).
         first_coord = rama_coords[0]
         coord_len = len(rama_coords)
         candidates: List[Tuple[str, Tuple[int, ...]]] = []
 
-        # Primary: match by first coord + length
         for fc in (first_coord, first_coord - 1, first_coord + 1):
             if 0 <= fc < 49:
                 candidates.extend(
@@ -1025,11 +1204,20 @@ class ShabdaDecoder:
         best_coords: Tuple[int, ...] = ()
 
         seen: set = set()
+        is_sanskrit = self._dict._sanskrit or set()
+        pref_bonus = 0.08 if self._language_preference != "both" else 0.0
         for word, word_coords in candidates:
             if word in seen:
                 continue
             seen.add(word)
             score = _score_candidate(rama_coords, word_coords)
+            # Language preference: small bonus for preferred language
+            if pref_bonus > 0.0:
+                word_is_sanskrit = word in is_sanskrit
+                if self._language_preference == "english" and not word_is_sanskrit:
+                    score += pref_bonus
+                elif self._language_preference == "sanskrit" and word_is_sanskrit:
+                    score += pref_bonus
             if score > best_score:
                 best_score = score
                 best_word = word
@@ -1068,6 +1256,7 @@ __all__ = [
     "score_frame",
     "segment_stream",
     "_dedup_coords",
+    "_stable_coords",
     "_frames_to_phoneme_coords",
     "_mfcc_similarity",
 ]
