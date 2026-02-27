@@ -1401,11 +1401,24 @@ class MoltbookPlugin(KernelPlugin):
     # =========================================================================
 
     def _scan_feed(self) -> None:
-        """GENESIS phase: Extract topics + metadata from feed. NO content generation."""
+        """GENESIS phase: Extract topics + metadata from feed + semantic search."""
+        # Gather mission descriptions for semantic search (discover beyond hot feed)
+        mission_descs: List[str] = []
+        planner = self._strategy_planner
+        if planner:
+            missions = planner.get_active_missions()
+            mission_descs = [
+                m.description for m in missions
+                if hasattr(m, "description") and m.description
+                and not m.id.startswith("moltbook_kg_")  # Skip KG garbage
+            ]
+
         self._current_feed_topics = self._feed.scan_feed(
             client=self._client,
             proposer=self._proposer,
             content_queue=self._content_queue,
+            service=self._service,
+            mission_descriptions=mission_descs,
         )
 
     def _gather_broadcast_intelligence(self) -> None:
