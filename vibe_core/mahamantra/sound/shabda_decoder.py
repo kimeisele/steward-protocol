@@ -307,23 +307,24 @@ def score_frame(
                 score += 0.05
 
         else:
-            # --- Legacy path (no MFCC available) ---
-            # Weights: voicing(0.25) + varga(0.20) + sound_class(0.30) + centroid(0.25)
-            # Sound class (vowel/consonant/fricative) is the KEY discriminator.
+            # --- Formant path (primary for real audio) ---
+            # Weights: voicing(0.15) + varga(0.15) + sound_class(0.15)
+            #        + centroid(0.15) + formant(0.40)
+            # Formant match is THE key vowel discriminator (F1/F2 fingerprint).
 
-            # Voicing match (0.25 weight)
+            # Voicing match (0.15 weight)
             if t.f0_required == is_voiced:
-                score += 0.25
+                score += 0.15
             elif not t.f0_required and not is_voiced:
-                score += 0.25
+                score += 0.15
 
-            # Varga match (0.20 weight)
+            # Varga match (0.15 weight)
             if t.varga == varga:
-                score += 0.20
+                score += 0.15
             else:
-                score += 0.04
+                score += 0.03
 
-            # Sound class match (0.30 weight) — vowel vs consonant vs fricative
+            # Sound class match (0.15 weight) — vowel vs consonant vs fricative
             # Determined by RMS + centroid pattern:
             #   Vowels: high RMS (>100), voiced, moderate centroid
             #   Stops:  RMS burst then drop, or low RMS
@@ -338,58 +339,66 @@ def score_frame(
 
             if t.sound_class == 0:  # SVARA (vowel)
                 if is_voiced and is_high_rms and not is_high_centroid:
-                    score += 0.30  # strong vowel evidence
+                    score += 0.15  # strong vowel evidence
                 elif is_voiced and is_mid_rms:
-                    score += 0.15  # weak vowel
+                    score += 0.08  # weak vowel
                 else:
-                    score += 0.02  # unlikely vowel
+                    score += 0.01  # unlikely vowel
             elif t.sound_class == 1:  # SPARSHA (stop/nasal)
-                # Nasals: voiced + low centroid + medium RMS
                 is_nasal = t.sthana == int(SthanaIndex.ANUNASIKA)
                 if is_nasal:
                     if is_voiced and is_low_centroid and is_mid_rms:
-                        score += 0.30
-                    elif is_voiced and is_low_centroid:
                         score += 0.15
+                    elif is_voiced and is_low_centroid:
+                        score += 0.08
                     else:
-                        score += 0.02
+                        score += 0.01
                 else:
-                    # Stops: low-to-mid RMS, or unvoiced
                     if not is_voiced and is_low_rms:
-                        score += 0.30  # unvoiced stop
+                        score += 0.15  # unvoiced stop
                     elif is_voiced and not is_high_rms:
-                        score += 0.20  # voiced stop
+                        score += 0.10  # voiced stop
                     elif not is_voiced:
-                        score += 0.15  # unvoiced but loud
+                        score += 0.08
                     else:
-                        score += 0.02  # high RMS voiced = more likely vowel
+                        score += 0.01
             else:  # SHESHA (semivowel/sibilant/fricative)
                 is_sibilant = t.arpabet in ("S", "SH", "Z", "ZH", "HH")
                 if is_sibilant:
                     if is_high_centroid:
-                        score += 0.30  # noise = sibilant
-                    elif centroid_100 > 150:
                         score += 0.15
+                    elif centroid_100 > 150:
+                        score += 0.08
                     else:
-                        score += 0.02
+                        score += 0.01
                 else:
-                    # Semivowels (Y, R, L, V, W): voiced, mid RMS
                     if is_voiced and is_mid_rms:
-                        score += 0.25
-                    elif is_voiced:
                         score += 0.12
+                    elif is_voiced:
+                        score += 0.06
                     else:
-                        score += 0.02
+                        score += 0.01
 
-            # Centroid detail (0.25 weight) — fine discrimination within class
+            # Centroid detail (0.15 weight)
             if t.centroid_min <= centroid_100 <= t.centroid_max:
-                score += 0.25
+                score += 0.15
             elif centroid_100 < t.centroid_min:
                 dist = t.centroid_min - centroid_100
-                score += max(0.0, 0.25 - dist * 0.003)
+                score += max(0.0, 0.15 - dist * 0.002)
             else:
                 dist = centroid_100 - t.centroid_max
-                score += max(0.0, 0.25 - dist * 0.003)
+                score += max(0.0, 0.15 - dist * 0.002)
+
+            # Formant match (0.40 weight — THE vowel discriminator)
+            # F1 = jaw height (open/close), F2 = tongue position (front/back)
+            if t.f1_center > 0 and f1 > 0 and f2 > 0:
+                f1_err = abs(f1 - t.f1_center) / max(t.f1_center, 1)
+                f2_err = abs(f2 - t.f2_center) / max(t.f2_center, 1)
+                formant_score = max(0.0, 1.0 - (f1_err + f2_err))
+                score += 0.40 * formant_score
+            elif t.f1_center == 0:
+                # Consonant template — no formant expected, partial credit
+                score += 0.15
 
         candidates.append((t.arpabet, score))
 
@@ -430,21 +439,16 @@ def _frames_to_phoneme_coords(
             raw_arpabets.append("")  # silence marker
             continue
 
-        # MFCC vector for this frame (primary path)
-        mfcc_vec: Tuple[int, ...] = ()
-        if has_mfcc and i < len(mfcc_frames):
-            mfcc_vec = mfcc_frames[i]
-
-        # Formant fallback (only when no MFCC)
+        # Extract formants from raw audio (primary vowel discriminator)
         f1, f2 = 0, 0
-        if not mfcc_vec and has_raw:
+        if has_raw:
             start_sample = i * hop
             end_sample = start_sample + n_fft
             if end_sample <= len(raw_samples):
                 audio_frame = raw_samples[start_sample:end_sample]
                 f1, f2 = extract_formants(audio_frame, sample_rate)
 
-        candidates = score_frame(frame, mfcc=mfcc_vec, f1=f1, f2=f2)
+        candidates = score_frame(frame, f1=f1, f2=f2)
         if candidates:
             raw_arpabets.append(candidates[0][0])
         else:
