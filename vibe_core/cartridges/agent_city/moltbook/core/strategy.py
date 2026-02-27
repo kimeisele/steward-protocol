@@ -62,18 +62,19 @@ def _derive_seed_topics(feed_topics: Optional[List[Dict[str, Any]]] = None) -> t
             logger.warning(f"Feed topic clustering failed: {e}")
 
     # Source 2: Existing Sankalpa missions — only NON-moltbook missions.
-    # Moltbook missions are already seeded — re-adding causes infinite nesting.
+    # Skip moltbook_ missions (already seeded) and moltbook_kg_ (API descriptions).
     try:
         from vibe_core.mahamantra.substrate.sankalpa.will import SankalpaOrchestrator
 
         orch = SankalpaOrchestrator()
         existing = orch.registry.get_all_missions()
+        seen_ids = {t[0] for t in topics}
         for mission in existing:
             mid = mission.id
             desc = mission.description
             if mid.startswith("moltbook_"):
-                continue
-            if desc and mid not in {t[0] for t in topics}:
+                continue  # Skip all moltbook missions (avoid nesting + KG garbage)
+            if desc and mid not in seen_ids:
                 topics.append((mid, desc[:200]))
     except Exception as e:
         logger.warning(f"Sankalpa topic derivation failed: {e}")
@@ -155,15 +156,15 @@ class MoltbookStrategyPlanner:
     def _seed_missions(
         self, feed_topics: Optional[List[Dict[str, Any]]] = None,
     ) -> None:
-        """Load initial missions from feed-derived topics.
+        """Load missions from feed-derived topics.
 
         Sources: Feed topics (BG chapter clusters) → Sankalpa missions.
-        Creates missions for each topic area. Only seeds once —
-        subsequent calls are no-ops (missions persist in registry).
-        """
-        if self._missions_seeded:
-            return
+        Creates missions for each topic area.
 
+        On first call, purges stale KG-generated missions (moltbook_kg_*)
+        that describe the Moltbook API itself — these cause self-referential posts.
+        Re-seeds from feed on subsequent calls when new topics appear.
+        """
         orch = self._orchestrator
         if not orch:
             return
@@ -180,10 +181,18 @@ class MoltbookStrategyPlanner:
             )
             from datetime import datetime, timezone
 
-            existing = {m.id for m in orch.registry.get_all_missions()}
+            # FIRST CALL: purge KG-generated garbage missions
+            if not self._missions_seeded:
+                self._purge_kg_missions(orch)
 
+            existing = {m.id for m in orch.registry.get_all_missions()}
             seed_topics = _derive_seed_topics(feed_topics)
 
+            if not seed_topics:
+                self._missions_seeded = True
+                return
+
+            added = 0
             for topic_id, description in seed_topics:
                 mission_id = f"moltbook_{topic_id}"
                 if mission_id in existing:
@@ -216,16 +225,39 @@ class MoltbookStrategyPlanner:
                     owner="moltbook",
                 )
                 orch.registry._missions[mission.id] = mission
+                added += 1
                 logger.info(f"Seeded mission: {mission_id}")
 
             # Persist seeded missions to disk
-            if hasattr(orch.registry, "_save"):
+            if added > 0 and hasattr(orch.registry, "_save"):
                 orch.registry._save()
 
             self._missions_seeded = True
         except Exception as e:
             logger.warning(f"Mission seeding failed: {e}")
             self._missions_seeded = True  # Don't retry on failure
+
+    @staticmethod
+    def _purge_kg_missions(orch: object) -> None:
+        """Remove KG auto-generated missions that describe the Moltbook API.
+
+        These missions (moltbook_kg_*) cause self-referential posts about
+        "Moltbook voting system" and "DM request flows" instead of real content.
+        They were seeded by querying the Knowledge Graph for Moltbook platform
+        concepts — useful as internal documentation, garbage as content strategy.
+        """
+        if not hasattr(orch, "registry") or not hasattr(orch.registry, "_missions"):
+            return
+        kg_ids = [
+            mid for mid in orch.registry._missions
+            if mid.startswith("moltbook_kg_")
+        ]
+        for mid in kg_ids:
+            del orch.registry._missions[mid]
+        if kg_ids:
+            if hasattr(orch.registry, "_save"):
+                orch.registry._save()
+            logger.info(f"Purged {len(kg_ids)} KG-generated missions: {', '.join(kg_ids)}")
 
     def get_active_missions(self) -> List[Any]:
         """Return active missions from registry."""
@@ -279,9 +311,16 @@ class MoltbookStrategyPlanner:
         output_count = len(own_post_ids) if own_post_ids else 0
         can_post = self._sravanam_check(input_count, output_count)
 
-        # Seed missions from feed on first call
-        if not self._missions_seeded and feed_topics:
-            self._seed_missions(feed_topics=feed_topics)
+        # Seed missions from feed (first call, or re-seed after purge left no moltbook missions)
+        if feed_topics:
+            if not self._missions_seeded:
+                self._seed_missions(feed_topics=feed_topics)
+            elif not any(
+                m.id.startswith("moltbook_") for m in self.get_active_missions()
+            ):
+                # All moltbook missions were purged — re-seed from feed
+                self._missions_seeded = False
+                self._seed_missions(feed_topics=feed_topics)
 
         missions = self.get_active_missions()
         if not missions:

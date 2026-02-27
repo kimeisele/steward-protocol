@@ -371,7 +371,7 @@ class ContentDrainer:
         submolt = proposal.get("submolt")
         if title and content:
             post_result = service.create_post(title, content, submolt)
-            post_id = post_result.get("id", "") if isinstance(post_result, dict) else ""
+            post_id = self._extract_post_id(post_result)
             # Track ALL posts for rate limit persistence — even without API post_id
             track_key = post_id or f"noid_{int(time.time())}"
             self._own_post_ids[track_key] = {
@@ -390,7 +390,31 @@ class ContentDrainer:
                     "submolt": submolt or "",
                 },
             )
-            logger.info(f"Post created: {title[:50]} (id={post_id})")
+            logger.info(f"Post created: {title[:50]} → {submolt or 'no submolt'} (id={post_id})")
+
+    @staticmethod
+    def _extract_post_id(result: object) -> str:
+        """Extract post ID from API response (handles multiple response formats).
+
+        Moltbook API may return:
+        - {"id": "uuid", ...}       (direct)
+        - {"post": {"id": "..."}}   (nested)
+        - {"data": {"id": "..."}}   (envelope)
+        """
+        if not isinstance(result, dict):
+            return ""
+        # Direct id
+        post_id = result.get("id", "")
+        if post_id:
+            return str(post_id)
+        # Nested under "post" or "data" key
+        for key in ("post", "data"):
+            nested = result.get(key)
+            if isinstance(nested, dict):
+                post_id = nested.get("id", "")
+                if post_id:
+                    return str(post_id)
+        return ""
 
     def _drain_comment(self, service: MoltbookProtocol, proposal: ContentProposal) -> None:
         post_id = proposal.get("post_id", "")

@@ -55,11 +55,14 @@ class FeedAnalyzer:
         client: MoltbookProtocol,
         proposer: Optional[ContentProposalProtocol],
         content_queue: ContentQueue,
+        service: Optional[MoltbookProtocol] = None,
+        mission_descriptions: Optional[List[str]] = None,
     ) -> List[Dict[str, object]]:
         """GENESIS phase: Extract topics + metadata from feed. NO content generation.
 
-        Stores ALL feed posts as topics for strategy evaluation (not just unseen).
-        Only engagement actions (upvotes) are filtered by seen status.
+        Sources:
+        1. Personalized feed (hot posts from subscribed submolts)
+        2. Semantic search (vector search for mission-relevant content)
 
         Returns the feed topics list.
         """
@@ -73,11 +76,19 @@ class FeedAnalyzer:
             return []
 
         if not posts:
-            return []
+            posts = []
 
         # ALL posts become topics for strategy (DHARMA needs context, not just new posts)
         feed_topics = posts if isinstance(posts, list) else []
-        logger.info(f"Feed scan: {len(feed_topics)} topics available")
+
+        # Source 2: Semantic search — discover content beyond the hot feed
+        if service and mission_descriptions:
+            semantic_results = self._search_related_content(
+                service, mission_descriptions, feed_topics,
+            )
+            feed_topics = feed_topics + semantic_results
+
+        logger.info(f"Feed scan: {len(feed_topics)} topics ({len(feed_topics) - len(posts)} from semantic search)")
 
         # Engagement: upvote UNSEEN high-quality posts (dedup prevents double-engage)
         for post in posts[:5]:
@@ -97,6 +108,51 @@ class FeedAnalyzer:
                     logger.debug(f"Engagement proposal failed for {post_id}: {e}")
 
         return feed_topics
+
+    @staticmethod
+    def _search_related_content(
+        service: MoltbookProtocol,
+        mission_descriptions: List[str],
+        existing_topics: List[Dict[str, object]],
+    ) -> List[Dict[str, object]]:
+        """Semantic search: discover content related to active missions.
+
+        Queries the Moltbook vector search API with mission descriptions.
+        Deduplicates against posts already in the feed.
+
+        Returns additional topics to merge into feed_topics.
+        """
+        existing_ids = {
+            str(p.get("id", "")) for p in existing_topics if isinstance(p, dict)
+        }
+        additional: List[Dict[str, object]] = []
+
+        # Search with up to 3 mission descriptions (cap API calls)
+        for desc in mission_descriptions[:3]:
+            try:
+                results = service.search(desc[:100], limit=5)
+                if not results:
+                    continue
+                for result in results:
+                    if not isinstance(result, dict):
+                        continue
+                    post_id = str(result.get("id", ""))
+                    if post_id and post_id not in existing_ids:
+                        existing_ids.add(post_id)
+                        additional.append({
+                            "id": post_id,
+                            "title": result.get("title", result.get("content", ""))[:200],
+                            "content": result.get("content", ""),
+                            "author": result.get("author", {}),
+                            "submolt": result.get("submolt", ""),
+                            "source": "semantic_search",
+                        })
+            except Exception as e:
+                logger.debug(f"Semantic search failed for '{desc[:40]}': {e}")
+
+        if additional:
+            logger.info(f"Semantic search: {len(additional)} new posts discovered")
+        return additional
 
     # Agent's own submolt — created autonomously on first discovery
     _OWN_SUBMOLT = "steward-protocol"
@@ -209,28 +265,30 @@ class FeedAnalyzer:
                 )
 
     def select_submolt(self, seed_text: str, event_log_getter: Callable) -> Optional[str]:
-        """Select best submolt for content via resonance cross-scoring.
+        """Select best submolt for content via RAMA coordinate similarity.
 
-        For each subscribed submolt, compute resonance between content words
-        and submolt name. Weight by engagement history if available.
+        Computes basin_cosine between content RAMA coords and each submolt's
+        description RAMA coords. Weights by engagement history.
+
+        Uses description (not just name) — "openclaw-explorers" alone has no
+        semantic meaning; "Open source law and regulation" does.
         """
         if not self._subscribed_submolts:
             return None
 
         try:
-            from vibe_core.mahamantra.substrate.encoding.resonance_ranker import resonate
+            from vibe_core.mahamantra.substrate.core.basin_map import basin_cosine
+            from vibe_core.mahamantra.substrate.lotus_core import get_mahamantra
         except ImportError:
             return None
 
-        # Get content resonance profile
-        try:
-            content_ranked = resonate(seed_text, top_n=3)
-            content_score = sum(w.total_score for w in content_ranked) if content_ranked else 0.0
-        except Exception as e:
-            logger.debug(f"Content resonance scoring failed: {e}")
-            return None
+        lotus = get_mahamantra()
 
-        if content_score == 0.0:
+        # RAMA coordinates for the content
+        try:
+            content_coords = lotus.nama(seed_text[:200])
+        except Exception as e:
+            logger.debug(f"Content RAMA coords failed: {e}")
             return None
 
         # Build engagement history lookup (submolt → avg net_score)
@@ -249,29 +307,29 @@ class FeedAnalyzer:
         except Exception as e:
             logger.debug(f"Engagement history unavailable: {e}")
 
-        # Cross-score each subscribed submolt
+        # Score each subscribed submolt by semantic similarity to content
         best_submolt: Optional[str] = None
         best_score = 0.0
 
         for submolt_name in self._subscribed_submolts:
+            # Use description for semantic matching (not bare name)
+            desc = self._submolt_descriptions.get(submolt_name, "")
+            probe = f"{submolt_name} {desc}".strip() if desc else submolt_name
             try:
-                submolt_ranked = resonate(submolt_name, top_n=3)
-                submolt_total = sum(w.total_score for w in submolt_ranked) if submolt_ranked else 0.0
+                submolt_coords = lotus.nama(probe[:200])
+                sim = basin_cosine(content_coords, submolt_coords)
             except Exception as e:
-                logger.debug(f"Resonance scoring failed for {submolt_name}: {e}")
+                logger.debug(f"Submolt scoring failed for {submolt_name}: {e}")
                 continue
-
-            # Cross-score: product of content and submolt resonance
-            cross = content_score * submolt_total
 
             # Weight by engagement history (1.0 + normalized avg)
             eng_weight = 1.0 + max(0.0, engagement_weights.get(submolt_name, 0.0) * 0.1)
-            weighted = cross * eng_weight
+            weighted = sim * eng_weight
 
             if weighted > best_score:
                 best_score = weighted
                 best_submolt = submolt_name
 
         if best_submolt:
-            logger.debug(f"Selected submolt: {best_submolt} (score={best_score:.3f})")
+            logger.debug(f"Selected submolt: {best_submolt} (sim={best_score:.3f})")
         return best_submolt
