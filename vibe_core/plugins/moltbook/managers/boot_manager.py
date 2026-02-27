@@ -126,6 +126,15 @@ class BootManager:
             self._plugin._state_dir = data_root
             logger.info(f"State directory: {data_root}")
 
+            # === STEP 1b: Connect to Mahamantra governance ===
+            try:
+                from vibe_core.mahamantra.substrate.vm.gate_providers import get_sync_gate
+
+                get_sync_gate()
+                logger.info("GOVERNANCE: Connected to EnforceGateProvider (Guna I/O)")
+            except Exception:
+                logger.info("GOVERNANCE: EnforceGateProvider unavailable (standalone mode)")
+
             # === STEP 2: Parse configuration ===
             cfg = config or {}
             self._plugin._offline_mode = bool(cfg.get("offline_mode", True))

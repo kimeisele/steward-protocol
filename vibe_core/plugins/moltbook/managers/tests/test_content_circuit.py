@@ -181,3 +181,62 @@ class TestContentCircuitContextPassthrough:
         call_kwargs = plugin.agency_director.run_retry_loop.call_args[1]
         assert call_kwargs["strategic_reasoning"] == "test reasoning"
         assert call_kwargs["submolt_context"] == "dev"
+
+
+class TestDepartmentSignal:
+    """CONTENT_FAILURE events include department-level signal fields."""
+
+    def test_failure_includes_department_signal(self):
+        """department_signal=True in CONTENT_FAILURE event data."""
+        executor, plugin = _make_executor()
+        plugin.agency_director.run_retry_loop.return_value = MockCycleResult(
+            status="ERROR", content=None
+        )
+
+        executor.execute(raw_input="test", content_type="comment")
+
+        calls = [c for c in plugin._emit_event.call_args_list if c[0][0] == "CONTENT_FAILURE"]
+        assert len(calls) == 1
+        event_data = calls[0][0][2]  # Third positional arg = data dict
+        assert event_data["department_signal"] is True
+
+    def test_failure_includes_healing_target(self):
+        """healing_target in CONTENT_FAILURE event data matches content type."""
+        executor, plugin = _make_executor()
+        plugin.agency_director.run_retry_loop.return_value = MockCycleResult(
+            status="ERROR", content=None
+        )
+
+        executor.execute(raw_input="test", content_type="post")
+
+        calls = [c for c in plugin._emit_event.call_args_list if c[0][0] == "CONTENT_FAILURE"]
+        assert len(calls) == 1
+        event_data = calls[0][0][2]
+        assert event_data["healing_target"] == "moltbook:content:post"
+
+    def test_low_integrity_skip_also_has_department_signal(self):
+        """SKIPPED_LOW_INTEGRITY emits CONTENT_FAILURE with department signal."""
+        executor, plugin = _make_executor()
+        plugin.agency_director.run_retry_loop.return_value = MockCycleResult(
+            status="SKIPPED_LOW_INTEGRITY", content=None, guna="TAMAS"
+        )
+
+        executor.execute(raw_input="test", content_type="dm")
+
+        calls = [c for c in plugin._emit_event.call_args_list if c[0][0] == "CONTENT_FAILURE"]
+        assert len(calls) == 1
+        event_data = calls[0][0][2]
+        assert event_data["department_signal"] is True
+        assert event_data["healing_target"] == "moltbook:content:dm"
+
+    def test_success_has_no_department_signal(self):
+        """SUCCESS path does NOT emit CONTENT_FAILURE."""
+        executor, plugin = _make_executor()
+        plugin.agency_director.run_retry_loop.return_value = MockCycleResult(
+            status="SUCCESS", content="Good content"
+        )
+
+        executor.execute(raw_input="test", content_type="comment")
+
+        calls = [c for c in plugin._emit_event.call_args_list if c[0][0] == "CONTENT_FAILURE"]
+        assert len(calls) == 0

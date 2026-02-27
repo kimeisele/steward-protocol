@@ -2,7 +2,9 @@
 
 Extracted from MoltbookPlugin._persist_queue() / _restore_queue() etc.
 
-Pure I/O — no business logic. Returns data; caller writes into own state.
+I/O routed through Mahamantra EnforceGateProvider (Guna-policy governance).
+When gate is unavailable (test/standalone mode), falls back to direct write.
+Reads are always direct (SATTVA — no governance needed).
 """
 
 import json
@@ -20,10 +22,50 @@ _SEEN_STATE_FILE = "seen_ids.json"
 _PHASE_STATE_FILE = "phase_state.json"
 
 
+def _get_rajas_guna() -> object:
+    """Get Guna.RAJAS for governed writes. Returns None if unavailable."""
+    try:
+        from vibe_core.mahamantra.substrate.core.guna import Guna
+
+        return Guna.RAJAS
+    except ImportError:
+        return None
+
+
+def _governed_write(filename: str, data: dict, path: Path, actor: str, indent: int = 2) -> None:
+    """Write state through EnforceGateProvider when available.
+
+    Routes through get_sync_gate().write() for Guna-policy enforcement + audit trail.
+    Falls back to direct Path.write_text() when gate is unavailable (test mode).
+
+    Args:
+        filename: State filename (for gate audit key)
+        data: JSON-serializable dict
+        path: Full path for direct write fallback
+        actor: Who is writing (for audit trail)
+        indent: JSON indentation
+    """
+    try:
+        from vibe_core.mahamantra.substrate.vm.gate_providers import get_sync_gate
+
+        gate = get_sync_gate()
+        guna = _get_rajas_guna()
+        result = gate.write(filename, data, actor=actor, guna=guna)
+        if not result.success:
+            logger.warning(f"Gate blocked {filename}: {result.reason}")
+            return
+        # Gate approved and wrote to StateService cache
+        logger.debug(f"Governed write: {filename} (actor={actor})")
+    except Exception:
+        # Gate unavailable — direct write (test/standalone mode)
+        path.write_text(json.dumps(data, indent=indent))
+
+
 class PersistenceManager:
     """Persist and restore plugin state to/from state directory.
 
-    Pure I/O. Does not modify business state — returns data for the caller.
+    Writes routed through Mahamantra EnforceGateProvider (Guna I/O governance).
+    Reads are direct (SATTVA — no governance needed for reads).
     """
 
     def __init__(self, state_dir: Optional[Path], max_seen_ids: int = 972):
@@ -59,8 +101,12 @@ class PersistenceManager:
                 },
                 "timestamp": datetime.now(timezone.utc).isoformat(),
             }
-            queue_path = self._state_dir / _QUEUE_STATE_FILE
-            queue_path.write_text(json.dumps(queue_data, indent=2))
+            _governed_write(
+                _QUEUE_STATE_FILE,
+                queue_data,
+                self._state_dir / _QUEUE_STATE_FILE,
+                actor="moltbook_persistence",
+            )
 
             # Seen IDs + tracking sets: cap to prevent unbounded growth
             cap = self._max_seen_ids
@@ -88,8 +134,12 @@ class PersistenceManager:
                 "own_post_ids": own_posts,
                 "timestamp": datetime.now(timezone.utc).isoformat(),
             }
-            seen_path = self._state_dir / _SEEN_STATE_FILE
-            seen_path.write_text(json.dumps(seen_data, indent=2))
+            _governed_write(
+                _SEEN_STATE_FILE,
+                seen_data,
+                self._state_dir / _SEEN_STATE_FILE,
+                actor="moltbook_persistence",
+            )
 
             total = len(proposals)
             logger.info(f"State persisted: {total} queued proposals, {len(msg_ids)} msg IDs, {len(post_ids)} post IDs")
@@ -100,6 +150,7 @@ class PersistenceManager:
         """Restore content queue + seen IDs from state dir.
 
         Returns dict with restored sets/maps for the caller to apply.
+        Reads are direct (SATTVA) — no governance needed.
         """
         result: Dict[str, Any] = {}
         if not self._state_dir:
@@ -184,8 +235,12 @@ class PersistenceManager:
                 "orchestrator_state": orchestrator_state or {},
                 "timestamp": datetime.now(timezone.utc).isoformat(),
             }
-            phase_path = self._state_dir / _PHASE_STATE_FILE
-            phase_path.write_text(json.dumps(phase_data, indent=2, default=str))
+            _governed_write(
+                _PHASE_STATE_FILE,
+                phase_data,
+                self._state_dir / _PHASE_STATE_FILE,
+                actor="moltbook_persistence",
+            )
         except Exception as e:
             logger.debug(f"Phase state persist failed: {e}")
 
@@ -193,6 +248,7 @@ class PersistenceManager:
         """Restore cross-phase state from previous run.
 
         Returns dict with: heartbeat_count, feed_topics, intents (as dicts).
+        Reads are direct (SATTVA) — no governance needed.
         """
         result: Dict[str, Any] = {}
         if not self._state_dir:

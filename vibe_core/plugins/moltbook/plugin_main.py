@@ -1387,7 +1387,11 @@ class MoltbookPlugin(KernelPlugin):
         logger.info(f"Follow-back queued for {sender}")
 
     def _log_activity(self, event_type: str, payload: Optional[Dict[str, Any]] = None) -> None:
-        """Append an event to the JSONL activity log. Fire-and-forget."""
+        """Append an event to the JSONL activity log.
+
+        Routes through EnforceGateProvider for Guna-policy audit trail.
+        Falls back to direct append when gate is unavailable (test mode).
+        """
         if not self._activity_log_path:
             return
         try:
@@ -1399,8 +1403,29 @@ class MoltbookPlugin(KernelPlugin):
             if payload:
                 entry["data"] = payload
             line = json.dumps(entry, separators=(",", ":"))
-            with self._activity_log_path.open("a") as f:
-                f.write(line + "\n")
+
+            # Route through EnforceGateProvider for audit trail
+            try:
+                from vibe_core.mahamantra.substrate.core.guna import Guna
+                from vibe_core.mahamantra.substrate.vm.gate_providers import get_sync_gate
+
+                gate = get_sync_gate()
+                result = gate.write(
+                    "moltbook_activity_log",
+                    entry,
+                    actor="moltbook_activity",
+                    guna=Guna.RAJAS,
+                )
+                if result.success:
+                    with self._activity_log_path.open("a") as f:
+                        f.write(line + "\n")
+                else:
+                    logger.debug(f"Activity log blocked by gate: {result.reason}")
+                    return
+            except Exception:
+                # Gate unavailable — direct append (test/standalone mode)
+                with self._activity_log_path.open("a") as f:
+                    f.write(line + "\n")
         except Exception as e:
             logger.warning(f"Activity log write failed: {e}")
 
