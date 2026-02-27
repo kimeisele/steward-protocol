@@ -27,6 +27,10 @@ Usage:
     # From microphone (blocking, records for N seconds)
     stream = engine.record(duration_seconds=6.0)
 
+    # Live streaming (yields frames in real-time)
+    for frame in engine.stream_live():
+        rms, varga, f0_x10, cent = unpack_frame(frame)
+
     # Inspect a frame
     rms, varga, f0_x10, cent = engine.unpack(stream[0])
 """
@@ -36,7 +40,8 @@ from __future__ import annotations
 import struct
 import wave
 from pathlib import Path
-from typing import List, Tuple
+import threading
+from typing import Generator, List, Tuple
 
 import numpy as np
 from scipy.fft import fft, fftfreq
@@ -335,6 +340,86 @@ class ShabdaIntake:
         ) / 32768.0
 
         return self.process_samples(samples, sample_rate, source="microphone")
+
+    def stream_live(
+        self, sample_rate: int = DEFAULT_SAMPLE_RATE
+    ) -> Generator[int, None, None]:
+        """Stream from microphone — yields one packed uint32 per hop.
+
+        Requires pyaudio. Runs until the generator is closed or .stop() is called.
+
+        Usage:
+            engine = ShabdaIntake()
+            for frame in engine.stream_live():
+                rms, varga, f0, cent = unpack_frame(frame)
+                if should_stop:
+                    break
+        """
+        try:
+            import pyaudio
+        except ImportError:
+            raise ImportError("pyaudio required for live streaming: pip install pyaudio")
+
+        self._stop_event = threading.Event()
+        hop = int(sample_rate * self.hop_ms / 1000)
+        chunk = self.n_fft  # Read exactly one FFT window per chunk
+
+        pa = pyaudio.PyAudio()
+        mic = pa.open(
+            format=pyaudio.paInt16,
+            channels=1,
+            rate=sample_rate,
+            input=True,
+            frames_per_buffer=chunk,
+        )
+
+        # Ring buffer: accumulates samples, emits frames at hop intervals
+        buf = np.zeros(0, dtype=np.float64)
+
+        try:
+            while not self._stop_event.is_set():
+                raw = mic.read(hop, exception_on_overflow=False)
+                new_samples = np.array(
+                    struct.unpack(f"<{hop}h", raw), dtype=np.float64
+                ) / 32768.0
+                buf = np.concatenate([buf, new_samples])
+
+                # Emit all complete frames
+                while len(buf) >= self.n_fft:
+                    frame = buf[:self.n_fft]
+                    rms, varga, f0_x10, centroid_x10 = _extract_frame_features(
+                        frame, sample_rate, self.n_fft
+                    )
+                    yield pack_frame(rms, varga, f0_x10, centroid_x10)
+                    buf = buf[hop:]  # Slide by hop, not n_fft (overlapping windows)
+        finally:
+            mic.stop_stream()
+            mic.close()
+            pa.terminate()
+            self._stop_event.clear()
+
+    def stream_samples(
+        self, samples: np.ndarray, sample_rate: int
+    ) -> Generator[int, None, None]:
+        """Stream from pre-loaded samples — yields one packed uint32 per hop.
+
+        Same frame-by-frame output as process_samples(), but as a generator.
+        Useful for testing the streaming interface without a microphone.
+        """
+        hop = int(sample_rate * self.hop_ms / 1000)
+        n_frames = (len(samples) - self.n_fft) // hop
+        for i in range(n_frames):
+            pos = i * hop
+            frame = samples[pos:pos + self.n_fft]
+            rms, varga, f0_x10, centroid_x10 = _extract_frame_features(
+                frame, sample_rate, self.n_fft
+            )
+            yield pack_frame(rms, varga, f0_x10, centroid_x10)
+
+    def stop(self) -> None:
+        """Stop a running stream_live() generator from another thread."""
+        if hasattr(self, "_stop_event"):
+            self._stop_event.set()
 
     def _extract_stream(self, samples: np.ndarray, sr: int) -> List[int]:
         """Core extraction: samples → list of packed uint32 frames."""
