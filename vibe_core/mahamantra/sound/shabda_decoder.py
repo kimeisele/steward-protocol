@@ -70,23 +70,25 @@ class PhonemeTemplate:
     mfcc_center: Tuple[int, ...] = ()  # 13 MFCC coefficients (×100)
 
 
-# Standard F1/F2 centers from acoustic phonetics (adult male, typical)
+# F1/F2 centers calibrated from Prabhupada's japa recording (experiment 21).
+# Bengali/Hindi vocal tract shifts F2 ~+350 Hz vs Peterson & Barney textbook.
+# Japa data: ha(453,1543) re(477,1589) kṛ(395,1672) ṣṇa(419,1656) rā(543,1426).
 _VOWEL_FORMANTS: Final[Dict[str, Tuple[int, int]]] = {
-    "AA": (750, 1200),   # /ɑ/ father
-    "AE": (660, 1700),   # /æ/ bat
-    "AH": (520, 1200),   # /ʌ/ but
-    "AO": (570, 850),    # /ɔ/ bought
-    "AW": (700, 1100),   # /aʊ/ bout
-    "AY": (700, 1200),   # /aɪ/ bite
-    "EH": (530, 1850),   # /ɛ/ bet
-    "EY": (400, 2200),   # /eɪ/ bait
-    "ER": (490, 1350),   # /ɝ/ bird
-    "IH": (390, 1950),   # /ɪ/ bit
-    "IY": (280, 2300),   # /i/ beat
-    "OW": (450, 850),    # /oʊ/ boat
-    "OY": (450, 850),    # /ɔɪ/ boy
-    "UH": (350, 1000),   # /ʊ/ book
-    "UW": (300, 900),    # /u/ boot
+    "AA": (650, 1550),   # /ɑ/ father  (textbook: 750, 1200)
+    "AE": (580, 2050),   # /æ/ bat     (textbook: 660, 1700)
+    "AH": (450, 1550),   # /ʌ/ but     (textbook: 520, 1200) — from japa /a/
+    "AO": (500, 1200),   # /ɔ/ bought  (textbook: 570, 850)
+    "AW": (620, 1450),   # /aʊ/ bout   (textbook: 700, 1100)
+    "AY": (620, 1550),   # /aɪ/ bite   (textbook: 700, 1200)
+    "EH": (490, 2200),   # /ɛ/ bet     (textbook: 530, 1850)
+    "EY": (360, 2550),   # /eɪ/ bait   (textbook: 400, 2200)
+    "ER": (420, 1700),   # /ɝ/ bird    (textbook: 490, 1350) — from japa /ṛ/
+    "IH": (340, 2300),   # /ɪ/ bit     (textbook: 390, 1950)
+    "IY": (250, 2650),   # /i/ beat    (textbook: 280, 2300)
+    "OW": (400, 1200),   # /oʊ/ boat   (textbook: 450, 850)
+    "OY": (400, 1200),   # /ɔɪ/ boy    (textbook: 450, 850)
+    "UH": (310, 1350),   # /ʊ/ book    (textbook: 350, 1000)
+    "UW": (270, 1250),   # /u/ boot    (textbook: 300, 900)
 }
 
 # Centroid ranges (centroid/100) for consonant classes
@@ -248,8 +250,8 @@ def score_frame(
         voicing: 0.30, varga: 0.20, centroid: 0.20, formant: 0.30
 
     prev_rms: RMS of previous frame (-1 = unknown). Used for temporal
-    stop detection: a burst onset (prev_rms < 20, current > 20) strongly
-    indicates a stop consonant (P/T/K/B/D/G), not a nasal or continuant.
+    stop detection: burst onset (prev_rms < 20) or energy dip strongly
+    indicates a stop consonant, not a nasal or continuant.
     """
     rms, varga, f0_x10, centroid_100 = unpack_frame(packed)
 
@@ -258,7 +260,6 @@ def score_frame(
 
     has_mfcc = len(mfcc) >= 13 and any(c != 0 for c in mfcc)
     is_voiced = f0_x10 > 0
-    # Temporal context: detect stop burst onset
     is_onset = prev_rms >= 0 and prev_rms < 20 and rms >= 20
     is_rms_dip = prev_rms >= 0 and rms < prev_rms * 6 // 10 and prev_rms > 80
     candidates: List[Tuple[str, float]] = []
@@ -347,7 +348,7 @@ def score_frame(
 
             if t.sound_class == 0:  # SVARA (vowel)
                 if is_onset or is_rms_dip:
-                    score += 0.01  # vowels don't start from silence/dip
+                    score += 0.01  # vowels don't burst from silence
                 elif is_voiced and is_high_rms and not is_high_centroid:
                     score += 0.15  # strong vowel evidence
                 elif is_voiced and is_mid_rms:
@@ -358,7 +359,7 @@ def score_frame(
                 is_nasal = t.sthana == int(SthanaIndex.ANUNASIKA)
                 if is_nasal:
                     if is_onset or is_rms_dip:
-                        score += 0.01  # nasals don't burst from silence
+                        score += 0.01  # nasals don't burst
                     elif is_voiced and is_low_centroid and is_mid_rms:
                         score += 0.15
                     elif is_voiced and is_low_centroid:
@@ -382,7 +383,7 @@ def score_frame(
             else:  # SHESHA (semivowel/sibilant/fricative)
                 is_sibilant = t.arpabet in ("S", "SH", "Z", "ZH", "HH")
                 if is_onset or is_rms_dip:
-                    score += 0.01  # fricatives/semivowels don't burst
+                    score += 0.01  # continuants don't burst
                 elif is_sibilant:
                     if is_high_centroid:
                         score += 0.15
@@ -410,8 +411,7 @@ def score_frame(
 
             # Formant match (0.40 weight — THE vowel discriminator)
             # F1 = jaw height (open/close), F2 = tongue position (front/back)
-            # Use absolute Hz distance normalized by vowel space range,
-            # not relative error (which biases toward higher-F2 templates).
+            # Absolute Hz distance / fixed range avoids bias toward high-F2 templates.
             if t.f1_center > 0 and f1 > 0 and f2 > 0:
                 f1_err = abs(f1 - t.f1_center) / 500.0   # F1 range ~200-800
                 f2_err = abs(f2 - t.f2_center) / 1500.0   # F2 range ~800-2500
