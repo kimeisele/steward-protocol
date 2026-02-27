@@ -480,6 +480,15 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         Args:
             silent: Suppress logging
             lazy: If True, defer heavy service loading until first use
+
+        Phases (each gracefully degrading):
+            1. Eager services (only if lazy=False)
+            2. Gate providers → TattvaRegistry
+            3. HealingIntentResolver → MantraKernel
+            4. Balarama proxy wrapping + orbital adoption
+            5. Sravanam listener (organic cell scanning)
+            6. Sudarshana governance hook (.git write protection)
+            7. Micro-Kernel VM capability discovery + compilation
         """
         if self._bootstrapped:
             return
@@ -487,28 +496,49 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         _log = logging.getLogger("MAHAMANTRA")
 
         if not lazy:
-            # EAGER mode (old behavior) - load everything now
-            try:
-                from vibe_core.services import maha_compute_service  # noqa: F401 (re-export: maha_compute_service)
+            self._bootstrap_eager_services(_log, silent)
 
-                if not silent:
-                    _log.info("MahaComputeService activated")
-            except ImportError as e:
-                if not silent:
-                    _log.debug(f"MahaComputeService not available: {e}")
+        self._bootstrap_gate_providers(_log, silent)
+        self._bootstrap_healing_resolver(_log, silent)
+        self._bootstrap_balarama(_log, silent)
+        self._bootstrap_sravanam(_log, silent)
+        self._bootstrap_sudarshana(_log, silent)
+        self._bootstrap_vm_capabilities(_log, silent)
 
-            try:
-                from vibe_core.mahamantra.adapters.llm import MahaLLM
+        self._bootstrapped = True
+        if not silent:
+            _log.info("Mahamantra bootstrap complete (lazy mode)" if lazy else "Mahamantra bootstrap complete")
 
-                kapila = self.dharma.kapila.get_kapila_service()
-                kapila.register_cognitive(MahaLLM())
-                if not silent:
-                    _log.info("Kapila cognition wired with MahaLLM")
-            except Exception as e:
-                if not silent:
-                    _log.debug(f"Kapila cognition wiring failed: {e}")
+    # =========================================================================
+    # BOOTSTRAP PHASES — Each phase is isolated and gracefully degrading.
+    # Extracted from bootstrap() (was complexity 42, now 3).
+    # =========================================================================
 
-        # Wire gate providers into TattvaRegistry (always — gates fire on every execute())
+    def _bootstrap_eager_services(self, _log: logging.Logger, silent: bool) -> None:
+        """Phase 1: Load heavy services eagerly (old behavior)."""
+        try:
+            from vibe_core.services import maha_compute_service  # noqa: F401 (re-export: maha_compute_service)
+
+            if not silent:
+                _log.info("MahaComputeService activated")
+        except ImportError as e:
+            if not silent:
+                _log.debug(f"MahaComputeService not available: {e}")
+
+        try:
+            from vibe_core.mahamantra.adapters.llm import MahaLLM
+
+            kapila = self.dharma.kapila.get_kapila_service()
+            kapila.register_cognitive(MahaLLM())
+            if not silent:
+                _log.info("Kapila cognition wired with MahaLLM")
+        except Exception as e:
+            if not silent:
+                _log.debug(f"Kapila cognition wiring failed: {e}")
+
+    @staticmethod
+    def _bootstrap_gate_providers(_log: logging.Logger, silent: bool) -> None:
+        """Phase 2: Wire gate providers into TattvaRegistry (always — gates fire on every execute())."""
         try:
             from vibe_core.mahamantra.substrate.gate_providers import wire_gate_providers
 
@@ -519,8 +549,9 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
             if not silent:
                 _log.debug(f"Gate provider wiring deferred: {e}")
 
-        # Wire HealingIntentResolver into MantraKernel (idempotent)
-        # IntentResolver processes queued HEAL intents on every Singularity.tick()
+    @staticmethod
+    def _bootstrap_healing_resolver(_log: logging.Logger, silent: bool) -> None:
+        """Phase 3: Wire HealingIntentResolver into MantraKernel (idempotent)."""
         try:
             from vibe_core.mahamantra.dharma.kumaras.healing_resolver import wire_healing_resolver
 
@@ -529,9 +560,13 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
             if not silent:
                 _log.debug(f"HealingResolver wiring deferred: {e}")
 
-        # Balarama Pattern: Wrap all lotus-discovered services with BalaramaProxy
-        # This gives every service: identity, heartbeat, governed I/O — automatically.
-        # "Let the wildness be wild. We flood the land with the ocean (Seed)."
+    def _bootstrap_balarama(self, _log: logging.Logger, silent: bool) -> None:
+        """Phase 4: Balarama proxy wrapping + orbital adoption.
+
+        Wraps all lotus-discovered services with BalaramaProxy
+        (identity, heartbeat, governed I/O), then mounts into
+        OrbitalShadowReactors for positional scheduling.
+        """
         try:
             from vibe_core.mahamantra.substrate.proxy import auto_wrap_services
 
@@ -556,11 +591,9 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
             if not silent:
                 _log.debug(f"Balarama wrapping deferred: {e}")
 
-        # NOTE: Codebase ingestion (CellRouter population) stays in boot_orchestrator.
-        # It scans ~460 .py files via fragment_parser — too expensive for bootstrap().
-        # bootstrap() must be fast and side-effect-free (no filesystem I/O).
-
-        # Wire Sravanam listener (organic per-tick cell scanning)
+    @staticmethod
+    def _bootstrap_sravanam(_log: logging.Logger, silent: bool) -> None:
+        """Phase 5: Wire Sravanam listener (organic per-tick cell scanning)."""
         try:
             from vibe_core.mahamantra.dharma.kumaras.sravanam import wire_sravanam
 
@@ -571,7 +604,9 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
             if not silent:
                 _log.debug(f"Sravanam wiring deferred: {e}")
 
-        # Register Sudarshana governance hook (blocks .git writes via @mantra_governed)
+    @staticmethod
+    def _bootstrap_sudarshana(_log: logging.Logger, silent: bool) -> None:
+        """Phase 6: Register Sudarshana governance hook (blocks .git writes)."""
         try:
             from vibe_core.mahamantra.substrate.opcode import MantraOpCode
             from vibe_core.protocols.substrate.mantra_protocol import register_governance_hook
@@ -606,8 +641,15 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
             if not silent:
                 _log.debug(f"Governance hook deferred: {e}")
 
-        # Micro-Kernel: Discover VMCapability implementations and register their ops
-        # in the CycleCompiler. This is the BUILD phase — compile once, dispatch at runtime.
+    def _bootstrap_vm_capabilities(self, _log: logging.Logger, silent: bool) -> None:
+        """Phase 7: Micro-Kernel VM capability discovery + compilation.
+
+        Discovers VMCapability implementations from:
+        1. Balarama-wrapped services
+        2. Composition adapter
+        3. Kirtan renderer
+        Then compiles all registered ops into CycleCompiler.
+        """
         try:
             from vibe_core.mahamantra.protocols._navabhakti import VMCapabilityProtocol
             from vibe_core.mahamantra.substrate.cycle_compiler import get_compiler
@@ -656,10 +698,6 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         except Exception as e:
             if not silent:
                 _log.debug(f"VM capability discovery deferred: {e}")
-
-        self._bootstrapped = True
-        if not silent:
-            _log.info("Mahamantra bootstrap complete (lazy mode)" if lazy else "Mahamantra bootstrap complete")
 
     # =========================================================================
     # NAVABHAKTI STEPS — Atomic, granular, individually callable

@@ -69,7 +69,12 @@ class Auditor:
         findings = []
         from vibe_core.mahamantra.substrate.lotus_core import MahamantraLotus
 
+        # Collect source from bootstrap() AND its _bootstrap_* phase methods.
+        # bootstrap() was decomposed into phases — tokens live in phase methods.
         source = _source_of(MahamantraLotus, "bootstrap")
+        for attr_name in dir(MahamantraLotus):
+            if attr_name.startswith("_bootstrap_"):
+                source += "\n" + _source_of(MahamantraLotus, attr_name)
 
         required = {
             "wire_gate_providers": "Gate providers must be wired at boot",
