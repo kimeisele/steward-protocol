@@ -68,6 +68,14 @@ class BootCallbacks(Protocol):
         """Wire EventBus listener for inter-agent events."""
         ...
 
+    def _init_bank(self) -> None:
+        """Initialize CivicBank for credit-gated publishing."""
+        ...
+
+    def _init_agora(self) -> None:
+        """Initialize AGORA for broadcast listening."""
+        ...
+
 
 class BootManager:
     """Orchestrate plugin lifecycle initialization.
@@ -205,7 +213,11 @@ class BootManager:
                 self._plugin._standalone_mode = True
                 logger.info("Standalone mode detected (no kernel singularity)")
 
-            # === STEP 12: Wire mahamantra listener + ouroboros + EventBus ===
+            # === STEP 12: Initialize economy + broadcast (standalone-compatible) ===
+            self._plugin._init_bank()
+            self._plugin._init_agora()
+
+            # === STEP 13: Wire mahamantra listener + ouroboros + EventBus ===
             self._plugin._wire_to_mahamantra()
             self._plugin._wire_ouroboros()
             self._plugin._wire_event_listener()

@@ -501,6 +501,9 @@ class MoltbookPlugin(KernelPlugin):
         self._last_profile_heartbeat: int = 0  # Heartbeat count when profile was last updated
         self._activity_log_path: Optional[Path] = None  # JSONL append-only audit log
         self._agent_name: str = "steward-protocol"  # Resolved from profile at boot
+        self._bank = None  # CivicBank instance (lazy, standalone-compatible)
+        self._agora = None  # AgoraCartridge for broadcast listening
+        self._agora_sequence: int = 0  # Last consumed AGORA message sequence
         # Heartbeat orchestration (extracted manager, manages debounce + phase ticks)
         # Circuit Executor (cortex/engines/circuit_engine.py) — wired at boot
         self._wiring = None  # WiringModule (lazy-loaded)
@@ -589,6 +592,8 @@ class MoltbookPlugin(KernelPlugin):
                 comment_post_map=self._comment_post_map,
                 followed_agents=self._followed_agents,
                 subscribed_submolts=self._subscribed_submolts,
+                bank=self._bank,
+                agent_id=self._agent_name,
             )
         return self._drainer
 
@@ -910,6 +915,75 @@ class MoltbookPlugin(KernelPlugin):
             logger.info("PARAMPARA: Moltbook wired to Mahamantra")
         except Exception as e:
             logger.warning(f"Mahamantra connection failed: {e}")
+
+    def _init_agora(self) -> None:
+        """Initialize AGORA for broadcast listening (standalone-compatible).
+
+        In standalone mode (GitHub Actions), AGORA is in-memory — no other agents
+        publish during the run. The wiring is prepared for full-system execution.
+        """
+        try:
+            from vibe_core.cartridges.agent_city.agora.cartridge_main import AgoraCartridge
+
+            self._agora = AgoraCartridge()
+            logger.info("AGORA initialized for broadcast listening")
+        except Exception as e:
+            logger.debug(f"AGORA unavailable: {e}")
+
+    def _listen_agora(self) -> List[Dict[str, Any]]:
+        """Listen for broadcast directives from herald/steward.
+
+        Returns list of messages since last check. Called in GENESIS phase.
+        """
+        if self._agora is None:
+            return []
+        messages: List[Dict[str, Any]] = []
+        for source in ("herald", "steward"):
+            try:
+                result = run_async(self._agora._listen_stream({
+                    "agent_id": self._agent_name,
+                    "source": source,
+                    "since": self._agora_sequence,
+                }))
+                if isinstance(result, dict):
+                    msgs = result.get("messages", [])
+                    messages.extend(msgs)
+                    seq = result.get("next_sequence", self._agora_sequence)
+                    if seq > self._agora_sequence:
+                        self._agora_sequence = seq
+            except Exception as e:
+                logger.debug(f"AGORA listen ({source}) failed: {e}")
+        if messages:
+            logger.info(f"AGORA: {len(messages)} broadcast messages received")
+        return messages
+
+    def _init_bank(self) -> None:
+        """Initialize CivicBank for credit-gated content publishing.
+
+        Direct instantiation — no kernel required (standalone-compatible).
+        Mints initial credits if account has zero balance.
+        """
+        try:
+            from vibe_core.cartridges.system.civic.tools.economy import CivicBank
+
+            db_path = None
+            if self._state_dir:
+                db_path = str(self._state_dir / "economy.db")
+            self._bank = CivicBank(db_path)
+            # Mint initial credits if account is empty
+            balance = self._bank.get_balance(self._agent_name)
+            if balance == 0:
+                self._bank.transfer(
+                    "MINT", self._agent_name, 1000,
+                    "moltbook_initial_mint",
+                    service_type="minting",
+                )
+                logger.info(f"CivicBank: minted 1000 initial credits for {self._agent_name}")
+            else:
+                logger.info(f"CivicBank: balance={balance} for {self._agent_name}")
+        except Exception as e:
+            logger.warning(f"CivicBank unavailable: {e}")
+            self._bank = None
 
     def _wire_event_listener(self) -> None:
         """Subscribe to EventBus — hear what other agents are doing.
