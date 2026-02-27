@@ -289,6 +289,7 @@ PHONEME_TO_VARGA: Final[Dict[str, VargaIndex]] = _build_phoneme_varga_from_proto
 #   OSHTHYA (lips/4) = rounded: UW (boot), UH (book), AW (bout)
 
 ARPABET_TO_VARGA: Final[Dict[str, VargaIndex]] = {
+    # Vowels (15)
     "AA": VargaIndex.KANTHYA,
     "AH": VargaIndex.KANTHYA,
     "AE": VargaIndex.KANTHYA,
@@ -304,6 +305,33 @@ ARPABET_TO_VARGA: Final[Dict[str, VargaIndex]] = {
     "UW": VargaIndex.OSHTHYA,
     "UH": VargaIndex.OSHTHYA,
     "AW": VargaIndex.OSHTHYA,
+    # Consonants — Stops (24)
+    "K": VargaIndex.KANTHYA,     # ka
+    "G": VargaIndex.KANTHYA,     # ga
+    "NG": VargaIndex.KANTHYA,    # ṅa (velar nasal)
+    "CH": VargaIndex.TALAVYA,    # ca
+    "JH": VargaIndex.TALAVYA,    # ja
+    "T": VargaIndex.DANTYA,      # ta
+    "D": VargaIndex.DANTYA,      # da
+    "TH": VargaIndex.DANTYA,     # tha
+    "DH": VargaIndex.DANTYA,     # dha
+    "N": VargaIndex.DANTYA,      # na
+    "P": VargaIndex.OSHTHYA,     # pa
+    "B": VargaIndex.OSHTHYA,     # ba
+    "F": VargaIndex.OSHTHYA,     # pha (labio-dental)
+    "M": VargaIndex.OSHTHYA,     # ma
+    "V": VargaIndex.OSHTHYA,     # va
+    "W": VargaIndex.OSHTHYA,     # va (western approx)
+    # Semivowels / Liquids
+    "Y": VargaIndex.TALAVYA,     # ya
+    "R": VargaIndex.MURDHANYA,   # ra
+    "L": VargaIndex.DANTYA,      # la
+    # Sibilants / Fricatives
+    "S": VargaIndex.DANTYA,      # sa
+    "SH": VargaIndex.TALAVYA,    # śa
+    "Z": VargaIndex.DANTYA,      # da (voiced dental)
+    "ZH": VargaIndex.TALAVYA,    # ja (voiced palatal)
+    "HH": VargaIndex.KANTHYA,    # ha (glottal)
 }
 
 
@@ -344,6 +372,104 @@ STHANA_ENERGY_CF: Final[Dict[SthanaIndex, int]] = {
 
 # Float alias for backward-compatible consumers
 STHANA_ENERGY: Final[Dict[SthanaIndex, float]] = {k: v / COSMIC_FRAME for k, v in STHANA_ENERGY_CF.items()}
+
+
+# =============================================================================
+# ARPABET → STHANA (CMU English phonemes → Sanskrit energy levels)
+# =============================================================================
+# Maps ARPAbet consonant manner of articulation to SthanaIndex:
+#   SPARSHA(0)   = unvoiced stops (P, T, K)
+#   MAHAPRANA(1) = aspirated/fricatives (F, TH, HH, SH, S)
+#   GHOSHAVAT(2) = voiced (B, D, G, V, Z, semivowels)
+#   GHOSHMAHA(3) = voiced-aspirated (DH, JH)
+#   ANUNASIKA(4) = nasals (M, N, NG)
+
+ARPABET_TO_STHANA: Final[Dict[str, SthanaIndex]] = {
+    # Vowels: expansion energy (sustained voicing)
+    "AA": SthanaIndex.MAHAPRANA, "AE": SthanaIndex.MAHAPRANA,
+    "AH": SthanaIndex.MAHAPRANA, "AO": SthanaIndex.MAHAPRANA,
+    "AW": SthanaIndex.GHOSHMAHA, "AY": SthanaIndex.GHOSHMAHA,
+    "EH": SthanaIndex.GHOSHAVAT, "EY": SthanaIndex.GHOSHAVAT,
+    "ER": SthanaIndex.GHOSHAVAT, "IH": SthanaIndex.SPARSHA,
+    "IY": SthanaIndex.SPARSHA, "OW": SthanaIndex.GHOSHAVAT,
+    "OY": SthanaIndex.GHOSHMAHA, "UH": SthanaIndex.SPARSHA,
+    "UW": SthanaIndex.SPARSHA,
+    # Unvoiced stops
+    "K": SthanaIndex.SPARSHA, "P": SthanaIndex.SPARSHA,
+    "T": SthanaIndex.SPARSHA,
+    # Aspirated / Fricatives
+    "F": SthanaIndex.MAHAPRANA, "TH": SthanaIndex.MAHAPRANA,
+    "HH": SthanaIndex.MAHAPRANA, "SH": SthanaIndex.MAHAPRANA,
+    "S": SthanaIndex.MAHAPRANA, "CH": SthanaIndex.MAHAPRANA,
+    # Voiced stops / continuants
+    "B": SthanaIndex.GHOSHAVAT, "D": SthanaIndex.GHOSHAVAT,
+    "G": SthanaIndex.GHOSHAVAT, "V": SthanaIndex.GHOSHAVAT,
+    "Z": SthanaIndex.GHOSHAVAT, "W": SthanaIndex.GHOSHAVAT,
+    "Y": SthanaIndex.GHOSHAVAT, "R": SthanaIndex.GHOSHAVAT,
+    "L": SthanaIndex.GHOSHAVAT,
+    # Voiced aspirated / affricates
+    "DH": SthanaIndex.GHOSHMAHA, "JH": SthanaIndex.GHOSHMAHA,
+    "ZH": SthanaIndex.GHOSHMAHA,
+    # Nasals
+    "M": SthanaIndex.ANUNASIKA, "N": SthanaIndex.ANUNASIKA,
+    "NG": SthanaIndex.ANUNASIKA,
+}
+
+# =============================================================================
+# ARPABET → RAMA (Full 39-phoneme mapping to RAMA coordinates 0-48)
+# =============================================================================
+# Vowels → SVARA coords (0-15) via articulatory position
+# Consonants → SPARSHA coords (16-40) via: 16 + (varga_row * 5) + sthana_col
+# Semivowels/Sibilants → SHESHA coords (41-48) directly
+
+ARPABET_TO_RAMA: Final[Dict[str, int]] = {
+    # ---- VOWELS (SVARA, coords 0-15) ----
+    "AE": 0,   # a (short open)
+    "AH": 0,   # ə → a
+    "AA": 5,   # ā (long open)
+    "IH": 1,   # i (short front)
+    "IY": 6,   # ī (long front)
+    "UH": 2,   # u (short back)
+    "UW": 7,   # ū (long back)
+    "ER": 3,   # ṛ (r-colored)
+    "EH": 1,   # e-like → i
+    "EY": 10,  # e (mid front)
+    "AY": 11,  # ai (diphthong)
+    "AO": 12,  # o (mid back)
+    "OW": 12,  # o
+    "OY": 12,  # oi → o
+    "AW": 13,  # au (diphthong)
+    # ---- STOPS (SPARSHA, coords 16-40) ----
+    # KANTHYA row: 16 + col   (ka=16, kha=17, ga=18, gha=19, ṅa=20)
+    "K": 16,    # ka
+    "G": 18,    # ga
+    "NG": 20,   # ṅa
+    # TALAVYA row: 21 + col   (ca=21, cha=22, ja=23, jha=24, ña=25)
+    "CH": 21,   # ca
+    "JH": 23,   # ja
+    # DANTYA row: 31 + col    (ta=31, tha=32, da=33, dha=34, na=35)
+    "T": 31,    # ta
+    "TH": 32,   # tha
+    "D": 33,    # da
+    "DH": 34,   # dha
+    "N": 35,    # na
+    # OSHTHYA row: 36 + col   (pa=36, pha=37, ba=38, bha=39, ma=40)
+    "P": 36,    # pa
+    "F": 37,    # pha (labio-dental approx)
+    "B": 38,    # ba
+    "M": 40,    # ma
+    # ---- SEMIVOWELS + SIBILANTS (SHESHA, coords 41-48) ----
+    "Y": 41,    # ya
+    "R": 42,    # ra
+    "L": 43,    # la
+    "V": 44,    # va
+    "W": 44,    # va (western approx)
+    "SH": 45,   # śa
+    "S": 47,    # sa
+    "Z": 33,    # → da (voiced dental)
+    "ZH": 23,   # → ja (voiced palatal)
+    "HH": 48,   # ha
+}
 
 
 # =============================================================================
@@ -774,4 +900,7 @@ __all__ = [
     "PRAYATNA_TO_STHANA",
     "CATEGORY_TO_STHANA",
     "STHANA_ENERGY",
+    # ARPAbet → RAMA (full 39-phoneme table for decoder)
+    "ARPABET_TO_RAMA",
+    "ARPABET_TO_STHANA",
 ]
