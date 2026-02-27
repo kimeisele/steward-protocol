@@ -1614,8 +1614,15 @@ class MoltbookPlugin(KernelPlugin):
         self._content_drainer.record_rate_limit(content_type)
 
     def _drain_content_queue(self) -> None:
-        """Execute queued content proposals through MoltbookService."""
+        """Execute queued content proposals through MoltbookService.
+
+        Persists state after drain — GitHub Actions kills the process after 4 cycles,
+        so on_shutdown() may never run. own_post_ids, comment_post_map, etc. must
+        survive to the next run.
+        """
         self._content_drainer.drain(self._content_queue, self._offline_mode)
+        # Persist immediately after drain — don't wait for on_shutdown()
+        self._persist_queue()
 
     # =========================================================================
     # API — exposed to other plugins via kernel.api("moltbook")

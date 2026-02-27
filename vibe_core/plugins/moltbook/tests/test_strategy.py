@@ -70,37 +70,7 @@ _TEST_MISSIONS = [
     ),
 ]
 
-# Deterministic RAMA coords for testing — pure basin groups ensure distinct semantic fields.
-# basin_cosine between pure-basin groups = 0.0, combined similarity ~0.35 (below 0.75 threshold).
-# Self-similarity = 1.0 (above 0.75 threshold).
-_COORDS_AI_GOVERNANCE = (10, 12, 13, 18, 21, 24, 32, 33, 34, 36)  # Basin 122
-_COORDS_DECENTRALIZED = (0, 3, 6, 8, 23, 25, 31, 35, 38, 40)     # Basin 38
-_COORDS_COMMUNITY = (1, 2, 9, 15, 17, 19, 22, 28, 29, 48)        # Basin 22
-_COORDS_UNRELATED = (4, 11, 14, 16, 20, 26, 37, 39, 41, 43)      # Basin 11
-
-# Map of text fragments → coords (for deterministic _get_coords mock)
-_COORDS_MAP = {
-    "ai governance": _COORDS_AI_GOVERNANCE,
-    "transparent decision": _COORDS_AI_GOVERNANCE,
-    "autonomous systems": _COORDS_AI_GOVERNANCE,
-    "decentralized protocols": _COORDS_DECENTRALIZED,
-    "agent-to-agent coordination": _COORDS_DECENTRALIZED,
-    "agent coordination": _COORDS_DECENTRALIZED,
-    "community building": _COORDS_COMMUNITY,
-    "social dynamics": _COORDS_COMMUNITY,
-    "agent networks": _COORDS_COMMUNITY,
-    "pizza": _COORDS_UNRELATED,
-    "spaghetti": _COORDS_UNRELATED,
-}
-
-
-def _mock_get_coords(text: str) -> tuple:
-    """Deterministic RAMA coords mock — matches by keyword fragments."""
-    text_lower = text.lower()
-    for fragment, coords in _COORDS_MAP.items():
-        if fragment in text_lower:
-            return coords
-    return _COORDS_UNRELATED
+# No mock infrastructure needed — keyword Jaccard uses real tokenization (no slow imports).
 
 
 def _mock_buddhi_think(text: str):
@@ -124,9 +94,6 @@ def _make_planner(missions=None) -> MoltbookStrategyPlanner:
     registry.get_all_missions.return_value = missions or []
     orch.registry = registry
     planner._orchestrator = orch
-
-    # Mock semantic infrastructure to avoid slow imports
-    planner._get_coords = _mock_get_coords
 
     return planner
 
@@ -273,55 +240,77 @@ class TestTopicMatching:
 
 
 # ---------------------------------------------------------------------------
-# _semantic_match — RAMA coordinates + basin_cosine + hkr_similarity
+# _semantic_match — keyword Jaccard (tokenized word overlap)
 # ---------------------------------------------------------------------------
 
 
 class TestSemanticMatch:
-    def test_identical_coords_high_similarity(self):
-        """Same coords → similarity=1.0, above threshold."""
-        coords = (0, 1, 2, 3, 4, 5)
+    def test_identical_tokens_high_similarity(self):
+        """Same token set → Jaccard=1.0."""
+        tokens = frozenset({"distributed", "systems", "consensus", "protocol"})
         missions = [FakeMission(id="m1", name="M", description="test", priority=FakePriority.MEDIUM)]
-        mission_coords = {"m1": coords}
-        mid, sim = MoltbookStrategyPlanner._semantic_match(coords, missions, mission_coords)
+        mission_tokens = {"m1": tokens}
+        mid, sim = MoltbookStrategyPlanner._semantic_match(tokens, missions, mission_tokens)
         assert mid == "m1"
-        assert sim >= 0.99
+        assert sim == 1.0
 
-    def test_different_coords_low_similarity(self):
-        """Very different coords → below threshold → no match."""
-        post_coords = (0, 1, 2, 3, 4)
-        mission_coords = {"m1": (40, 41, 42, 43, 44)}
+    def test_disjoint_tokens_no_match(self):
+        """Zero overlap → below floor → no match."""
+        post_tokens = frozenset({"distributed", "systems", "consensus"})
+        mission_tokens = {"m1": frozenset({"chocolate", "cookie", "recipe"})}
         missions = [FakeMission(id="m1", name="M", description="test", priority=FakePriority.MEDIUM)]
-        mid, sim = MoltbookStrategyPlanner._semantic_match(post_coords, missions, mission_coords)
-        # Whether this matches depends on actual basin_cosine — but very different coords
-        # should produce low similarity
-        if mid is None:
-            assert sim == 0.0
-
-    def test_empty_missions(self):
-        mid, sim = MoltbookStrategyPlanner._semantic_match((0, 1, 2), [], {})
+        mid, sim = MoltbookStrategyPlanner._semantic_match(post_tokens, missions, mission_tokens)
         assert mid is None
         assert sim == 0.0
 
-    def test_missing_mission_coords_skipped(self):
+    def test_partial_overlap_matches(self):
+        """Shared keywords above floor → match with correct Jaccard."""
+        post_tokens = frozenset({"distributed", "systems", "fault", "tolerance"})
+        mission_tokens = {"m1": frozenset({"distributed", "systems", "consensus", "protocol"})}
         missions = [FakeMission(id="m1", name="M", description="test", priority=FakePriority.MEDIUM)]
-        mid, sim = MoltbookStrategyPlanner._semantic_match((0, 1, 2), missions, {})
+        mid, sim = MoltbookStrategyPlanner._semantic_match(post_tokens, missions, mission_tokens)
+        assert mid == "m1"
+        # Jaccard: 2 shared / 6 total = 0.333
+        assert 0.3 <= sim <= 0.4
+
+    def test_empty_missions(self):
+        mid, sim = MoltbookStrategyPlanner._semantic_match(
+            frozenset({"test"}), [], {},
+        )
+        assert mid is None
+        assert sim == 0.0
+
+    def test_missing_mission_tokens_skipped(self):
+        missions = [FakeMission(id="m1", name="M", description="test", priority=FakePriority.MEDIUM)]
+        mid, sim = MoltbookStrategyPlanner._semantic_match(
+            frozenset({"test"}), missions, {},
+        )
+        assert mid is None
+        assert sim == 0.0
+
+    def test_empty_post_tokens(self):
+        """Empty post token set → no match."""
+        missions = [FakeMission(id="m1", name="M", description="test", priority=FakePriority.MEDIUM)]
+        mid, sim = MoltbookStrategyPlanner._semantic_match(
+            frozenset(), missions, {"m1": frozenset({"test"})},
+        )
         assert mid is None
         assert sim == 0.0
 
     def test_picks_best_mission(self):
-        """When multiple missions have coords, picks the best match."""
-        post_coords = (0, 1, 2, 3, 4, 5)
+        """When multiple missions have tokens, picks highest Jaccard."""
+        post_tokens = frozenset({"distributed", "systems", "consensus", "protocol"})
         missions = [
             FakeMission(id="m1", name="M1", description="close", priority=FakePriority.MEDIUM),
             FakeMission(id="m2", name="M2", description="far", priority=FakePriority.MEDIUM),
         ]
-        mission_coords = {
-            "m1": (0, 1, 2, 3, 4, 5),  # Identical
-            "m2": (40, 41, 42, 43, 44, 45),  # Different
+        mission_tokens = {
+            "m1": frozenset({"distributed", "systems", "consensus", "protocol"}),  # Identical
+            "m2": frozenset({"chocolate", "cookie", "recipe", "baking"}),  # Disjoint
         }
-        mid, sim = MoltbookStrategyPlanner._semantic_match(post_coords, missions, mission_coords)
+        mid, sim = MoltbookStrategyPlanner._semantic_match(post_tokens, missions, mission_tokens)
         assert mid == "m1"
+        assert sim == 1.0
 
 
 # ---------------------------------------------------------------------------
@@ -598,27 +587,22 @@ class TestSeedTopics:
         assert isinstance(topics, tuple)
 
     def test_derive_with_feed_topics(self):
-        """Feed topics produce chapter-based seed topics via Lotus VM."""
+        """Feed topics extract unique titles as seed topics (no chapter clustering)."""
         feed = [
             {"title": "Distributed consensus algorithms and their tradeoffs"},
             {"title": "Short"},  # Should be skipped (len < 10)
             {"title": "Agent coordination in multi-agent systems research"},
         ]
-        # Mock lotus() to return chapter-based results
-        mock_lotus = MagicMock()
-        mock_lotus.return_value = {"chapter": 3}
-        with patch(
-            "vibe_core.mahamantra.substrate.lotus_core.get_mahamantra",
-            return_value=mock_lotus,
-        ):
-            topics = _derive_seed_topics(feed_topics=feed)
+        topics = _derive_seed_topics(feed_topics=feed)
 
         assert isinstance(topics, tuple)
-        # Should have at least 1 topic from feed (both long titles → same chapter 3)
-        if topics:
-            # Topic IDs should start with "ch" (chapter-based)
-            feed_topics = [t for t in topics if t[0].startswith("ch")]
-            assert len(feed_topics) >= 1
+        # 2 long titles → 2 topics (short one skipped)
+        feed_ids = [t for t in topics if t[0].startswith("feed_")]
+        assert len(feed_ids) >= 2
+        # Descriptions match original titles
+        descriptions = {t[1] for t in topics}
+        assert "Distributed consensus algorithms and their tradeoffs" in descriptions
+        assert "Agent coordination in multi-agent systems research" in descriptions
 
 
 # ---------------------------------------------------------------------------
@@ -1009,7 +993,7 @@ class TestIntentDiversity:
 
 
 # ---------------------------------------------------------------------------
-# _semantic_dedup — basin_cosine based dedup
+# _semantic_dedup — keyword Jaccard based dedup
 # ---------------------------------------------------------------------------
 
 

@@ -29,7 +29,7 @@ def _derive_seed_topics(feed_topics: Optional[List[Dict[str, Any]]] = None) -> t
     """Derive mission topics from feed content + existing Sankalpa missions.
 
     Priority order:
-    1. Feed topics → BG chapter clustering via Lotus VM (what the community discusses)
+    1. Feed topics — use each unique post title as a potential topic
     2. Existing Sankalpa missions (persisted from previous runs)
 
     No hardcoded query strings. No KG queries. Feed is truth.
@@ -37,29 +37,20 @@ def _derive_seed_topics(feed_topics: Optional[List[Dict[str, Any]]] = None) -> t
     """
     topics: list = []
 
-    # Source 1: Feed topics → cluster by BG chapter via Lotus VM
+    # Source 1: Feed topics — extract unique titles as potential mission seeds
     if feed_topics:
-        try:
-            from vibe_core.mahamantra.substrate.lotus_core import get_mahamantra
-
-            lotus = get_mahamantra()
-            chapter_posts: Dict[int, List[str]] = {}
-            for post in feed_topics[:20]:
-                title = str(post.get("title", ""))
-                if not title or len(title) < 10:
-                    continue
-                vm_result = lotus(title)
-                chapter = int(vm_result.get("chapter", 0))
-                if chapter > 0:
-                    chapter_posts.setdefault(chapter, []).append(title[:200])
-
-            for chapter, titles in chapter_posts.items():
-                if titles:
-                    slug = titles[0][:30].replace(" ", "_").lower()
-                    topic_id = f"ch{chapter}_{slug}"
-                    topics.append((topic_id, titles[0]))
-        except Exception as e:
-            logger.warning(f"Feed topic clustering failed: {e}")
+        seen_titles: set = set()
+        for post in feed_topics[:20]:
+            title = str(post.get("title", ""))
+            if not title or len(title) < 10:
+                continue
+            title_key = title[:60].lower()
+            if title_key in seen_titles:
+                continue
+            seen_titles.add(title_key)
+            slug = title[:30].replace(" ", "_").lower()
+            topic_id = f"feed_{slug}"
+            topics.append((topic_id, title[:200]))
 
     # Source 2: Existing Sankalpa missions — only NON-moltbook missions.
     # Skip moltbook_ missions (already seeded) and moltbook_kg_ (API descriptions).
@@ -132,9 +123,9 @@ class MoltbookStrategyPlanner:
         self._state_dir = state_dir
         self._attention = None  # MahaAttention instance (lazy)
         self._attention_mission_ids: set = set()  # Missions already memorized
-        # Semantic matching caches (RAMA coordinates)
-        self._mission_coords: Dict[str, tuple] = {}  # mission_id → RAMA coords
-        self._coord_cache: Dict[str, tuple] = {}  # text[:200] → RAMA coords
+        # Semantic matching caches (tokenized keywords)
+        self._mission_tokens: Dict[str, frozenset] = {}  # mission_id → token set
+        self._token_cache: Dict[str, frozenset] = {}  # text[:200] → token set
         # Cache: mission_id → engagement stats
         self._engagement_cache: Dict[str, Dict[str, float]] = {}
         # Restore from disk
@@ -512,29 +503,26 @@ class MoltbookStrategyPlanner:
     def _semantic_dedup(
         self, topic: str, own_post_ids: Dict[str, Dict[str, object]],
     ) -> bool:
-        """Check if topic semantically overlaps with recent posts.
+        """Check if topic overlaps with recent posts via keyword Jaccard.
 
-        Uses combined metric (basin_cosine + hkr_similarity) — basin_cosine alone
-        has only 0.03 spread, making any threshold meaningless. The combined metric
-        with 0.10-0.18 spread can actually discriminate.
+        Jaccard > 0.4 means >40% keyword overlap = too similar to post again.
         """
-        from vibe_core.mahamantra.substrate.core.basin_map import (
-            basin_cosine,
-            hkr_similarity,
-        )
-
-        topic_coords = self._get_coords(topic.lower())
+        topic_tokens = self._tokenize(topic.lower())
+        if not topic_tokens:
+            return False
         for post_info in own_post_ids.values():
             if not isinstance(post_info, dict):
                 continue
             prev_title = post_info.get("title", "")
             if not prev_title or not isinstance(prev_title, str):
                 continue
-            prev_coords = self._get_coords(prev_title.lower())
-            bc = basin_cosine(topic_coords, prev_coords)
-            hkr = hkr_similarity(topic_coords, prev_coords)
-            combined = 0.6 * bc + 0.4 * hkr
-            if combined > 0.95:
+            prev_tokens = self._tokenize(prev_title.lower())
+            if not prev_tokens:
+                continue
+            intersection = len(topic_tokens & prev_tokens)
+            union = len(topic_tokens | prev_tokens)
+            jaccard = intersection / union if union > 0 else 0.0
+            if jaccard > 0.4:
                 return True
         return False
 
@@ -568,7 +556,7 @@ class MoltbookStrategyPlanner:
         2. Semantic fallback via RAMA coordinates + basin_cosine + hkr_similarity
         """
         self._ensure_attention(missions)
-        self._ensure_mission_coords(missions)
+        self._ensure_mission_tokens(missions)
         mission_map = {m.id: m for m in missions}
         matches: List[TopicMatch] = []
 
@@ -591,11 +579,11 @@ class MoltbookStrategyPlanner:
                     matched_mission_id = result.handler
                     relevance = 1.0
 
-            # Semantic fallback via RAMA coordinates
+            # Keyword Jaccard fallback — tokenized word overlap
             if matched_mission_id is None:
-                post_coords = self._get_coords(post_text)
+                post_tokens = self._tokenize(post_text)
                 matched_mission_id, relevance = self._semantic_match(
-                    post_coords, missions, self._mission_coords,
+                    post_tokens, missions, self._mission_tokens,
                 )
 
             if matched_mission_id and matched_mission_id in mission_map:
@@ -617,59 +605,75 @@ class MoltbookStrategyPlanner:
         matches.sort(key=lambda m: m.relevance, reverse=True)
         return matches
 
-    def _get_coords(self, text: str) -> tuple:
-        """Get RAMA coordinates for text. Cached by first 200 chars."""
+    # Stop words — common English words that carry no topical signal
+    _STOP_WORDS = frozenset({
+        "the", "a", "an", "and", "or", "in", "on", "at", "to", "for", "of",
+        "is", "are", "was", "were", "be", "been", "this", "that", "with",
+        "from", "by", "it", "its", "as", "not", "but", "no", "all", "any",
+        "do", "does", "did", "can", "could", "would", "should", "will",
+        "may", "might", "must", "shall", "has", "have", "had", "about",
+        "into", "over", "after", "before", "more", "most", "very", "just",
+        "also", "how", "what", "which", "who", "whom", "when", "where",
+        "why", "than", "then", "so", "if", "only", "own", "same", "too",
+        "each", "every", "both", "few", "some", "such", "other",
+    })
+
+    def _tokenize(self, text: str) -> frozenset:
+        """Tokenize text into content words. Cached by first 200 chars.
+
+        Strips punctuation, removes stop words and short tokens.
+        Returns frozenset for O(1) set operations.
+        """
         key = text[:200]
-        if key not in self._coord_cache:
-            from vibe_core.mahamantra.substrate.lotus_core import get_mahamantra
+        if key not in self._token_cache:
+            tokens = set()
+            for word in key.lower().split():
+                clean = "".join(c for c in word if c.isalnum())
+                if clean and clean not in self._STOP_WORDS and len(clean) > 2:
+                    tokens.add(clean)
+            self._token_cache[key] = frozenset(tokens)
+        return self._token_cache[key]
 
-            lotus = get_mahamantra()
-            self._coord_cache[key] = lotus.nama(key)
-        return self._coord_cache[key]
-
-    def _ensure_mission_coords(self, missions: List[Any]) -> None:
-        """Precompute RAMA coordinates for mission descriptions. Cached."""
+    def _ensure_mission_tokens(self, missions: List[Any]) -> None:
+        """Precompute token sets for mission descriptions. Cached."""
         for mission in missions:
-            if mission.id not in self._mission_coords:
-                self._mission_coords[mission.id] = self._get_coords(
+            if mission.id not in self._mission_tokens:
+                self._mission_tokens[mission.id] = self._tokenize(
                     mission.description.lower()
                 )
 
     @staticmethod
     def _semantic_match(
-        post_coords: tuple,
+        post_tokens: frozenset,
         missions: List[Any],
-        mission_coords: Dict[str, tuple],
+        mission_tokens: Dict[str, frozenset],
     ) -> tuple:
-        """Semantic matching via RAMA coordinates. Returns (mission_id, similarity).
+        """Keyword Jaccard matching — tokenized word overlap.
 
-        Combined metric: 60% basin_cosine (coarse field) + 40% hkr_similarity (fine fingerprint).
+        Compares content words (stop words removed) between post and missions.
+        This provides real discrimination:
+        - Same topic: 0.40-0.70 (shared domain keywords)
+        - Related: 0.10-0.30 (some shared vocabulary)
+        - Unrelated: 0.00 (no shared words)
 
-        Rank-based selection: picks the BEST match and requires a minimum margin
-        over the second-best. basin_cosine alone has only ~0.03 spread across all
-        texts — the combined metric has 0.10-0.18 spread. A flat threshold (0.75)
-        is useless when ALL scores exceed 0.89.
+        Previous approach (RAMA coordinates / basin_cosine) had 0.03 spread
+        across ALL text pairs — useless for discrimination.
 
-        Selection criteria:
-        1. Absolute floor: combined similarity must exceed 0.5 (filters truly
-           unrelated content like "pizza" vs "distributed systems" = 0.38)
-        2. Margin: best match must have margin > 0.02 over second-best
-           (if all missions equally close, no discriminating signal → None)
+        Returns (mission_id, jaccard_similarity).
+        Floor: Jaccard >= 0.1 (at least 1 shared content word).
         """
-        from vibe_core.mahamantra.substrate.core.basin_map import (
-            basin_cosine,
-            hkr_similarity,
-        )
+        if not post_tokens:
+            return None, 0.0
 
-        scores: List[tuple] = []  # (mission_id, combined_sim)
+        scores: List[tuple] = []  # (mission_id, jaccard)
         for mission in missions:
-            m_coords = mission_coords.get(mission.id)
-            if not m_coords:
+            m_tokens = mission_tokens.get(mission.id)
+            if not m_tokens:
                 continue
-            bc = basin_cosine(post_coords, m_coords)
-            hkr = hkr_similarity(post_coords, m_coords)
-            sim = 0.6 * bc + 0.4 * hkr
-            scores.append((mission.id, sim))
+            intersection = len(post_tokens & m_tokens)
+            union = len(post_tokens | m_tokens)
+            jaccard = intersection / union if union > 0 else 0.0
+            scores.append((mission.id, jaccard))
 
         if not scores:
             return None, 0.0
@@ -677,17 +681,9 @@ class MoltbookStrategyPlanner:
         scores.sort(key=lambda x: x[1], reverse=True)
         best_id, best_sim = scores[0]
 
-        # Floor: reject truly unrelated content
-        if best_sim < 0.5:
+        # Floor: at least 1 shared content word
+        if best_sim < 0.1:
             return None, 0.0
-
-        # Rank-based: require margin over second-best
-        if len(scores) > 1:
-            second_sim = scores[1][1]
-            margin = best_sim - second_sim
-            if margin < 0.02:
-                # All missions equally close — no discriminating signal
-                return None, 0.0
 
         return best_id, best_sim
 
@@ -730,30 +726,25 @@ class MoltbookStrategyPlanner:
         if not topic:
             return
 
-        # Find matching mission by semantic similarity (combined RAMA metric)
+        # Find matching mission by keyword Jaccard overlap
         missions = self.get_active_missions()
-        self._ensure_mission_coords(missions)
-        topic_coords = self._get_coords(topic.lower())
-
-        from vibe_core.mahamantra.substrate.core.basin_map import (
-            basin_cosine,
-            hkr_similarity,
-        )
+        self._ensure_mission_tokens(missions)
+        topic_tokens = self._tokenize(topic.lower())
 
         best_mission = None
         best_sim = 0.0
         for mission in missions:
-            m_coords = self._mission_coords.get(mission.id)
-            if not m_coords:
+            m_tokens = self._mission_tokens.get(mission.id)
+            if not m_tokens or not topic_tokens:
                 continue
-            bc = basin_cosine(topic_coords, m_coords)
-            hkr = hkr_similarity(topic_coords, m_coords)
-            combined = 0.6 * bc + 0.4 * hkr
-            if combined > best_sim:
-                best_sim = combined
+            intersection = len(topic_tokens & m_tokens)
+            union = len(topic_tokens | m_tokens)
+            jaccard = intersection / union if union > 0 else 0.0
+            if jaccard > best_sim:
+                best_sim = jaccard
                 best_mission = mission
 
-        if best_mission and best_sim >= 0.5:
+        if best_mission and best_sim >= 0.1:
             mission = best_mission
             # Update engagement cache
             cache = self._engagement_cache.setdefault(
