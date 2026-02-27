@@ -31,8 +31,8 @@ from vibe_core.mahamantra.protocols._seed import PARAMPARA
 assert int(__genesis__, 16) % PARAMPARA == 0, "BROKEN LINEAGE"
 
 # Core infrastructure
-from .audit_registry import AuditFinding, AuditRegistry, FindingSeverity, FindingStatus, get_registry
 from .audit_dispatcher import AuditDispatcher, AuditorProtocol, get_dispatcher
+from .audit_registry import AuditFinding, AuditRegistry, FindingSeverity, FindingStatus, get_registry
 from .kernel import AuditKernel
 
 __all__ = [

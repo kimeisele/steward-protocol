@@ -34,8 +34,8 @@ Author: The Mahamantra Itself
 """
 
 from __future__ import annotations
-from vibe_core.mahamantra.protocols._seed import KSETRAJNA, KSHETRA, LILA, QUARTERS, SHARANAGATI
 
+from vibe_core.mahamantra.protocols._seed import KSETRAJNA, KSHETRA, LILA, QUARTERS, SHARANAGATI
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "vyasa"
@@ -46,39 +46,36 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from typing import (
-    ClassVar,
     Final,
     Generic,
     Iterator,
     List,
-    Optional,
-    Protocol,
     Tuple,
-    Type,
     TypeVar,
-    runtime_checkable,
 )
 
 from vibe_core.mahamantra.protocols._core import (
     Level,
-    Quarter,
     MahamantraProtocolBase,
-    ProtocolIdentity,
     ProtocolCapability,
+    ProtocolIdentity,
+    Quarter,
 )
-
 
 # =============================================================================
 # LILA CONSTANTS - From Sacred Mathematics (seed.py is SSOT)
 # =============================================================================
-
 from vibe_core.mahamantra.substrate.seed import (
     LILA as LILA_LIMIT,  # 48 - Total Lila (16 * 3)
-    TRINITY as LILA_CYCLES,  # 3  - Trinity (Hare, Krishna, Rama)
+)
+from vibe_core.mahamantra.substrate.seed import (
     NAVADVIPA as NAVADVIPA_PHASE,  # 24 - Build Phase
-    PURI as PURI_PHASE,  # 24 - Runtime Phase
+)
+from vibe_core.mahamantra.substrate.seed import (
     PARAMPARA,  # 37 - Lineage verification
-    KSHETRA as KSETRA_COUNT,  # 24 - Boundary (Prakriti)
+)
+from vibe_core.mahamantra.substrate.seed import (
+    TRINITY as LILA_CYCLES,  # 3  - Trinity (Hare, Krishna, Rama)
 )
 
 # From _core.py: KSETRA_COUNT = 24 (Prakriti elements)
@@ -248,7 +245,7 @@ class LilaBoundary(Generic[T]):
             # STRICT: Navadvipa boundary is HARD LIMIT
             if len(self.items) >= LILA_BOUNDARY:
                 raise LilaBoundaryViolation(
-                    f"Cannot add item - Navadvipa boundary enforced (strict=True)",
+                    "Cannot add item - Navadvipa boundary enforced (strict=True)",
                     current_count=len(self.items),
                     boundary=LILA_BOUNDARY,
                     phase=LilaPhase.NAVADVIPA,

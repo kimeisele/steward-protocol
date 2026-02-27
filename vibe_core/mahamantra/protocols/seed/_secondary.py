@@ -7,16 +7,15 @@ These constants are derived from TIER 1 primary derivations.
 
 from typing import Final
 
-from ._axioms import WORDS, TRINITY, HALVES, HARE_COUNT
+from ._axioms import HALVES, HARE_COUNT, TRINITY, WORDS
 from ._primary import (
-    QUARTERS,
-    KSETRAJNA,
     HALF_SIZE,
-    LILA,
+    KSETRAJNA,
     KSHETRA,
+    LILA,
     NAVA,
+    QUARTERS,
     SHARANAGATI,
-    AKSARA_COUNT,
 )
 
 # MAHAJANA_COUNT = KSHETRA // HALVES = 24 // 2 = 12

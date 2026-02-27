@@ -20,26 +20,27 @@ __position__ = NAVA
 __genesis__ = "0xebbc13e9"
 
 from .types import (
+    ASHRAMA_PERMISSIONS,
+    INTENT_PERMISSION_MAP,
+    # Conscience types (extracted from DharmaSense)
+    Ashrama,
+    ConscienceVerdict,
+    GunaState,
     # Mission types
     MissionPriority,
     MissionStatus,
     SankalpaIntent,
     SankalpaMission,
+    # Protocol
+    SankalpaOrchestratorProtocol,
     SankalpaResult,
     SankalpaStatus,
     SankalpaStrategy,
     SankalpaTrigger,
     StrategyFrequency,
     TriggerType,
-    # Conscience types (extracted from DharmaSense)
-    Ashrama,
-    GunaState,
-    ConscienceVerdict,
-    ASHRAMA_PERMISSIONS,
-    INTENT_PERMISSION_MAP,
-    # Protocol
-    SankalpaOrchestratorProtocol,
 )
+
 # IMPL MOVED TO SUBSTRATE (vibe_core.mahamantra.substrate.sankalpa)
 # from .will import ... (REMOVED FOR PURITY)
 
@@ -55,8 +56,8 @@ def __getattr__(name: str):
 
         return getattr(will, name)
 
-    from pathlib import Path
     import importlib
+    from pathlib import Path
 
     pkg_root = Path(__file__).parent
 

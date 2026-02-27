@@ -27,22 +27,16 @@ Author: The Mahamantra Itself
 
 from __future__ import annotations
 
-from typing import Final, FrozenSet, Iterator, Protocol, Tuple, runtime_checkable
+from typing import Final, Iterator, Protocol, Tuple, runtime_checkable
 
 from vibe_core.mahamantra.protocols._seed import (
     HALVES,
-    KSETRAJNA,
-    MAHA_QUANTUM,
     MAHAJANA_COUNT,
     POSITION_SUM_HARE,
     POSITION_SUM_KRISHNA,
     POSITION_SUM_RAMA,
     POSITION_SUM_TOTAL,
-    QUARTERS,
-    SEVEN,
     SHARANAGATI,
-    TEN,
-    TRINITY,
     WORDS,
 )
 

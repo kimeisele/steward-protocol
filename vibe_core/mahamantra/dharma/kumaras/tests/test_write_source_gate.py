@@ -10,8 +10,6 @@ Verifies:
 5. Backup .bak file is created before overwrite
 """
 
-import textwrap
-from pathlib import Path
 
 import pytest
 
@@ -20,7 +18,6 @@ from vibe_core.mahamantra.substrate.gate_providers import (
     IOPolicy,
 )
 from vibe_core.mahamantra.substrate.guna import Guna
-
 
 # =============================================================================
 # write_source() TESTS

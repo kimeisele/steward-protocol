@@ -55,7 +55,6 @@ from vibe_core.mahamantra.cli.protocol import (
     CLIState,
 )
 
-
 # =============================================================================
 # CLI ENTRY PROTOCOL - What an entry point MUST be
 # =============================================================================

@@ -10,10 +10,8 @@ Tests what matters:
     6. Backward compat: compose_from_wave delegates to adapter
 """
 
-import pytest
 
-from vibe_core.mahamantra.protocols._seed import HALVES, PANCHA, QUARTERS, SEVEN, WORDS
-
+from vibe_core.mahamantra.protocols._seed import HALVES, PANCHA, QUARTERS, SEVEN
 
 # =============================================================================
 # PROTOCOL COMPLIANCE
@@ -33,8 +31,8 @@ class TestCompositionProtocol:
         )  # runtime_checkable Protocol
 
     def test_adapter_satisfies_protocol(self):
-        from vibe_core.mahamantra.protocols._composition import CompositionProtocol
         from vibe_core.mahamantra.adapters.composition import MahaComposition
+        from vibe_core.mahamantra.protocols._composition import CompositionProtocol
 
         adapter = MahaComposition()
         assert isinstance(adapter, CompositionProtocol)

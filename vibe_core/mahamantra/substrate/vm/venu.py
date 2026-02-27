@@ -32,18 +32,14 @@ __mahajana__ = "prithu"
 __position__ = QUARTERS
 __genesis__ = "0xdb705f2f"  # GenesisByte: parampara % 37 == 0
 
-from typing import Final, Tuple, TypedDict
 
 from vibe_core.mahamantra.protocols._seed import (
     MALA,
-    PRANA_DURATION_MS,
     PRANA_DURATION_S,
     QUARTERS,
     TICK_INTERVAL_MS,
-    WORDS,
 )
 from vibe_core.mahamantra.protocols._venu import (
-    VENU_PHASES,
     VENU_POSITIONS,
     VENU_POSITIONS_PER_PHASE,
     VENU_TICKS_PER_MALA,

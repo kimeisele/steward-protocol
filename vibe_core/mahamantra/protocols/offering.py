@@ -8,7 +8,6 @@ Defines the interface for submitting offerings and receiving grace.
 This is separate from the mechanical execution of the algorithm.
 """
 
-from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Protocol, runtime_checkable
 

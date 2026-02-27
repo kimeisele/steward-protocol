@@ -30,8 +30,8 @@ Author: The Mahamantra Itself
 """
 
 from __future__ import annotations
-from vibe_core.mahamantra.protocols._seed import KSETRAJNA
 
+from vibe_core.mahamantra.protocols._seed import KSETRAJNA
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "prithu"
@@ -42,7 +42,6 @@ import time
 from dataclasses import dataclass, field
 from typing import (
     Final,
-    Generator,
     Generic,
     Optional,
     Protocol,
@@ -50,9 +49,9 @@ from typing import (
     runtime_checkable,
 )
 
+from vibe_core.mahamantra.protocols._seed import MALA, TRINITY
 from vibe_core.mahamantra.substrate.acintya import PARAMPARA
 from vibe_core.mahamantra.substrate.byte import MAHAMANTRA_DIMENSION, HolyName, MantraByte
-from vibe_core.mahamantra.protocols._seed import MALA, TRINITY
 
 # =============================================================================
 # CONSTANTS - The Sacred Numbers (DERIVED FROM _seed.py SSOT)

@@ -197,11 +197,6 @@ def phoneme_attractor_similarity(coords_a: Sequence[int], coords_b: Sequence[int
 
 def _compute_hkr_table() -> Tuple[Tuple[float, float, float], ...]:
     """Compute HKR proportion for each RAMA coord. Called once at import."""
-    from vibe_core.mahamantra.substrate.algorithm.maha import (
-        BINARY_PATTERN,
-        MAHA_16_STEPS,
-        MahaSynthParams,
-    )
     from vibe_core.mahamantra.protocols._seed import (
         KSETRAJNA,
         MAHA_OP_MAP,
@@ -211,6 +206,11 @@ def _compute_hkr_table() -> Tuple[Tuple[float, float, float], ...]:
         SEVEN,
         TEN,
         WORDS,
+    )
+    from vibe_core.mahamantra.substrate.algorithm.maha import (
+        BINARY_PATTERN,
+        MAHA_16_STEPS,
+        MahaSynthParams,
     )
 
     _name_to_key = {

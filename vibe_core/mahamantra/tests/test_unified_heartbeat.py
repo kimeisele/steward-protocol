@@ -21,7 +21,6 @@ from __future__ import annotations
 import pytest
 
 from vibe_core.mahamantra.kernel.singularity import Mahamantra, mahamantra
-from vibe_core.mahamantra.substrate.venu_orchestrator import VenuOrchestrator
 
 # =============================================================================
 # TEST 1: ONE SINGULARITY (Ekamevadvitiyam)
@@ -276,7 +275,6 @@ class TestIntentResolverInTick:
     def test_tick_processes_queued_intents(self):
         """A queued intent gets resolved when tick() fires."""
         from vibe_core.mahamantra.kernel.intent import (
-            IntentStatus,
             IntentType,
             MantraIntent,
             get_kernel,

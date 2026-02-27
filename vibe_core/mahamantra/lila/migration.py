@@ -21,7 +21,6 @@ __genesis__ = "0x263ac482"  # GenesisByte: parampara % 37 == 0
 
 from typing import Protocol, runtime_checkable
 
-
 # =============================================================================
 # BASE LEGACY SERVICE PROTOCOL
 # =============================================================================

@@ -7,8 +7,8 @@ Nakshatras, Cosmic Frame, Timing, and Jiva Qualities.
 
 from typing import Final
 
-from ._axioms import WORDS, PANCHA, HALVES, HARE_COUNT, TRINITY
-from ._primary import QUARTERS, KSETRAJNA, AKSARA_COUNT, LILA, SHARANAGATI, KSHETRA, NAVA
+from ._axioms import HALVES, PANCHA, TRINITY, WORDS
+from ._primary import AKSARA_COUNT, KSETRAJNA, LILA, NAVA, QUARTERS, SHARANAGATI
 from ._secondary import JIVA_CYCLE, MALA, TEN
 
 # NAKSHATRAS = JIVA_CYCLE // WORDS = 432 // 16 = 27

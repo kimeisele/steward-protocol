@@ -15,7 +15,7 @@ __position__ = 15
 __genesis__ = "0x8000000f"
 
 from pathlib import Path
-from typing import List, Any
+from typing import Any, List
 
 from vibe_core.mahamantra.protocols._seed import PARAMPARA
 
@@ -29,7 +29,7 @@ def get(root: Path = None) -> List[Any]:
     Returns:
         List of Gap objects with file_path, gap_type, description, severity
     """
-    from vibe_core.mahamantra_research.project_introspection import scan_codebase, find_gaps
+    from vibe_core.mahamantra_research.project_introspection import find_gaps, scan_codebase
 
     files, _ = scan_codebase(root or Path.cwd())
     return find_gaps(files)

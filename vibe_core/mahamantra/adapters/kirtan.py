@@ -17,10 +17,9 @@ ARCHITECTURE:
 
 from __future__ import annotations
 
-from typing import Callable, List, Optional
+from typing import List, Optional
 
 from vibe_core.mahamantra.protocols._navabhakti import (
-    VMCapabilityProtocol,
     VMOpDeclaration,
 )
 from vibe_core.mahamantra.render import render

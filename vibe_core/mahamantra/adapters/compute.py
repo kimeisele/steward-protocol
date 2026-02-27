@@ -59,12 +59,12 @@ __position__ = 3
 __genesis__ = "0x6e44c339"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass
-from typing import Dict, Final, Iterator, List, Literal, Optional
+from typing import Dict, Final, Iterator, Literal, Optional
 
 from vibe_core.mahamantra.protocols._seed import (
-    WORDS,  # 16 - Mahamantra words = SIMD lanes
-    QUARTERS,  # 4 - Memory hierarchy levels
     QUALITIES,  # 64 - Cache line size
+    QUARTERS,  # 4 - Memory hierarchy levels
+    WORDS,  # 16 - Mahamantra words = SIMD lanes
 )
 
 # =============================================================================

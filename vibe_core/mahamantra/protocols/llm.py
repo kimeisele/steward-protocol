@@ -1,4 +1,7 @@
-from typing import Protocol, runtime_checkable, List, Optional, Dict, Union, Callable, Tuple
+from dataclasses import dataclass
+from enum import Enum
+from typing import Callable, Dict, List, Optional, Protocol, Tuple, Union, runtime_checkable
+
 from vibe_core.mahamantra.protocols._seed import (
     HALVES,
     HARE_COUNT,
@@ -12,8 +15,6 @@ from vibe_core.mahamantra.protocols._seed import (
     TEN,
     TRINITY,
 )
-from dataclasses import dataclass
-from enum import Enum
 
 # Strict Type Declaration for JSON-like metadata
 JsonValue = Union[str, int, float, bool, None, Dict[str, "JsonValue"], List["JsonValue"]]

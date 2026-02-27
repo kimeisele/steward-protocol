@@ -17,15 +17,15 @@ __mahajana__ = "kapila"  # Position 6 - Analysis/Biology
 __position__ = 6
 __genesis__ = "0x33b8c1e2"  # GenesisByte: parampara % 37 == 0
 
+import random
 import time
 from dataclasses import dataclass
-from typing import Final, Dict, List, Set, Optional
-import random
+from typing import Dict, Final, List
 
 from vibe_core.mahamantra.protocols._seed import (
+    HARE_COUNT,  # 8 - bases per k-mer (fits in 16 bits)
     QUARTERS,  # 4 - A, C, G, T
     WORDS,  # 16 - 16 bits = 8-mer
-    HARE_COUNT,  # 8 - bases per k-mer (fits in 16 bits)
 )
 
 # =============================================================================
@@ -386,9 +386,9 @@ def main():
     print("  Naive search time grows LINEARLY with genome size.")
     print()
     print("  This is the Mahamantra structure:")
-    print(f"    QUARTERS = 4 bases → 2 bits per base")
-    print(f"    8 bases × 2 bits = 16 bits = WORDS")
-    print(f"    Direct addressing: O(1) lookup")
+    print("    QUARTERS = 4 bases → 2 bits per base")
+    print("    8 bases × 2 bits = 16 bits = WORDS")
+    print("    Direct addressing: O(1) lookup")
     print()
     print("  For human genome (3 billion bases):")
     naive_per_query = result3.naive_search_ms / 500 * (3_000_000_000 / 500_000)

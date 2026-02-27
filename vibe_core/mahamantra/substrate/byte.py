@@ -33,7 +33,7 @@ __genesis__ = "0x0752f8c3"  # GenesisByte: parampara % 37 == 0
 import math
 from dataclasses import dataclass, field
 from datetime import datetime
-from enum import IntEnum, IntFlag
+from enum import IntEnum, IntFlag  # noqa: F401 (re-export: IntEnum)
 from typing import TYPE_CHECKING, Final, List, NewType, Optional, Tuple, Union
 
 if TYPE_CHECKING:
@@ -56,7 +56,7 @@ from vibe_core.mahamantra.substrate.seed import (
     HolyName,
 )
 from vibe_core.mahamantra.substrate.seed import (
-    TRINITY as LILA_CYCLES,  # 3
+    TRINITY as LILA_CYCLES,  # 3  # noqa: F401 (re-export: LILA_CYCLES)
 )
 from vibe_core.mahamantra.substrate.seed import (
     # Mathematical constants - THE SSOT (seed.py is THE source)

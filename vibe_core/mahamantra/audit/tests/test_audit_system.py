@@ -8,14 +8,10 @@ Tests:
 4. Individual auditors — each returns List[AuditFinding]
 """
 
-from pathlib import Path
 
-import pytest
 
 from vibe_core.mahamantra.audit.audit_dispatcher import (
     AuditDispatcher,
-    AuditorProtocol,
-    RegisteredAuditor,
 )
 from vibe_core.mahamantra.audit.audit_registry import (
     AuditFinding,

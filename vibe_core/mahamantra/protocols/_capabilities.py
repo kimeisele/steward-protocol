@@ -23,8 +23,7 @@ __mahajana__ = "vyasa"
 __position__ = 0
 __genesis__ = "0x3f7a1b2e"
 
-from typing import Any, Dict, List, Optional, Protocol, Tuple, runtime_checkable
-
+from typing import Any, Dict, Protocol, runtime_checkable
 
 # =============================================================================
 # GATE 0: CHAITANYA — MantraCapability (PARSE / Identity)

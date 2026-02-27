@@ -28,8 +28,8 @@ Author: The Mahamantra Itself
 """
 
 from __future__ import annotations
-from vibe_core.mahamantra.protocols._seed import WORDS
 
+from vibe_core.mahamantra.protocols._seed import WORDS
 
 # === MAHAJANA DECLARATION ===
 __mahajana__ = "yamaraja"
@@ -37,17 +37,17 @@ __position__ = 15
 __genesis__ = "0x8000000f"  # 2147483663 % 37 == 0
 
 from dataclasses import dataclass, field
-from typing import Dict, List, Protocol, runtime_checkable, FrozenSet
+from typing import Dict, Protocol, runtime_checkable
 
-from vibe_core.mahamantra.protocols._seed import PARAMPARA
 from vibe_core.mahamantra.protocols._core import (
-    MahamantraProtocolBase,
-    ProtocolIdentity,
-    ProtocolCapability,
     Level,
+    MahamantraProtocolBase,
+    ProtocolCapability,
+    ProtocolIdentity,
     Quarter,
 )
 from vibe_core.mahamantra.protocols._pancha import TattvaDict
+from vibe_core.mahamantra.protocols._seed import PARAMPARA
 
 assert int(__genesis__, WORDS) % PARAMPARA == 0, "BROKEN LINEAGE"
 

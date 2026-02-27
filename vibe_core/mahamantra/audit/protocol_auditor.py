@@ -17,10 +17,10 @@ __genesis__ = "0x8000000f"
 
 import importlib
 import logging
-from typing import List, Optional, Tuple
+from typing import List, Tuple
 
-from vibe_core.mahamantra.protocols._seed import PARAMPARA
 from vibe_core.mahamantra.audit.audit_registry import AuditFinding, FindingSeverity
+from vibe_core.mahamantra.protocols._seed import PARAMPARA
 
 assert int(__genesis__, 16) % PARAMPARA == 0, "BROKEN LINEAGE"
 

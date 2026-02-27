@@ -11,8 +11,9 @@ This ensures NO COLLISIONS between 'Ga' (Action) and 'A' (Existence).
 """
 
 from typing import List, Optional, Tuple
-from vibe_core.mahamantra.substrate.lotus_radix import lotus_256bit
+
 from vibe_core.mahamantra.namarupa.akshara import Akshara, SyllableEngine
+from vibe_core.mahamantra.substrate.lotus_radix import lotus_256bit
 
 # =============================================================================
 # MANTRA BYTE (256-Bit Address)

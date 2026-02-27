@@ -15,15 +15,13 @@ SOURCE OF TRUTH:
 
 from dataclasses import dataclass, field
 from enum import Enum, auto
-from typing import List, Optional, Tuple
+from typing import List
 
-from vibe_core.reactor.matrix import Varga, Sthana, analyze_phonemes, PHONEME_MATRIX
 from vibe_core.mahamantra.substrate.phonetics.shabda import (
     SANSKRIT_PHONEME_MAP,
-    VibrationSignature,
-    NADI_RESONANCE,
     VoicingType,
 )
+from vibe_core.reactor.matrix import PHONEME_MATRIX, Sthana, Varga
 
 # =============================================================================
 # PHYSICS MODEL

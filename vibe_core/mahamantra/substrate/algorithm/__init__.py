@@ -28,9 +28,9 @@ from .maha import (
     find_attractor,
     maha_oscillate,
     maha_oscillate_optimized,
-    maha_transform,
     # PRIMITIVE FUNCTIONS - THE API
     maha_step,
+    maha_transform,
 )
 
 __all__ = [

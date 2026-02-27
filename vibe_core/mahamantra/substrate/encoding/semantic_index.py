@@ -26,42 +26,35 @@ from __future__ import annotations
 
 import json
 from collections import defaultdict
-from functools import lru_cache
 from pathlib import Path
-from typing import Dict, Final, FrozenSet, List, Optional, Sequence, Tuple
+from typing import Dict, Final, FrozenSet, List, Optional, Tuple
 
 from vibe_core.mahamantra.protocols._seed import (
     PANCHA,
-    SEVEN,
     TRINITY,
-    WORDS,
 )
-from vibe_core.mahamantra.substrate.pancha_walk import (
-    COORD_ELEMENT,
-    COORD_HARMONIC,
-    COORD_SUB,
-    COORD_VARGA,
-    ELEMENT_NAMES,
-    IS_SHRUTI,
-)
+
+# =============================================================================
+# DATA PATH
+# =============================================================================
+from vibe_core.mahamantra.substrate._paths import DATA_DIR
 from vibe_core.mahamantra.substrate.basin_map import (
     BASIN_COUNT,
     BASIN_INDEX,
-    BASIN_LIST,
     COORD_BASIN,
     COORD_HKR,
     COORD_PHONEME_ATTRACTOR,
     PHONEME_ATTRACTOR_COUNT,
     PHONEME_ATTRACTOR_INDEX,
-    basin_jaccard,
+)
+from vibe_core.mahamantra.substrate.pancha_walk import (
+    COORD_ELEMENT,
+    COORD_HARMONIC,
+    COORD_VARGA,
+    ELEMENT_NAMES,
+    IS_SHRUTI,
 )
 from vibe_core.mahamantra.substrate.rama_grid import VARNAMALA_TOTAL
-
-# =============================================================================
-# DATA PATH
-# =============================================================================
-
-from vibe_core.mahamantra.substrate._paths import DATA_DIR
 
 _DATA_DIR: Final[Path] = DATA_DIR
 _LEXICON_PATH: Final[Path] = _DATA_DIR / "rama_lexicon.json"

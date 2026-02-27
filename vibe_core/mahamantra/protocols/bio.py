@@ -1,6 +1,7 @@
-from typing import Protocol, runtime_checkable, Tuple, List
-from vibe_core.mahamantra.protocols._seed import KSETRAJNA
 from dataclasses import dataclass
+from typing import List, Protocol, Tuple, runtime_checkable
+
+from vibe_core.mahamantra.protocols._seed import KSETRAJNA
 
 
 @runtime_checkable

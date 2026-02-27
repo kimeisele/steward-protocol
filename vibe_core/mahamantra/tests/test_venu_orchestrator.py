@@ -20,10 +20,13 @@ from vibe_core.mahamantra.protocols._seed import (
     MAHAMANTRA_WORD_PATTERN,
     MURALI_HOLES,
     QUARTERS,
-    SEVEN,
     VAMSI_HOLES,
     VENU_HOLES,
     WORDS,
+)
+from vibe_core.mahamantra.protocols._venu import (
+    DIWEvent,
+    DIWSubscriberProtocol,
 )
 from vibe_core.mahamantra.protocols.diw import (
     DIW_MASK,
@@ -34,15 +37,10 @@ from vibe_core.mahamantra.protocols.diw import (
     unpack,
 )
 from vibe_core.mahamantra.substrate.venu_orchestrator import (
+    _NAME_TO_ENCODING,
     THE_FLUTE_CYCLE,
     VenuOrchestrator,
-    _NAME_TO_ENCODING,
 )
-from vibe_core.mahamantra.protocols._venu import (
-    DIWEvent,
-    DIWSubscriberProtocol,
-)
-
 
 # =============================================================================
 # FIXTURES
@@ -161,7 +159,7 @@ class TestStep:
 
     def test_step_carries_position_in_condition_bits(self, orch: VenuOrchestrator):
         """step() embeds tick position into CONDITION bits (27-30)."""
-        from vibe_core.mahamantra.protocols.diw import CONDITION_SHIFT, CONDITION_MASK
+        from vibe_core.mahamantra.protocols.diw import CONDITION_MASK, CONDITION_SHIFT
         for i in range(WORDS):
             diw = orch.step()
             position = (diw >> CONDITION_SHIFT) & CONDITION_MASK
@@ -857,8 +855,8 @@ class TestSharedOrchestrator:
 
     def test_boot_path_shares_orchestrator(self):
         """VenuService registers its orchestrator; Chamber resolves the same one."""
-        from vibe_core.services.venu_service import VenuService
         from vibe_core.mahamantra.substrate.chamber import _resolve_orchestrator
+        from vibe_core.services.venu_service import VenuService
 
         svc = VenuService()
         resolved = _resolve_orchestrator()
@@ -866,8 +864,8 @@ class TestSharedOrchestrator:
 
     def test_boot_path_chamber_uses_shared(self):
         """get_chamber() uses the VenuService orchestrator when booted."""
-        from vibe_core.services.venu_service import VenuService
         from vibe_core.mahamantra.substrate.chamber import get_chamber, reset_chamber
+        from vibe_core.services.venu_service import VenuService
 
         reset_chamber()
         svc = VenuService()
@@ -884,8 +882,8 @@ class TestSharedOrchestrator:
 
     def test_shared_orchestrator_ticks_propagate(self):
         """Ticks on the shared orchestrator are visible to the chamber."""
-        from vibe_core.services.venu_service import VenuService
         from vibe_core.mahamantra.substrate.chamber import get_chamber, reset_chamber
+        from vibe_core.services.venu_service import VenuService
 
         reset_chamber()
         svc = VenuService()
@@ -901,12 +899,12 @@ class TestSharedOrchestrator:
 
     def test_shared_subscribers_receive_from_both(self):
         """A subscriber on the shared orchestrator receives DIW from any caller."""
-        from vibe_core.services.venu_service import VenuService
         from vibe_core.mahamantra.substrate.chamber import get_chamber, reset_chamber
+        from vibe_core.services.venu_service import VenuService
 
         reset_chamber()
         svc = VenuService()
-        chamber = get_chamber()
+        _chamber = get_chamber()
 
         sub = _MockSubscriber("shared")
         svc.orchestrator.subscribe(sub)

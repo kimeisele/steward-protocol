@@ -30,6 +30,7 @@ from typing import TYPE_CHECKING, Dict, List, Optional, TypedDict
 
 if TYPE_CHECKING:
     from pathlib import Path
+
     from vibe_core.state.state_service import StateServiceProtocol
 
 

@@ -4,22 +4,20 @@ Tests for substrate/language/phonetics.py — 3D Syllable Vectors from CMU ARPAb
 Tests what is DERIVED from the protocol, not invented.
 """
 
-import pytest
 
-from vibe_core.mahamantra.protocols._seed import HALVES, KSETRAJNA, QUARTERS
-from vibe_core.mahamantra.substrate.language.types import RhythmProfile, SyllableVector
+from vibe_core.mahamantra.protocols._seed import KSETRAJNA
 from vibe_core.mahamantra.substrate.language.phonetics import (
     _VOWEL_GROUP_RE,
     _WORD_TOKEN_RE,
     _fallback_vectors,
-    parse_arpabet,
     _varga_height,
+    parse_arpabet,
     scan_syllable_rhythm,
     stress_for_word,
     syllable_vectors_for_word,
 )
+from vibe_core.mahamantra.substrate.language.types import RhythmProfile, SyllableVector
 from vibe_core.mahamantra.substrate.phonetic_bridge import VargaIndex
-
 
 # =============================================================================
 # _varga_height: VargaIndex → 1-5 (PANCHA scale)

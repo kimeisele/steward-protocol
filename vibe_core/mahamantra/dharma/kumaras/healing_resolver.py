@@ -39,7 +39,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Dict
 
 if TYPE_CHECKING:
-    from vibe_core.mahamantra.kernel.intent import MantraIntent, IntentResult
+    from vibe_core.mahamantra.kernel.intent import IntentResult, MantraIntent
     from vibe_core.mahamantra.substrate.lotus_core import MahamantraLotus
     from vibe_core.mahamantra.substrate.pancha_tattva import TattvaGate
 
@@ -85,8 +85,8 @@ class HealingIntentResolver:
 
     def _resolve_validate(self, intent: "MantraIntent") -> tuple:
         """Resolve Step 1: Extract + validate params. Returns (file_path, rule_id, dry_run) or IntentResult."""
-        from vibe_core.mahamantra.kernel.intent import IntentResult, IntentStatus
         from vibe_core.mahamantra import Mahajana
+        from vibe_core.mahamantra.kernel.intent import IntentResult, IntentStatus
 
         file_path_str = intent.params.get("file_path", "")
         rule_id = intent.params.get("rule_id", "")
@@ -123,9 +123,9 @@ class HealingIntentResolver:
     def _resolve_sattva(self, intent: "MantraIntent", file_path: Path, rule_id: str) -> tuple:
         """Resolve Step 2: SATTVA phase — Gates 0-3, CST surgery in RAM.
         Returns (cell_results, purified, seed, attractor) or IntentResult on failure."""
+        from vibe_core.mahamantra import Mahajana
         from vibe_core.mahamantra.kernel.intent import IntentResult, IntentStatus
         from vibe_core.mahamantra.substrate.pancha_tattva import TattvaGate
-        from vibe_core.mahamantra import Mahajana
 
         lotus = self._get_lotus()
         healer = get_cellular_healer()
@@ -185,10 +185,10 @@ class HealingIntentResolver:
     ) -> "IntentResult":
         """Resolve Step 3: RAJAS phase — Gate 4 SYNC, governed write.
         Returns IntentResult (dry_run or committed)."""
-        from vibe_core.mahamantra.kernel.intent import IntentResult, IntentStatus
-        from vibe_core.mahamantra.substrate.pancha_tattva import TattvaGate
-        from vibe_core.mahamantra.substrate.guna import Guna
         from vibe_core.mahamantra import Mahajana
+        from vibe_core.mahamantra.kernel.intent import IntentResult, IntentStatus
+        from vibe_core.mahamantra.substrate.guna import Guna
+        from vibe_core.mahamantra.substrate.pancha_tattva import TattvaGate
 
         lotus = self._get_lotus()
 
@@ -252,8 +252,8 @@ class HealingIntentResolver:
 
     def resolve(self, intent: "MantraIntent") -> "IntentResult":
         """Resolve a HEAL intent through the 5-gate pipeline. Chains _resolve_* steps."""
-        from vibe_core.mahamantra.kernel.intent import IntentResult, IntentStatus
         from vibe_core.mahamantra import Mahajana
+        from vibe_core.mahamantra.kernel.intent import IntentResult, IntentStatus
 
         validated = self._resolve_validate(intent)
         if isinstance(validated, IntentResult):

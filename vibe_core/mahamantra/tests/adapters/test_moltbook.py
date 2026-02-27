@@ -33,7 +33,6 @@ from vibe_core.mahamantra.adapters.moltbook import (
     MoltbookClient,
     MoltbookLimits,
     RateLimitState,
-    run_async,
 )
 
 # =============================================================================
@@ -537,13 +536,6 @@ class TestCaptchaChamberNewScorers:
         """CaptchaChamber.solve() uses all 6 scorers."""
         from vibe_core.mahamantra.adapters.captcha_decoder import (
             CONFIDENCE_THRESHOLD,
-            _STRATEGIES,
-            _score_completeness,
-            _score_consensus,
-            _score_decode_fidelity,
-            _score_expression,
-            _score_range,
-            _score_structural_conformity,
         )
         # Verify threshold is scaled for 6 scorers (max 6.0)
         assert CONFIDENCE_THRESHOLD == 2.25

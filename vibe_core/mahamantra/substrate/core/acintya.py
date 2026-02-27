@@ -60,24 +60,18 @@ __position__ = 0
 __genesis__ = "0x18aa5d64"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass
-from typing import Final, Protocol, runtime_checkable, Union
 from enum import IntEnum
+from typing import Final, Protocol, Union, runtime_checkable
 
 # =============================================================================
 # IMPORT FROM TATTVA.PY - The Shastra-konform Structure
 # =============================================================================
 # Now lives in mahamantra/substrate/tattva.py (THE canonical location)
-
 from vibe_core.mahamantra.substrate.tattva import (
-    Purushottama,
     PURUSHOTTAMA,
-    KshetraElement,
-    GuruTattva,
-    GuruConnection,
-    JIVA,
     SYSTEM_MANIFESTATION,  # SSOT for 37
+    Purushottama,
 )
-
 
 # =============================================================================
 # SAMKHYA ARCHITECTURE: THE 37 (Manifestation in System)
@@ -554,8 +548,10 @@ def verify_parampara(lineage_hash: int) -> bool:
 
 # Sacred Constants - imported from URSUBSTRAT (seed.py)
 from vibe_core.mahamantra.substrate.seed import (
-    TRINITY,  # 3 = Hare, Krishna, Rama (essence/source)
     PARAMPARA,  # 37 = 24 + 12 + 1 (the link)
+    TRINITY,  # 3 = Hare, Krishna, Rama (essence/source)
+)
+from vibe_core.mahamantra.substrate.seed import (
     QUARTERS as PHASES,  # 4 = GENESIS, DHARMA, KARMA, MOKSHA (structure)
 )
 

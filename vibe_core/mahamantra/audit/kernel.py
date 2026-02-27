@@ -25,7 +25,10 @@ __genesis__ = "0x8000000f"
 import logging
 from typing import Dict, List, Optional
 
-from vibe_core.mahamantra.protocols._seed import PARAMPARA
+from vibe_core.mahamantra.audit.audit_dispatcher import (
+    AuditDispatcher,
+    get_dispatcher,
+)
 from vibe_core.mahamantra.audit.audit_registry import (
     AuditFinding,
     AuditRegistry,
@@ -33,10 +36,7 @@ from vibe_core.mahamantra.audit.audit_registry import (
     FindingStatus,
     get_registry,
 )
-from vibe_core.mahamantra.audit.audit_dispatcher import (
-    AuditDispatcher,
-    get_dispatcher,
-)
+from vibe_core.mahamantra.protocols._seed import PARAMPARA
 
 assert int(__genesis__, 16) % PARAMPARA == 0, "BROKEN LINEAGE"
 

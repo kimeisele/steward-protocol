@@ -64,13 +64,12 @@ __position__ = 5
 __genesis__ = "0xd4e79076"  # GenesisByte: parampara % 37 == 0
 
 import hashlib
-from dataclasses import dataclass, field
-from enum import Enum, auto
-from typing import Final, FrozenSet, List, Optional, Tuple
+from dataclasses import dataclass
+from enum import Enum
+from typing import Final, FrozenSet, Optional, Tuple
 
 # SSOT: All constants from _seed.py
 from vibe_core.mahamantra.protocols._seed import (
-    COSMIC_FRAME,  # = 21600
     JIVA_QUALITIES,  # = 50
     PARAMPARA,  # = 37
 )

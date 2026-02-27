@@ -13,9 +13,6 @@ file reorganization without breaking any imports.
 import importlib
 import sys
 import textwrap
-from pathlib import Path
-
-import pytest
 
 
 class TestMoveProof:

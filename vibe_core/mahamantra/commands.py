@@ -175,8 +175,8 @@ def cli_chant(
 
     # === BUILD RESULT from VM outputs ===
     last = round_results[-1] if round_results else {}
-    last_execution = last.get("execution", {}) if last else {}
-    last_yajna = last.get("yajna", {}) if last else {}
+    _last_execution = last.get("execution", {}) if last else {}
+    _last_yajna = last.get("yajna", {}) if last else {}
 
     total_cycles = sum(r.get("execution", {}).get("kirtan_cycles", 0) for r in round_results)
     total_switches = sum(r.get("yajna", {}).get("switch_count", 0) for r in round_results)
@@ -684,7 +684,7 @@ def cli_veda(
     vm_verse = vm_result.get("verse", {})
     vm_smaranam = vm_result.get("smaranam", ())
     vm_composed = vm_result.get("composed", "")
-    vm_parampara = vm_result.get("parampara", {})
+    _vm_parampara = vm_result.get("parampara", {})
 
     # === I/O: VedaExplorer / LLM use VM output as context ===
     # CREATIVE MODE: Kirtan-Flow (canonical VM pipeline + optional LLM)

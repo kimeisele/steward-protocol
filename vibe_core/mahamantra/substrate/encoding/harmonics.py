@@ -40,7 +40,6 @@ from vibe_core.mahamantra.protocols._seed import (
     JIVA_CYCLE,
     KSETRAJNA,
     LILA,
-    MAHAJANA_COUNT,
     MALA,
     MURALI_HOLES,
     NADI_RESONANCE,

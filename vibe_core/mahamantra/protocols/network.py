@@ -1,5 +1,5 @@
-from typing import Protocol, runtime_checkable, List, Optional, Tuple
 from dataclasses import dataclass
+from typing import List, Optional, Protocol, Tuple, runtime_checkable
 
 
 @runtime_checkable

@@ -21,8 +21,8 @@ WATERTIGHT:
 """
 
 from __future__ import annotations
-from vibe_core.mahamantra.protocols._seed import HALVES
 
+from vibe_core.mahamantra.protocols._seed import HALVES
 
 # === MAHAJANA DECLARATION ===
 __mahajana__ = "narada"  # The Carrier of the Message

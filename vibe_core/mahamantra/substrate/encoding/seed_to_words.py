@@ -26,18 +26,14 @@ NO EXTERNAL DEPENDENCIES. NO RANDOMNESS. PURE MATHEMATICS.
 
 from __future__ import annotations
 
-from typing import Dict, Final, List, Optional, Sequence, Tuple
+from typing import Dict, Final, List, Optional, Tuple
 
 from vibe_core.mahamantra.adapters.synth import (
-    MahaSynth,
     SynthParams,
-    SYNTH_PRESETS,
     create_synth,
 )
 from vibe_core.mahamantra.protocols._seed import (
     MAHA_QUANTUM,
-    SEVEN,
-    WORDS,
 )
 from vibe_core.mahamantra.substrate.pancha_walk import (
     COORD_ELEMENT,
@@ -53,7 +49,6 @@ from vibe_core.mahamantra.substrate.rama_grid import (
 )
 from vibe_core.mahamantra.substrate.semantic_index import (
     LexiconWord,
-    get_index,
     words_at_position,
 )
 

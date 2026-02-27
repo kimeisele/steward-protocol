@@ -43,23 +43,21 @@ __mahajana__ = "narada"
 __position__ = 3
 __genesis__ = "0x36552212"  # GenesisByte: parampara % 37 == 0
 
-from dataclasses import dataclass
-from typing import Final, Tuple, Optional
+from typing import Final, Optional, Tuple
 
-from vibe_core.mahamantra.protocols.hash import (
-    MahaHashProtocol,
-    HashResult,
-    LensReading,
-    MultiLensReading,
-)
 from vibe_core.mahamantra.protocols._seed import (
     MAHA_QUANTUM,
-    PARAMPARA,
-    TRINITY,
     PANCHA,
+    PARAMPARA,
     SEVEN,
+    TRINITY,
 )
-
+from vibe_core.mahamantra.protocols.hash import (
+    HashResult,
+    LensReading,
+    MahaHashProtocol,
+    MultiLensReading,
+)
 
 # =============================================================================
 # CONSTANTS

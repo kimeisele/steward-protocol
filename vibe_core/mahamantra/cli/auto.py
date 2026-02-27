@@ -48,19 +48,15 @@ __genesis__ = "0xb3e04d0e"  # GenesisByte: parampara % 37 == 0
 import inspect
 import logging
 from dataclasses import dataclass
-from datetime import datetime
 from typing import (
-    Callable,
     Dict,
     List,
     Optional,
     Protocol,
     Tuple,
     Type,
-    TypedDict,
     Union,
     get_type_hints,
-    runtime_checkable,
 )
 
 logger = logging.getLogger(__name__)
@@ -87,15 +83,13 @@ from vibe_core.mahamantra import mahamantra
 from vibe_core.mahamantra.cli.protocol import (
     # Chaitanya Lila Boundaries
     NAVADVIPA_LIMIT,
-    PURI_LIMIT,
     CLICapability,
-    CLIContext,
     CLIErrorCode,
     CLIOutput,
     CLIParameter,
     CLIResult,
 )
-from vibe_core.mahamantra.substrate.seed import MAHA_QUANTUM, PARAMPARA, WORDS
+from vibe_core.mahamantra.substrate.seed import MAHA_QUANTUM, WORDS
 
 # =============================================================================
 # VIBRATION ROUTING - MahaKirtan Orchestration (THE KING)
@@ -203,7 +197,7 @@ class CLIAutoDiscovery:
         guardian_name = pos_info.guardian.value
 
         # 1. THE ROYAL HUNT - Find the service class and its module
-        service_class = None
+        _service_class = None
         service_class_name = f"{guardian_name.capitalize()}Service"
 
         jungles = [
@@ -220,7 +214,7 @@ class CLIAutoDiscovery:
                 module = importlib.import_module(jungle)
                 candidate = getattr(module, service_class_name, None)
                 if candidate and isinstance(candidate, type):
-                    service_class = candidate
+                    _service_class = candidate
                     target_module = module
                     break
                 # If no class found, maybe it's a protocol module

@@ -72,13 +72,9 @@ from typing import (
 
 # Adhikara Protocol - Authorization Chain (Mahajana Signatures)
 from vibe_core.mahamantra.protocols._adhikara import (
-    QUARTER_MAHAJANAS,
-    SIGNATURES_REQUIRED,
     AuthorizationBundle,
     Mahajana,
-    MahajanaSignature,
     create_signature,
-    verify_authorization,
 )
 from vibe_core.mahamantra.protocols._adhikara import (
     Quarter as AdhikaraQuarter,
@@ -96,7 +92,6 @@ from vibe_core.mahamantra.protocols._bhava import (
 # Import GAD Base
 from vibe_core.mahamantra.protocols._gad import (
     GADBase,
-    GADProtocol,
 )
 
 # =============================================================================
@@ -139,7 +134,6 @@ from vibe_core.mahamantra.reactor.shadow_protocol import (
 )
 from vibe_core.mahamantra.substrate.position import (
     MAHAMANTRA_POSITIONS,
-    MantraPosition,
 )
 
 # =============================================================================
@@ -154,9 +148,7 @@ from vibe_core.mahamantra.substrate.prabhupada import Prabhupada, get_prabhupada
 # =============================================================================
 from vibe_core.mahamantra.substrate.samana_bridge import (
     DISPATCH_BATCH_SIZE,
-    MAX_KERNELS_PER_REACTOR,
     SamanaBridge,
-    SamanaDispatch,
     SamanaFold,
     create_samana_bridge,
 )
@@ -520,7 +512,7 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
         # PARAMPARA VERIFICATION (CHAITANYA SINGULARITY)
         # =====================================================================
         # Verified against EFFECTIVE position (Personal Parampara)
-        parampara_connected = self._verify_parampara(self._position, self._cycle_count)
+        _parampara_connected = self._verify_parampara(self._position, self._cycle_count)
         parampara_coherence = self._compute_parampara_coherence(self._position, self._cycle_count)
 
         # =====================================================================
@@ -789,7 +781,7 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
         }
 
         # Process through tick
-        shadow_state = self.tick(tick_state)
+        _shadow_state = self.tick(tick_state)
 
         # Return new cell with processed state
         return self.to_maha_cell(
@@ -1163,7 +1155,6 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
             # (In reality, tests should have proper setup, but this is an internal self-test)
             if not was_authorized:
                 # Create a dummy auth for the test
-                from vibe_core.mahamantra.protocols._adhikara import Quarter
 
                 # We need a proper Quarter enum that matches current position string
                 mapping = get_position_by_index(pos)

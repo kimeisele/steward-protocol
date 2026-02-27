@@ -5,12 +5,11 @@ Compression Protocol Types - SSOT for MahaCompression
 All types used by MahaCompression adapter must be defined here.
 """
 
-from vibe_core.mahamantra.protocols._seed import HALVES, KSETRAJNA, TRINITY
-
-from typing import Protocol, runtime_checkable, Final, Literal, Optional, Union
 from dataclasses import dataclass
 from enum import Enum
+from typing import Final, Optional, Protocol, runtime_checkable
 
+from vibe_core.mahamantra.protocols._seed import HALVES, KSETRAJNA, TRINITY
 
 # =============================================================================
 # INTENT GUNA (The 3 Modes + 1 Transcendental)

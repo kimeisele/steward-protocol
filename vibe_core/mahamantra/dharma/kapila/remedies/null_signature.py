@@ -27,10 +27,9 @@ __mahajana__ = "kapila"
 __position__ = 6
 __genesis__ = "0x25d36ba1"  # GenesisByte: parampara % 37 == 0
 
-from typing import List, Optional, Sequence, Union
+from typing import List, Optional
 
 import libcst as cst
-from libcst import matchers as m
 
 from vibe_core.mahamantra.dharma.kapila.remedies.base import CSTRemedy
 
@@ -237,7 +236,7 @@ def heal_all_null_signatures(dry_run: bool = True) -> dict:
                 stats["skipped"] += 1
             else:
                 stats["failed"] += 1
-        except Exception as e:
+        except Exception:
             stats["failed"] += 1
 
     return stats

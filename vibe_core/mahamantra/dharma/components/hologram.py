@@ -8,11 +8,9 @@ Responsibility:
 - Tree Structure (Node -> Mantra)
 """
 
-from dataclasses import dataclass, field
-from typing import List, Optional
 
-from vibe_core.mahamantra.dharma.components.linguist import DEFINITIONS, Linguist
-from vibe_core.mahamantra.protocols.dharma_protocol import FractalNodeData, HologramProtocol, SwarupaData
+from vibe_core.mahamantra.dharma.components.linguist import Linguist
+from vibe_core.mahamantra.protocols.dharma_protocol import FractalNodeData, SwarupaData
 
 SEED_MANTRA = [
     "HARE",

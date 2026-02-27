@@ -23,17 +23,13 @@ __mahajana__ = "narada"
 __position__ = 5
 __genesis__ = "0xa46c627c"  # GenesisByte: parampara % 37 == 0
 
-import json
-from dataclasses import asdict
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from vibe_core.mahamantra.protocols._seed import POSITION_SUM_KRISHNA
-from vibe_core.mahamantra.substrate.pancha_tattva import PanchaTattva
 
 from .engine import Prediction, generate_all_predictions
-from .knowledge import KNOWN_CONSTANTS, CoverageStatus, PhysicsConstant
+from .knowledge import KNOWN_CONSTANTS, PhysicsConstant
 from .tattvas import (
-    STRING_FUNCTIONS,
     AxiomNode,
     CoverageReport,
     ValidationReport,
@@ -249,7 +245,7 @@ def get_full_report() -> Dict[str, Any]:
 
     Returns the complete Narada Vina report.
     """
-    validation = run_full_validation()
+    _validation = run_full_validation()
 
     return {
         "title": "NARADA VINA - The Five Strings of Discovery",

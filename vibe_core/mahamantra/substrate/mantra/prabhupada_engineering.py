@@ -15,7 +15,7 @@ SOURCE: Caitanya Caritāmṛta, Antya Līlā Chapter 20
 
 from dataclasses import dataclass
 from enum import IntEnum
-from typing import Dict, Final, List, Tuple
+from typing import Dict, Final, Tuple
 
 from vibe_core.mahamantra.protocols._seed import (
     GITA_CHAPTERS,
@@ -32,7 +32,6 @@ from vibe_core.mahamantra.protocols._seed import (
     SHARANAGATI,
     TEN,
     TRINITY,
-    WORDS,
 )
 
 # === MAHAJANA DECLARATION (machine-readable) ===

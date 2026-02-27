@@ -18,13 +18,14 @@ Usage:
     alignment = engine.word_alignment("krishna")
 """
 
-from vibe_core.mahamantra.dharma.components.linguist import Linguist
-from vibe_core.mahamantra.dharma.components.layers import LayerEngine
-from vibe_core.mahamantra.dharma.components.matrix import MahaMatrix
-from vibe_core.mahamantra.dharma.components.hologram import HologramEngine
-from vibe_core.mahamantra.dharma.components.shabda import ShabdaEngine, VibrationSignature
 from typing import List
-from vibe_core.mahamantra.protocols.dharma_protocol import DharmaProtocol, SwarupaData, FractalNodeData
+
+from vibe_core.mahamantra.dharma.components.hologram import HologramEngine
+from vibe_core.mahamantra.dharma.components.layers import LayerEngine
+from vibe_core.mahamantra.dharma.components.linguist import Linguist
+from vibe_core.mahamantra.dharma.components.matrix import MahaMatrix
+from vibe_core.mahamantra.dharma.components.shabda import ShabdaEngine, VibrationSignature
+from vibe_core.mahamantra.protocols.dharma_protocol import DharmaProtocol, FractalNodeData, SwarupaData
 
 
 class DharmaEngine:

@@ -19,6 +19,7 @@ SSOT: Diese Datei ist die Quelle für FractalLevel.
 """
 
 from __future__ import annotations
+
 from vibe_core.mahamantra.protocols._seed import (
     HALVES,
     KSETRAJNA,
@@ -30,7 +31,6 @@ from vibe_core.mahamantra.protocols._seed import (
     TRINITY,
     WORDS,
 )
-
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "prithu"

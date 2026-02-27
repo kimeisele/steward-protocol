@@ -13,18 +13,16 @@ Verifies:
 
 import pytest
 
+from vibe_core.mahamantra.protocols._navabhakti import (
+    GATE_INDEX,
+    VAMSI_ADDR,
+    NavaBhaktiOp,
+)
+from vibe_core.mahamantra.protocols._seed import NAVA
 from vibe_core.mahamantra.substrate.cycle_compiler import (
     CycleCompiler,
-    CompiledOp,
     get_compiler,
 )
-from vibe_core.mahamantra.protocols._navabhakti import (
-    CYCLE as CORE_CYCLE,
-    GATE_INDEX,
-    NavaBhaktiOp,
-    VAMSI_ADDR,
-)
-from vibe_core.mahamantra.protocols._seed import NAVA, PARAMPARA
 
 
 class TestCycleCompilerCore:
@@ -149,10 +147,10 @@ class TestExecuteCycleIntegration:
     """Verify execute_cycle uses CycleCompiler when custom ops exist."""
 
     def test_custom_op_runs_in_pipeline(self):
-        from vibe_core.mahamantra.substrate.cycle_compiler import get_compiler, _COMPILER
+        import vibe_core.mahamantra.substrate.cycle_compiler as cc_mod
+        from vibe_core.mahamantra.substrate.cycle_compiler import get_compiler
         from vibe_core.mahamantra.substrate.lotus_core import MahamantraLotus
         from vibe_core.mahamantra.substrate.mantra_vm import execute_cycle
-        import vibe_core.mahamantra.substrate.cycle_compiler as cc_mod
 
         # Save and reset global compiler
         old = cc_mod._COMPILER
@@ -287,11 +285,12 @@ class TestMicroKernelWiring:
 
     def test_vm_capability_discovered_at_bootstrap(self):
         """A service implementing VMCapabilityProtocol gets its ops registered."""
+        from unittest.mock import patch
+
         import vibe_core.mahamantra.substrate.cycle_compiler as cc_mod
+        from vibe_core.mahamantra.protocols._navabhakti import VMOpDeclaration
         from vibe_core.mahamantra.substrate.lotus_core import MahamantraLotus
         from vibe_core.mahamantra.substrate.mantra_vm import execute_cycle
-        from vibe_core.mahamantra.protocols._navabhakti import VMOpDeclaration
-        from unittest.mock import patch
 
         old_compiler = cc_mod._COMPILER
         cc_mod._COMPILER = None
@@ -361,9 +360,9 @@ class TestMicroKernelWiring:
     def test_vm_capability_with_condition(self):
         """VMCapability ops with conditions are evaluated correctly."""
         import vibe_core.mahamantra.substrate.cycle_compiler as cc_mod
+        from vibe_core.mahamantra.protocols._navabhakti import VMOpDeclaration
         from vibe_core.mahamantra.substrate.lotus_core import MahamantraLotus
         from vibe_core.mahamantra.substrate.mantra_vm import execute_cycle
-        from vibe_core.mahamantra.protocols._navabhakti import VMOpDeclaration
 
         old_compiler = cc_mod._COMPILER
         cc_mod._COMPILER = None

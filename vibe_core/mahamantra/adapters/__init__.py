@@ -109,8 +109,8 @@ def __getattr__(name: str):
     # FRACTAL ROUTING: "EIN IMPORT. KRISHNA ROUTET ALLES."
     # Any .py file or subpackage in adapters/ is auto-discoverable
     # ==========================================================================
-    from pathlib import Path
     import importlib
+    from pathlib import Path
 
     adapters_root = Path(__file__).parent
 

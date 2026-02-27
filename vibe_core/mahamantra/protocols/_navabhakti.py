@@ -21,7 +21,7 @@ USAGE:
 from __future__ import annotations
 
 from enum import IntEnum
-from typing import Callable, Dict, Final, List, Optional, Protocol, Tuple, runtime_checkable
+from typing import Callable, Final, List, Optional, Protocol, Tuple, runtime_checkable
 
 from vibe_core.mahamantra.protocols._seed import (
     KSETRAJNA,

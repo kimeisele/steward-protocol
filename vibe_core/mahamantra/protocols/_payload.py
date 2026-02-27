@@ -54,7 +54,7 @@ DUAL MODE: VIBRATIONAL + DATA:
 
 from dataclasses import dataclass
 from enum import IntEnum
-from typing import Any, Dict, Final, Optional, Protocol, Tuple, Type, TypeVar, Union
+from typing import Dict, Final, Protocol, Tuple, Type, TypeVar
 
 from vibe_core.mahamantra.protocols._seed import (
     GAURA_TITHI,

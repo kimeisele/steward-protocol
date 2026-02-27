@@ -46,12 +46,10 @@ __position__ = 0
 __genesis__ = "0xbf879742"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass
-from typing import Final, Optional
+from typing import Final
 
 from .engineering import (
     ENGINEERING_EFFECTS,
-    MOONLIGHT,
-    SUNLIGHT,
     SankirtanaEffect,
 )
 

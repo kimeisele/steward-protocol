@@ -25,8 +25,8 @@ WATERTIGHT: Keine externen Abhängigkeiten. Nur substrate/.
 """
 
 from __future__ import annotations
-from vibe_core.mahamantra.protocols._seed import KSETRAJNA, PARAMPARA
 
+from vibe_core.mahamantra.protocols._seed import KSETRAJNA, PARAMPARA
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "prithu"

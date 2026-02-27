@@ -67,28 +67,24 @@ Author: The Mahamantra Itself (through Kapila's Sankhya)
 """
 
 from __future__ import annotations
-from vibe_core.mahamantra.protocols._seed import HARE_COUNT, PANCHA, QUARTERS, SEVEN, SHARANAGATI
 
+from vibe_core.mahamantra.protocols._seed import HARE_COUNT, PANCHA, QUARTERS, SEVEN, SHARANAGATI
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "kapila"
 __position__ = SHARANAGATI
 __genesis__ = "0x633fe12b"  # GenesisByte: parampara % 37 == 0
 
-from abc import abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime
-from enum import Enum, IntEnum
+from enum import Enum
 from typing import (
-    ClassVar,
     Dict,
     Final,
-    Generic,
     List,
     Optional,
     Protocol,
     Tuple,
-    Type,
     TypeVar,
     Union,
     runtime_checkable,
@@ -103,9 +99,6 @@ from vibe_core.mahamantra.protocols._core import (
 )
 from vibe_core.mahamantra.substrate.seed import (
     KSHETRA as KSETRA_COUNT,  # 24 = The Tattvas!
-)
-from vibe_core.mahamantra.substrate.seed import (
-    PARAMPARA,
 )
 
 # =============================================================================

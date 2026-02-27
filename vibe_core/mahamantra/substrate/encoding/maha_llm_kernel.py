@@ -179,7 +179,7 @@ class MahaLLMKernel(MahaResonanceProtocol):
         # Guardian routing score — __call__() doesn't expose route_score,
         # but the guardian IS the routed result (position-based, deterministic)
         vib = lr.get("vibration", {})
-        sig = vib.get("signature", {})
+        _sig = vib.get("signature", {})
 
         return ResonanceResponse(
             input_text=text,
@@ -372,8 +372,8 @@ class MahaLLMKernel(MahaResonanceProtocol):
         if g is None:
             raise ValueError(f"Unknown guardian: {guardian_name}")
 
-        from vibe_core.mahamantra.substrate.lotus_core import get_mahamantra
         from vibe_core.mahamantra.substrate.guardian_router import GUARDIANS
+        from vibe_core.mahamantra.substrate.lotus_core import get_mahamantra
 
         # Find the guardian's position index (0-15)
         guardian_position = next(

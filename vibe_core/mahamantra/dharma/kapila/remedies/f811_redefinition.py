@@ -24,7 +24,6 @@ from libcst import Attribute, BaseExpression, Name
 
 from vibe_core.mahamantra.dharma.kapila.remedies.base import CSTRemedy
 
-
 _ImportKey = Tuple[str, str, str, str]
 
 

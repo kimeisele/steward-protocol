@@ -20,10 +20,9 @@ __mahajana__ = "kapila"
 __position__ = 6
 __genesis__ = "0x67b83055"  # GenesisByte: parampara % 37 == 0
 
-from typing import List, Set, Union
+from typing import List, Set
 
 import libcst as cst
-import libcst.matchers as m
 
 from vibe_core.mahamantra.dharma.kapila.remedies.base import CSTRemedy
 

@@ -7,8 +7,10 @@ Separates Space (Seeking), Meaning (Indexing), and Flow (Streaming).
 """
 
 from __future__ import annotations
-from typing import Protocol, Generator, Optional, List
+
 from datetime import datetime
+from typing import Generator, List, Optional, Protocol
+
 from .entry import LogEntry
 
 

@@ -5,45 +5,43 @@ EXTENDED CONSTANTS - Production-relevant derived constants
 Physics, Music, Position Sums, Mahamantra Patterns, Gita References.
 """
 
-from typing import Final
 import math
+from typing import Final
 
 from ._axioms import (
-    WORDS,
-    TRINITY,
+    HALVES,
     HARE_COUNT,
     KRISHNA_COUNT,
-    RAMA_COUNT,
     PANCHA,
-    HALVES,
+    RAMA_COUNT,
+    TRINITY,
+    WORDS,
 )
+from ._cosmic import JIVA_QUALITIES, NAKSHATRAS
 from ._primary import (
-    QUARTERS,
-    KSETRAJNA,
-    HALF_SIZE,
-    LILA,
-    KSHETRA,
-    NAVA,
-    SHARANAGATI,
     AKSARA_COUNT,
-    AVATAR_COUNT,
+    HALF_SIZE,
+    KSETRAJNA,
+    KSHETRA,
+    LILA,
+    NAVA,
+    QUARTERS,
+    SHARANAGATI,
 )
 from ._secondary import (
+    FLUTE_HOLES_SUM,
+    FLUTE_VENU_VAMSI,
+    GITA_CHAPTERS,
+    JIVA_CYCLE,
     MAHAJANA_COUNT,
     MALA,
     MALA_COMPLETE,
-    JIVA_CYCLE,
-    GITA_CHAPTERS,
-    QUALITIES,
+    NADI_RESONANCE,
     PARAMPARA,
+    QUALITIES,
     SEVEN,
     TEN,
-    NADI_RESONANCE,
-    FIELD_RESONANCE,
-    FLUTE_HOLES_SUM,
-    FLUTE_VENU_VAMSI,
 )
-from ._cosmic import NAKSHATRAS, JIVA_QUALITIES, COSMIC_FRAME
 
 
 # =============================================================================

@@ -50,7 +50,6 @@ __genesis__ = "0xcdd640f9"  # GenesisByte: parampara % 37 == 0
 from typing import (
     Dict,
     Final,
-    Optional,
 )
 
 # =============================================================================
@@ -59,31 +58,21 @@ from typing import (
 # Core constants from _seed.py (THE LAW)
 from vibe_core.mahamantra.protocols._seed import (
     COSMIC_FRAME,
-    KSETRA_KSETRAJNA_CHAPTER,
-    KSETRA_KSETRAJNA_VERSE,
-    KSETRAJNA,
-    MAHA_QUANTUM,
     PARAMPARA,
-    SEVEN,
-    TEN,
-    TRINITY,
-    WORDS,
 )
-
-# THE ALGORITHM - imported from SSOT, not reimplemented!
-from vibe_core.mahamantra.substrate.algorithm import maha_oscillate_optimized as maha_oscillate
 
 # Parampara channels from _seed.py (via shadow_protocol)
 from vibe_core.mahamantra.reactor.shadow_protocol import (
     PARAMPARA_CHANNEL_NAMES,
     PARAMPARA_CHANNELS,
-    MahaOracleProtocol,
     OracleValidationResult,
     ShadowState,
 )
 
-# NOTE: Pattern no longer needed - using maha_oscillate from algorithm/
+# THE ALGORITHM - imported from SSOT, not reimplemented!
+from vibe_core.mahamantra.substrate.algorithm import maha_oscillate_optimized as maha_oscillate
 
+# NOTE: Pattern no longer needed - using maha_oscillate from algorithm/
 # PRABHUPADA constants from substrate resonance
 from vibe_core.mahamantra.substrate.resonance import (
     PRABHUPADA_BUILD,

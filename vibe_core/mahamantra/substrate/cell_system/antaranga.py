@@ -48,8 +48,6 @@ from vibe_core.mahamantra.protocols._seed import (
     KSETRAJNA,
     MAHA_QUANTUM,
     MALA,
-    NAVA,
-    PARAMPARA,
     VAMSI_HOLES,
     WORDS,
 )

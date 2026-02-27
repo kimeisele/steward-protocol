@@ -20,7 +20,6 @@ import sys
 from pathlib import Path
 
 from vibe_core.mahamantra.moksha.yamaraja import SamskaraService
-from vibe_core.mahamantra import Mahajana
 
 
 def _get_samskara_service() -> SamskaraService:

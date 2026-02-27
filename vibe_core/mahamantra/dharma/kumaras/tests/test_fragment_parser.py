@@ -22,7 +22,6 @@ from vibe_core.mahamantra.dharma.kumaras.fragment_parser import (
     parse_source_to_fragments,
 )
 
-
 # =============================================================================
 # TEST FIXTURES
 # =============================================================================

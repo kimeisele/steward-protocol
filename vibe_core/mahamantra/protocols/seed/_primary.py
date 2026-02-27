@@ -9,12 +9,12 @@ No secondary derivations used here.
 from typing import Final
 
 from ._axioms import (
-    WORDS,
-    TRINITY,
+    HALVES,
     HARE_COUNT,
     KRISHNA_COUNT,
-    HALVES,
     PANCHA,
+    TRINITY,
+    WORDS,
 )
 
 # QUARTERS = KRISHNA_COUNT (Krishna appears 4 times = 4 quadrants)

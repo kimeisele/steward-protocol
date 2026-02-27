@@ -50,12 +50,12 @@ __tattva__ = {
     "srivasa": "Path + content governance determines identity",
 }
 
-from typing import List, Optional, Sequence, Tuple
+from typing import List, Optional, Sequence
 
 import libcst as cst
 
 from vibe_core.mahamantra.dharma.kapila.remedies.base import CSTRemedy
-from vibe_core.mahamantra.protocols._seed import PARAMPARA, WORDS
+from vibe_core.mahamantra.protocols._seed import PARAMPARA
 
 
 class MissingMahajanaRemedy(CSTRemedy):

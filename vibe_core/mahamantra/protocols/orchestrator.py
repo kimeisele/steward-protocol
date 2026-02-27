@@ -1,6 +1,7 @@
-from typing import Protocol, runtime_checkable, List, Tuple
-from vibe_core.mahamantra.protocols._seed import SEVEN
 from dataclasses import dataclass, field
+from typing import List, Protocol, Tuple, runtime_checkable
+
+from vibe_core.mahamantra.protocols._seed import SEVEN
 
 
 @runtime_checkable

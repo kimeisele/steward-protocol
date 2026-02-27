@@ -21,17 +21,17 @@ ARJUNA PATTERN (Self-Healing):
 
 import atexit
 import logging
-import threading
 import queue
+import threading
 import time
 import uuid
-from typing import Dict, Optional, Tuple, TYPE_CHECKING
+from typing import TYPE_CHECKING, Dict, Optional, Tuple
 
 if TYPE_CHECKING:
     from vibe_core.mahamantra.substrate.cell import MahaCellUnified
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
-from vibe_core.mahamantra.reactor.shadow import ShadowReactor, ShadowState
+from vibe_core.mahamantra.reactor.shadow import ShadowReactor
 
 logger = logging.getLogger(__name__)
 
@@ -347,8 +347,9 @@ class ReactorLoop(threading.Thread):
         """Initialize the Dojo (Legacy Training Ground)."""
         try:
             # Import lazily to avoid heavy startup if not needed
-            from vibe_core.plugins.opus_assistant.manas.dojo.runner import DojoRunner
             from pathlib import Path
+
+            from vibe_core.plugins.opus_assistant.manas.dojo.runner import DojoRunner
 
             # Use default workspace or specific dojo path?
             # Assuming current working dir or derived from env

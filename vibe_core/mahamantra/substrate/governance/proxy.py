@@ -18,8 +18,8 @@ WATERTIGHT: NO hardcoded numbers. ALL from seed.py.
 """
 
 from __future__ import annotations
-from vibe_core.mahamantra.protocols._seed import KSETRAJNA
 
+from vibe_core.mahamantra.protocols._seed import KSETRAJNA
 
 # === MAHAJANA DECLARATION ===
 __mahajana__ = "nityananda"
@@ -28,12 +28,8 @@ __genesis__ = "0x12419353"  # GenesisByte: parampara % 37 == 0
 
 import importlib
 import logging
-import sys
 from pathlib import Path as StdPath
-from typing import Callable, Dict, List, Optional, TYPE_CHECKING, TypedDict, Union
-
-# Import bridge for routing
-from vibe_core.mahamantra.substrate.bridge import offer
+from typing import TYPE_CHECKING, Callable, Dict, List, Optional
 
 # Import GAD Base
 from vibe_core.mahamantra.protocols._gad import (
@@ -41,15 +37,14 @@ from vibe_core.mahamantra.protocols._gad import (
     GADProtocol,
 )
 
-
 # =============================================================================
 # TYPE DEFINITIONS (WATERTIGHT - No Any)
 # =============================================================================
-
-
 # TickState imported from _types.py (SSOT)
 from vibe_core.mahamantra.seed.types import TickState
 
+# Import bridge for routing
+from vibe_core.mahamantra.substrate.bridge import offer
 
 if TYPE_CHECKING:
     from vibe_core.mahamantra.reactor.shadow import OrbitalShadowReactor
@@ -316,6 +311,7 @@ class BalaramaProxy(GADBase, GADProtocol):
 
         # MAHAMANTRA DEFINES IDENTITY - FOLDER IS TRUTH
         from pathlib import Path
+
         from vibe_core.mahamantra.substrate.sankirtan import get_mahajana_for_path
 
         module_path = getattr(self.module, "__file__", None)

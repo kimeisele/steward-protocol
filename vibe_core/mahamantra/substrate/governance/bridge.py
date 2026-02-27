@@ -18,27 +18,15 @@ WATERTIGHT: NO hardcoded numbers. ALL from seed.py (SSOT).
 """
 
 from __future__ import annotations
-from vibe_core.mahamantra.protocols._seed import KSETRAJNA, TEN
 
+from vibe_core.mahamantra.protocols._seed import KSETRAJNA, TEN
 
 # === MAHAJANA DECLARATION ===
 __mahajana__ = "janaka"
 __position__ = TEN
 __genesis__ = "0x17f29aed"  # GenesisByte: parampara % 37 == 0
 
-from typing import Dict, Optional, Final, Union
-
-# =============================================================================
-# IMPORT FROM SSOT (seed.py) - NO MAGIC NUMBERS ALLOWED
-# =============================================================================
-
-# Import constants from protocols._seed (THE SOURCE)
-from vibe_core.mahamantra.protocols._seed import (
-    PARAMPARA,  # 37 - verification constant
-    WORDS,  # 16 - mantra positions
-    SHARANAGATI,  # 6 - connection limbs
-    MAHAJANA_COUNT,  # 12 - the mahajanas
-)
+from typing import Dict, Final, Optional, Union
 
 # =============================================================================
 # MAHA CELL - Universal Data Format (AUTO-WRAPPING AT THE GATE)
@@ -48,15 +36,21 @@ from vibe_core.mahamantra.protocols._seed import (
 from vibe_core.mahamantra.protocols._header import MahaCell, MahaHeader
 from vibe_core.mahamantra.protocols._payload import MahaPayload, PayloadType
 
-# Import functions from substrate.seed (THE REALITY)
-from vibe_core.mahamantra.substrate.seed import (
-    MAHAJANA_TO_POSITION,  # Name → Position mapping
-    POSITION_TO_MAHAJANA,  # Position → Name mapping
-    get_mahajana_position,  # Function to get position by name
-    verify_parampara,  # Function to verify % 37 == 0
-    lotus_declaration,  # Function to generate genesis signature
+# =============================================================================
+# IMPORT FROM SSOT (seed.py) - NO MAGIC NUMBERS ALLOWED
+# =============================================================================
+# Import constants from protocols._seed (THE SOURCE)
+from vibe_core.mahamantra.protocols._seed import (
+    WORDS,  # 16 - mantra positions
 )
 
+# Import functions from substrate.seed (THE REALITY)
+from vibe_core.mahamantra.substrate.seed import (
+    POSITION_TO_MAHAJANA,  # Position → Name mapping
+    get_mahajana_position,  # Function to get position by name
+    lotus_declaration,  # Function to generate genesis signature
+    verify_parampara,  # Function to verify % 37 == 0
+)
 
 # =============================================================================
 # PURPOSE → POSITION MAPPING (DERIVED FROM SEED, NOT HARDCODED)

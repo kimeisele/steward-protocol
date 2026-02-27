@@ -22,7 +22,7 @@ __genesis__ = "0x8a89fdb5"  # GenesisByte: parampara % 37 == 0
 from typing import Protocol, runtime_checkable
 
 # SSOT: Re-export from substrate
-from vibe_core.mahamantra.substrate.guna import Guna, VISHUDDHA_SATTVA
+from vibe_core.mahamantra.substrate.guna import VISHUDDHA_SATTVA, Guna
 
 
 @runtime_checkable

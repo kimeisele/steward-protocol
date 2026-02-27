@@ -33,7 +33,7 @@ L7: āśliṣya vā              → RETURN_UNCONDITIONAL (verse 8)
 ALL CONSTANTS DERIVED FROM SEED.PY.
 """
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Callable, Dict, Final, List, Optional, Tuple
 
 from vibe_core.mahamantra.protocols._seed import (
@@ -52,7 +52,7 @@ from vibe_core.mahamantra.protocols._seed import (
 __mahajana__ = "prahlada"  # Position 9 - Devotion under adversity
 __position__ = NAVA
 __genesis__ = "0x7e40b596"  # GenesisByte: parampara % 37 == 0
-from vibe_core.mahamantra.substrate.prabhupada import Prabhupada, get_prabhupada
+from vibe_core.mahamantra.substrate.prabhupada import get_prabhupada
 
 # Use substrate kirtan
 from .kirtan import (
@@ -64,7 +64,6 @@ from .kirtan import (
 from .prabhupada_engineering import (
     ENGINEERING_SUMMARY,
     VERSE_CONSTANTS,
-    PipelineStage,
 )
 
 # =============================================================================

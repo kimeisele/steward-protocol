@@ -1,6 +1,7 @@
-from typing import Protocol, runtime_checkable, TypeVar, List, Generic, Optional
-from vibe_core.mahamantra.protocols._seed import WORDS
 from dataclasses import dataclass
+from typing import Generic, List, Optional, Protocol, TypeVar, runtime_checkable
+
+from vibe_core.mahamantra.protocols._seed import WORDS
 
 T_Handler = TypeVar("T_Handler", covariant=True)
 

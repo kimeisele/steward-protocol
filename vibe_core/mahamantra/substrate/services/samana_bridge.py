@@ -609,7 +609,7 @@ class SamanaBridge(GADBase):
         self._mark_shadow_busy(shadow.shadow_id, dispatch_id)
 
         # Create Nadi message
-        message = NadiMessage(
+        _message = NadiMessage(
             source=self._nadi.endpoint_id,
             target="*",  # Broadcast to available kernels
             nadi_type=NadiType.SAMANA,

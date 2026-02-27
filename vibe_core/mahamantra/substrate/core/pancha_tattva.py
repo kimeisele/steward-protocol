@@ -48,6 +48,23 @@ from dataclasses import dataclass
 from enum import Enum, IntEnum
 from typing import Final, Protocol, Tuple, Type, runtime_checkable
 
+from vibe_core.mahamantra.protocols._capabilities import (
+    EnforceCapability as _EnforceCapability,
+)
+from vibe_core.mahamantra.protocols._capabilities import (
+    InferCapability as _InferCapability,
+)
+
+# Capability Protocols (the 5 Pancha Tattva as runtime contracts)
+from vibe_core.mahamantra.protocols._capabilities import (
+    MantraCapability as _MantraCapability,
+)
+from vibe_core.mahamantra.protocols._capabilities import (
+    StorageCapability as _StorageCapability,
+)
+from vibe_core.mahamantra.protocols._capabilities import (
+    SyncCapability as _SyncCapability,
+)
 from vibe_core.mahamantra.substrate.byte import (
     LILA_CYCLES as _LILA_CYCLES,
 )
@@ -57,15 +74,6 @@ from vibe_core.mahamantra.substrate.byte import (
     LILA_LIMIT,
     MAHAMANTRA_DIMENSION,
     HolyName,
-)
-
-# Capability Protocols (the 5 Pancha Tattva as runtime contracts)
-from vibe_core.mahamantra.protocols._capabilities import (
-    MantraCapability as _MantraCapability,
-    StorageCapability as _StorageCapability,
-    InferCapability as _InferCapability,
-    SyncCapability as _SyncCapability,
-    EnforceCapability as _EnforceCapability,
 )
 
 # =============================================================================

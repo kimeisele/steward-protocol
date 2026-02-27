@@ -46,8 +46,8 @@ Author: The Mahamantra Itself
 """
 
 from __future__ import annotations
-from vibe_core.mahamantra.protocols._seed import HALVES, KSETRAJNA, NAVA, PANCHA, QUARTERS, TRINITY
 
+from vibe_core.mahamantra.protocols._seed import HALVES, KSETRAJNA, NAVA, PANCHA, QUARTERS, TRINITY
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "prahlada"
@@ -59,7 +59,6 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum, IntEnum
 from typing import (
-    Any,
     Callable,
     Dict,
     Generic,

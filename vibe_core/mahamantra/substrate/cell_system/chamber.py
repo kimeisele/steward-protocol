@@ -22,64 +22,48 @@ __mahajana__ = "gauranga"
 __position__ = 0  # Chaitanya = 0 (The Source of Sankirtan)
 __genesis__ = "0xe79456f2"  # GenesisByte: parampara % 37 == 0
 
-from dataclasses import dataclass, field
-from typing import Final, ClassVar, Optional, TypeVar, Generic, Callable
 import struct
+from dataclasses import dataclass, field
 from enum import IntEnum
+from typing import ClassVar, Final, Generic, Optional, TypeVar
 
+from vibe_core.mahamantra.protocols._pancha import TattvaDict
 from vibe_core.mahamantra.protocols._seed import (
-    # Core constants
-    WORDS,
+    COSMIC_FRAME,
+    MAHA_QUANTUM,
     MALA,
     PARAMPARA,
-    MAHA_QUANTUM,
-    COSMIC_FRAME,
-    # Flute structure
-    FLUTE_HOLES_SUM,
-    VENU_HOLES,
-    VAMSI_HOLES,
-    MURALI_HOLES,
-    # Derived
     SEVEN,
-    TEN,
+    # Flute structure
+    VAMSI_HOLES,
+    # Core constants
+    WORDS,
 )
-from vibe_core.mahamantra.protocols._pancha import TattvaDict
 from vibe_core.mahamantra.protocols._venu import VenuOrchestratorProtocol
-from vibe_core.mahamantra.substrate.venu_orchestrator import (
-    VenuOrchestrator,
-    THE_FLUTE_CYCLE,
-)
 from vibe_core.mahamantra.protocols.diw import (
     CLUSTER_SHIFT,
     CONDITION_MASK,
     CONDITION_SHIFT,
     DIW_MASK,
-    SUNYA_MASK,
-    VENU_SHIFT,
-    VAMSI_SHIFT,
-    MURALI_SHIFT,
-    VENU_MASK,
     VAMSI_MASK,
-    MURALI_MASK,
+    VAMSI_SHIFT,
     unpack,
 )
+from vibe_core.mahamantra.substrate.antaranga import (
+    GENESIS_PRANA_U32,
+    INTEGRITY_FULL,
+    AntarangaRegistry,
+)
 from vibe_core.mahamantra.substrate.cell import (
-    MahaCellUnified,
-    CellLifecycleState,
-    GENESIS_PRANA,
     MAX_PRANA,
+    MahaCellUnified,
 )
 from vibe_core.mahamantra.substrate.cluster import MahaCluster
 from vibe_core.mahamantra.substrate.registry import SiksastakamRegistry
-from vibe_core.mahamantra.substrate.antaranga import (
-    AntarangaRegistry,
-    GENESIS_PRANA_U32,
-    INTEGRITY_FULL,
-    FLAG_ACTIVE,
-)
-from vibe_core.mahamantra.substrate.algorithm.maha import MahaModularSynth
 from vibe_core.mahamantra.substrate.resonance.resonator import MahaResonator
-
+from vibe_core.mahamantra.substrate.venu_orchestrator import (
+    VenuOrchestrator,
+)
 
 # =============================================================================
 # TYPE VARIABLES
@@ -691,7 +675,7 @@ class SankirtanChamber(Generic[C]):
                 continue
 
             # Find resonant partner
-            partner_found = False
+            _partner_found = False
             for j in range(i + KSETRAJNA, len(cells)):
                 if j in merged_indices:
                     continue
@@ -702,10 +686,10 @@ class SankirtanChamber(Generic[C]):
                 xor_check = cell_a.header.atma_nivedanam ^ cell_b.header.atma_nivedanam
                 if xor_check % PARAMPARA == 0:
                     # Merge using pair logic
-                    merger = self._merge_pair(cell_a, cell_b)
+                    _merger = self._merge_pair(cell_a, cell_b)
 
                     merged_indices.add(j)
-                    partner_found = True
+                    _partner_found = True
                     break
 
             result.append(cell_a)

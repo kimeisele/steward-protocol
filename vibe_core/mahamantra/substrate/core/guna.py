@@ -61,8 +61,8 @@ WATERTIGHT: No Any types. All typed explicitly.
 """
 
 from __future__ import annotations
-from vibe_core.mahamantra.protocols._seed import HALVES, KSETRAJNA
 
+from vibe_core.mahamantra.protocols._seed import HALVES, KSETRAJNA
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "prithu"
@@ -73,7 +73,6 @@ from enum import IntEnum
 from typing import Dict, Final, FrozenSet
 
 from vibe_core.mahamantra.substrate.opcode import MantraOpCode
-
 
 # =============================================================================
 # THE THREE GUNAS (Material)

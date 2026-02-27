@@ -181,7 +181,7 @@ class _FragmentExtractor(cst.CSTVisitor):
         # Check if this is an import
         for stmt in node.body:
             if isinstance(stmt, (cst.Import, cst.ImportFrom)):
-                source = self._extract_source(start, end)
+                _source = self._extract_source(start, end)
                 # Try to get the module name for a readable qualified_name
                 if isinstance(stmt, cst.ImportFrom) and isinstance(stmt.module, cst.Attribute):
                     mod_name = cst.parse_module("").code  # fallback

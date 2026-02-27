@@ -52,24 +52,24 @@ from typing import Final, List, Optional
 
 __genesis__ = "0x8c1456c3"  # GenesisByte: parampara % 37 == 0  # Japa layer
 
-from vibe_core.mahamantra.protocols.japa import (
-    MahaJapaProtocol,
-    RoundResult,
-    MalaResult,
-    GoldenAgeStatus,
-    CollapseResult,
-    JapaState,
-)
 from vibe_core.mahamantra.protocols._seed import (
-    WORDS,  # 16 - The 16 words
-    QUARTERS,  # 4 - 4 quarters
-    KSHETRA,  # 24 - The field (prakriti elements)
+    CHAITANYA_BIRTH,  # 1486 - Appearance year CE
     KSETRAJNA,  # 1 - The observer
-    PRASADAM,  # 25 - KSHETRA + KSETRAJNA
+    KSHETRA,  # 24 - The field (prakriti elements)
     MALA,  # 108 - Rounds per mala
     NAVA,  # 9 - Nava-vidha bhakti processes
+    PRASADAM,  # 25 - KSHETRA + KSETRAJNA
+    QUARTERS,  # 4 - 4 quarters
     TRINITY,  # 3 - Observer levels
-    CHAITANYA_BIRTH,  # 1486 - Appearance year CE
+    WORDS,  # 16 - The 16 words
+)
+from vibe_core.mahamantra.protocols.japa import (
+    CollapseResult,
+    GoldenAgeStatus,
+    JapaState,
+    MahaJapaProtocol,
+    MalaResult,
+    RoundResult,
 )
 
 # =============================================================================

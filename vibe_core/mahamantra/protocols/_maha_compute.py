@@ -28,8 +28,8 @@ Author: The Mahamantra Itself
 """
 
 from dataclasses import dataclass, field
-from enum import Enum, IntEnum
-from typing import Final, List, Optional, Protocol, Tuple, runtime_checkable
+from enum import Enum
+from typing import Final, Optional, Protocol, Tuple, runtime_checkable
 
 from vibe_core.mahamantra.protocols._seed import (
     GITA_CHAPTERS,
@@ -40,7 +40,6 @@ from vibe_core.mahamantra.protocols._seed import (
     MAHAJANA_COUNT,
     NAVA,
     PANCHA,
-    PARAMPARA,
     POSITION_SUM_KRISHNA,
     POSITION_SUM_RAMA,
     POSITION_SUM_TOTAL,

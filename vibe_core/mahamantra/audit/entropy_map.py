@@ -18,12 +18,8 @@ __mahajana__ = "kapila"
 __position__ = 6
 __genesis__ = "0x25d36ba1"
 
-import ast
-import importlib
-import inspect
-import sys
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Dict, List
 
 VIBE_CORE = Path(__file__).resolve().parent.parent.parent.parent
 
@@ -531,7 +527,7 @@ def main():
         print(f"    [{status:6s}] {link['link']}")
         print(f"             {link['file']}")
 
-    print(f"\n  ORPHANED INFRASTRUCTURE (built, never called):")
+    print("\n  ORPHANED INFRASTRUCTURE (built, never called):")
     for o in orch["orphaned"]:
         print(f"    [{o['callers']:2d} callers] {o['function']}")
         print(f"                {o['file']} — {o['purpose']}")

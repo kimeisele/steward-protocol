@@ -1,6 +1,7 @@
-from typing import Protocol, runtime_checkable, Tuple, Optional
-from vibe_core.mahamantra.protocols._seed import GITA_CHAPTERS
 from dataclasses import dataclass
+from typing import Optional, Protocol, Tuple, runtime_checkable
+
+from vibe_core.mahamantra.protocols._seed import GITA_CHAPTERS
 
 
 @runtime_checkable

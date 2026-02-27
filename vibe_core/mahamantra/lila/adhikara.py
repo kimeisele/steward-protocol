@@ -78,7 +78,6 @@ from vibe_core.mahamantra.protocols._seed import (
 from vibe_core.mahamantra.substrate.seed import (
     MAHAMANTRA,
     QUARTERS,
-    HolyName,
     Quarter,
 )
 

@@ -40,16 +40,8 @@ ALL PROTOCOL. NO CONCRETE CLASSES. NO EXTERNAL DEPENDENCIES.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Protocol, Sequence, Tuple, runtime_checkable
-
-from vibe_core.mahamantra.protocols._seed import (
-    PANCHA,
-    SEVEN,
-    TRINITY,
-    WORDS,
-)
-
+from dataclasses import dataclass
+from typing import List, Optional, Protocol, Tuple, runtime_checkable
 
 # =============================================================================
 # RESULT TYPES

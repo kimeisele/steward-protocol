@@ -27,8 +27,8 @@ import re
 from dataclasses import dataclass, field
 from typing import Dict, Final, List, Optional, Sequence, Tuple
 
-from vibe_core.mahamantra.substrate.encoding.phonetic_encoder import encode_text
 from vibe_core.mahamantra.substrate.core.basin_map import basin_cosine, hkr_similarity
+from vibe_core.mahamantra.substrate.encoding.phonetic_encoder import encode_text
 
 logger = logging.getLogger("CAPTCHA_CHAMBER")
 

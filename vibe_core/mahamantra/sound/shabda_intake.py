@@ -38,9 +38,9 @@ Usage:
 from __future__ import annotations
 
 import struct
+import threading
 import wave
 from pathlib import Path
-import threading
 from typing import Generator, List, Tuple
 
 import numpy as np

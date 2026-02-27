@@ -21,17 +21,36 @@ __mahajana__ = "narada"
 __position__ = 2
 __genesis__ = "0x7838b130"  # GenesisByte: parampara % 37 == 0
 
-from vibe_core.mahamantra.cli.protocol import (
-    CLIErrorCode,
-    OutputFormat,
-    CLIOutputItem,
-    CLIOutput,
-    CLIError,
-    CLIResult,
-    CLIParameter,
-    CLICapability,
-    CLIState,
-    CLIHealth,
+# Auto Discovery
+from vibe_core.mahamantra.cli.auto import (
+    CLIAutoDiscovery,
+    DiscoveredMethod,
+    capabilities,
+    discover,
+    execute,
+)
+
+# Bridge (Routing)
+from vibe_core.mahamantra.cli.bridge import (
+    BridgeResult,
+    MahamantraCLIBridge,
+    get_position,
+    route,
+)
+
+# Engine (Execution)
+from vibe_core.mahamantra.cli.engine import (
+    CLIEngine,
+    MahajanaCliRegistration,
+    cli_command,
+)
+
+# Entry Point
+from vibe_core.mahamantra.cli.entry import (
+    MahamantraCLIEntry,
+    cli_entry,
+    get_entry,
+    main,
 )
 
 # Entry Protocol
@@ -39,46 +58,26 @@ from vibe_core.mahamantra.cli.entry_protocol import (
     CLIEntryProtocol,
     CLIEntryResult,
 )
-
-# Entry Point
-from vibe_core.mahamantra.cli.entry import (
-    MahamantraCLIEntry,
-    get_entry,
-    main,
-    cli_entry,
-)
-
-# Bridge (Routing)
-from vibe_core.mahamantra.cli.bridge import (
-    BridgeResult,
-    MahamantraCLIBridge,
-    route,
-    get_position,
-)
-
-# Engine (Execution)
-from vibe_core.mahamantra.cli.engine import (
-    MahajanaCliRegistration,
-    CLIEngine,
-    cli_command,
-)
-
-# Auto Discovery
-from vibe_core.mahamantra.cli.auto import (
-    DiscoveredMethod,
-    CLIAutoDiscovery,
-    discover,
-    execute,
-    capabilities,
+from vibe_core.mahamantra.cli.protocol import (
+    CLICapability,
+    CLIError,
+    CLIErrorCode,
+    CLIHealth,
+    CLIOutput,
+    CLIOutputItem,
+    CLIParameter,
+    CLIResult,
+    CLIState,
+    OutputFormat,
 )
 
 # Steward (Universal Resonance Router)
 from vibe_core.mahamantra.cli.steward import (
+    RESONANCE_MAP,
+    Quarter,  # Re-exported from substrate.seed (was ResonanceQuarter)
+    ResonanceRoute,
     Steward,
     StewardResponse,
-    ResonanceRoute,
-    Quarter,  # Re-exported from substrate.seed (was ResonanceQuarter)
-    RESONANCE_MAP,
 )
 
 
@@ -87,8 +86,8 @@ def __getattr__(name: str):
     Fractal routing: folder IS wiring.
     "EIN IMPORT. KRISHNA ROUTET ALLES."
     """
-    from pathlib import Path
     import importlib
+    from pathlib import Path
 
     pkg_root = Path(__file__).parent
 

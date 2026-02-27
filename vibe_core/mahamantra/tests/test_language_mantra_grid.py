@@ -4,19 +4,17 @@ Tests for substrate/language/mantra_grid.py — 32-Step Mantra Sequencer.
 Only tests what is DERIVED from seed.MAHAMANTRA, not invented.
 """
 
-import pytest
 
 from vibe_core.mahamantra.protocols._seed import HALVES, KSETRAJNA, QUARTERS, WORDS
-from vibe_core.mahamantra.substrate.language.types import SyllableVector
 from vibe_core.mahamantra.substrate.language.mantra_grid import (
     GridStep,
-    alignment_score,
     align_syllables_to_grid,
+    alignment_score,
     build_mantra_grid,
     get_holyname_mode,
 )
-from vibe_core.mahamantra.substrate.seed import HolyName, MAHAMANTRA
-
+from vibe_core.mahamantra.substrate.language.types import SyllableVector
+from vibe_core.mahamantra.substrate.seed import MAHAMANTRA, HolyName
 
 # =============================================================================
 # build_mantra_grid: 16 words × 2 beats = 32 steps

@@ -28,22 +28,21 @@ __mahajana__ = "yamaraja"
 __position__ = 15
 __genesis__ = "0x8000000f"
 
-import re
 import hashlib
 import logging
+import re
 from pathlib import Path
 from typing import Dict, List, Tuple
 
-from vibe_core.mahamantra.protocols._seed import PARAMPARA
-from vibe_core.mahamantra.protocols._pancha import TattvaDict
 from vibe_core.mahamantra.audit.audit_registry import AuditFinding, FindingSeverity, get_source_cache
 from vibe_core.mahamantra.protocols._audit import (
-    AuditProtocol,
     AuditReport,
     LineageViolation,
-    SSOTViolation,
     ProtocolViolation,
+    SSOTViolation,
 )
+from vibe_core.mahamantra.protocols._pancha import TattvaDict
+from vibe_core.mahamantra.protocols._seed import PARAMPARA
 
 assert int(__genesis__, 16) % PARAMPARA == 0, "BROKEN LINEAGE"
 

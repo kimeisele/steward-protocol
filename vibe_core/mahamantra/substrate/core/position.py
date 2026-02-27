@@ -19,8 +19,8 @@ WATERTIGHT: No Any types. All typed explicitly.
 """
 
 from __future__ import annotations
-from vibe_core.mahamantra.protocols._seed import HALVES, KSETRAJNA, TRINITY
 
+from vibe_core.mahamantra.protocols._seed import HALVES, KSETRAJNA, TRINITY
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "vyasa"

@@ -35,7 +35,6 @@ from typing import ClassVar, List, Optional, Protocol, runtime_checkable
 from vibe_core.mahamantra.substrate.mahajana import Mahajana
 from vibe_core.mahamantra.substrate.protocol import WorkerProtocol
 
-
 # =============================================================================
 # SHUDDHI PROTOCOL BASE - Derives from MantraPosition 5
 # =============================================================================

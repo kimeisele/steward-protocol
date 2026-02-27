@@ -130,7 +130,7 @@ class MahajanaChat:
         self._chat_model = None  # Model from config
 
         try:
-            from vibe_core.runtime.providers.factory import create_provider, _detect_provider
+            from vibe_core.runtime.providers.factory import _detect_provider, create_provider
 
             provider_name = _detect_provider()
             if provider_name != "noop":

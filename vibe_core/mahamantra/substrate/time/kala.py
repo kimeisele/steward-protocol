@@ -18,10 +18,10 @@ __mahajana__ = "prithu"
 __position__ = QUARTERS
 __genesis__ = "0x8dfd7ced"  # GenesisByte: parampara % 37 == 0
 
-from typing import Final, Optional
+from typing import Final
 
 from vibe_core.mahamantra.protocols._kala import KalaProtocol, KalaTime
-from vibe_core.mahamantra.protocols._seed import WORDS, TRINITY, MALA  # SSOT
+from vibe_core.mahamantra.protocols._seed import MALA, TRINITY, WORDS  # SSOT
 
 # --- CONSTANTS (DERIVED FROM _seed.py) ---
 LILA_TICKS: Final[int] = WORDS * TRINITY  # 16 × 3 = 48

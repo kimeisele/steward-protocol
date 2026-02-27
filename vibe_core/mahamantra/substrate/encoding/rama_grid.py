@@ -40,26 +40,20 @@ This is not curve-fitting. This is COORDINATES.
 """
 
 from dataclasses import dataclass
-from typing import Final, Optional, Tuple
+from typing import Final, Tuple
 
 from vibe_core.mahamantra.protocols._seed import (
-    AVATAR_COUNT,
     HALVES,
     HARE_COUNT,
-    KRISHNA_COUNT,
     KSETRAJNA,
-    KSHETRA,
     MAHAJANA_COUNT,
     NAVA,
     PANCHA,
-    PARAMPARA,
     POSITION_SUM_HARE,
     POSITION_SUM_KRISHNA,
     POSITION_SUM_RAMA,
-    POSITION_SUM_TOTAL,
     PRASADAM,
     QUARTERS,
-    RAMA_COUNT,
     SEVEN,
     SHARANAGATI,
     TEN,

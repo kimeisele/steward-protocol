@@ -8,7 +8,7 @@ __position__ = 6
 __genesis__ = "0xf228a759"  # GenesisByte: parampara % 37 == 0
 
 from abc import ABC, abstractmethod
-from typing import List, Optional
+from typing import List
 
 import libcst as cst
 

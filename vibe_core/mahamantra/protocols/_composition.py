@@ -24,7 +24,7 @@ PROTOCOL PRINCIPLES:
 
 from __future__ import annotations
 
-from typing import Dict, Protocol, Tuple, runtime_checkable
+from typing import Dict, Protocol, runtime_checkable
 
 from vibe_core.mahamantra.protocols._seed import PARAMPARA
 

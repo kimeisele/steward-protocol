@@ -59,20 +59,9 @@ from typing import Dict, Final, List, Optional, Sequence, Tuple
 
 from vibe_core.mahamantra.protocols._seed import (
     PANCHA,
-    SEVEN,
     TRINITY,
 )
 from vibe_core.mahamantra.protocols.seed._cosmic import COSMIC_FRAME
-from vibe_core.mahamantra.substrate.pancha_walk import (
-    COORD_ELEMENT,
-    COORD_HARMONIC,
-    COORD_SUB,
-    COORD_VARGA,
-    ELEMENT_NAMES,
-    IS_SHRUTI,
-    element_histogram,
-    walk_distance,
-)
 from vibe_core.mahamantra.substrate.basin_map import (
     BASIN_COUNT,
     BASIN_INDEX,
@@ -85,6 +74,13 @@ from vibe_core.mahamantra.substrate.basin_map import (
     basin_jaccard,
     hkr_similarity,
     phoneme_attractor_similarity,
+)
+from vibe_core.mahamantra.substrate.pancha_walk import (
+    COORD_ELEMENT,
+    COORD_HARMONIC,
+    COORD_VARGA,
+    IS_SHRUTI,
+    walk_distance,
 )
 from vibe_core.mahamantra.substrate.rama_grid import VARNAMALA_TOTAL
 from vibe_core.mahamantra.substrate.semantic_index import (
@@ -694,8 +690,8 @@ def resonate(
 
     Deterministic. Same input → always same output.
     """
-    from vibe_core.mahamantra.substrate.phonetic_encoder import encode_text
     from vibe_core.mahamantra.adapters.synth import create_synth
+    from vibe_core.mahamantra.substrate.phonetic_encoder import encode_text
 
     # Step 1: Encode input (unified — one path for all languages)
     input_coords = encode_text(text)
@@ -767,8 +763,8 @@ def resonate_sanskrit(
     seed: int = 0,
 ) -> List[RankedWord]:
     """Resonate with Sanskrit input (exact IAST encoding)."""
-    from vibe_core.mahamantra.substrate.varnamala_codec import encode
     from vibe_core.mahamantra.adapters.synth import create_synth
+    from vibe_core.mahamantra.substrate.varnamala_codec import encode
 
     input_coords = encode(sanskrit_text)
     if not input_coords:

@@ -22,8 +22,8 @@ import logging
 from pathlib import Path
 from typing import List, Optional
 
-from vibe_core.mahamantra.protocols._seed import PARAMPARA
 from vibe_core.mahamantra.audit.audit_registry import AuditFinding, FindingSeverity, get_source_cache
+from vibe_core.mahamantra.protocols._seed import PARAMPARA
 
 assert int(__genesis__, 16) % PARAMPARA == 0, "BROKEN LINEAGE"
 
@@ -56,7 +56,7 @@ class _HygieneVisitor(ast.NodeVisitor):
                     source="hygiene_auditor",
                     position=__position__,
                     mahajana=__mahajana__,
-                    description=f"Usage of 'Any' type",
+                    description="Usage of 'Any' type",
                     file_path=self.filepath,
                     line_number=node.lineno,
                     severity=FindingSeverity.WARNING,
@@ -71,7 +71,7 @@ class _HygieneVisitor(ast.NodeVisitor):
                     source="hygiene_auditor",
                     position=__position__,
                     mahajana=__mahajana__,
-                    description=f"Usage of 'typing.Any' type",
+                    description="Usage of 'typing.Any' type",
                     file_path=self.filepath,
                     line_number=node.lineno,
                     severity=FindingSeverity.WARNING,

@@ -18,6 +18,7 @@ __position__ = QUARTERS
 __genesis__ = "0xfb0a3320"  # GenesisByte: parampara % 37 == 0
 
 import hashlib
+
 from vibe_core.mahamantra.protocols._orbit import OrbitProtocol
 from vibe_core.mahamantra.protocols._seed import WORDS
 

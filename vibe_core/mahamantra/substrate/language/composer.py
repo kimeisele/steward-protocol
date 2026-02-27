@@ -24,23 +24,20 @@ All thresholds derived from protocol constants.
 
 from __future__ import annotations
 
-from collections import Counter
 from typing import Dict, List, Optional, Sequence, Tuple
 
 from vibe_core.mahamantra.protocols._seed import (
     HALVES,
     KSETRAJNA,
-    MAHA_QUANTUM,
     PANCHA,
     QUARTERS,
     SEVEN,
     WORDS,
 )
-from vibe_core.mahamantra.substrate.language.types import RhythmProfile, StateVector, SyllableVector
-from vibe_core.mahamantra.substrate.language.mantra_grid import build_mantra_grid, get_holyname_mode
+from vibe_core.mahamantra.substrate.language.mantra_grid import build_mantra_grid
 from vibe_core.mahamantra.substrate.language.mode_affinity import classify_by_graph, mode_anchor_phrases
+from vibe_core.mahamantra.substrate.language.types import RhythmProfile, StateVector, SyllableVector
 from vibe_core.mahamantra.substrate.seed import HolyName
-
 
 # =============================================================================
 # TOKENS — from wordnet_bridge precomputed data

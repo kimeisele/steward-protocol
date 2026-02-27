@@ -40,7 +40,7 @@ USAGE:
     values = router.prefix_query(0x12, prefix_bits=8)
 """
 
-from typing import Any, Dict, Final, Generic, Iterator, List, Optional, Tuple, TypeVar
+from typing import Any, Dict, Final, Iterator, List, Optional, Tuple, TypeVar
 
 from ..protocols._pancha import TattvaDict
 
