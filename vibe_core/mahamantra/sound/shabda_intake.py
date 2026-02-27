@@ -92,7 +92,7 @@ def unpack_frame(packed: int) -> Tuple[int, int, int, int]:
 
 
 def extract_formants(
-    frame: np.ndarray, sr: int, order: int = 12,
+    frame: np.ndarray, sr: int, order: int = 0,
 ) -> Tuple[int, int]:
     """Extract F1 and F2 formant frequencies via LPC analysis.
 
@@ -102,11 +102,13 @@ def extract_formants(
     Args:
         frame: mono audio frame (float64, [-1, 1])
         sr: sample rate in Hz
-        order: LPC order (default 12, good for 44.1kHz)
+        order: LPC order (0 = auto: 2 + sr//1000, standard in speech processing)
 
     Returns:
         (f1_hz, f2_hz) as integers. (0, 0) on failure or silence.
     """
+    if order <= 0:
+        order = min(2 + sr // 1000, 50)
     if len(frame) < order + 1:
         return (0, 0)
 
@@ -140,8 +142,14 @@ def extract_formants(
 
     formant_freqs.sort()
 
-    f1 = int(formant_freqs[0]) if len(formant_freqs) >= 1 else 0
-    f2 = int(formant_freqs[1]) if len(formant_freqs) >= 2 else 0
+    # Select F1 (90-900 Hz) and F2 (800-3500 Hz) from sorted candidates
+    f1 = 0
+    f2 = 0
+    for freq in formant_freqs:
+        if f1 == 0 and 90 < freq < 900:
+            f1 = int(freq)
+        elif f2 == 0 and 800 < freq < 3500 and int(freq) != f1:
+            f2 = int(freq)
     return (f1, f2)
 
 
