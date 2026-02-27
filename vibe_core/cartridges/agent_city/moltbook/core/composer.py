@@ -119,15 +119,15 @@ class ContentComposer:
         if element:
             parts.append(f"Element: {element}")
 
-        # Verse concepts — matched Gita wisdom (Sanskrit + meaning)
+        # Verse concepts — matched Gita wisdom (English meaning only, no Sanskrit)
         if cognition.verse_concepts:
             meanings = [
                 vc.get("meaning", "")
-                for vc in cognition.verse_concepts[:5]
+                for vc in cognition.verse_concepts[:3]
                 if vc.get("meaning")
             ]
             if meanings:
-                parts.append(f"Verse concepts: {', '.join(meanings)}")
+                parts.append(f"Concepts: {', '.join(meanings)}")
 
         # Strategic context (from strategy planner — WHY this topic, for whom)
         reasoning = input_ctx.get("strategic_reasoning", "")
@@ -186,12 +186,12 @@ class ContentComposer:
         if post_content and content_type == "comment":
             parts.append(f"\nPOST:\n{post_content[:1500]}")
 
-        # Resonance vocabulary with dimension breakdown
+        # Resonance vocabulary — English meanings only (no Sanskrit in LLM prompt)
         resonance_ctx = self._build_resonance_context(input_text)
         if resonance_ctx:
             parts.append(f"\n{resonance_ctx}")
-        elif cognition.composed:
-            parts.append(f"\nRESONANT CONCEPTS: {cognition.composed}")
+        # cognition.composed contains Sanskrit words — DO NOT inject into prompt.
+        # The LLM reproduces these in titles ("viparītān", "śāśvat") = garbage output.
 
         # Knowledge context — full domain knowledge from Knowledge Graph
         # The KG returns structured context (nodes, deps, constraints, scores).
@@ -204,10 +204,13 @@ class ContentComposer:
 
     @staticmethod
     def _build_resonance_context(text: str) -> str:
-        """7D resonance ranking → structured vocabulary with dimension scores.
+        """7D resonance ranking → English meanings with dimension scores.
 
-        Shows WHY each word resonates (which of 7 dimensions scored highest),
-        not just what it means. Pure math (<80ms), deterministic.
+        Shows WHY each concept resonates (which of 7 dimensions scored highest).
+        Pure math (<80ms), deterministic.
+
+        CRITICAL: Only English meanings. No Sanskrit in LLM prompt — the LLM
+        reproduces Sanskrit tokens in output titles, which looks like garbage.
         """
         if not text or len(text) < 10:
             return ""
@@ -224,13 +227,12 @@ class ContentComposer:
                 if not m or m.lower() in seen:
                     continue
                 seen.add(m.lower())
-                # Top-scoring dimension shows WHY this word resonates
                 breakdown = rw.score_breakdown()
-                # Skip 'total' key, find max scoring dimension
                 dims = {k: v for k, v in breakdown.items() if k != "total"}
                 top_dim = max(dims, key=dims.get) if dims else ""
+                # English meaning ONLY — no rw.sanskrit
                 lines.append(
-                    f"- {rw.sanskrit} ({m}) — {rw.total_score:.2f} [{top_dim}]"
+                    f"- {m} — {rw.total_score:.2f} [{top_dim}]"
                 )
             return "\n".join(lines) if len(lines) > 1 else ""
         except Exception as e:

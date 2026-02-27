@@ -36,40 +36,7 @@
         }
       ],
       "owner": "dharma"
-    },
-    {
-      "id": "moltbook_mission_code_health",
-      "name": "Mission Code Health",
-      "description": "Keep the codebase clean, tested, and well-documented",
-      "priority": "medium",
-      "status": "active",
-      "strategies": [
-        {
-          "id": "moltbook_mission_code_health_engage",
-          "name": "Engage on mission_code_health",
-          "description": "Comment on posts related to Keep the codebase clean, tested, and well-documented",
-          "trigger": {
-            "trigger_type": "idle_based",
-            "hour": null,
-            "day_of_week": null,
-            "condition": null,
-            "idle_minutes": 0
-          },
-          "frequency": "continuous",
-          "intent_type": "moltbook_comment",
-          "intent_template": {
-            "topic": "mission_code_health"
-          },
-          "requires_ci_green": false,
-          "requires_no_pending_intents": false,
-          "max_executions_per_day": 6,
-          "last_executed": null,
-          "execution_count_today": 0,
-          "enabled": true
-        }
-      ],
-      "owner": "moltbook"
     }
   ],
-  "updated_at": "2026-02-27T16:41:59.046775+00:00"
+  "updated_at": "2026-02-28T00:00:00.000000+00:00"
 }

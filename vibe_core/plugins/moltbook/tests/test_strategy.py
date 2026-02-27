@@ -42,6 +42,7 @@ class FakeMission:
     description: str
     priority: FakePriority
     strategies: list = None
+    owner: str = "moltbook"
 
     def __post_init__(self):
         if self.strategies is None:

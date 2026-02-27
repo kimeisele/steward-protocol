@@ -147,14 +147,12 @@ class MoltbookStrategyPlanner:
     def _seed_missions(
         self, feed_topics: Optional[List[Dict[str, Any]]] = None,
     ) -> None:
-        """Load missions from feed-derived topics.
+        """Seed missions from FEED content — what the community discusses.
 
-        Sources: Feed topics (BG chapter clusters) → Sankalpa missions.
-        Creates missions for each topic area.
+        Always purges stale non-feed missions (moltbook_kg_*, moltbook_mission_*,
+        mission_code_health). Then seeds new missions from feed titles.
 
-        On first call, purges stale KG-generated missions (moltbook_kg_*)
-        that describe the Moltbook API itself — these cause self-referential posts.
-        Re-seeds from feed on subsequent calls when new topics appear.
+        Called every DHARMA cycle when feed has topics. New feed topics → new missions.
         """
         orch = self._orchestrator
         if not orch:
@@ -172,9 +170,8 @@ class MoltbookStrategyPlanner:
             )
             from datetime import datetime, timezone
 
-            # FIRST CALL: purge KG-generated garbage missions
-            if not self._missions_seeded:
-                self._purge_kg_missions(orch)
+            # ALWAYS purge stale missions — they come back if not cleaned
+            self._purge_stale_missions(orch)
 
             existing = {m.id for m in orch.registry.get_all_missions()}
             seed_topics = _derive_seed_topics(feed_topics)
@@ -229,34 +226,48 @@ class MoltbookStrategyPlanner:
             self._missions_seeded = True  # Don't retry on failure
 
     @staticmethod
-    def _purge_kg_missions(orch: object) -> None:
-        """Remove KG auto-generated missions that describe the Moltbook API.
+    def _purge_stale_missions(orch: object) -> None:
+        """Remove stale missions that don't derive from feed content.
 
-        These missions (moltbook_kg_*) cause self-referential posts about
-        "Moltbook voting system" and "DM request flows" instead of real content.
-        They were seeded by querying the Knowledge Graph for Moltbook platform
-        concepts — useful as internal documentation, garbage as content strategy.
+        Purges:
+        - moltbook_kg_* — KG-generated (self-referential API posts)
+        - moltbook_mission_* — cloned from non-moltbook missions (generic garbage)
+        - mission_code_health — dharma mission leaked into content strategy
+
+        Only moltbook_feed_* and moltbook_ch* survive — these come from real feed.
         """
         if not hasattr(orch, "registry") or not hasattr(orch.registry, "_missions"):
             return
-        kg_ids = [
+        stale_ids = [
             mid for mid in orch.registry._missions
-            if mid.startswith("moltbook_kg_")
+            if (
+                mid.startswith("moltbook_kg_")
+                or mid.startswith("moltbook_mission_")
+                or mid == "mission_code_health"
+            )
         ]
-        for mid in kg_ids:
+        for mid in stale_ids:
             del orch.registry._missions[mid]
-        if kg_ids:
+        if stale_ids:
             if hasattr(orch.registry, "_save"):
                 orch.registry._save()
-            logger.info(f"Purged {len(kg_ids)} KG-generated missions: {', '.join(kg_ids)}")
+            logger.info(f"Purged {len(stale_ids)} stale missions: {', '.join(stale_ids)}")
 
     def get_active_missions(self) -> List[Any]:
-        """Return active missions from registry."""
+        """Return active MOLTBOOK missions (owner='moltbook') from registry.
+
+        Filters out non-moltbook missions (e.g. 'mission_code_health' with
+        owner='dharma') that leak generic topics into content strategy.
+        """
         orch = self.orchestrator
         if not orch:
             return []
         try:
-            return orch.registry.get_active_missions()
+            all_missions = orch.registry.get_active_missions()
+            return [
+                m for m in all_missions
+                if getattr(m, "owner", "") == "moltbook"
+            ]
         except Exception as e:
             logger.warning(f"Active missions query failed: {e}")
             return []
@@ -302,16 +313,10 @@ class MoltbookStrategyPlanner:
         output_count = len(own_post_ids) if own_post_ids else 0
         can_post = self._sravanam_check(input_count, output_count)
 
-        # Seed missions from feed (first call, or re-seed after purge left no moltbook missions)
+        # Seed missions from feed — EVERY cycle with feed topics.
+        # New feed titles → new missions. Stale missions purged on every seed call.
         if feed_topics:
-            if not self._missions_seeded:
-                self._seed_missions(feed_topics=feed_topics)
-            elif not any(
-                m.id.startswith("moltbook_") for m in self.get_active_missions()
-            ):
-                # All moltbook missions were purged — re-seed from feed
-                self._missions_seeded = False
-                self._seed_missions(feed_topics=feed_topics)
+            self._seed_missions(feed_topics=feed_topics)
 
         missions = self.get_active_missions()
         if not missions:

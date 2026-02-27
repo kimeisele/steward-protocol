@@ -246,6 +246,7 @@ class TestContentType:
 # =============================================================================
 
 
+@pytest.mark.timeout(30)
 class TestDMReplyLoop:
     """End-to-end: inbound DM → propose → queue → drain → send_dm."""
 

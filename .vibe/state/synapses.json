@@ -21,6 +21,12 @@
     },
     "trigger:maintenance": {
       "action:maintenance": 0.9000000000000004
+    },
+    "moltbook:moltbook_ai_governance": {
+      "engage": 0.95
+    },
+    "moltbook:moltbook_community_building": {
+      "engage": 0.6000000000000001
     }
   },
   "triggers": [
@@ -821,8 +827,8 @@
   ],
   "meta": {
     "created": "2026-01-03T22:16:51.585643Z",
-    "last_updated": "2026-01-12T04:07:37.512875Z",
-    "updates_count": 8,
+    "last_updated": "2026-02-27T21:41:52.799267Z",
+    "updates_count": 200,
     "last_synapse_update": "2026-02-21T21:22:02.220684",
     "last_vairagya_prune": "2026-02-21T21:22:01.997525",
     "last_vairagya_count": 1

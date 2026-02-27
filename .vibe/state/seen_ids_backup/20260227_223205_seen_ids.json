@@ -1,16 +1,12 @@
 {
   "version": 5,
-  "message_ids": [
-    "m1"
-  ],
-  "post_ids": [
-    "p1"
-  ],
+  "message_ids": [],
+  "post_ids": [],
   "own_comment_ids": [],
   "commented_post_ids": [],
   "followed_agents": [],
   "subscribed_submolts": [],
   "comment_post_map": {},
   "own_post_ids": {},
-  "timestamp": "2026-02-27T12:48:37.451096+00:00"
+  "timestamp": "2026-02-27T21:10:33.363652+00:00"
 }
