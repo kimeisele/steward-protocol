@@ -140,7 +140,7 @@ def _verse_coords(verse_data: dict, vocab: dict) -> Tuple[int, ...]:
 
 def _compute_resonance(coords: Tuple[int, ...]) -> Tuple[float, float, float]:
     """H/K/R resonance from VARGA partition. Algorithm-independent."""
-    from vibe_core.mahamantra.substrate.pancha_walk import COORD_VARGA
+    from vibe_core.mahamantra.substrate import COORD_VARGA
 
     if not coords:
         return (0.0, 0.0, 0.0)
@@ -155,7 +155,7 @@ def _compute_resonance(coords: Tuple[int, ...]) -> Tuple[float, float, float]:
 
 def _compute_guna(coords: Tuple[int, ...], baseline: float, half_std: float) -> str:
     """Guna from SHRUTI/NAKSHATRA ratio. Algorithm-independent."""
-    from vibe_core.mahamantra.substrate.pancha_walk import IS_SHRUTI
+    from vibe_core.mahamantra.substrate import IS_SHRUTI
 
     if not coords:
         return "rajas"
@@ -184,7 +184,7 @@ def _coord_seed(coords: Tuple[int, ...], verse_id: str) -> int:
 
 def _phonetic_hash(coords: Tuple[int, ...], verse_id: str) -> str:
     """Stable hash from 4D full_signature + verse identity."""
-    from vibe_core.mahamantra.substrate.pancha_walk import full_signature
+    from vibe_core.mahamantra.substrate import full_signature
 
     if not coords:
         return "0" * 16
@@ -239,7 +239,7 @@ class GitaResonance(GitaResonanceProtocol):
         # Pass 1: compute SHRUTI baseline from all verse coords
         import statistics as st
 
-        from vibe_core.mahamantra.substrate.pancha_walk import IS_SHRUTI
+        from vibe_core.mahamantra.substrate import IS_SHRUTI
 
         shruti_ratios: List[float] = []
         all_coords: List[Tuple[int, ...]] = []

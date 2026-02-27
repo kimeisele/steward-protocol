@@ -489,7 +489,7 @@ class MahaSynth(MahaSynthProtocol):
         This is the bridge between Sanskrit phonetics and the synth engine:
         each phoneme IS a modulation instruction.
         """
-        from vibe_core.mahamantra.substrate.pancha_walk import (
+        from vibe_core.mahamantra.substrate import (
             COORD_ELEMENT,
             COORD_HARMONIC,
             COORD_SUB,

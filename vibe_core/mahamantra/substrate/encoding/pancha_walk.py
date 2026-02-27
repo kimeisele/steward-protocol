@@ -246,6 +246,11 @@ _nakshatra_count = VARNAMALA_TOTAL - _shruti_count
 assert _shruti_count == 22, f"SHRUTIS must be 22, got {_shruti_count}"
 assert _nakshatra_count == 27, f"NAKSHATRAS must be 27, got {_nakshatra_count}"
 
+# Verify: 4D + shruti is a BIJECTION (Pancha Tattva = 5 aspects of Absolute Truth)
+_5d_keys = {(COORD_ELEMENT[c], COORD_VARGA[c], COORD_SUB[c], COORD_HARMONIC[c], IS_SHRUTI[c])
+            for c in range(VARNAMALA_TOTAL)}
+assert len(_5d_keys) == VARNAMALA_TOTAL, "5D must be bijective on VARNAMALA"
+
 
 # =============================================================================
 # DERIVED SIGNATURE (all 3 spatial dimensions + harmonic)
@@ -271,6 +276,20 @@ def full_signature(coords: Sequence[int]) -> str:
     4127/4127 Gita words unique (100.00%). 49/49 phoneme bijection.
     """
     return "".join(f"{COORD_ELEMENT[c]}{COORD_VARGA[c]}{COORD_SUB[c]}{COORD_HARMONIC[c]:02d}" for c in coords)
+
+
+def pancha_signature(coords: Sequence[int]) -> str:
+    """
+    5D phoneme signature: element + varga + sub + harmonic + shruti.
+
+    Pancha Tattva: the Absolute Truth in 5 aspects.
+    Extends full_signature() with Shruti/Nakshatra classification.
+    4127/4127 Gita words unique (100.00%). 49/49 phoneme bijection.
+    """
+    return "".join(
+        f"{COORD_ELEMENT[c]}{COORD_VARGA[c]}{COORD_SUB[c]}{COORD_HARMONIC[c]:02d}{'S' if IS_SHRUTI[c] else 'N'}"
+        for c in coords
+    )
 
 
 # =============================================================================
@@ -341,6 +360,7 @@ __all__ = [
     "IS_SHRUTI",
     "derived_signature",
     "full_signature",
+    "pancha_signature",
     "element_walk",
     "walk_signature",
     "element_histogram",
