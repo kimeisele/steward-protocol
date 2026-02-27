@@ -132,6 +132,14 @@ class IntentExecutor:
             logger.info(
                 f"Strategic comment queued for {target_post_id} (mission={intent_dict.get('mission_id', '')})"
             )
+        else:
+            # KIRTAN: Content generation failed for this intent
+            logger.warning(f"Content generation returned None for comment on {target_post_id}")
+            self._plugin._emit_event(
+                "INTENT_FAILURE",
+                f"Comment intent failed (no content): {target_post_id}",
+                {"action": "comment", "post_id": target_post_id, "mission_id": intent_dict.get("mission_id", "")},
+            )
 
     def _execute_post_intent(self, intent: object) -> None:
         """Execute a post intent with submolt selection and title extraction.
@@ -180,4 +188,12 @@ class IntentExecutor:
             self._plugin._last_post_heartbeat = self._plugin._heartbeat_count
             logger.info(
                 f"Strategic post queued: {proposal.get('title', '')[:50]} (mission={intent_dict.get('mission_id', '')})"
+            )
+        else:
+            # KIRTAN: Content generation failed for this intent
+            logger.warning("Content generation returned None for post intent")
+            self._plugin._emit_event(
+                "INTENT_FAILURE",
+                "Post intent failed (no content)",
+                {"action": "post", "mission_id": intent_dict.get("mission_id", "")},
             )

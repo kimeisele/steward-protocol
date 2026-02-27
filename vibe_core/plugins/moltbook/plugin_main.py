@@ -928,7 +928,10 @@ class MoltbookPlugin(KernelPlugin):
             logger.debug(f"Ouroboros registration failed: {e}")
 
     def on_event(self, event_type: str, data: Dict[str, Any]) -> None:
-        """Ouroboros event handler — react to system healing/violation events."""
+        """Ouroboros event handler — react to system healing/violation events.
+
+        Kirtan loop endpoint: healing.requested → concrete self-repair actions.
+        """
         if event_type == "violation.detected":
             target = data.get("target", "")
             if "moltbook" in target.lower():
@@ -937,16 +940,66 @@ class MoltbookPlugin(KernelPlugin):
         elif event_type == "healing.requested":
             target = data.get("target", "")
             if target == "moltbook" or target == "strategy_planner":
-                logger.info(f"OUROBOROS: Healing requested for {target}: {data.get('reason', '')}")
-                # Self-heal: reset engagement cache if strategy is degraded
+                reason = data.get("reason", "")
+                logger.info(f"OUROBOROS: Healing requested for {target}: {reason}")
+
+                # KIRTAN: Apply concrete healing actions
                 if target == "strategy_planner" and self._strategy_planner:
                     self._strategy_planner._engagement_cache.clear()
-                    logger.info("OUROBOROS: Strategy planner engagement cache reset (healing)")
+                    logger.info("KIRTAN: Strategy planner engagement cache cleared")
+
+                if target == "moltbook":
+                    self._heal_synapse_weights()
+                    self._emit_event(
+                        "HEALING_APPLIED",
+                        f"Moltbook self-healing applied: {reason}",
+                        {"target": target, "reason": reason},
+                    )
+
+    def _heal_synapse_weights(self) -> None:
+        """Kirtan: Heal degraded content synapse weights toward neutral.
+
+        When content types fail repeatedly, their SynapseStore weights drop.
+        Healing nudges degraded weights (< 0.4) back up, allowing the system
+        to re-explore those content types instead of permanently avoiding them.
+        """
+        try:
+            from vibe_core.state.synapse_store import get_synapse_store
+
+            store = get_synapse_store()
+            weights = store.get_weights()
+            decayed = 0
+            for trigger, actions in weights.items():
+                if trigger.startswith("moltbook:content:"):
+                    for action, w in actions.items():
+                        if w < 0.4:  # Only heal degraded weights
+                            store.increment_weight(trigger, action, delta=0.05)
+                            decayed += 1
+            if decayed:
+                store.save()
+                logger.info(f"KIRTAN: Healed {decayed} degraded synapse weight(s)")
+        except Exception as e:
+            logger.warning(f"Synapse healing failed: {e}")
 
     def _emit_ouroboros_health(self) -> None:
-        """Emit health status to Ouroboros on each heartbeat."""
+        """Emit health status to Ouroboros — includes content generation metrics."""
         try:
             from vibe_core.ouroboros.ananta_shesha import get_system_anchor
+
+            # Gather content health metrics from FeedbackProtocol
+            content_health: Dict[str, object] = {}
+            try:
+                from vibe_core.protocols.feedback import get_feedback_safe
+
+                fb = get_feedback_safe()
+                stats = fb.get_stats()
+                content_health = {
+                    "success_rate": stats.success_rate,
+                    "failure_count": stats.failure_count,
+                    "total_signals": stats.total_signals,
+                }
+            except Exception:
+                pass  # FeedbackProtocol unavailable
 
             anchor = get_system_anchor()
             anchor.emit_event("moltbook.health", {
@@ -955,6 +1008,7 @@ class MoltbookPlugin(KernelPlugin):
                 "queue_size": len(self._content_queue),
                 "last_error": self._last_heartbeat_error,
                 "subscribed_submolts": len(self._subscribed_submolts),
+                **content_health,
             })
         except Exception:
             pass  # Ouroboros unavailable — degrade gracefully
@@ -1129,7 +1183,13 @@ class MoltbookPlugin(KernelPlugin):
             pass  # Reflection unavailable — degrade gracefully
 
     def _reflect_on_patterns(self) -> None:
-        """MOKSHA: Analyze reflection patterns and apply learned improvements."""
+        """MOKSHA: Analyze reflection patterns → trigger healing on failure.
+
+        Kirtan feedback loop:
+        1. Reflection detects failure patterns from recorded ExecutionRecords
+        2. If failures found → request_healing() via Ouroboros
+        3. Ouroboros routes healing → on_event() → concrete self-repair
+        """
         try:
             from vibe_core.protocols.reflection import get_reflection_safe
 
@@ -1139,13 +1199,29 @@ class MoltbookPlugin(KernelPlugin):
                 return
 
             # Check for repeated failures → emit to Ouroboros
+            failure_count = 0
             for insight in patterns:
                 if getattr(insight, "type", None) == "failure_pattern":
+                    failure_count += 1
                     self._emit_event(
                         "REFLECTION_INSIGHT",
                         f"Failure pattern detected: {insight.message}",
                         {"insight": insight.message, "confidence": getattr(insight, "confidence", 0)},
                     )
+
+            # KIRTAN: Failure patterns detected → request healing from Ouroboros
+            if failure_count > 0:
+                try:
+                    from vibe_core.ouroboros.ananta_shesha import get_system_anchor
+
+                    anchor = get_system_anchor()
+                    anchor.request_healing(
+                        target="moltbook",
+                        reason=f"Content failure patterns detected: {failure_count} pattern(s) in last 50 executions",
+                    )
+                    logger.info(f"KIRTAN: Requested healing for {failure_count} failure pattern(s)")
+                except Exception as e:
+                    logger.warning(f"Healing request failed: {e}")
 
             # Propose improvements (auto-approve high-confidence)
             proposal = reflection.propose_improvement(patterns)
