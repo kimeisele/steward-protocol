@@ -44,6 +44,11 @@ def _voiced_frames(n: int, rms: int = 150, varga: int = 0, f0_x10: int = 1200, c
     return [pack_frame(rms, varga, f0_x10, centroid_x10)] * n
 
 
+def _low_energy_frames(n: int, rms: int = 30) -> list:
+    """Generate n low-energy frames (above silence, below voiced threshold)."""
+    return [pack_frame(rms, 0, 0, 0)] * n
+
+
 # =============================================================================
 # TEST: ARPAbet → RAMA Mapping (Phase 2 verification)
 # =============================================================================
@@ -214,9 +219,9 @@ class TestSegmentation:
         assert segments[0].length == 20
 
     def test_max_segment_length(self):
-        """Segments longer than 200 frames (2s) are force-split."""
+        """Segments longer than max frames are force-split."""
         from vibe_core.mahamantra.sound.shabda_decoder import segment_stream
-        frames = _voiced_frames(250)
+        frames = _voiced_frames(120)  # > 80 frame max
         segments = segment_stream(frames)
         assert len(segments) >= 2
 
@@ -230,11 +235,11 @@ class TestSegmentation:
         assert segments[0].duration_ms == 30 * 10
 
     def test_energy_dip_boundary(self):
-        """Energy dip (8+ low frames) creates word boundary."""
+        """Energy dip (5+ low-energy frames) creates word boundary."""
         from vibe_core.mahamantra.sound.shabda_decoder import segment_stream
-        # High energy → 10 frames of low energy (RMS=50) → high energy
+        # High energy → 7 frames of low energy (RMS=30) → high energy
         high = _voiced_frames(20, rms=150)
-        low = [pack_frame(50, 0, 1200, 15000)] * 10
+        low = _low_energy_frames(7, rms=30)
         frames = high + low + _voiced_frames(20, rms=150)
         segments = segment_stream(frames)
         assert len(segments) == 2
