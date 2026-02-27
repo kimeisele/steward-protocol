@@ -12,17 +12,25 @@ from vibe_core.mahamantra.sound.shabda_intake import (
     pack_frame,
 )
 from vibe_core.mahamantra.sound.shabda_processor import (
+    STHANA_ENERGY,
+    _ASPIRATION_CENTROID_FLOOR,
     _CENTROID_SIBILANT_THRESHOLD,
+    _GHOSHMAHA_RMS_FLOOR,
+    _NASAL_CENTROID_CEILING,
     _RMS_VOICED_THRESHOLD,
     _RMS_VOWEL_THRESHOLD,
+    _audio_to_sthana,
     _classify_sound,
     _refine_sub_index,
     compare_streams,
     frame_to_rama,
+    frame_to_sthana,
     stream_to_element_walk,
+    stream_to_energy_contour,
     stream_to_histogram,
     stream_to_rama,
     stream_to_signature,
+    stream_to_sthana_profile,
 )
 from vibe_core.mahamantra.substrate.encoding.pancha_walk import (
     COORD_ELEMENT,
@@ -81,21 +89,85 @@ class TestClassifySound:
 # =============================================================================
 
 
+class TestAudioToSthana:
+    """Sthana detection: audio features → 5 energy levels (0-4)."""
+
+    def test_unvoiced_no_f0(self):
+        """No pitch → SPARSHA (0)."""
+        assert _audio_to_sthana(50, 0, 100) == 0
+
+    def test_nasal_low_centroid(self):
+        """F0 + low centroid → ANUNASIKA (4)."""
+        assert _audio_to_sthana(60, 1000, _NASAL_CENTROID_CEILING - 10) == 4
+
+    def test_voiced_aspirated_high_all(self):
+        """F0 + high RMS + high centroid → GHOSHMAHA (3)."""
+        assert _audio_to_sthana(
+            _GHOSHMAHA_RMS_FLOOR + 10, 1200, _ASPIRATION_CENTROID_FLOOR + 10,
+        ) == 3
+
+    def test_aspirated_high_centroid_low_rms(self):
+        """F0 + high centroid but moderate RMS → MAHAPRANA (1)."""
+        assert _audio_to_sthana(80, 1200, _ASPIRATION_CENTROID_FLOOR + 10) == 1
+
+    def test_voiced_moderate(self):
+        """F0 + moderate everything → GHOSHAVAT (2)."""
+        assert _audio_to_sthana(80, 1200, 100) == 2
+
+    def test_all_five_sthanas_reachable(self):
+        """Every SthanaIndex (0-4) must be reachable from audio features."""
+        seen = set()
+        # SPARSHA: no F0
+        seen.add(_audio_to_sthana(50, 0, 100))
+        # MAHAPRANA: F0 + high centroid, moderate RMS
+        seen.add(_audio_to_sthana(80, 1200, 150))
+        # GHOSHAVAT: F0 + moderate
+        seen.add(_audio_to_sthana(80, 1200, 100))
+        # GHOSHMAHA: F0 + high RMS + high centroid
+        seen.add(_audio_to_sthana(150, 1200, 150))
+        # ANUNASIKA: F0 + low centroid
+        seen.add(_audio_to_sthana(60, 1000, 50))
+        assert seen == {0, 1, 2, 3, 4}
+
+
 class TestRefineSubIndex:
+    """Sub-index refinement using Sthana-aware features."""
+
     def test_svara_short(self):
         assert _refine_sub_index(0, 100, 1200, 100, 0) == 0  # short
 
     def test_svara_long(self):
         assert _refine_sub_index(0, 150, 1200, 100, 0) == 1  # long
 
+    def test_svara_compound(self):
+        """High energy + high centroid → compound vowel (diphthong)."""
+        assert _refine_sub_index(0, 170, 1200, 130, 0) == 2  # compound
+
+    def test_svara_special_nasal(self):
+        """Low centroid in vowel → anusvara territory."""
+        assert _refine_sub_index(0, 100, 1200, 50, 0) == 3  # special
+
     def test_sparsha_unvoiced(self):
-        assert _refine_sub_index(1, 50, 0, 100, 0) == 0  # unvoiced
+        """No F0 → SPARSHA (0) via _audio_to_sthana."""
+        assert _refine_sub_index(1, 50, 0, 100, 0) == 0
+
+    def test_sparsha_aspirated(self):
+        """F0 + high centroid, moderate RMS → MAHAPRANA (1)."""
+        assert _refine_sub_index(1, 80, 1200, _ASPIRATION_CENTROID_FLOOR + 10, 0) == 1
 
     def test_sparsha_voiced(self):
-        assert _refine_sub_index(1, 80, 1200, 120, 0) == 2  # voiced
+        """F0 + moderate centroid → GHOSHAVAT (2)."""
+        assert _refine_sub_index(1, 80, 1200, 100, 0) == 2
+
+    def test_sparsha_voiced_aspirated(self):
+        """F0 + high RMS + high centroid → GHOSHMAHA (3)."""
+        assert _refine_sub_index(
+            1, _GHOSHMAHA_RMS_FLOOR + 10, 1200, _ASPIRATION_CENTROID_FLOOR + 10, 0,
+        ) == 3
 
     def test_sparsha_nasal(self):
-        assert _refine_sub_index(1, 60, 1000, 80, 0) == 4  # nasal
+        """F0 + low centroid → ANUNASIKA (4)."""
+        assert _refine_sub_index(1, 60, 1000, _NASAL_CENTROID_CEILING - 10, 0) == 4
 
     def test_shesha_semivowel(self):
         assert _refine_sub_index(2, 60, 1000, 100, 0) == 0  # semivowel
@@ -245,6 +317,99 @@ class TestStreamDerived:
 
     def test_signature_empty(self):
         assert stream_to_signature(()) == ""
+
+
+# =============================================================================
+# STHANA PROFILE / ENERGY CONTOUR
+# =============================================================================
+
+
+class TestSthanaProfile:
+    def test_frame_to_sthana_silence(self):
+        assert frame_to_sthana(_make_frame(0, 0, 0, 0)) == -1
+
+    def test_frame_to_sthana_voiced(self):
+        s = frame_to_sthana(_make_frame(80, 0, 1200, 100))
+        assert 0 <= s <= 4
+
+    def test_frame_to_sthana_all_five_reachable(self):
+        """All 5 Sthana levels reachable from audio.
+
+        pack_frame takes centroid_x10 (Hz×10), unpacked gives centroid_100 (x10//100).
+        So centroid_100=130 needs centroid_x10=13000 in pack_frame.
+        """
+        seen = set()
+        seen.add(frame_to_sthana(_make_frame(50, 0, 0, 10000)))      # SPARSHA(0): no F0
+        seen.add(frame_to_sthana(_make_frame(80, 0, 1200, 13000)))    # MAHAPRANA(1): F0+high cent
+        seen.add(frame_to_sthana(_make_frame(80, 0, 1200, 10000)))    # GHOSHAVAT(2): F0+mod cent
+        seen.add(frame_to_sthana(_make_frame(150, 0, 1200, 13000)))   # GHOSHMAHA(3): F0+high all
+        seen.add(frame_to_sthana(_make_frame(60, 0, 1000, 5000)))     # ANUNASIKA(4): F0+low cent
+        assert seen == {0, 1, 2, 3, 4}
+
+    def test_profile_empty(self):
+        assert stream_to_sthana_profile(()) == ()
+
+    def test_profile_silence_removed(self):
+        frames = [_make_frame(0, 0, 0, 0), _make_frame(80, 0, 1200, 100)]
+        profile = stream_to_sthana_profile(frames)
+        assert len(profile) == 1
+
+    def test_profile_same_length_as_rama(self):
+        frames = [
+            _make_frame(0, 0, 0, 0),
+            _make_frame(150, 0, 1200, 10000),
+            _make_frame(150, 1, 1200, 10000),
+            _make_frame(0, 0, 0, 0),
+            _make_frame(80, 2, 1500, 12000),
+        ]
+        coords = stream_to_rama(frames)
+        profile = stream_to_sthana_profile(frames)
+        assert len(profile) == len(coords)
+
+    def test_energy_contour_empty(self):
+        assert stream_to_energy_contour(()) == ()
+
+    def test_energy_contour_values_in_range(self):
+        frames = [_make_frame(150, v, 1200, 10000) for v in range(PANCHA)]
+        contour = stream_to_energy_contour(frames)
+        assert all(0.0 <= e <= 1.0 for e in contour)
+
+    def test_energy_contour_same_length_as_rama(self):
+        frames = [_make_frame(150, 0, 1200, 10000)] * 5
+        coords = stream_to_rama(frames)
+        contour = stream_to_energy_contour(frames)
+        assert len(contour) == len(coords)
+
+    def test_sthana_energy_tuple(self):
+        """STHANA_ENERGY maps index → float correctly."""
+        assert len(STHANA_ENERGY) == PANCHA
+        assert STHANA_ENERGY[0] == 0.2   # SPARSHA
+        assert STHANA_ENERGY[3] == 1.0   # GHOSHMAHA (max)
+        assert all(0.0 < e <= 1.0 for e in STHANA_ENERGY)
+
+    def test_prabhupada_sthana_profile(self):
+        """Prabhupada's stream has all 5 Sthana levels."""
+        from vibe_core.mahamantra.substrate.encoding.shabda_bridge import (
+            stream_frame, stream_length, _ensure_loaded,
+        )
+        _ensure_loaded()
+        frames = [stream_frame(i) for i in range(stream_length())]
+        profile = stream_to_sthana_profile(frames)
+        assert len(profile) > 500
+        # Should have at least 3 distinct Sthana levels
+        assert len(set(profile)) >= 3
+
+    def test_prabhupada_energy_contour(self):
+        """Energy contour has variation (not all same level)."""
+        from vibe_core.mahamantra.substrate.encoding.shabda_bridge import (
+            stream_frame, stream_length, _ensure_loaded,
+        )
+        _ensure_loaded()
+        frames = [stream_frame(i) for i in range(stream_length())]
+        contour = stream_to_energy_contour(frames)
+        mean_energy = sum(contour) / len(contour)
+        # Prabhupada's chanting: mostly voiced (0.8) with aspiration (0.6)
+        assert 0.5 < mean_energy < 0.95
 
 
 # =============================================================================

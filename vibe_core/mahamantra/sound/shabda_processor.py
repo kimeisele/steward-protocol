@@ -15,11 +15,23 @@ coordinate space that PhoneticEncoder uses for text.
     ResonanceRanker       →  scored words from Gita lexicon
     PhoneticBridge        →  PhoneticTensor (varga/sthana vectors)
 
-The mapping uses THREE acoustic dimensions to narrow 49 → 1-5 candidates:
+The mapping uses FOUR acoustic dimensions to narrow 49 → 1 coordinate:
 
     1. Varga (from centroid)  →  Element (0-4)  →  10 candidates
     2. Sound class (from RMS dynamics)  →  Svara/Sparsha/Shesha  →  2-5 candidates
-    3. Sub-index (from F0 + RMS + duration)  →  final coordinate
+    3. Sthana (from F0 + RMS + centroid)  →  energy level (0-4)  →  exact coordinate
+    4. Vowel quality (from RMS + centroid pattern)  →  short/long/compound/special
+
+Sthana detection uses the SAME 5-level system as PhoneticBridge:
+
+    SPARSHA(0)    = unvoiced stop      → F0 absent, sharp onset
+    MAHAPRANA(1)  = aspirated          → F0 present, high centroid (breath)
+    GHOSHAVAT(2)  = voiced             → F0 present, moderate energy
+    GHOSHMAHA(3)  = voiced aspirated   → F0 present, high energy + high centroid
+    ANUNASIKA(4)  = nasal              → F0 present, low centroid (nasal resonance)
+
+For SPARSHA consonants (coords 16-40), COORD_SUB = SthanaIndex directly.
+This gives 5×5 = 25 distinct consonant coordinates from audio alone.
 
 No external dependencies. No ML models. Pure phonetic algebra.
 """
@@ -117,29 +129,76 @@ def _classify_sound(
     return 1  # SPARSHA
 
 
+# =============================================================================
+# STHANA DETECTION (from acoustic features → 5 energy levels)
+# =============================================================================
+
+# Maps directly to SthanaIndex from phonetic_bridge.py:
+#   0 = SPARSHA     (unvoiced: no F0, sharp onset)         energy=0.2
+#   1 = MAHAPRANA   (aspirated: F0 + high centroid/breath)  energy=0.6
+#   2 = GHOSHAVAT   (voiced: F0 + moderate energy)          energy=0.8
+#   3 = GHOSHMAHA   (voiced aspirated: F0 + max energy)     energy=1.0
+#   4 = ANUNASIKA   (nasal: F0 + low centroid resonance)    energy=0.5
+#
+# For SPARSHA consonants (coords 16-40), COORD_SUB IS the Sthana column.
+
+_NASAL_CENTROID_CEILING = 80
+_ASPIRATION_CENTROID_FLOOR = 120
+_GHOSHMAHA_RMS_FLOOR = 120
+
+
+def _audio_to_sthana(rms: int, f0_x10: int, centroid_100: int) -> int:
+    """Map audio features to SthanaIndex (0-4).
+
+    This is the CORE innovation: acoustic energy → Vedic articulation energy.
+    The same 5-level system that PhoneticBridge uses for text analysis.
+    """
+    # No pitch → unvoiced stop (ka, ca, ṭa, ta, pa)
+    if f0_x10 == 0:
+        return 0  # SPARSHA
+
+    # F0 present → voiced. Now distinguish 4 energy levels.
+
+    # Low centroid + F0 = nasal resonance (ṅa, ña, ṇa, na, ma)
+    if centroid_100 < _NASAL_CENTROID_CEILING:
+        return 4  # ANUNASIKA
+
+    # High energy + high centroid = voiced aspirated (gha, jha, ḍha, dha, bha)
+    if rms > _GHOSHMAHA_RMS_FLOOR and centroid_100 > _ASPIRATION_CENTROID_FLOOR:
+        return 3  # GHOSHMAHA
+
+    # High centroid but lower energy = aspirated (kha, cha, ṭha, tha, pha)
+    if centroid_100 > _ASPIRATION_CENTROID_FLOOR:
+        return 1  # MAHAPRANA
+
+    # Default voiced: moderate energy, moderate centroid (ga, ja, ḍa, da, ba)
+    return 2  # GHOSHAVAT
+
+
 def _refine_sub_index(
     sound_class: int, rms: int, f0_x10: int, centroid_100: int, element: int,
 ) -> int:
-    """Refine sub-index within a sound class using acoustic features.
+    """Refine sub-index within a sound class using Sthana-aware features.
 
-    SVARA sub: 0=short, 1=long (from duration/RMS sustain)
-    SPARSHA sub: 0=unvoiced, 2=voiced, 4=nasal (from F0 + RMS pattern)
-    SHESHA sub: 0=semivowel, 1=sibilant (from centroid)
+    SVARA sub (0-3): 0=short, 1=long, 2=compound, 3=special (anusvara/visarga)
+    SPARSHA sub (0-4): SthanaIndex directly (unvoiced/aspirated/voiced/voiced-asp/nasal)
+    SHESHA sub (0-1): 0=antastha (semivowel), 1=ushman (sibilant)
     """
     if sound_class == 0:  # SVARA
-        # High RMS = long vowel tendency, low = short
+        # Special: nasal quality (low centroid) in vowel = anusvara-like
+        if centroid_100 < _NASAL_CENTROID_CEILING:
+            return 3  # special (anusvara territory)
+        # Compound: high energy + high centroid = diphthong-like transition
+        if rms > 160 and centroid_100 > _ASPIRATION_CENTROID_FLOOR:
+            return 2  # compound
+        # Long vs short: sustained energy
         return 1 if rms > 140 else 0
 
     if sound_class == 1:  # SPARSHA
-        # No F0 = unvoiced (0), F0 present = voiced (2), low centroid + F0 = nasal (4)
-        if f0_x10 == 0:
-            return 0  # unvoiced
-        if centroid_100 < 100:
-            return 4  # nasal (low spectral energy, voiced)
-        return 2  # voiced
+        # Direct Sthana detection — the 5×5 grid
+        return _audio_to_sthana(rms, f0_x10, centroid_100)
 
-    # SHESHA
-    # High centroid = sibilant (1), lower = semivowel (0)
+    # SHESHA: antastha (semivowel) vs ushman (sibilant)
     return 1 if centroid_100 > _CENTROID_SIBILANT_THRESHOLD else 0
 
 
@@ -202,6 +261,64 @@ def frame_to_rama(
             best = c
             best_dist = d
     return best
+
+
+# =============================================================================
+# STHANA ENERGY (pronunciation intensity per frame)
+# =============================================================================
+
+# Float energy values matching PhoneticBridge's STHANA_ENERGY.
+# Index = SthanaIndex, Value = energy (0.0-1.0).
+STHANA_ENERGY: Tuple[float, ...] = (0.2, 0.6, 0.8, 1.0, 0.5)
+
+
+def frame_to_sthana(packed: int) -> int:
+    """Convert one uint32 audio frame to a SthanaIndex (0-4).
+
+    Returns the pronunciation energy level regardless of sound class:
+        0 = SPARSHA     (unvoiced, 0.2)
+        1 = MAHAPRANA   (aspirated, 0.6)
+        2 = GHOSHAVAT   (voiced, 0.8)
+        3 = GHOSHMAHA   (voiced aspirated, 1.0)
+        4 = ANUNASIKA   (nasal, 0.5)
+       -1 = silence
+
+    This runs PARALLEL to frame_to_rama(). Together they give:
+        RAMA coordinate = WHAT phoneme (identity)
+        SthanaIndex     = HOW STRONG  (pronunciation energy)
+    """
+    rms, _varga, f0_x10, centroid_100 = unpack_frame(packed)
+    if rms < _RMS_VOICED_THRESHOLD:
+        return -1
+    return _audio_to_sthana(rms, f0_x10, centroid_100)
+
+
+def stream_to_sthana_profile(frames: Sequence[int]) -> Tuple[int, ...]:
+    """Audio frames → Sthana indices (parallel to stream_to_rama).
+
+    Same length as stream_to_rama(): silence frames removed, same ordering.
+    Each value is a SthanaIndex (0-4) giving pronunciation energy.
+    """
+    profile: List[int] = []
+    for frame in frames:
+        s = frame_to_sthana(frame)
+        if s >= 0:
+            profile.append(s)
+    return tuple(profile)
+
+
+def stream_to_energy_contour(frames: Sequence[int]) -> Tuple[float, ...]:
+    """Audio frames → energy contour (0.0-1.0 per voiced frame).
+
+    Converts SthanaIndex to float energy via STHANA_ENERGY lookup.
+    Same length as stream_to_rama().
+    """
+    contour: List[float] = []
+    for frame in frames:
+        s = frame_to_sthana(frame)
+        if s >= 0:
+            contour.append(STHANA_ENERGY[s])
+    return tuple(contour)
 
 
 # =============================================================================
