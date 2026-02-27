@@ -101,20 +101,17 @@ def mock_llm():
         system = messages[0].get("content", "") if messages else ""
         user = messages[1].get("content", "") if len(messages) > 1 else ""
 
-        # Generate contextual response based on format-aware task instructions from composer.py
-        # These match _COMMENT_INSTRUCTIONS and _POST_INSTRUCTIONS in _build_task()
+        # Match task message action verbs from composer._build_task()
+        # No hardcoded instruction templates — just action + content + resonance
 
-        # Comment formats: observation, question, analysis, opinion
-        if any(s in user for s in ["Point out a non-obvious connection", "Ask the author one specific",
-                                      "Add a concrete technical angle", "Disagree or build on this"]):
+        # Comments: "Respond to this post about: ..."
+        if "Respond to this post about:" in user:
             return _make_response(
                 "Your insight highlights a crucial architectural consideration. "
                 "The real complexity emerges when examining how different systems handle this tradeoff."
             )
-        # Post formats: question, analysis, opinion, observation, tutorial
-        elif any(s in user for s in ["Ask a sharp technical question", "Analyze the technical tradeoffs",
-                                        "Take a strong engineering stance", "Share a non-obvious technical insight",
-                                        "Write a practical how-to"]):
+        # Posts: "Write about: ..."
+        elif "Write about:" in user:
             return _make_response(
                 "This represents a fundamental principle in system design. "
                 "The key insight comes from understanding both the theoretical constraints and practical implications "
@@ -133,12 +130,9 @@ def mock_llm():
             )
 
         # No fallback — unmatched template means test/code mismatch.
-        # This forces test failures when template strings change, preventing silent regressions.
-        # See GitHub issue #833: Don't hide mismatches with fallback text.
         raise AssertionError(
-            f"Mock LLM: unmatched instruction string in user message.\n"
+            f"Mock LLM: unmatched action verb in user message.\n"
             f"User: {user[:100]}\n"
-            f"This indicates test expectations don't match _COMMENT_INSTRUCTIONS/_POST_INSTRUCTIONS in composer.py.\n"
             f"Update mock conditions or verify _build_task() output."
         )
 
@@ -356,18 +350,17 @@ class TestPromptConstruction:
         prompt = self._build_prompt(MOLTBOOK_POSTS[0])
         assert "steward-protocol" in prompt, f"No agent name in prompt: {prompt[:200]}"
 
-    def test_prompt_has_mode_voice(self):
+    def test_prompt_has_cognitive_frame(self):
         prompt = self._build_prompt(MOLTBOOK_POSTS[0])
-        # Must contain one of the mode voices (precision/energy/challenge)
-        assert any(s in prompt.lower() for s in ("precision", "energy", "challenge")), (
-            f"No mode voice in prompt: {prompt[:200]}"
-        )
+        # Must contain computed cognitive signals (Mode, Chapter, Phase)
+        assert "Mode:" in prompt, f"No cognitive mode in prompt: {prompt[:200]}"
+        assert "Chapter" in prompt, f"No chapter in prompt: {prompt[:200]}"
 
     def test_prompt_has_verse_concepts(self):
         """Verse concepts from MahaBuddhi must reach the system prompt."""
         prompt = self._build_prompt(MOLTBOOK_POSTS[0])
-        # Should contain "Draw from these ideas:" with actual verse meanings
-        assert "Draw from these ideas:" in prompt, f"No verse concepts in prompt: {prompt[:200]}"
+        # Should contain "Verse concepts:" with actual verse meanings
+        assert "Verse concepts:" in prompt, f"No verse concepts in prompt: {prompt[:200]}"
 
     def test_prompt_under_800_chars(self):
         """System prompt must be dense, not verbose."""

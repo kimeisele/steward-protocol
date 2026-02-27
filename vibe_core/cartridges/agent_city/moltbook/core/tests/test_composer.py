@@ -32,6 +32,7 @@ def _make_cognition(**overrides):
             "guna": {"mode": "RAJAS"},
             "cell": {"prana": 13581, "integrity": 0.987, "is_alive": True},
             "guardian": "prahlada",
+            "vibration": {"signature": {"element": "prithvi", "harmonic": 23}},
         },
     }
     defaults.update(overrides)
@@ -56,25 +57,40 @@ class TestBuildSystem:
         msg = composer._build_system(_make_cognition(), {})
         assert "my-agent" in msg
 
-    def test_mode_voice_rajas(self):
+    def test_cognitive_frame_rajas(self):
         composer = ContentComposer()
         msg = composer._build_system(_make_cognition(mode="RAJAS"), {})
-        assert "energy" in msg.lower() or "direct" in msg.lower()
+        assert "Mode: RAJAS" in msg
 
-    def test_mode_voice_sattva(self):
+    def test_cognitive_frame_sattva(self):
         composer = ContentComposer()
         msg = composer._build_system(_make_cognition(mode="SATTVA"), {})
-        assert "precision" in msg.lower() or "depth" in msg.lower()
+        assert "Mode: SATTVA" in msg
 
-    def test_mode_voice_tamas(self):
+    def test_cognitive_frame_tamas(self):
         composer = ContentComposer()
         msg = composer._build_system(_make_cognition(mode="TAMAS"), {})
-        assert "challenge" in msg.lower()
+        assert "Mode: TAMAS" in msg
 
-    def test_function_role_included(self):
+    def test_chapter_perspective_included(self):
+        composer = ContentComposer()
+        msg = composer._build_system(_make_cognition(chapter=3, perspective="Karma Yoga - Action"), {})
+        assert "Chapter 3: Karma Yoga - Action" in msg
+
+    def test_function_included(self):
         composer = ContentComposer()
         msg = composer._build_system(_make_cognition(function="maintainer"), {})
-        assert "Sustain" in msg
+        assert "Function: maintainer" in msg
+
+    def test_element_included(self):
+        composer = ContentComposer()
+        msg = composer._build_system(_make_cognition(), {})
+        assert "Element: prithvi" in msg
+
+    def test_focus_included(self):
+        composer = ContentComposer()
+        msg = composer._build_system(_make_cognition(focus="fruit"), {})
+        assert "Phase: fruit" in msg
 
     def test_verse_concepts_included(self):
         composer = ContentComposer()
@@ -108,34 +124,34 @@ class TestBuildSystem:
 
 
 class TestBuildTask:
-    def test_comment_question_format(self):
+    def test_comment_has_respond_action(self):
         composer = ContentComposer()
         msg = composer._build_task(
             _make_cognition(), "comment", "topic", {"content_format": "question"},
         )
-        assert "Ask the author one specific" in msg
+        assert "Respond to this post about:" in msg
 
-    def test_comment_analysis_format(self):
+    def test_comment_includes_topic(self):
         composer = ContentComposer()
         msg = composer._build_task(
-            _make_cognition(), "comment", "topic", {"content_format": "analysis"},
+            _make_cognition(), "comment", "consensus algorithms", {"content_format": "analysis"},
         )
-        assert "Add a concrete technical angle" in msg
+        assert "consensus algorithms" in msg
 
-    def test_post_analysis_format(self):
+    def test_post_has_write_action(self):
         composer = ContentComposer()
         msg = composer._build_task(
             _make_cognition(), "post", "distributed systems", {"content_format": "analysis"},
         )
-        assert "Analyze the technical tradeoffs" in msg
+        assert "Write about:" in msg
         assert "distributed systems" in msg
 
-    def test_post_opinion_format(self):
+    def test_post_includes_topic(self):
         composer = ContentComposer()
         msg = composer._build_task(
             _make_cognition(), "post", "microservices", {"content_format": "opinion"},
         )
-        assert "Take a strong engineering stance" in msg
+        assert "microservices" in msg
 
     def test_dm_reply(self):
         composer = ContentComposer()
@@ -169,19 +185,19 @@ class TestBuildTask:
         )
         assert "POST:" not in msg
 
-    @patch.object(ContentComposer, "_enrich_with_resonance", return_value="fire, truth, action")
-    def test_resonance_vocabulary_included(self, mock_res):
+    @patch.object(ContentComposer, "_build_resonance_context", return_value="RESONANCE:\n- agni (fire) — 0.91 [element]")
+    def test_resonance_context_included(self, mock_res):
         composer = ContentComposer()
         msg = composer._build_task(
             _make_cognition(composed="dharma karma action truth"), "post", "topic",
             {"content_format": "observation"},
         )
-        assert "RESONANCE VOCABULARY:" in msg
-        assert "fire, truth, action" in msg
+        assert "RESONANCE:" in msg
+        assert "agni (fire)" in msg
         # When resonance is available, RESONANT CONCEPTS should NOT appear
         assert "RESONANT CONCEPTS:" not in msg
 
-    @patch.object(ContentComposer, "_enrich_with_resonance", return_value="")
+    @patch.object(ContentComposer, "_build_resonance_context", return_value="")
     def test_resonant_concepts_fallback(self, mock_res):
         composer = ContentComposer()
         msg = composer._build_task(
@@ -216,42 +232,66 @@ class TestBuildTask:
 # =============================================================================
 
 
-class TestResonanceEnrichment:
+class TestResonanceContext:
     def test_short_text_returns_empty(self):
-        assert ContentComposer._enrich_with_resonance("hi") == ""
+        assert ContentComposer._build_resonance_context("hi") == ""
 
     def test_empty_text_returns_empty(self):
-        assert ContentComposer._enrich_with_resonance("") == ""
+        assert ContentComposer._build_resonance_context("") == ""
 
-    @patch("vibe_core.cartridges.agent_city.moltbook.core.composer.resonate", create=True)
-    def test_returns_meanings(self, mock_res):
-        # Can't easily mock the inline import, so test via _enrich_with_resonance
-        # with the actual resonate if available, or skip if not
-        result = ContentComposer._enrich_with_resonance(
+    def test_returns_string(self):
+        result = ContentComposer._build_resonance_context(
             "distributed systems fault tolerance consensus"
         )
-        # resonate() is deterministic — just verify it returns a non-empty string
-        # or empty (if lexicon not available in test env)
+        # resonate() is deterministic — just verify it returns a string
         assert isinstance(result, str)
 
     def test_deduplicates_meanings(self):
         """If resonate returns words with duplicate meanings, they're deduped."""
-        # Test the dedup logic by patching resonate
         mock_rw1 = MagicMock()
         mock_rw1.first_meaning = "fire"
+        mock_rw1.sanskrit = "agni"
+        mock_rw1.total_score = 0.91
+        mock_rw1.score_breakdown.return_value = {"element": 0.9, "harmonic": 0.7}
         mock_rw2 = MagicMock()
         mock_rw2.first_meaning = "fire"  # duplicate
+        mock_rw2.sanskrit = "tejas"
+        mock_rw2.total_score = 0.85
+        mock_rw2.score_breakdown.return_value = {"element": 0.8, "harmonic": 0.6}
         mock_rw3 = MagicMock()
         mock_rw3.first_meaning = "truth"
+        mock_rw3.sanskrit = "satya"
+        mock_rw3.total_score = 0.78
+        mock_rw3.score_breakdown.return_value = {"element": 0.5, "harmonic": 0.9}
 
         with patch(
             "vibe_core.mahamantra.substrate.encoding.resonance_ranker.resonate",
             return_value=[mock_rw1, mock_rw2, mock_rw3],
         ):
-            result = ContentComposer._enrich_with_resonance(
+            result = ContentComposer._build_resonance_context(
                 "distributed systems architecture"
             )
-        assert result == "fire, truth"
+        # fire appears once (deduped), truth appears
+        assert "agni (fire)" in result
+        assert "satya (truth)" in result
+        assert result.count("(fire)") == 1  # deduped
+
+    def test_includes_dimension_scores(self):
+        """Resonance context shows top-scoring dimension for each word."""
+        mock_rw = MagicMock()
+        mock_rw.first_meaning = "action"
+        mock_rw.sanskrit = "karma"
+        mock_rw.total_score = 0.88
+        mock_rw.score_breakdown.return_value = {"element": 0.3, "harmonic": 0.95, "shruti": 0.1}
+
+        with patch(
+            "vibe_core.mahamantra.substrate.encoding.resonance_ranker.resonate",
+            return_value=[mock_rw],
+        ):
+            result = ContentComposer._build_resonance_context(
+                "testing dimension scores in resonance"
+            )
+        assert "[harmonic]" in result  # harmonic scored highest
 
 
 # =============================================================================

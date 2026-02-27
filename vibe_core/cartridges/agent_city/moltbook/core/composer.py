@@ -2,15 +2,19 @@
 
 MahaBuddhi does the thinking. Composer does the talking.
 
-1. BuddhiResult → cognitive system message (perspective, mode, function, verse concepts)
-2. BuddhiResult → cognitive task message (format instruction + resonant vocabulary)
+No hardcoded instruction templates. System message is built entirely from
+computed BuddhiResult signals: chapter, perspective, focus, mode, function,
+vibration element, verse concepts. Task message = action + content + resonance.
+
+1. BuddhiResult → computed cognitive system message
+2. Content + resonance context → task message
 3. Prana/integrity → model routing (reasoning model for substantive posts)
 4. Atomic LLM call
 5. Post-LLM validation (echo, substance)
 """
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from vibe_core.mahamantra.protocols._buddhi import BuddhiResult
 
@@ -29,38 +33,9 @@ _FORMAT_TOKENS = {
 }
 _DEFAULT_TOKENS = 300
 
-# Guna → writing voice (BG 14.5)
-_MODE_VOICE = {
-    "SATTVA": "Write with precision and depth. Measure your words.",
-    "RAJAS": "Write with energy and directness. Drive toward action.",
-    "TAMAS": "Challenge assumptions. Question what everyone accepts.",
-}
-
-# Trinity function → role
-_FUNCTION_ROLE = {
-    "source": "Introduce new perspectives others haven't considered.",
-    "maintainer": "Sustain and deepen the conversation with substance.",
-    "destroyer": "Transform the discussion by challenging weak premises.",
-    "deliverer": "Cut through complexity to deliver the essential insight.",
-    "carrier": "Connect ideas across domains. Bridge different perspectives.",
-}
-
-# Format → task instruction (comments)
-_COMMENT_INSTRUCTIONS = {
-    "question": "Ask the author one specific technical follow-up. What tradeoff or edge case did they miss?",
-    "analysis": "Add a concrete technical angle the author missed. Name a specific tool, pattern, or failure mode.",
-    "opinion": "Disagree or build on this with a specific technical counterpoint. Give a real-world example.",
-    "observation": "Point out a non-obvious connection or implication. Reference specific systems or patterns.",
-}
-
-# Format → task instruction (posts)
-_POST_INSTRUCTIONS = {
-    "question": "Ask a sharp technical question about: {input}. What's the unsolved problem?",
-    "analysis": "Analyze the technical tradeoffs of: {input}. Name specific tools or patterns. Compare approaches.",
-    "opinion": "Take a strong engineering stance on: {input}. Back it with concrete examples from real systems.",
-    "observation": "Share a non-obvious technical insight about: {input}. Be specific — what did you build or observe?",
-    "tutorial": "Write a practical how-to for: {input}. Include concrete steps, tools, and gotchas.",
-}
+# No hardcoded instruction templates.
+# System message built entirely from BuddhiResult computed signals.
+# Task message = action verb + content + resonance context.
 
 
 class ContentComposer:
@@ -117,22 +92,44 @@ class ContentComposer:
         return None
 
     def _build_system(self, cognition: BuddhiResult, input_ctx: Dict[str, Any]) -> str:
-        """Build cognitive system message from BuddhiResult."""
+        """Build system message from computed BuddhiResult signals.
+
+        No hardcoded instruction templates. Every line except the agent name
+        and anti-slop rules is derived from Mahamantra pipeline output.
+        """
         agent_name = "steward-protocol"
         if self._plugin and hasattr(self._plugin, "_agent_name"):
             agent_name = self._plugin._agent_name
 
         parts = [f"You are {agent_name}."]
 
-        # Mode → writing voice
-        parts.append(_MODE_VOICE.get(cognition.mode, _MODE_VOICE["RAJAS"]))
+        # Cognitive frame — computed by MahaBuddhi from input text
+        parts.append(
+            f"Chapter {cognition.chapter}: {cognition.perspective}"
+        )
+        parts.append(
+            f"Phase: {cognition.focus} | Mode: {cognition.mode} | "
+            f"Function: {cognition.function}"
+        )
 
-        # Function → role
-        role = _FUNCTION_ROLE.get(cognition.function)
-        if role:
-            parts.append(role)
+        # Vibration signature — from Mantra VM phonetic encoding
+        vib = cognition.vm_result.get("vibration", {})
+        sig = vib.get("signature", {}) if isinstance(vib, dict) else {}
+        element = sig.get("element", "")
+        if element:
+            parts.append(f"Element: {element}")
 
-        # Strategic context
+        # Verse concepts — matched Gita wisdom (Sanskrit + meaning)
+        if cognition.verse_concepts:
+            meanings = [
+                vc.get("meaning", "")
+                for vc in cognition.verse_concepts[:5]
+                if vc.get("meaning")
+            ]
+            if meanings:
+                parts.append(f"Verse concepts: {', '.join(meanings)}")
+
+        # Strategic context (from strategy planner — WHY this topic, for whom)
         reasoning = input_ctx.get("strategic_reasoning", "")
         eng_ctx = input_ctx.get("engagement_context", "")
         if eng_ctx and reasoning:
@@ -142,17 +139,16 @@ class ContentComposer:
         if reasoning:
             parts.append(f"Context: {reasoning[:200]}")
 
-        # Verse concepts → actual cognitive material for LLM
-        if cognition.verse_concepts:
-            meanings = [vc.get("meaning", "") for vc in cognition.verse_concepts[:5] if vc.get("meaning")]
-            if meanings:
-                parts.append(f"Draw from these ideas: {', '.join(meanings)}.")
+        # Submolt context — WHERE this content goes
+        submolt_ctx = input_ctx.get("submolt_context", "")
+        if submolt_ctx:
+            parts.append(f"Community: {submolt_ctx[:150]}")
 
-        # Anti-slop rules
+        # Anti-slop (universal — not content-specific)
         parts.append(
             "RULES: No AI filler. No 'as an AI'. No 'let me break this down'. "
-            "No 'it's important to note'. Be specific — name real tools, systems, "
-            "patterns, failure modes. No meta-commentary."
+            "No 'it's important to note'. No meta-commentary. "
+            "Be specific — name real tools, systems, patterns."
         )
 
         return "\n".join(parts)
@@ -164,33 +160,32 @@ class ContentComposer:
         input_text: str,
         input_ctx: Dict[str, Any],
     ) -> str:
-        """Build cognitive task message from BuddhiResult + context."""
-        content_format = input_ctx.get("content_format", "observation")
+        """Build task message — action + content + resonance context.
 
-        # Format-aware instruction
+        No format-keyed instruction templates. The cognitive frame in the
+        system message tells the LLM HOW to think. This message tells it
+        WHAT to respond to and provides resonance vocabulary.
+        """
         if content_type == "comment":
-            instruction = _COMMENT_INSTRUCTIONS.get(content_format, _COMMENT_INSTRUCTIONS["observation"])
             task_input = str(input_ctx.get("raw_input", input_text))[:300]
-            parts = [instruction, f"TOPIC: {task_input}"]
+            parts = [f"Respond to this post about: {task_input}"]
         elif content_type == "dm_reply":
             parts = [f"Reply to this message: {input_text[:300]}"]
         elif content_type == "dm_request":
             parts = [f"Send a message about: {input_text[:300]}"]
         else:
-            template = _POST_INSTRUCTIONS.get(content_format, _POST_INSTRUCTIONS["observation"])
-            parts = [template.format(input=input_text[:300] if input_text else content_type)]
+            parts = [f"Write about: {input_text[:300] if input_text else content_type}"]
 
-        # Post content for comments
+        # Post content for comments — the LLM needs the actual post
         post_content = input_ctx.get("post_content", "")
         if post_content and content_type == "comment":
             parts.append(f"\nPOST:\n{post_content[:1500]}")
 
-        # Resonant vocabulary: 7D-ranked Gita words for unique voice
-        resonance_vocab = self._enrich_with_resonance(input_text)
-        if resonance_vocab:
-            parts.append(f"\nRESONANCE VOCABULARY: {resonance_vocab}")
+        # Resonance vocabulary with dimension breakdown
+        resonance_ctx = self._build_resonance_context(input_text)
+        if resonance_ctx:
+            parts.append(f"\n{resonance_ctx}")
         elif cognition.composed:
-            # Fallback: BuddhiResult composition (less specific)
             parts.append(f"\nRESONANT CONCEPTS: {cognition.composed}")
 
         # Knowledge context
@@ -201,11 +196,11 @@ class ContentComposer:
         return "\n".join(parts)
 
     @staticmethod
-    def _enrich_with_resonance(text: str) -> str:
-        """7D resonance ranking over 4127 Gita words → unique vocabulary context.
+    def _build_resonance_context(text: str) -> str:
+        """7D resonance ranking → structured vocabulary with dimension scores.
 
-        Returns comma-separated English meanings of top-5 resonant words.
-        Pure math (<80ms), no LLM, deterministic. Same input → same vocabulary.
+        Shows WHY each word resonates (which of 7 dimensions scored highest),
+        not just what it means. Pure math (<80ms), deterministic.
         """
         if not text or len(text) < 10:
             return ""
@@ -215,17 +210,24 @@ class ContentComposer:
             ranked = resonate(text[:200], top_n=5)
             if not ranked:
                 return ""
-            meanings: List[str] = []
+            lines = ["RESONANCE:"]
             seen: set = set()
             for rw in ranked:
                 m = rw.first_meaning
-                if m and m.lower() not in seen:
-                    seen.add(m.lower())
-                    meanings.append(m)
-            if meanings:
-                return ", ".join(meanings)
+                if not m or m.lower() in seen:
+                    continue
+                seen.add(m.lower())
+                # Top-scoring dimension shows WHY this word resonates
+                breakdown = rw.score_breakdown()
+                # Skip 'total' key, find max scoring dimension
+                dims = {k: v for k, v in breakdown.items() if k != "total"}
+                top_dim = max(dims, key=dims.get) if dims else ""
+                lines.append(
+                    f"- {rw.sanskrit} ({m}) — {rw.total_score:.2f} [{top_dim}]"
+                )
+            return "\n".join(lines) if len(lines) > 1 else ""
         except Exception as e:
-            logger.debug(f"Resonance enrichment skipped: {e}")
+            logger.debug(f"Resonance context skipped: {e}")
         return ""
 
     def _route_model(
