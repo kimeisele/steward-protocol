@@ -264,35 +264,39 @@ class FeedAnalyzer:
                     f"Submolt skipped: {name} (score_cf={int(score * COSMIC_FRAME)} < {_SUBMOLT_RESONANCE_CF})"
                 )
 
+    # Stop words for keyword matching
+    _STOP_WORDS = frozenset({
+        "the", "a", "an", "and", "or", "in", "on", "at", "to", "for", "of",
+        "is", "are", "was", "were", "be", "been", "this", "that", "with",
+        "from", "by", "it", "its", "as", "not", "but", "no", "all", "any",
+        "do", "does", "did", "can", "could", "would", "should", "will",
+        "may", "might", "must", "shall", "has", "have", "had", "about",
+        "into", "over", "after", "before", "more", "most", "very", "just",
+        "also", "how", "what", "which", "who", "whom", "when", "where",
+        "why", "than", "then", "so", "if", "only", "own", "same", "too",
+    })
+
+    @classmethod
+    def _tokenize(cls, text: str) -> frozenset:
+        """Tokenize text into content words (stop words removed)."""
+        tokens = set()
+        for word in text.lower().split():
+            clean = "".join(c for c in word if c.isalnum())
+            if clean and clean not in cls._STOP_WORDS and len(clean) > 2:
+                tokens.add(clean)
+        return frozenset(tokens)
+
     def select_submolt(self, seed_text: str, event_log_getter: Callable) -> Optional[str]:
-        """Select best submolt for content via combined RAMA similarity + diversity.
+        """Select best submolt for content via keyword Jaccard + diversity.
 
-        Uses basin_cosine (60%) + hkr_similarity (40%) — basin_cosine alone has
-        only 0.03 spread across submolts (useless). The combined metric has
-        0.10-0.18 spread (workable).
-
-        Diversity: applies recency penalty to recently-used submolts so the agent
-        doesn't post to the same community every time.
+        Compares content keywords against each submolt's name + description.
+        Applies recency penalty to prevent posting to the same community every time.
         """
         if not self._subscribed_submolts:
             return None
 
-        try:
-            from vibe_core.mahamantra.substrate.core.basin_map import (
-                basin_cosine,
-                hkr_similarity,
-            )
-            from vibe_core.mahamantra.substrate.lotus_core import get_mahamantra
-        except ImportError:
-            return None
-
-        lotus = get_mahamantra()
-
-        # RAMA coordinates for the content
-        try:
-            content_coords = lotus.nama(seed_text[:200])
-        except Exception as e:
-            logger.debug(f"Content RAMA coords failed: {e}")
+        content_tokens = self._tokenize(seed_text[:200])
+        if not content_tokens:
             return None
 
         # Build engagement history + recency penalty from event log
@@ -319,20 +323,21 @@ class FeedAnalyzer:
         except Exception as e:
             logger.debug(f"Engagement/recency history unavailable: {e}")
 
-        # Score each subscribed submolt by combined semantic similarity
+        # Score each subscribed submolt by keyword Jaccard
         scored: List[tuple] = []  # (submolt_name, weighted_score)
 
         for submolt_name in self._subscribed_submolts:
             desc = self._submolt_descriptions.get(submolt_name, "")
             probe = f"{submolt_name} {desc}".strip() if desc else submolt_name
-            try:
-                submolt_coords = lotus.nama(probe[:200])
-                bc = basin_cosine(content_coords, submolt_coords)
-                hkr = hkr_similarity(content_coords, submolt_coords)
-                sim = 0.6 * bc + 0.4 * hkr
-            except Exception as e:
-                logger.debug(f"Submolt scoring failed for {submolt_name}: {e}")
+            submolt_tokens = self._tokenize(probe)
+
+            if not submolt_tokens:
                 continue
+
+            # Jaccard similarity of keyword sets
+            intersection = len(content_tokens & submolt_tokens)
+            union = len(content_tokens | submolt_tokens)
+            sim = intersection / union if union > 0 else 0.0
 
             # Engagement weight: boost submolts with positive engagement
             eng_weight = 1.0 + max(0.0, engagement_weights.get(submolt_name, 0.0) * 0.1)

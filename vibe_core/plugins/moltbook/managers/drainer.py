@@ -397,23 +397,40 @@ class ContentDrainer:
         """Extract post ID from API response (handles multiple response formats).
 
         Moltbook API may return:
-        - {"id": "uuid", ...}       (direct)
-        - {"post": {"id": "..."}}   (nested)
-        - {"data": {"id": "..."}}   (envelope)
+        - {"id": "uuid", ...}            (direct)
+        - {"post": {"id": "..."}}        (nested under "post")
+        - {"data": {"id": "..."}}        (nested under "data")
+        - {"result": {"id": "..."}}      (nested under "result")
+        - {"post_id": "uuid"}            (alternate key name)
+        - {"success": true, "id": "..."}  (with status flag)
         """
         if not isinstance(result, dict):
+            logger.debug(f"Post API response is not dict: {type(result).__name__}")
             return ""
-        # Direct id
+
+        # Log response keys for debugging (first time helps identify format)
+        logger.info(f"Post API response keys: {list(result.keys())[:10]}")
+
+        # Direct id field
         post_id = result.get("id", "")
         if post_id:
             return str(post_id)
-        # Nested under "post" or "data" key
-        for key in ("post", "data"):
+
+        # Alternate key names
+        for key in ("post_id", "postId", "_id"):
+            post_id = result.get(key, "")
+            if post_id:
+                return str(post_id)
+
+        # Nested under common envelope keys
+        for key in ("post", "data", "result"):
             nested = result.get(key)
             if isinstance(nested, dict):
-                post_id = nested.get("id", "")
+                post_id = nested.get("id", "") or nested.get("post_id", "")
                 if post_id:
                     return str(post_id)
+
+        logger.warning(f"Could not extract post_id from response: {str(result)[:200]}")
         return ""
 
     def _drain_comment(self, service: MoltbookProtocol, proposal: ContentProposal) -> None:
