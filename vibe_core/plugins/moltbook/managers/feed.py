@@ -208,24 +208,7 @@ class FeedAnalyzer:
         try:
             from vibe_core.mahamantra.substrate.encoding.resonance_ranker import resonate
         except ImportError:
-            # Fallback: subscribe to all (original behavior)
-            for submolt in submolts:
-                if not isinstance(submolt, dict):
-                    continue
-                name = submolt.get("name", "")
-                if name and name not in self._subscribed_submolts:
-                    self._subscribed_submolts.add(name)
-                    desc = submolt.get("description", "")
-                    if desc:
-                        self._submolt_descriptions[name] = desc
-                    content_queue.enqueue(
-                        {
-                            "content_type": ContentType.SUBSCRIBE.value,
-                            "submolt": name,
-                            "source": "submolt_discovery",
-                            "priority": 0,
-                        }
-                    )
+            logger.warning("resonate() unavailable — submolt discovery skipped")
             return
 
         cold_start = len(self._subscribed_submolts) < 3
