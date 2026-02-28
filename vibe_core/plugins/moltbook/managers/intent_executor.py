@@ -112,6 +112,7 @@ class IntentExecutor:
             self._state.content_queue.enqueue(proposal)
             self._state.commented_post_ids.add(target_post_id)
             logger.info(f"Strategic comment queued for {target_post_id} (mission={intent_dict.get('mission_id', '')})")
+            self._record_manas_outcome(intent_dict, success=True)
         else:
             # KIRTAN: Content generation failed for this intent
             logger.warning(f"Content generation returned None for comment on {target_post_id}")
@@ -120,6 +121,7 @@ class IntentExecutor:
                 f"Comment intent failed (no content): {target_post_id}",
                 {"action": "comment", "post_id": target_post_id, "mission_id": intent_dict.get("mission_id", "")},
             )
+            self._record_manas_outcome(intent_dict, success=False)
 
     def _execute_post_intent(self, intent: object) -> None:
         """Execute a post intent with submolt selection and title extraction.
@@ -171,6 +173,7 @@ class IntentExecutor:
             logger.info(
                 f"Strategic post queued: {proposal.get('title', '')[:50]} (mission={intent_dict.get('mission_id', '')})"
             )
+            self._record_manas_outcome(intent_dict, success=True)
         else:
             # KIRTAN: Content generation failed for this intent
             logger.warning("Content generation returned None for post intent")
@@ -179,3 +182,34 @@ class IntentExecutor:
                 "Post intent failed (no content)",
                 {"action": "post", "mission_id": intent_dict.get("mission_id", "")},
             )
+            self._record_manas_outcome(intent_dict, success=False)
+
+    @staticmethod
+    def _record_manas_outcome(intent_dict: dict, success: bool) -> None:
+        """Record intent outcome to MahaManas cooldown system.
+
+        Reconstructs a minimal ManaVerdict from the intent dict so Manas
+        can track consecutive failures per source and enter meditation mode.
+        """
+        try:
+            from vibe_core.mahamantra.protocols._manas import ManaVerdict, PerceptionEntry
+            from vibe_core.mahamantra.substrate.manas import get_manas
+
+            perception = PerceptionEntry(
+                content=intent_dict.get("topic", ""),
+                source="feed_scan",
+                category="sthula",
+                context={"mission_id": intent_dict.get("mission_id", "")},
+            )
+            verdict = ManaVerdict(
+                perception=perception,
+                approved=True,
+                priority_score=float(intent_dict.get("priority", 5)) * 10,
+                confidence=0.5,
+                dharma_ok=True,
+                dharma_reason="intent execution",
+                reason="executed",
+            )
+            get_manas().record_outcome(verdict, success)
+        except Exception as e:
+            logger.warning(f"Manas outcome recording failed: {e}")

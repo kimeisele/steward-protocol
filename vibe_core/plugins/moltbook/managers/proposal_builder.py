@@ -1,7 +1,7 @@
 """Moltbook Proposal Builder — Circuit result → ContentProposal conversion."""
 
 import logging
-from typing import Any, Callable, Dict, Optional
+from typing import Callable, Optional
 
 from vibe_core.protocols.moltbook_content import ContentProposal
 

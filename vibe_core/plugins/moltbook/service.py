@@ -143,7 +143,8 @@ class MoltbookService(MoltbookProtocol, GADBase):
         try:
             status = run_async(self._client.check_status())
             return status == "claimed"
-        except Exception:
+        except Exception as e:
+            logger.warning(f"Credential check failed: {e}")
             return False
 
     # --- RAJAS operations (write, logged) ---

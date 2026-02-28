@@ -96,7 +96,8 @@ def _kg_priority(content_type: str) -> int:
         resolver = get_resolver()
         priority = resolver.graph.get_metric(node_id, MetricType.PRIORITY)
         return int(priority) if priority else 1
-    except Exception:
+    except Exception as e:
+        logger.warning(f"Priority lookup failed for {node_id}: {e}")
         return 1
 
 
@@ -320,7 +321,8 @@ class ResonanceProposer(ContentProposalProtocol):
     def analyze(self, text: str) -> List[RankedWord]:
         try:
             return resonate(text, top_n=self._top_n)
-        except Exception:
+        except Exception as e:
+            logger.warning(f"Resonance analysis failed: {e}")
             return []
 
     def propose_dm_reply(

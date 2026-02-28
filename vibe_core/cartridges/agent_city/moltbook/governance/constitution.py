@@ -1,12 +1,11 @@
 """
-Moltbook Constitution — Quality Gates + Platform Constraints as Code.
+Moltbook Constitution — Mechanical Safety Net.
 
-Pattern: Herald governance/constitution.py (Living Constitution)
-
-Four enforcement layers:
-    1. GUNA GATE — TAMAS blocks posts (high-visibility, permanent content)
-    2. SLOP DETECTION — AI filler patterns blocked programmatically
-    3. QUALITY SCORING — template leaks, coherence, sentence structure
+Buddhi.evaluate() handles cognitive alignment (TEIL C).
+Constitution handles MECHANICAL checks only:
+    1. SLOP DETECTION — AI filler patterns blocked programmatically
+    2. UNTRANSLATED INTERNALS — pipeline term leak detection
+    3. COHERENCE — minimum word counts, sentence structure
     4. PLATFORM CONSTRAINTS — from knowledge/moltbook/platform.yaml
 
 validate(content, content_type, guna) → ValidationResult
@@ -73,17 +72,6 @@ def _load_platform_constraints() -> Dict[str, Dict[str, object]]:
 
 PLATFORM_CONSTRAINTS: Dict[str, Dict[str, object]] = _load_platform_constraints()
 
-# Words that signal low-quality output (word salad, template leaks)
-# NOTE: SATTVA/RAJAS/TAMAS are NOT blocked — they are legitimate Vedic concepts
-# that the agent uses in philosophical discourse. Blocking them killed all output.
-QUALITY_BLOCKERS = [
-    "unknown · unknown",  # Unresolved guardian leak
-    "PARTICLE",  # Template role leak
-    "NOUN",  # Template role leak
-    "VERB",  # Template role leak
-    "QUALITY",  # Template role leak
-]
-
 # Sanskrit terms that should NOT appear raw in output
 # (they need translation by the content capability)
 UNTRANSLATED_INTERNALS = [
@@ -146,14 +134,12 @@ class MoltbookConstitution:
             violations.append("Empty content")
             return ValidationResult(is_valid=False, violations=violations, warnings=warnings)
 
-        # 0. Guna gate: TAMAS blocks posts (permanent, high-visibility)
-        if guna == "TAMAS" and content_type == "post":
-            violations.append("TAMAS guna cannot produce posts")
+        # Guna = STYLE, not GATE. No guna-based blocking.
 
         # 1. Platform constraints (length, type)
         self._check_platform(content, content_type, violations)
 
-        # 2. Quality blockers (template leaks, word salad indicators)
+        # 2. Mechanical quality checks (slop, untranslated terms)
         self._check_quality(content, violations, warnings)
 
         # 3. Coherence (minimum word count, not just single words)
@@ -180,13 +166,8 @@ class MoltbookConstitution:
             violations.append(f"Content too long for {content_type}: {len(content)} chars (max {max_len})")
 
     def _check_quality(self, content: str, violations: List[str], warnings: List[str]) -> None:
-        """Check for quality blockers (template leaks, slop, internal term exposure)."""
+        """Check for mechanical quality issues (slop, untranslated terms)."""
         content_lower = content.lower()
-
-        # Hard blocks: internal system terms leaking into output
-        for blocker in QUALITY_BLOCKERS:
-            if blocker.lower() in content_lower:
-                violations.append(f"Internal term leak: '{blocker}' must not appear in output")
 
         # Warnings: untranslated Sanskrit pipeline terms
         for term in UNTRANSLATED_INTERNALS:
@@ -239,9 +220,9 @@ class MoltbookConstitution:
     def get_rules_summary(self) -> Dict[str, str]:
         """Get summary of governance rules."""
         return {
-            "guna_gate": "TAMAS blocks posts (comments/DMs allowed)",
+            "guna": "STYLE only — no guna-based blocking (Buddhi.evaluate() handles alignment)",
             "slop_detection": f"{len(SLOP_PATTERNS)} filler patterns (2+=block, 1=warn)",
-            "quality": f"{len(QUALITY_BLOCKERS)} blockers, {len(UNTRANSLATED_INTERNALS)} untranslated terms",
+            "quality": f"{len(UNTRANSLATED_INTERNALS)} untranslated term checks",
             "coherence": "Posts require 2+ sentences",
             "platform": ", ".join(f"{k}:{v.get('max_length', 'n/a')}" for k, v in PLATFORM_CONSTRAINTS.items()),
             "enforcement": "FAIL-CLOSED — violations block content",

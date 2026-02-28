@@ -75,12 +75,19 @@ _TEST_MISSIONS = [
 
 
 def _mock_buddhi_think(text: str):
-    """Return a fake BuddhiResult-like object with .mode attribute."""
+    """Return a fake BuddhiResult-like object with valid cognitive fields."""
     mock = MagicMock()
     mock.mode = "SATTVA"
     mock.approach = "DHARMA"
-    mock.function = "maintainer"
+    mock.function = "VISHNU"  # Valid trinity → comments (not posts)
     mock.chapter = 3
+    mock.prana = 10800  # Half of COSMIC_FRAME → ~50 Viveka score
+    mock.integrity = 0.8
+    mock.is_alive = True
+    mock.verse_concepts = ()
+    mock.resonant_words = ()
+    mock.composed = "dharma action truth"
+    mock.vm_result = {}
     return mock
 
 
@@ -101,7 +108,14 @@ def _make_planner(missions=None) -> MoltbookStrategyPlanner:
 
 @pytest.fixture
 def _mock_buddhi():
-    """Mock get_buddhi() to avoid full Lotus VM in plan_cycle."""
+    """Mock get_buddhi() to avoid full Lotus VM in plan_cycle.
+
+    Also resets MahaManas singleton so tests don't leak state.
+    """
+    import vibe_core.mahamantra.substrate.manas as manas_mod
+
+    manas_mod._manas_instance = None
+
     mock_buddhi = MagicMock()
     mock_buddhi.think.side_effect = _mock_buddhi_think
     with patch(
@@ -109,6 +123,8 @@ def _mock_buddhi():
         return_value=mock_buddhi,
     ):
         yield mock_buddhi
+
+    manas_mod._manas_instance = None
 
 
 # ---------------------------------------------------------------------------
@@ -147,9 +163,9 @@ class TestPlanCycle:
         assert comments[0].mission_id == "moltbook_ai_governance"
         assert comments[0].target_post_id == "p1"
 
-    def test_unmatched_missions_produce_proactive_post(self, _mock_buddhi):
+    def test_vishnu_function_produces_comments(self, _mock_buddhi):
+        """Default VISHNU function → all intents are comments."""
         planner = _make_planner(missions=_TEST_MISSIONS)
-        # Feed that matches only ai_governance
         topics = [
             {
                 "id": "p1",
@@ -158,9 +174,9 @@ class TestPlanCycle:
             },
         ]
         result = planner.plan_cycle(topics, {})
-        posts = [i for i in result if i.action_type == "post"]
-        # At least one proactive post for an unmatched mission
-        assert len(posts) >= 1
+        for intent in result:
+            assert intent.action_type == "comment"
+            assert intent.buddhi_function == "VISHNU"
 
     def test_max_trinity_intents(self, _mock_buddhi):
         """plan_cycle returns at most TRINITY (3) intents."""
@@ -344,66 +360,44 @@ class TestBuddhiSelectFormat:
 
 
 # ---------------------------------------------------------------------------
-# Priority scoring
+# Viveka priority scoring (via MahaManas)
 # ---------------------------------------------------------------------------
 
 
-class TestPriorityScoring:
-    def test_medium_mission_scores_5(self):
-        planner = _make_planner()
-        planner._get_synapse_boost = lambda _: 0  # Isolate from persisted weights
-        score = planner._mission_priority_score("moltbook_ai_governance", _TEST_MISSIONS)
-        assert score == 5
+class TestVivekaPriority:
+    """Priority comes from Viveka scoring inside MahaManas.decide()."""
 
-    def test_high_mission_scores_8(self):
-        planner = _make_planner()
-        planner._get_synapse_boost = lambda _: 0
-        score = planner._mission_priority_score("moltbook_decentralized_protocols", _TEST_MISSIONS)
-        assert score == 8
-
-    def test_low_mission_scores_3(self):
-        planner = _make_planner()
-        planner._get_synapse_boost = lambda _: 0
-        score = planner._mission_priority_score("moltbook_community_building", _TEST_MISSIONS)
-        assert score == 3
-
-    def test_engagement_boost(self):
-        planner = _make_planner()
-        planner._get_synapse_boost = lambda _: 0
-        planner._engagement_cache["moltbook_ai_governance"] = {"success_rate": 0.8}
-        score = planner._mission_priority_score("moltbook_ai_governance", _TEST_MISSIONS)
-        assert score == 7  # 5 + 2
-
-    def test_engagement_penalty(self):
-        planner = _make_planner()
-        planner._get_synapse_boost = lambda _: 0
-        planner._engagement_cache["moltbook_decentralized_protocols"] = {"success_rate": 0.1}
-        score = planner._mission_priority_score("moltbook_decentralized_protocols", _TEST_MISSIONS)
-        assert score == 6  # 8 - 2
-
-    def test_score_clamped_max_10(self):
-        planner = _make_planner()
-        critical_mission = FakeMission(
-            id="m_crit",
-            name="Critical",
-            description="test",
-            priority=FakePriority.CRITICAL,
+    def test_high_prana_high_priority(self, _mock_buddhi):
+        """Higher prana → higher Viveka score → higher intent priority."""
+        _mock_buddhi.think.side_effect = lambda text: MagicMock(
+            mode="SATTVA", approach="DHARMA", function="VISHNU",
+            chapter=3, prana=21600, integrity=1.0, is_alive=True,
+            verse_concepts=(), resonant_words=(), composed="test", vm_result={},
         )
-        planner._engagement_cache["m_crit"] = {"success_rate": 0.9}
-        score = planner._mission_priority_score("m_crit", [critical_mission])
-        assert score == 10  # 10 + 2 → clamped to 10
+        planner = _make_planner(missions=_TEST_MISSIONS)
+        topics = [
+            {"id": "p1", "title": "AI governance and transparent decision-making autonomous", "content": ""},
+        ]
+        result = planner.plan_cycle(topics, {})
+        assert len(result) >= 1
+        # Max Viveka: prana=21600 → 60, integrity=1.0 → 20, VISHNU → 10 = 90 → priority=9
+        assert result[0].priority >= 8
 
-    def test_score_clamped_min_1(self):
-        planner = _make_planner()
-        low_mission = FakeMission(
-            id="m_low",
-            name="Low",
-            description="test",
-            priority=FakePriority.LOW,
+    def test_low_prana_low_priority(self, _mock_buddhi):
+        """Lower prana → lower Viveka score → lower intent priority."""
+        _mock_buddhi.think.side_effect = lambda text: MagicMock(
+            mode="SATTVA", approach="DHARMA", function="SHIVA",
+            chapter=3, prana=1000, integrity=0.2, is_alive=True,
+            verse_concepts=(), resonant_words=(), composed="test", vm_result={},
         )
-        planner._engagement_cache["m_low"] = {"success_rate": 0.1}
-        score = planner._mission_priority_score("m_low", [low_mission])
-        assert score == 1  # 3 - 2 = 1
+        planner = _make_planner(missions=_TEST_MISSIONS)
+        topics = [
+            {"id": "p1", "title": "AI governance and transparent decision-making autonomous", "content": ""},
+        ]
+        result = planner.plan_cycle(topics, {})
+        assert len(result) >= 1
+        # Low Viveka: prana=1000 → ~2.8, integrity=0.2 → 4, SHIVA → 5 = ~12 → priority=1
+        assert result[0].priority <= 3
 
 
 # ---------------------------------------------------------------------------
@@ -495,22 +489,12 @@ class TestEngagementFeedback:
 
 
 # ---------------------------------------------------------------------------
-# Global engagement stats (FeedbackProtocol → plan_cycle)
+# Engagement context (cache-driven, no global stats)
 # ---------------------------------------------------------------------------
 
 
-class TestGlobalEngagementStats:
-    def test_global_stats_used_as_fallback(self, _mock_buddhi):
-        planner = _make_planner(missions=_TEST_MISSIONS)
-        topics = [
-            {"id": "p1", "title": "AI governance and transparent decision-making autonomous", "content": ""},
-        ]
-        result = planner.plan_cycle(topics, {"success_rate": 0.75, "total_signals": 20})
-        # At least one intent should have global engagement context
-        with_eng = [i for i in result if "Overall:" in i.engagement_context]
-        assert len(with_eng) >= 1
-
-    def test_mission_specific_overrides_global(self, _mock_buddhi):
+class TestEngagementContext:
+    def test_mission_cache_provides_context(self, _mock_buddhi):
         planner = _make_planner(missions=_TEST_MISSIONS)
         planner._engagement_cache["moltbook_ai_governance"] = {
             "success_rate": 0.9,
@@ -520,23 +504,35 @@ class TestGlobalEngagementStats:
         topics = [
             {"id": "p1", "title": "AI governance and transparent decision-making autonomous", "content": ""},
         ]
-        result = planner.plan_cycle(topics, {"success_rate": 0.5, "total_signals": 100})
+        result = planner.plan_cycle(topics, {})
         matched = [i for i in result if i.mission_id == "moltbook_ai_governance"]
         if matched:
-            # Should use mission-specific, not global
             assert "Success rate:" in matched[0].engagement_context
-            assert "Overall:" not in matched[0].engagement_context
 
-    def test_empty_global_stats_no_context(self, _mock_buddhi):
+    def test_no_cache_no_context(self, _mock_buddhi):
         planner = _make_planner(missions=_TEST_MISSIONS)
         topics = [
             {"id": "p1", "title": "AI governance and transparent decision-making autonomous", "content": ""},
         ]
         result = planner.plan_cycle(topics, {})
-        # No engagement context when no data
         for intent in result:
             if intent.mission_id == "moltbook_ai_governance":
                 assert intent.engagement_context == ""
+
+    def test_cognitive_provenance_fields(self, _mock_buddhi):
+        """Intents carry BuddhiResult cognitive provenance."""
+        planner = _make_planner(missions=_TEST_MISSIONS)
+        topics = [
+            {"id": "p1", "title": "AI governance and transparent decision-making autonomous", "content": ""},
+        ]
+        result = planner.plan_cycle(topics, {})
+        assert len(result) >= 1
+        intent = result[0]
+        assert intent.buddhi_function == "VISHNU"
+        assert intent.buddhi_approach == "DHARMA"
+        assert intent.buddhi_chapter == 3
+        assert intent.buddhi_prana > 0
+        assert intent.buddhi_integrity > 0.0
 
 
 # ---------------------------------------------------------------------------
@@ -918,64 +914,54 @@ class TestMissionNesting:
 
 
 class TestIntentDiversity:
-    def test_unmatched_mission_creates_post(self, _mock_buddhi):
-        """When some missions don't match feed, one gets a proactive post."""
+    def test_brahma_function_produces_post(self, _mock_buddhi):
+        """BRAHMA function + can_post + novel chapter → post intent."""
+        _mock_buddhi.think.side_effect = lambda text: MagicMock(
+            mode="SATTVA", approach="GENESIS", function="BRAHMA",
+            chapter=7, prana=15000, integrity=0.9, is_alive=True,
+            verse_concepts=(), resonant_words=(), composed="creation", vm_result={},
+        )
         planner = _make_planner(missions=_TEST_MISSIONS)
-        # Feed matches only 1 mission
         topics = [
             {"id": "p1", "title": "AI governance and transparent decision-making autonomous", "content": ""},
         ]
         result = planner.plan_cycle(topics, {})
         posts = [i for i in result if i.action_type == "post"]
-        assert len(posts) >= 1, "Should have at least 1 post intent"
+        assert len(posts) >= 1, "BRAHMA function should produce post intent"
+        assert posts[0].buddhi_function == "BRAHMA"
 
-    def test_all_matched_stays_comment_only(self, _mock_buddhi):
-        """When ALL missions match feed, agent comments — no forced post conversion."""
-        generic_missions = [
-            FakeMission(
-                id="m1", name="M1",
-                description="AI governance and transparent decision-making",
-                priority=FakePriority.HIGH,
-            ),
-            FakeMission(
-                id="m2", name="M2",
-                description="decentralized protocols and agent coordination",
-                priority=FakePriority.LOW,
-            ),
-        ]
-        planner = _make_planner(missions=generic_missions)
-
-        # Feed posts that each match their respective mission
-        topics = [
-            {"id": "p1", "title": "AI governance and transparent decision-making research", "content": ""},
-            {"id": "p2", "title": "decentralized protocols for agent coordination analysis", "content": ""},
-        ]
-        result = planner.plan_cycle(topics, {})
-        comments = [i for i in result if i.action_type == "comment"]
-        # With fewer than TRINITY comments, a post may be synthesized from feed
-        assert len(comments) >= 1, "Should have comment intents"
-        assert len(result) <= TRINITY, "Should not exceed TRINITY intents"
-
-    def test_semantic_dedup_skips_recent_post(self, _mock_buddhi):
-        """Post intent is skipped when topic semantically overlaps with own recent post."""
+    def test_vishnu_function_stays_comment(self, _mock_buddhi):
+        """VISHNU function → always comment, never post."""
         planner = _make_planner(missions=_TEST_MISSIONS)
-        # Unmatched mission would normally create a post
         topics = [
             {"id": "p1", "title": "AI governance and transparent decision-making autonomous", "content": ""},
         ]
-        # We recently posted about the same thing (own_post_ids)
+        result = planner.plan_cycle(topics, {})
+        for intent in result:
+            assert intent.action_type == "comment"
+
+    def test_brahma_blocked_by_zero_streak(self, _mock_buddhi):
+        """BRAHMA + zero engagement streak → comments only."""
+        _mock_buddhi.think.side_effect = lambda text: MagicMock(
+            mode="SATTVA", approach="GENESIS", function="BRAHMA",
+            chapter=7, prana=15000, integrity=0.9, is_alive=True,
+            verse_concepts=(), resonant_words=(), composed="creation", vm_result={},
+        )
+        planner = _make_planner(missions=_TEST_MISSIONS)
+        topics = [
+            {"id": "p1", "title": "AI governance and transparent decision-making autonomous", "content": ""},
+        ]
+        # 3 recent posts with 0 engagement
         own_posts = {
-            "post_123": {
-                "title": "AI governance and transparent decision-making autonomous systems",
-                "created_at": 1000000.0,
-            },
+            f"p{i}": {"title": f"Post {i}", "created_at": 1000000.0 + i, "upvotes": 0, "replies": 0}
+            for i in range(5)
         }
         result = planner.plan_cycle(topics, {}, own_post_ids=own_posts)
         posts = [i for i in result if i.action_type == "post"]
-        assert len(posts) == 0, "Should skip post when topic semantically overlaps recent"
+        assert len(posts) == 0, "Should skip posts when zero engagement streak"
 
-    def test_max_trinity_still_enforced_with_diversity(self, _mock_buddhi):
-        """Intent diversity doesn't break TRINITY cap."""
+    def test_max_trinity_still_enforced(self, _mock_buddhi):
+        """MahaManas diversity doesn't break TRINITY cap."""
         planner = _make_planner(missions=_TEST_MISSIONS)
         topics = [
             {"id": f"p{i}", "title": f"AI governance decision autonomous systems topic {i}", "content": ""}
@@ -1050,7 +1036,12 @@ class TestSravanamCheck:
             assert MoltbookStrategyPlanner._sravanam_check(1, 100) is True
 
     def test_sravanam_blocks_post_in_plan_cycle(self, _mock_buddhi):
-        """When SravanamCheck fails, plan_cycle returns comments only."""
+        """When SravanamCheck fails, BRAHMA is blocked → comments only."""
+        _mock_buddhi.think.side_effect = lambda text: MagicMock(
+            mode="SATTVA", approach="GENESIS", function="BRAHMA",
+            chapter=7, prana=15000, integrity=0.9, is_alive=True,
+            verse_concepts=(), resonant_words=(), composed="creation", vm_result={},
+        )
         planner = _make_planner(missions=_TEST_MISSIONS)
         topics = [
             {"id": "p1", "title": "AI governance and transparent decision-making autonomous", "content": ""},
@@ -1103,7 +1094,12 @@ class TestZeroEngagementStreak:
         assert not MoltbookStrategyPlanner._zero_engagement_streak(own_posts)
 
     def test_streak_blocks_post_in_plan_cycle(self, _mock_buddhi):
-        """When recent posts have 0 engagement, plan_cycle returns comments only."""
+        """When recent posts have 0 engagement, BRAHMA is blocked → comments only."""
+        _mock_buddhi.think.side_effect = lambda text: MagicMock(
+            mode="SATTVA", approach="GENESIS", function="BRAHMA",
+            chapter=7, prana=15000, integrity=0.9, is_alive=True,
+            verse_concepts=(), resonant_words=(), composed="creation", vm_result={},
+        )
         planner = _make_planner(missions=_TEST_MISSIONS)
         topics = [
             {"id": "p1", "title": "AI governance and transparent decision-making autonomous", "content": ""},

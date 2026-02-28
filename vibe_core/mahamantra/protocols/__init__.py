@@ -200,6 +200,18 @@ def __getattr__(name: str):
 
         return getattr(_shabda_derivation, name)
 
+    # Manas (Cognitive Mind - Tattva #6)
+    if name in (
+        "ManasProtocol",
+        "PerceptionEntry",
+        "ManaVerdict",
+        "DharmaGateProtocol",
+        "SynapticProtocol",
+    ):
+        from vibe_core.mahamantra.protocols import _manas
+
+        return getattr(_manas, name)
+
     # Buddhi (Discriminative Intelligence - Mahat-tattva)
     if name in ("BuddhiProtocol", "BuddhiResult", "BuddhiEvaluation"):
         from vibe_core.mahamantra.protocols import _buddhi

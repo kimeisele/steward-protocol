@@ -83,6 +83,14 @@ class ContentComposer:
             if len(alnum_words) < 3:
                 logger.warning("LLM output has no substance — rejecting")
                 return None
+            # Post-LLM: topic overlap (mechanical — keyword Jaccard)
+            if not self._verify_topic_overlap(content, input_text):
+                logger.warning("Topic drift detected — rejecting")
+                return None
+            # Post-LLM: chapter coherence (mechanical — Buddhi re-evaluation)
+            if not self._verify_chapter_coherence(content, cognition):
+                logger.warning("Chapter drift detected — rejecting")
+                return None
             # Clean mid-sentence cuts
             if not content.rstrip().endswith((".", "!", "?", ":", "```")):
                 content = self.truncate_smart(content, len(content))
@@ -238,7 +246,7 @@ class ContentComposer:
                 )
             return "\n".join(lines) if len(lines) > 1 else ""
         except Exception as e:
-            logger.debug(f"Resonance context skipped: {e}")
+            logger.warning(f"Resonance context failed: {e}")
         return ""
 
     def _route_model(
@@ -279,7 +287,8 @@ class ContentComposer:
             provider = get_llm_provider()
             if not provider or not provider.is_available():
                 return None
-        except Exception:
+        except Exception as e:
+            logger.warning(f"LLM provider unavailable: {e}")
             return None
 
         # Quota check
@@ -327,6 +336,49 @@ class ContentComposer:
             logger.warning(f"LLM call failed: {e}")
 
         return None
+
+    @staticmethod
+    def _verify_topic_overlap(output: str, input_text: str) -> bool:
+        """Mechanical check: output keywords overlap with input topic.
+
+        Uses keyword Jaccard from text_utils. Threshold: 0.10.
+        If input is too short to tokenize, passes through.
+        """
+        if not input_text or len(input_text.strip()) < 15:
+            return True  # Too short to verify meaningfully
+        try:
+            from vibe_core.cartridges.agent_city.moltbook.core.text_utils import keyword_jaccard
+
+            score = keyword_jaccard(input_text, output)
+            if score < 0.10:
+                logger.warning(f"Topic overlap Jaccard={score:.2f} (threshold=0.10)")
+                return False
+            return True
+        except Exception as e:
+            logger.warning(f"Topic overlap check failed: {e}")
+            return True  # Can't verify, pass through
+
+    @staticmethod
+    def _verify_chapter_coherence(output: str, input_cognition: BuddhiResult) -> bool:
+        """Mechanical check: output cognitive chapter matches input.
+
+        Re-runs Buddhi.think() on the OUTPUT. If chapter diverged,
+        the LLM drifted off-topic. Pure VM computation, no LLM.
+        """
+        try:
+            from vibe_core.mahamantra.substrate.buddhi import get_buddhi
+
+            output_cognition = get_buddhi().think(output)
+            if output_cognition.chapter != input_cognition.chapter:
+                logger.warning(
+                    f"Chapter drift: input ch.{input_cognition.chapter} "
+                    f"→ output ch.{output_cognition.chapter}"
+                )
+                return False
+            return True
+        except Exception as e:
+            logger.warning(f"Chapter coherence check failed: {e}")
+            return True  # Can't verify, pass through
 
     @staticmethod
     def truncate_smart(text: str, limit: int) -> str:

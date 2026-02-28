@@ -6,6 +6,8 @@ Thin tool wrapper. Gets proposer from ServiceRegistry (registered by plugin).
 Does NOT create its own proposer instance.
 """
 
+import logging
+
 from vibe_core.tools.tool_protocol import Tool, ToolResult
 
 
@@ -18,8 +20,8 @@ def _get_proposer():
         proposer = ServiceRegistry.get(ContentProposalProtocol)
         if proposer is not None:
             return proposer
-    except Exception:
-        pass
+    except Exception as e:
+        logging.getLogger("MOLTBOOK.TOOLS").debug(f"ServiceRegistry unavailable: {e}")
     from vibe_core.plugins.moltbook.resonance_proposer import ResonanceProposer
 
     return ResonanceProposer()

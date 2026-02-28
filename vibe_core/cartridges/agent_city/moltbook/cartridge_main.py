@@ -46,8 +46,8 @@ def _get_proposer():
         proposer = ServiceRegistry.get(ContentProposalProtocol)
         if proposer is not None:
             return proposer
-    except Exception:
-        pass
+    except Exception as e:
+        logging.getLogger("MOLTBOOK.CARTRIDGE").debug(f"ServiceRegistry unavailable: {e}")
     from vibe_core.plugins.moltbook.resonance_proposer import ResonanceProposer
 
     return ResonanceProposer()
