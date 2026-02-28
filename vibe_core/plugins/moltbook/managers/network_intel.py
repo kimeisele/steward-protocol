@@ -10,29 +10,9 @@ import logging
 import time
 from typing import Dict, List, Set, Tuple
 
+from vibe_core.cartridges.agent_city.moltbook.core.text_utils import tokenize
+
 logger = logging.getLogger("MOLTBOOK.NETWORK_INTEL")
-
-# Stop words for interest keyword extraction
-_STOP_WORDS = frozenset({
-    "the", "a", "an", "and", "or", "in", "on", "at", "to", "for", "of",
-    "is", "are", "was", "were", "be", "been", "this", "that", "with",
-    "from", "by", "it", "its", "as", "not", "but", "no", "all", "any",
-    "do", "does", "did", "can", "could", "would", "should", "will",
-    "has", "have", "had", "about", "into", "over", "more", "very",
-    "just", "also", "how", "what", "which", "who", "when", "where",
-    "why", "than", "then", "so", "if", "only", "own", "same", "too",
-    "my", "your", "our", "they", "them", "we", "you", "me",
-})
-
-
-def _tokenize(text: str) -> Set[str]:
-    """Tokenize text into content keywords (stop words removed)."""
-    tokens: Set[str] = set()
-    for word in text.lower().split():
-        clean = "".join(c for c in word if c.isalnum())
-        if clean and clean not in _STOP_WORDS and len(clean) > 2:
-            tokens.add(clean)
-    return tokens
 
 
 class NetworkIntel:
@@ -89,7 +69,7 @@ class NetworkIntel:
                     # Extract interest keywords from description
                     desc = profile.get("description", "")
                     if desc and isinstance(desc, str):
-                        self._agent_topics[author] = _tokenize(desc)
+                        self._agent_topics[author] = set(tokenize(desc))
                     else:
                         self._agent_topics[author] = set()
                     fetched += 1

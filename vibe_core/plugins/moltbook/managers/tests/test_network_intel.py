@@ -2,26 +2,24 @@
 
 from unittest.mock import MagicMock
 
-from vibe_core.plugins.moltbook.managers.network_intel import (
-    NetworkIntel,
-    _tokenize,
-)
+from vibe_core.cartridges.agent_city.moltbook.core.text_utils import tokenize
+from vibe_core.plugins.moltbook.managers.network_intel import NetworkIntel
 
 
 class TestTokenize:
     def test_basic_tokenization(self):
-        tokens = _tokenize("AI governance and transparent systems")
+        tokens = tokenize("AI governance and transparent systems")
         assert "governance" in tokens
         assert "transparent" in tokens
         assert "systems" in tokens
         assert "and" not in tokens  # stop word
 
     def test_stop_words_removed(self):
-        tokens = _tokenize("the a an and or in on at to for of")
+        tokens = tokenize("the a an and or in on at to for of")
         assert len(tokens) == 0
 
     def test_short_words_removed(self):
-        tokens = _tokenize("AI is ok but ML works")
+        tokens = tokenize("AI is ok but ML works")
         assert "works" in tokens
         # "ai", "is", "ok", "ml" are <=2 chars → removed
         assert "ai" not in tokens

@@ -15,6 +15,7 @@ from vibe_core.mahamantra.substrate.core.seed import (
     QUARTERS,
     SHARANAGATI,
 )
+from vibe_core.cartridges.agent_city.moltbook.core.text_utils import tokenize
 from vibe_core.protocols.moltbook_content import (
     ContentProposal,
     ContentQueue,
@@ -277,93 +278,6 @@ class FeedAnalyzer:
                     f"Submolt skipped: {name} (score_cf={int(score * COSMIC_FRAME)} < {_SUBMOLT_RESONANCE_CF})"
                 )
 
-    # Stop words for keyword matching
-    _STOP_WORDS = frozenset(
-        {
-            "the",
-            "a",
-            "an",
-            "and",
-            "or",
-            "in",
-            "on",
-            "at",
-            "to",
-            "for",
-            "of",
-            "is",
-            "are",
-            "was",
-            "were",
-            "be",
-            "been",
-            "this",
-            "that",
-            "with",
-            "from",
-            "by",
-            "it",
-            "its",
-            "as",
-            "not",
-            "but",
-            "no",
-            "all",
-            "any",
-            "do",
-            "does",
-            "did",
-            "can",
-            "could",
-            "would",
-            "should",
-            "will",
-            "may",
-            "might",
-            "must",
-            "shall",
-            "has",
-            "have",
-            "had",
-            "about",
-            "into",
-            "over",
-            "after",
-            "before",
-            "more",
-            "most",
-            "very",
-            "just",
-            "also",
-            "how",
-            "what",
-            "which",
-            "who",
-            "whom",
-            "when",
-            "where",
-            "why",
-            "than",
-            "then",
-            "so",
-            "if",
-            "only",
-            "own",
-            "same",
-            "too",
-        }
-    )
-
-    @classmethod
-    def _tokenize(cls, text: str) -> frozenset:
-        """Tokenize text into content words (stop words removed)."""
-        tokens = set()
-        for word in text.lower().split():
-            clean = "".join(c for c in word if c.isalnum())
-            if clean and clean not in cls._STOP_WORDS and len(clean) > 2:
-                tokens.add(clean)
-        return frozenset(tokens)
-
     def select_submolt(self, seed_text: str, event_log_getter: Callable) -> Optional[str]:
         """Select best submolt for content via keyword Jaccard + diversity.
 
@@ -373,7 +287,7 @@ class FeedAnalyzer:
         if not self._subscribed_submolts:
             return None
 
-        content_tokens = self._tokenize(seed_text[:200])
+        content_tokens = tokenize(seed_text[:200])
         if not content_tokens:
             return None
 
@@ -407,7 +321,7 @@ class FeedAnalyzer:
         for submolt_name in self._subscribed_submolts:
             desc = self._submolt_descriptions.get(submolt_name, "")
             probe = f"{submolt_name} {desc}".strip() if desc else submolt_name
-            submolt_tokens = self._tokenize(probe)
+            submolt_tokens = tokenize(probe)
 
             if not submolt_tokens:
                 continue

@@ -15,6 +15,7 @@ STOP_WORDS = frozenset({
     "also", "how", "what", "which", "who", "whom", "when", "where",
     "why", "than", "then", "so", "if", "only", "own", "same", "too",
     "each", "every", "both", "few", "some", "such", "other",
+    "my", "your", "our", "they", "them", "we", "you", "me",
 })
 
 
