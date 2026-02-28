@@ -154,7 +154,7 @@ class MoltbookStrategyPlanner:
 
         Called every DHARMA cycle when feed has topics. New feed topics → new missions.
         """
-        orch = self._orchestrator
+        orch = self.orchestrator  # Property — lazy-inits if None
         if not orch:
             return
 
