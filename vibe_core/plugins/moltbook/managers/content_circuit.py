@@ -1,23 +1,15 @@
 """Moltbook Content Circuit Executor — AgencyDirector wrapper for circuit execution."""
 
 import logging
-from typing import Any, Dict, Optional, Protocol
+from typing import Any, Callable, Dict, Optional
 
 logger = logging.getLogger("MOLTBOOK.CIRCUIT")
 
 
-class ContentCircuitCallbacks(Protocol):
-    """Callbacks that MoltbookPlugin provides to ContentCircuitExecutor."""
-
-    agency_director: object  # MahaDirector
-
-    def _emit_event(self, event_type_name: str, message: str, data: Optional[dict] = None) -> None:
-        """Emit system event."""
-        ...
-
-
 class ContentCircuitExecutor:
     """Execute content generation circuit via AgencyDirector.
+
+    Receives explicit callables — no back-reference to plugin.
 
     Responsibilities:
     - Build kwargs dict for AgencyDirector.run_retry_loop()
@@ -27,22 +19,15 @@ class ContentCircuitExecutor:
     - Return None on any failure (no fallbacks)
     - KIRTAN: Record failures → Reflection + SynapseStore for system learning
     - KIRTAN: Record successes → SynapseStore for positive reinforcement
-
-    YANTRA Discipline:
-    - ONE path: AgencyDirector.run_retry_loop() IS the state machine
-    - Explicit event emission on integrity skip
-    - Clear status handling (SKIPPED_LOW_INTEGRITY vs. SUCCESS vs. other)
-    - No fallbacks: None on any non-success state
-    - Every outcome (success/failure) feeds back into the learning system
     """
 
-    def __init__(self, plugin: "ContentCircuitCallbacks") -> None:
-        """Initialize with parent plugin callbacks.
-
-        Args:
-            plugin: MoltbookPlugin instance providing callbacks
-        """
-        self._plugin: "ContentCircuitCallbacks" = plugin
+    def __init__(
+        self,
+        agency_director_getter: Callable[[], Any],
+        emit_event: Callable[..., None],
+    ) -> None:
+        self._get_director = agency_director_getter
+        self._emit_event = emit_event
 
     def execute(
         self,
@@ -86,11 +71,12 @@ class ContentCircuitExecutor:
             kwargs.update(context)
 
         # Execute circuit via director (catches all internal errors)
-        result = self._plugin.agency_director.run_retry_loop(**kwargs)
+        director = self._get_director()
+        result = director.run_retry_loop(**kwargs)
 
         # Handle low integrity skip
         if result.status == "SKIPPED_LOW_INTEGRITY":
-            self._plugin._emit_event(
+            self._emit_event(
                 "CONTENT_SKIPPED",
                 f"Low integrity skip: {result.guna}",
                 {
@@ -161,7 +147,7 @@ class ContentCircuitExecutor:
         except Exception as e:
             logger.warning(f"SynapseStore failure learning failed: {e}")
 
-        self._plugin._emit_event(
+        self._emit_event(
             "CONTENT_FAILURE",
             f"Content generation failed: {status} ({content_type})",
             {

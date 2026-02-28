@@ -1,25 +1,18 @@
 """Moltbook State Restorer — Cross-phase state recovery."""
 
 import logging
-from typing import TYPE_CHECKING, List, Protocol
+from typing import Any, Callable, List
 
-if TYPE_CHECKING:
-    from vibe_core.plugins.moltbook.plugin_main import MoltbookPlugin
+from vibe_core.plugins.moltbook.state import MoltbookState
 
 logger = logging.getLogger("MOLTBOOK.RESTORE")
 
 
-class StateRestorerCallbacks(Protocol):
-    """Callbacks that MoltbookPlugin provides to StateRestorer."""
-
-    _heartbeat: object  # HeartbeatOrchestrator
-    _current_feed_topics: List[dict]
-    _current_intents: list  # List[StrategicIntent]
-    _persistence: object  # PersistenceManager
-
-
 class StateRestorer:
     """Restore cross-phase state from previous run.
+
+    Receives MoltbookState + explicit persistence/heartbeat references.
+    No back-reference to plugin — full dependency injection.
 
     Responsibilities:
     - Restore orchestrator state (phase ticks, debounce timestamp)
@@ -27,21 +20,17 @@ class StateRestorer:
     - Restore feed topics (raw dicts, no deserialization)
     - Restore strategic intents (StrategicIntent objects)
     - Idempotent: only restore if state was empty
-
-    YANTRA Discipline:
-    - Protocol-based callbacks (no Any types)
-    - Explicit error handling per state type
-    - Logging at restoration points
-    - No fallbacks: if deserialization fails, skip intent restoration
     """
 
-    def __init__(self, plugin: "MoltbookPlugin") -> None:
-        """Initialize with parent plugin callbacks.
-
-        Args:
-            plugin: MoltbookPlugin instance providing callbacks
-        """
-        self._plugin: "MoltbookPlugin" = plugin
+    def __init__(
+        self,
+        state: MoltbookState,
+        persistence_getter: Callable[[], Any],
+        heartbeat_getter: Callable[[], Any],
+    ) -> None:
+        self._state = state
+        self._get_persistence = persistence_getter
+        self._get_heartbeat = heartbeat_getter
 
     def restore_phase_state(self) -> None:
         """Restore cross-phase state from previous run.
@@ -54,31 +43,33 @@ class StateRestorer:
 
         Idempotent: only restores if current state is empty.
         """
-        restored = self._plugin._persistence.restore_phase_state()
+        restored = self._get_persistence().restore_phase_state()
         if not restored:
             return
+
+        heartbeat = self._get_heartbeat()
 
         # === Restore orchestrator state (phase ticks, debounce timestamp, etc.) ===
         orch_state = restored.get("orchestrator_state", {})
         if orch_state:
-            self._plugin._heartbeat.restore(orch_state)
+            heartbeat.restore(orch_state)
 
         # === Restore heartbeat_count (from orchestrator, highest wins) ===
         saved_hb = restored.get("heartbeat_count", 0)
-        if saved_hb > self._plugin._heartbeat.current_heartbeat_count:
+        if saved_hb > heartbeat.current_heartbeat_count:
             # Manually set if persistence has a higher count
-            if hasattr(self._plugin._heartbeat, "_heartbeat_count"):
-                self._plugin._heartbeat._heartbeat_count = saved_hb
+            if hasattr(heartbeat, "_heartbeat_count"):
+                heartbeat._heartbeat_count = saved_hb
 
         # === Restore feed topics (raw dicts, no deserialization needed) ===
         topics = restored.get("feed_topics", [])
-        if topics and not self._plugin._current_feed_topics:
-            self._plugin._current_feed_topics = topics
+        if topics and not self._state.current_feed_topics:
+            self._state.current_feed_topics = topics
             logger.info(f"Restored {len(topics)} feed topics from previous run")
 
         # === Restore intents as StrategicIntent objects ===
         intent_dicts = restored.get("intent_dicts", [])
-        if intent_dicts and not self._plugin._current_intents:
+        if intent_dicts and not self._state.current_intents:
             self._restore_strategic_intents(intent_dicts)
 
     def _restore_strategic_intents(self, intent_dicts: List[dict]) -> None:
@@ -106,7 +97,7 @@ class StateRestorer:
                         submolt_context=d.get("submolt_context", ""),
                     )
                 )
-            self._plugin._current_intents = intents
+            self._state.current_intents = intents
             logger.info(f"Restored {len(intents)} strategic intents from previous run")
         except Exception as e:
             logger.debug(f"Strategic intent restoration failed: {e}")

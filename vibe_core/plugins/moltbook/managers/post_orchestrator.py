@@ -1,7 +1,9 @@
 """Moltbook Post Orchestrator — Post creation, comment monitoring, profile management."""
 
 import logging
-from typing import TYPE_CHECKING, Optional, Protocol
+from typing import TYPE_CHECKING, Any, Dict, Optional
+
+from vibe_core.plugins.moltbook.state import MoltbookState
 
 if TYPE_CHECKING:
     from vibe_core.plugins.moltbook.plugin_main import MoltbookPlugin
@@ -9,54 +11,11 @@ if TYPE_CHECKING:
 logger = logging.getLogger("MOLTBOOK.POST")
 
 
-class PostOrchestratorCallbacks(Protocol):
-    """Callbacks that MoltbookPlugin provides to PostOrchestrator."""
-
-    _client: object  # MoltbookClient
-    _content_queue: object  # ContentQueue
-    _own_post_ids: dict  # Dict[str, Dict[str, object]]
-    _own_comment_ids: set  # Set[str]
-    _comment_post_map: dict  # Dict[str, str]
-    _last_post_heartbeat: int
-    _last_profile_heartbeat: int
-    _heartbeat_count: int
-
-    def _director_propose(
-        self,
-        content_type: str,
-        raw_input: str,
-        proposal_type: str,
-        **extra,
-    ) -> object:  # Optional[ContentProposal]
-        """Content generation via AgencyDirector."""
-        ...
-
-    def _check_rate_limit(self, content_type: str) -> bool:
-        """Check if rate limit allows operation."""
-        ...
-
-    def _record_rate_limit(self, content_type: str) -> None:
-        """Record rate-limited operation."""
-        ...
-
-    def _emit_event(self, event_type_name: str, message: str, data: Optional[dict] = None) -> None:
-        """Emit system event."""
-        ...
-
-    def _log_activity(self, event_type: str, payload: Optional[dict] = None) -> None:
-        """Log activity to audit log."""
-        ...
-
-    def _select_submolt(self, seed_text: str) -> Optional[str]:
-        """Select best submolt for content."""
-        ...
-
-    _submolt_descriptions: dict
-    """Submolt name → description mapping."""
-
-
 class PostOrchestrator:
     """Orchestrates post creation, comment monitoring, and profile updates.
+
+    Receives MoltbookState for data access. Plugin reference used only
+    for action methods (director_propose, emit_event, etc.).
 
     Responsibilities:
     - Create new posts based on strategic intents
@@ -64,17 +23,11 @@ class PostOrchestrator:
     - Update agent profile periodically
     - Track post creation for rate limiting
     - Maintain comment-to-post mapping for monitoring
-
-    YANTRA Discipline:
-    - Protocol-based callbacks (no Any types)
-    - Explicit error handling for API operations
-    - Rate limit checks prevent API blocking
-    - Idempotent state tracking
     """
 
-    def __init__(self, plugin: "MoltbookPlugin") -> None:
-        """Initialize with parent plugin callbacks."""
-        self._plugin: "MoltbookPlugin" = plugin
+    def __init__(self, state: MoltbookState, plugin: "MoltbookPlugin") -> None:
+        self._state = state
+        self._plugin = plugin
 
     def maybe_create_fallback_post(self) -> None:
         """Create a fallback post when no strategic intents available.
@@ -95,7 +48,7 @@ class PostOrchestrator:
         # Extract trending topics from recent feed as context
         feed_topics: list = []
         try:
-            posts = run_async(self._plugin._client.get_feed(sort="hot", limit=5))
+            posts = run_async(self._state.client.get_feed(sort="hot", limit=5))
             for post in posts or []:
                 title = post.get("title", "") if isinstance(post, dict) else ""
                 if title:
@@ -110,11 +63,11 @@ class PostOrchestrator:
         selected_submolt = self._plugin._select_submolt(seed)
         submolt_ctx = ""
         if selected_submolt:
-            desc = self._plugin._submolt_descriptions.get(selected_submolt, "")
+            desc = self._state.submolt_descriptions.get(selected_submolt, "")
             submolt_ctx = f"{selected_submolt} — {desc}" if desc else selected_submolt
 
         try:
-            ctx = {"submolt_context": submolt_ctx}
+            ctx: Dict[str, Any] = {"submolt_context": submolt_ctx}
             if feed_topics:
                 ctx["feed_topics"] = feed_topics
 
@@ -136,8 +89,8 @@ class PostOrchestrator:
                 else:
                     proposal["title"] = content[:120]
 
-                self._plugin._content_queue.enqueue(proposal)
-                self._plugin._last_post_heartbeat = self._plugin._heartbeat_count
+                self._state.content_queue.enqueue(proposal)
+                self._state.last_post_heartbeat = self._plugin._heartbeat_count
                 logger.info(f"Autonomous post queued: {proposal.get('title', '')[:50]}")
             else:
                 logger.debug("Post proposal filtered by director (TAMAS+dead or governance)")
@@ -161,12 +114,12 @@ class PostOrchestrator:
         """
         from vibe_core.protocols.moltbook_content import ContentType
 
-        if not self._plugin._comment_post_map:
+        if not self._state.comment_post_map:
             return
 
         # Get unique post IDs we need to check (max 3 per cycle)
-        post_ids = list(set(self._plugin._comment_post_map.values()))[:3]
-        our_comment_ids = set(self._plugin._comment_post_map.keys())
+        post_ids = list(set(self._state.comment_post_map.values()))[:3]
+        our_comment_ids = set(self._state.comment_post_map.keys())
 
         for post_id in post_ids:
             try:
@@ -191,8 +144,8 @@ class PostOrchestrator:
                 content = comment.get("content", "")
 
                 # Is this a reply to one of our comments?
-                if parent in our_comment_ids and cid not in self._plugin._seen_message_ids:
-                    self._plugin._seen_message_ids.add(cid)
+                if parent in our_comment_ids and cid not in self._state.seen_message_ids:
+                    self._state.seen_message_ids.add(cid)
 
                     # Propose a follow-up reply via Agency Director (I-P-V-O)
                     try:
@@ -205,7 +158,7 @@ class PostOrchestrator:
                             trigger="reply_to_own_comment",
                         )
                         if proposal:
-                            self._plugin._content_queue.enqueue(proposal)
+                            self._state.content_queue.enqueue(proposal)
                             self._plugin._log_activity(
                                 "reply_proposed",
                                 {
@@ -246,18 +199,17 @@ class PostOrchestrator:
         following_count = profile.get("following_count", 0) if isinstance(profile, dict) else 0
 
         # Build activity summary for bio
-        queue_stats = self._plugin._content_queue.stats
         description = (
-            f"{self._plugin._agent_name} · Autonomous agent · "
+            f"{self._state.agent_name} · Autonomous agent · "
             f"{current_karma} karma · "
             f"{follower_count} followers · {following_count} following · "
-            f"{len(self._plugin._subscribed_submolts)} submolts"
+            f"{len(self._state.subscribed_submolts)} submolts"
         )
 
         try:
             service.update_profile(description=description)
             self._plugin._record_rate_limit("profile_update")
-            self._plugin._last_profile_heartbeat = self._plugin._heartbeat_count
+            self._state.last_profile_heartbeat = self._plugin._heartbeat_count
             self._plugin._emit_event(
                 "PROFILE_UPDATED",
                 "Profile refreshed with stats",
