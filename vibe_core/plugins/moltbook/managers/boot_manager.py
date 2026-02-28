@@ -8,6 +8,7 @@ from vibe_core.plugin_protocol import HookResult
 
 if TYPE_CHECKING:
     from vibe_core.kernel_impl import RealVibeKernel
+
 from vibe_core.plugins.moltbook.state import (
     DEFAULT_FEED_INTERVAL,
     DEFAULT_POST_INTERVAL,

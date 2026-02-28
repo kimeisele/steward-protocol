@@ -327,7 +327,7 @@ class MoltbookPlugin(KernelPlugin):
         if self._guna_inst is None:
             from vibe_core.plugins.moltbook.managers.guna_enforcer import GunaEnforcer
 
-            self._guna_inst = GunaEnforcer(self)
+            self._guna_inst = GunaEnforcer(actions=self)
         return self._guna_inst
 
     @property

@@ -2,10 +2,7 @@
 
 import logging
 import time
-from typing import TYPE_CHECKING, List, Protocol
-
-if TYPE_CHECKING:
-    pass
+from typing import List, Protocol
 
 from vibe_core.protocols.moltbook import MOLTBOOK_GUNA_MAP, MoltbookGuna
 
@@ -43,13 +40,8 @@ class GunaEnforcer:
     _MAX_LOG_SIZE = 5000
     _TRIM_TO_SIZE = 2500
 
-    def __init__(self, plugin: "GunaEnforcerCallbacks") -> None:
-        """Initialize with parent plugin callbacks.
-
-        Args:
-            plugin: MoltbookPlugin instance providing callbacks
-        """
-        self._plugin: "GunaEnforcerCallbacks" = plugin
+    def __init__(self, actions: GunaEnforcerCallbacks) -> None:
+        self._actions = actions
 
     def enforce(self, operation: str) -> None:
         """Enforce Guna I/O Policy and Knowledge Graph constraints.
@@ -109,10 +101,10 @@ class GunaEnforcer:
             "guna": guna.value,
             "timestamp": time.time(),
         }
-        self._plugin._operation_log.append(entry)
+        self._actions._operation_log.append(entry)
 
         # Prevent unbounded growth: trim when log exceeds max size
-        if len(self._plugin._operation_log) > self._MAX_LOG_SIZE:
-            self._plugin._operation_log = self._plugin._operation_log[-self._TRIM_TO_SIZE :]
+        if len(self._actions._operation_log) > self._MAX_LOG_SIZE:
+            self._actions._operation_log = self._actions._operation_log[-self._TRIM_TO_SIZE :]
 
         logger.info(f"MOLTBOOK-RAJAS: {operation} (write operation logged)")
