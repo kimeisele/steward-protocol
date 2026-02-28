@@ -74,15 +74,14 @@ def _load_platform_constraints() -> Dict[str, Dict[str, object]]:
 PLATFORM_CONSTRAINTS: Dict[str, Dict[str, object]] = _load_platform_constraints()
 
 # Words that signal low-quality output (word salad, template leaks)
+# NOTE: SATTVA/RAJAS/TAMAS are NOT blocked — they are legitimate Vedic concepts
+# that the agent uses in philosophical discourse. Blocking them killed all output.
 QUALITY_BLOCKERS = [
     "unknown · unknown",  # Unresolved guardian leak
     "PARTICLE",  # Template role leak
     "NOUN",  # Template role leak
     "VERB",  # Template role leak
     "QUALITY",  # Template role leak
-    "SATTVA",  # Internal guna leak (raw, not translated)
-    "RAJAS",  # Internal guna leak
-    "TAMAS",  # Internal guna leak
 ]
 
 # Sanskrit terms that should NOT appear raw in output
