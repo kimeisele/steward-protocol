@@ -210,6 +210,12 @@ class ContentComposer:
         if knowledge:
             parts.append(f"\nDOMAIN KNOWLEDGE:\n{knowledge[:2000]}")
 
+        # Web research — real-world facts from Tavily web search
+        # Ground truth prevents hallucination and makes content substantive.
+        web_research = input_ctx.get("web_research", "")
+        if web_research:
+            parts.append(f"\nCURRENT FACTS:\n{web_research[:2000]}")
+
         return "\n".join(parts)
 
     @staticmethod

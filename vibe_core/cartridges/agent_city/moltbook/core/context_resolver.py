@@ -4,9 +4,10 @@ Extracted from AgencyDirector._input() and related query methods.
 
 Queries (all graceful degradation — works standalone):
     1. Knowledge Graph → domain context
-    2. MahaLLM Kernel → guardian vocabulary + semantic expansion
-    3. ServiceRegistry → discover available agents/capabilities
-    4. Previous validation feedback (retry loop)
+    2. Web research → real-world facts via Tavily
+    3. MahaLLM Kernel → guardian vocabulary + semantic expansion
+    4. ServiceRegistry → discover available agents/capabilities
+    5. Previous validation feedback (retry loop)
 """
 
 import logging
@@ -30,9 +31,10 @@ class ContextResolver:
 
         Queries (all graceful degradation — works standalone):
             1. Knowledge Graph → domain context
-            2. MahaLLM Kernel → guardian vocabulary + semantic expansion
-            3. ServiceRegistry → discover available agents/capabilities
-            4. Previous validation feedback (retry loop)
+            2. Web research → real-world facts via Tavily
+            3. MahaLLM Kernel → guardian vocabulary + semantic expansion
+            4. ServiceRegistry → discover available agents/capabilities
+            5. Previous validation feedback (retry loop)
         """
         input_ctx: Dict[str, Any] = {
             "content_type": content_type,
@@ -46,6 +48,11 @@ class ContextResolver:
         kg_context = self._query_knowledge(topic)
         if kg_context:
             input_ctx["knowledge_context"] = kg_context
+
+        # Web research: real-world facts (Tavily)
+        web_research = self._query_web(topic)
+        if web_research:
+            input_ctx["web_research"] = web_research
 
         # MahaLLM Kernel: guardian semantic expansion
         kernel_context = self._query_kernel(topic)
@@ -140,3 +147,41 @@ class ContextResolver:
         except Exception as e:
             logger.warning(f"Capability discovery failed: {e}")
             return None
+
+    def _query_web(self, topic: str) -> str:
+        """Query Tavily for real-world facts about the topic.
+
+        Uses the Science cartridge's WebSearchTool (already handles API key).
+        Returns synthesized insights as plain text for the LLM context.
+        Max 3 results, basic search depth — budget-conscious.
+        """
+        try:
+            from vibe_core.cartridges.system.science.tools.web_search_tool import (
+                WebSearchTool,
+            )
+
+            tool = WebSearchTool()
+            briefing = tool.get_briefing(topic, max_results=3)
+            if not briefing or briefing.get("mode") == "offline":
+                return ""
+
+            # Extract key insights into compact text
+            parts: List[str] = []
+            insights = briefing.get("key_insights", [])
+            for insight in insights[:5]:
+                if insight and len(insight) > 15:
+                    parts.append(f"- {insight}")
+
+            summary = briefing.get("summary", "")
+            if summary and len(summary) > 20:
+                parts.insert(0, summary)
+
+            if not parts:
+                return ""
+
+            result = "\n".join(parts)
+            logger.info(f"Web research: {len(parts)} insights for '{topic[:50]}'")
+            return result
+        except Exception as e:
+            logger.debug(f"Web research unavailable: {e}")
+            return ""
