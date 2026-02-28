@@ -102,6 +102,77 @@ def listen_agora(state: Any) -> List[Dict[str, Any]]:
     return messages
 
 
+def gather_broadcast_intelligence(state: Any, agent_events: List[Dict[str, Any]]) -> None:
+    """Collect intelligence from AGORA broadcasts + EventBus into feed topics.
+
+    Merges broadcast messages and agent events into state.current_feed_topics.
+    Deduplicates by title to prevent topic flooding.
+    """
+    broadcasts = listen_agora(state)
+    for msg in broadcasts:
+        content = msg.get("content", msg.get("message", ""))
+        source = msg.get("source", "broadcast")
+        if content and len(content) > 10:
+            state.current_feed_topics.append(
+                {
+                    "title": content[:200],
+                    "content": content,
+                    "id": f"agora_{source}_{state.agora_sequence}",
+                    "source": f"agora:{source}",
+                }
+            )
+    if agent_events:
+        existing_titles = {str(t.get("title", "")).lower() for t in state.current_feed_topics}
+        for evt in agent_events[-10:]:
+            topic = evt.get("topic", "")
+            agent = evt.get("agent", "unknown")
+            if topic and len(topic) > 10 and topic.lower()[:80] not in existing_titles:
+                state.current_feed_topics.append(
+                    {
+                        "title": topic[:200],
+                        "content": topic,
+                        "id": f"eventbus_{agent}_{hash(topic) % 10000}",
+                        "source": f"eventbus:{agent}",
+                    }
+                )
+        agent_events.clear()
+
+
+# =========================================================================
+# Strategy Evaluation — DHARMA phase
+# =========================================================================
+
+
+def evaluate_strategy(state: Any, strategy_planner: Any) -> None:
+    """DHARMA phase: Evaluate strategy from gathered intelligence.
+
+    Feeds engagement stats + feed topics into the strategy planner,
+    which produces ranked intents for KARMA phase execution.
+    """
+    if not strategy_planner:
+        return
+    engagement_stats: Dict[str, Any] = {}
+    try:
+        from vibe_core.protocols.feedback import get_feedback_safe
+
+        stats = get_feedback_safe().get_stats()
+        engagement_stats = {"success_rate": stats.success_rate, "total_signals": stats.total_signals}
+    except Exception:
+        pass
+    try:
+        intents = strategy_planner.plan_cycle(
+            state.current_feed_topics,
+            engagement_stats,
+            own_post_ids=state.own_post_ids,
+            commented_post_ids=state.commented_post_ids,
+        )
+        state.current_intents = intents
+        if intents:
+            logger.info(f"Strategy: {len(intents)} intents ({', '.join(i.action_type for i in intents)})")
+    except Exception as e:
+        logger.warning(f"Strategy evaluation failed: {e}")
+
+
 # =========================================================================
 # CivicBank — Credit-gated publishing
 # =========================================================================
@@ -245,7 +316,7 @@ def heal_synapse_weights() -> None:
         logger.warning(f"Synapse healing failed: {e}")
 
 
-def emit_ouroboros_health(state: Any) -> None:
+def emit_ouroboros_health(state: Any, heartbeat_count: int = 0) -> None:
     """Emit health status to Ouroboros — includes content generation metrics."""
     try:
         from vibe_core.ouroboros.ananta_shesha import get_system_anchor
@@ -268,7 +339,7 @@ def emit_ouroboros_health(state: Any) -> None:
         anchor.emit_event(
             "moltbook.health",
             {
-                "heartbeat": 0,  # Caller should pass heartbeat count
+                "heartbeat": heartbeat_count,
                 "offline": state.offline_mode,
                 "queue_size": state.content_queue.size,
                 "last_error": state.last_heartbeat_error,

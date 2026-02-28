@@ -52,11 +52,12 @@ class FeedAnalyzer:
 
     def scan_feed(
         self,
-        client: MoltbookProtocol,
-        proposer: Optional[ContentProposalProtocol],
+        client: "MoltbookProtocol",
+        proposer: Optional["ContentProposalProtocol"],
         content_queue: ContentQueue,
-        service: Optional[MoltbookProtocol] = None,
+        service: Optional["MoltbookProtocol"] = None,
         mission_descriptions: Optional[List[str]] = None,
+        strategy_planner: Optional[object] = None,
     ) -> List[Dict[str, object]]:
         """GENESIS phase: Extract topics + metadata from feed. NO content generation.
 
@@ -68,6 +69,18 @@ class FeedAnalyzer:
         """
         if not proposer:
             return []
+
+        # Extract mission descriptions from strategy planner (if available)
+        if strategy_planner and not mission_descriptions:
+            try:
+                missions = strategy_planner.get_active_missions()
+                mission_descriptions = [
+                    m.description
+                    for m in missions
+                    if hasattr(m, "description") and m.description and not m.id.startswith("moltbook_kg_")
+                ]
+            except Exception as e:
+                logger.debug(f"Mission extraction from strategy planner failed: {e}")
 
         try:
             posts = run_async(client.get_personalized_feed(sort="hot", limit=10))
@@ -84,7 +97,9 @@ class FeedAnalyzer:
         # Source 2: Semantic search — discover content beyond the hot feed
         if service and mission_descriptions:
             semantic_results = self._search_related_content(
-                service, mission_descriptions, feed_topics,
+                service,
+                mission_descriptions,
+                feed_topics,
             )
             feed_topics = feed_topics + semantic_results
 
@@ -122,9 +137,7 @@ class FeedAnalyzer:
 
         Returns additional topics to merge into feed_topics.
         """
-        existing_ids = {
-            str(p.get("id", "")) for p in existing_topics if isinstance(p, dict)
-        }
+        existing_ids = {str(p.get("id", "")) for p in existing_topics if isinstance(p, dict)}
         additional: List[Dict[str, object]] = []
 
         # Search with up to 3 mission descriptions (cap API calls)
@@ -139,14 +152,16 @@ class FeedAnalyzer:
                     post_id = str(result.get("id", ""))
                     if post_id and post_id not in existing_ids:
                         existing_ids.add(post_id)
-                        additional.append({
-                            "id": post_id,
-                            "title": result.get("title", result.get("content", ""))[:200],
-                            "content": result.get("content", ""),
-                            "author": result.get("author", {}),
-                            "submolt": result.get("submolt", ""),
-                            "source": "semantic_search",
-                        })
+                        additional.append(
+                            {
+                                "id": post_id,
+                                "title": result.get("title", result.get("content", ""))[:200],
+                                "content": result.get("content", ""),
+                                "author": result.get("author", {}),
+                                "submolt": result.get("submolt", ""),
+                                "source": "semantic_search",
+                            }
+                        )
             except Exception as e:
                 logger.debug(f"Semantic search failed for '{desc[:40]}': {e}")
 
@@ -182,12 +197,14 @@ class FeedAnalyzer:
         # Subscribe
         self._subscribed_submolts.add(self._OWN_SUBMOLT)
         self._submolt_descriptions[self._OWN_SUBMOLT] = self._OWN_SUBMOLT_DESC
-        content_queue.enqueue({
-            "content_type": ContentType.SUBSCRIBE.value,
-            "submolt": self._OWN_SUBMOLT,
-            "source": "own_submolt_init",
-            "priority": 0,
-        })
+        content_queue.enqueue(
+            {
+                "content_type": ContentType.SUBSCRIBE.value,
+                "submolt": self._OWN_SUBMOLT,
+                "source": "own_submolt_init",
+                "priority": 0,
+            }
+        )
         logger.info(f"Own submolt '{self._OWN_SUBMOLT}' ensured + subscription queued")
 
     def discover_submolts(self, client: MoltbookProtocol, content_queue: ContentQueue) -> None:
@@ -248,16 +265,81 @@ class FeedAnalyzer:
                 )
 
     # Stop words for keyword matching
-    _STOP_WORDS = frozenset({
-        "the", "a", "an", "and", "or", "in", "on", "at", "to", "for", "of",
-        "is", "are", "was", "were", "be", "been", "this", "that", "with",
-        "from", "by", "it", "its", "as", "not", "but", "no", "all", "any",
-        "do", "does", "did", "can", "could", "would", "should", "will",
-        "may", "might", "must", "shall", "has", "have", "had", "about",
-        "into", "over", "after", "before", "more", "most", "very", "just",
-        "also", "how", "what", "which", "who", "whom", "when", "where",
-        "why", "than", "then", "so", "if", "only", "own", "same", "too",
-    })
+    _STOP_WORDS = frozenset(
+        {
+            "the",
+            "a",
+            "an",
+            "and",
+            "or",
+            "in",
+            "on",
+            "at",
+            "to",
+            "for",
+            "of",
+            "is",
+            "are",
+            "was",
+            "were",
+            "be",
+            "been",
+            "this",
+            "that",
+            "with",
+            "from",
+            "by",
+            "it",
+            "its",
+            "as",
+            "not",
+            "but",
+            "no",
+            "all",
+            "any",
+            "do",
+            "does",
+            "did",
+            "can",
+            "could",
+            "would",
+            "should",
+            "will",
+            "may",
+            "might",
+            "must",
+            "shall",
+            "has",
+            "have",
+            "had",
+            "about",
+            "into",
+            "over",
+            "after",
+            "before",
+            "more",
+            "most",
+            "very",
+            "just",
+            "also",
+            "how",
+            "what",
+            "which",
+            "who",
+            "whom",
+            "when",
+            "where",
+            "why",
+            "than",
+            "then",
+            "so",
+            "if",
+            "only",
+            "own",
+            "same",
+            "too",
+        }
+    )
 
     @classmethod
     def _tokenize(cls, text: str) -> frozenset:
