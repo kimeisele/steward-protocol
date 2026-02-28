@@ -1,14 +1,12 @@
 {
   "version": 1,
-  "heartbeat_count": 0,
-  "feed_topics": [],
+  "heartbeat_count": 10,
+  "feed_topics": [
+    {
+      "title": "test"
+    }
+  ],
   "intents": [],
-  "orchestrator_state": {
-    "heartbeat_count": 0,
-    "last_heartbeat_ts": 0.0,
-    "genesis_tick": 0,
-    "karma_tick": 0,
-    "moksha_tick": 0
-  },
-  "timestamp": "2026-02-28T15:21:45.967711+00:00"
+  "orchestrator_state": {},
+  "timestamp": "2026-02-28T15:35:30.300203+00:00"
 }
