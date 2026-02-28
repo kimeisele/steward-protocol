@@ -24,10 +24,13 @@ Sections:
 
 import asyncio
 import json
+import logging
 import os
 import sys
 import time
 from typing import Any, Dict, List
+
+logger = logging.getLogger("MOLTBOOK_DRY_RUN")
 
 # Add project root to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
@@ -350,8 +353,8 @@ def _resolve_api_key() -> str:
             key = creds.get("api_key", "")
             if key:
                 return key
-    except Exception:
-        pass
+    except Exception as e:
+        logger.warning(f"Credential file read failed: {e}")
 
     return ""
 

@@ -402,7 +402,7 @@ class TestDirectorCycle:
     def test_comment_cycle_succeeds(self, director):
         result = director.run_cycle("comment", MOLTBOOK_POSTS[0])
         # Either SUCCESS or SKIPPED (TAMAS gate) — never ERROR
-        assert result.status in ("SUCCESS", "SKIPPED", "LLM_UNAVAILABLE"), (
+        assert result.status in ("SUCCESS", "SKIPPED", "LLM_UNAVAILABLE", "VALIDATION_FAILED"), (
             f"Unexpected status: {result.status}, error: {result.error}"
         )
 
@@ -415,7 +415,7 @@ class TestDirectorCycle:
 
     def test_dm_reply_cycle_succeeds(self, director):
         result = director.run_cycle("dm_reply", DM_MESSAGES[0])
-        assert result.status in ("SUCCESS", "SKIPPED", "LLM_UNAVAILABLE"), (
+        assert result.status in ("SUCCESS", "SKIPPED", "LLM_UNAVAILABLE", "VALIDATION_FAILED"), (
             f"Unexpected status: {result.status}, error: {result.error}"
         )
 
@@ -599,7 +599,7 @@ class TestEdgeCases:
     def test_empty_input(self, director):
         result = director.run_cycle("comment", "")
         # Empty input uses content_type as seed — should not crash
-        assert result.status in ("SUCCESS", "ERROR", "SKIPPED", "LLM_UNAVAILABLE")
+        assert result.status in ("SUCCESS", "ERROR", "SKIPPED", "LLM_UNAVAILABLE", "VALIDATION_FAILED")
 
     def test_very_long_input(self, director):
         long_text = "agent " * 500  # 3000 chars
@@ -610,17 +610,17 @@ class TestEdgeCases:
 
     def test_unicode_input(self, director):
         result = director.run_cycle("comment", "कृष्ण consciousness dharma 道 إسلام")
-        assert result.status in ("SUCCESS", "SKIPPED", "LLM_UNAVAILABLE", "ERROR")
+        assert result.status in ("SUCCESS", "SKIPPED", "LLM_UNAVAILABLE", "ERROR", "VALIDATION_FAILED")
 
     def test_url_heavy_input(self, director):
         result = director.run_cycle(
             "comment", "Check out https://example.com/agent?id=123&type=os for the architecture docs"
         )
-        assert result.status in ("SUCCESS", "SKIPPED", "LLM_UNAVAILABLE", "ERROR")
+        assert result.status in ("SUCCESS", "SKIPPED", "LLM_UNAVAILABLE", "ERROR", "VALIDATION_FAILED")
 
     def test_single_word_input(self, director):
         result = director.run_cycle("comment", "dharma")
-        assert result.status in ("SUCCESS", "SKIPPED", "LLM_UNAVAILABLE")
+        assert result.status in ("SUCCESS", "SKIPPED", "LLM_UNAVAILABLE", "VALIDATION_FAILED")
 
     def test_numbers_only_input(self, director):
         result = director.run_cycle("comment", "42 3.14159 65536")

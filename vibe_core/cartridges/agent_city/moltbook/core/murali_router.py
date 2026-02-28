@@ -21,16 +21,15 @@ _MURALI_DEPARTMENTS = {
 class MuraliRouter:
     """Read-only access to VenuOrchestrator MURALI phase → department name.
 
-    Used by plugin_main heartbeat to weight department priorities.
-    Does NOT modify VenuOrchestrator state — pure observation.
+    Uses DIW unpack (per CLAUDE.md: "DIW consumers MUST use diw.unpack()").
+    Reads THE_FLUTE_CYCLE at current venu position, unpacks MURALI bits.
 
     If VenuOrchestrator is unavailable, uses fallback_tick (heartbeat_count)
-    to cycle through all 4 departments. This prevents starvation where
-    only KARMA/execution runs when venu is uninitialized.
+    to cycle through all 4 departments.
     """
 
     def current_department(self, fallback_tick: int = 0) -> str:
-        """Read current MURALI phase → department name.
+        """Read current MURALI phase → department name via DIW unpack.
 
         Args:
             fallback_tick: Used to cycle departments when VenuOrchestrator
@@ -38,15 +37,17 @@ class MuraliRouter:
         """
         try:
             from vibe_core.mahamantra import mahamantra
+            from vibe_core.mahamantra.protocols.diw import unpack
+            from vibe_core.mahamantra.substrate.vm.venu_orchestrator import THE_FLUTE_CYCLE
 
             venu = mahamantra.venu
             if venu is not None:
-                tick = venu.tick
-                quarter_size = WORDS // QUARTERS  # 4
-                murali = min(tick % WORDS // quarter_size, QUARTERS - 1)
+                position = venu.tick % WORDS
+                diw = THE_FLUTE_CYCLE[position]
+                murali = unpack(diw).murali
                 return _MURALI_DEPARTMENTS.get(murali, "execution")
         except Exception as e:
-            logger.warning(f"VenuOrchestrator access failed, using fallback_tick: {e}")
+            logger.warning(f"VenuOrchestrator/DIW access failed, using fallback_tick: {e}")
 
         # Fallback: cycle through departments using fallback_tick
         murali = fallback_tick % QUARTERS

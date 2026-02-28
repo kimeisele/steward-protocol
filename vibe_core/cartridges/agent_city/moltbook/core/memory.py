@@ -64,7 +64,8 @@ class EventLog:
                 from vibe_core.phoenix.config import get_config
 
                 data_root = Path(get_config().paths.data.resolve("plugins/moltbook"))
-            except Exception:
+            except Exception as e:
+                logger.warning(f"Config unavailable, using fallback path: {e}")
                 data_root = Path(".vibe/state/plugins/moltbook")
             ledger_path = data_root / "events.jsonl"
 
@@ -82,7 +83,8 @@ class EventLog:
             try:
                 with open(self.ledger_path, "r") as f:
                     self.sequence_counter = sum(1 for line in f if line.strip())
-            except Exception:
+            except Exception as e:
+                logger.warning(f"Ledger read failed, sequence reset to 0: {e}")
                 self.sequence_counter = 0
 
     def commit(self, event_type: str, payload: Dict[str, Any]) -> Optional[LedgerEvent]:

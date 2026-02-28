@@ -95,8 +95,8 @@ class HeartbeatOrchestrator:
         try:
             queue_stats = self._state.content_queue.stats
             plugin_queue_size = queue_stats.get("pending", 0) if isinstance(queue_stats, dict) else 0
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug(f"Queue stats unavailable: {e}")
 
         logger.info(f"HB#{self._heartbeat_count} → {department.upper()} (queue={plugin_queue_size})")
 
@@ -151,7 +151,18 @@ class HeartbeatOrchestrator:
             self._safe_call(self._actions._evaluate_strategy, "strategy_evaluation")
 
         elif department == "execution":
-            # KARMA: produce content from intents + monitor replies
+            # KARMA: Meditation gate — Manas decides if we should act
+            try:
+                from vibe_core.mahamantra.substrate.manas import get_manas
+                if not get_manas().should_act():
+                    logger.info("MEDITATION: Manas says skip — observing only")
+                    self._safe_call(self._actions._check_own_comment_replies, "reply_monitoring")
+                    self._karma_tick += 1
+                    return
+            except Exception as e:
+                logger.warning(f"Manas should_act check failed: {e}")
+
+            # Normal KARMA execution
             self._safe_call(self._actions._execute_intents, "intent_execution")
             if self._karma_tick % HALVES == 0:
                 self._safe_call(self._actions._check_own_comment_replies, "reply_monitoring")
@@ -168,23 +179,22 @@ class HeartbeatOrchestrator:
     def _get_current_department(self) -> str:
         """Determine current MURALI phase from heartbeat cycle.
 
-        Uses heartbeat_count % 4 for reliable rotation. In standalone mode
-        (MinimalKernel, GitHub Actions), this is the only reliable clock.
+        MuraliRouter uses DIW unpack internally, with fallback_tick as safety net.
+        No standalone_mode guard — MuraliRouter handles fallback internally.
 
         Returns:
             Department name: research, planning, execution, or learning
         """
-        if not self._state.standalone_mode:
-            try:
-                from vibe_core.cartridges.agent_city.moltbook.core.agency_director import (
-                    MuraliRouter,
-                )
+        try:
+            from vibe_core.cartridges.agent_city.moltbook.core.agency_director import (
+                MuraliRouter,
+            )
 
-                return MuraliRouter().current_department(fallback_tick=self._heartbeat_count)
-            except Exception:
-                pass
+            return MuraliRouter().current_department(fallback_tick=self._heartbeat_count)
+        except Exception as e:
+            logger.warning(f"MuraliRouter unavailable, using fallback rotation: {e}")
 
-        # Fallback: heartbeat-based rotation
+        # Ultimate fallback: heartbeat-based rotation
         return self._DEPARTMENTS[self._heartbeat_count % len(self._DEPARTMENTS)]
 
     def _safe_call(self, fn: Callable[[], None], label: str) -> None:

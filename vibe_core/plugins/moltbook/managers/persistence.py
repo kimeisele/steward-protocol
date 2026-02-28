@@ -57,8 +57,9 @@ def _governed_write(filename: str, data: dict, path: Path, actor: str, indent: i
             return
         # Gate approved and wrote to StateService cache
         logger.debug(f"Governed write: {filename} (actor={actor})")
-    except Exception:
+    except Exception as e:
         # Gate unavailable — direct write (test/standalone mode)
+        logger.warning(f"Gate unavailable for {filename}, direct write: {e}")
         path.write_text(json.dumps(data, indent=indent))
 
 

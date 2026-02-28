@@ -10,7 +10,7 @@ Extracted from plugin_main.py for single-responsibility.
 
 import json
 import logging
-from typing import TYPE_CHECKING, Any, Dict, List, Optional
+from typing import TYPE_CHECKING, List
 
 if TYPE_CHECKING:
     from vibe_core.plugins.moltbook.state import MoltbookState
@@ -74,7 +74,8 @@ def resolve_engagement_trends() -> str:
 
         stats = get_feedback_safe().get_stats()
         return f"Success rate: {stats.success_rate:.0%}, Total: {stats.total_signals}, Failures: {stats.total_failures}"
-    except Exception:
+    except Exception as e:
+        logger.warning(f"Engagement trends unavailable: {e}")
         return ""
 
 
@@ -112,8 +113,10 @@ def resolve_recent_content(state: "MoltbookState") -> str:
                 if entry.get("event") in ("post_created", "comment_posted", "dm_sent"):
                     data = entry.get("data", {})
                     recent.append(f"{entry['event']}: {data.get('title', data.get('post_id', ''))[:60]}")
-            except Exception:
+            except Exception as e:
+                logger.debug(f"Activity log entry malformed: {e}")
                 continue
         return " | ".join(recent) if recent else ""
-    except Exception:
+    except Exception as e:
+        logger.warning(f"Activity log read failed: {e}")
         return ""

@@ -14,12 +14,11 @@ Uses:
 
 import json
 import logging
-import random
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from vibe_core.mahamantra.substrate.core.seed import TRINITY
+from vibe_core.mahamantra.substrate.core.seed import HALVES, TRINITY
 
 logger = logging.getLogger("MOLTBOOK.STRATEGY")
 
@@ -91,6 +90,11 @@ class StrategicIntent:
     engagement_context: str = ""  # What we know about topic performance
     submolt_context: str = ""  # Target submolt if known
     content_format: str = ""  # "question", "observation", "opinion", "analysis", "tutorial"
+    buddhi_function: str = ""  # BRAHMA/VISHNU/SHIVA
+    buddhi_approach: str = ""  # GENESIS/DHARMA/KARMA/MOKSHA
+    buddhi_chapter: int = 0  # BG chapter 1-18
+    buddhi_prana: int = 0  # energy 0-21600
+    buddhi_integrity: float = 0.0  # membrane 0.0-1.0
 
 
 @dataclass
@@ -335,117 +339,134 @@ class MoltbookStrategyPlanner:
                 ]
             return []
 
-        intents: List[StrategicIntent] = []
-
-        # Global engagement context
-        global_eng = ""
-        if engagement_stats:
-            rate = engagement_stats.get("success_rate", 0)
-            total = engagement_stats.get("total_signals", 0)
-            if total > 0:
-                global_eng = f"Overall: {rate:.0%} success ({total} signals)"
-
-        # Match feed topics against missions (semantic)
+        # Keyword Jaccard matching — first filter
         matches = self._match_topics(feed_topics, missions)
-
-        # Buddhi.think() on top matches for cognitive format selection
-        match_cognitions: Dict[str, str] = {}  # post_id → mode
-        try:
-            from vibe_core.mahamantra.substrate.buddhi import get_buddhi
-
-            buddhi = get_buddhi()
-            shuffled = list(matches)
-            random.shuffle(shuffled)
-            for match in shuffled[:TRINITY]:
-                cognition = buddhi.think(match.topic)
-                match_cognitions[match.post_id] = cognition.mode
-        except Exception as e:
-            logger.warning(f"Buddhi format selection failed: {e}")
-            shuffled = list(matches)
-            random.shuffle(shuffled)
-
-        # Build comment intents — skip already-commented posts
         _commented = commented_post_ids or set()
-        for match in shuffled:
-            if match.post_id in _commented:
-                continue  # Already commented — don't waste an intent slot
 
-            eng = self._engagement_cache.get(match.mission_id, {})
+        # MahaManas drives ALL remaining decisions
+        intents = self._manas_evaluate_matches(
+            matches, missions, _commented, can_post, own_post_ids,
+        )
+        intents.sort(key=lambda i: i.priority, reverse=True)
+        return intents[:TRINITY]
+
+    def _manas_evaluate_matches(
+        self,
+        matches: List[TopicMatch],
+        missions: List[Any],
+        commented: set,
+        can_post: bool,
+        own_post_ids: Optional[Dict[str, Dict[str, object]]],
+    ) -> List[StrategicIntent]:
+        """Cognitive core: MahaManas perceive → decide → intents.
+
+        Each match becomes a PerceptionEntry. Manas deduplicates,
+        Buddhi discriminates, Viveka scores, then we build intents
+        with full cognitive provenance.
+        """
+        from vibe_core.mahamantra.protocols._manas import PerceptionEntry
+        from vibe_core.mahamantra.substrate.manas import get_manas
+
+        manas = get_manas()
+
+        # Build perception entries from matches (skip already-commented)
+        entries = [
+            PerceptionEntry(
+                content=m.topic,
+                source="feed_scan",
+                category="sthula",
+                context={"mission_id": m.mission_id, "post_id": m.post_id},
+            )
+            for m in matches
+            if m.post_id not in commented
+        ]
+
+        if not entries:
+            return []
+
+        clean = manas.perceive(entries)
+        verdicts = manas.decide(clean, max_verdicts=TRINITY * HALVES)
+
+        # Build intents from verdicts with chapter dedup
+        seen_chapters: set = set()
+        intents: List[StrategicIntent] = []
+        own_chapters = self._get_own_chapters(own_post_ids)
+        zero_streak = bool(own_post_ids and self._zero_engagement_streak(own_post_ids))
+        mission_map = {m.id: m for m in missions}
+
+        for v in verdicts:
+            cognition = v.buddhi
+            if cognition is None:
+                continue
+            chapter = cognition.chapter
+            if chapter in seen_chapters:
+                continue
+            seen_chapters.add(chapter)
+
+            mission_id = v.perception.context.get("mission_id", "default")
+            post_id = v.perception.context.get("post_id", "")
+            mission = mission_map.get(mission_id)
+            mission_name = mission.name if mission else "unknown"
+
+            action_type = self._function_to_action(
+                cognition.function, can_post, zero_streak, chapter, own_chapters,
+            )
+
+            eng = self._engagement_cache.get(mission_id, {})
             eng_context = ""
             if eng:
                 eng_context = f"Success rate: {eng.get('success_rate', 0):.0%}"
-            elif global_eng:
-                eng_context = global_eng
 
-            mode = match_cognitions.get(match.post_id, "SATTVA")
-            intents.append(
-                StrategicIntent(
-                    action_type="comment",
-                    topic=match.topic,
-                    reasoning=f"Matches mission '{match.mission_name}' (relevance={match.relevance:.2f})",
-                    priority=self._mission_priority_score(match.mission_id, missions),
-                    mission_id=match.mission_id,
-                    target_post_id=match.post_id,
-                    engagement_context=eng_context,
-                    content_format=self._buddhi_select_format("comment", mode),
-                )
-            )
+            intents.append(StrategicIntent(
+                action_type=action_type,
+                topic=v.perception.content,
+                reasoning=f"Manas verdict: {cognition.function}/{cognition.approach} ch.{chapter} (p={v.priority_score:.0f}, c={v.confidence:.2f})",
+                priority=int(v.priority_score / 10),  # 0-100 → 0-10
+                mission_id=mission_id,
+                target_post_id=post_id,
+                engagement_context=eng_context,
+                content_format=self._buddhi_select_format(action_type, cognition.mode),
+                buddhi_function=cognition.function,
+                buddhi_approach=cognition.approach,
+                buddhi_chapter=chapter,
+                buddhi_prana=cognition.prana,
+                buddhi_integrity=cognition.integrity,
+            ))
 
-        # POST LOGIC: when we have capacity AND feed themes to synthesize.
-        # Post when: SravanamCheck passes + not in zero-engagement streak +
-        # fewer than TRINITY comment intents (room for a post).
-        if can_post and len(intents) < TRINITY and feed_topics:
-            if not (own_post_ids and self._zero_engagement_streak(own_post_ids)):
-                # Synthesize from top feed themes
-                top_by_engagement = sorted(
-                    feed_topics, key=lambda t: t.get("upvotes", 0), reverse=True
-                )
-                theme_titles = [
-                    str(t.get("title", "")) for t in top_by_engagement[:3] if t.get("title")
-                ]
-                if theme_titles:
-                    post_topic = "; ".join(theme_titles)[:300]
+        return intents
 
-                    # Dedup against own recent posts
-                    if not (own_post_ids and self._semantic_dedup(post_topic, own_post_ids)):
-                        post_mode = "SATTVA"
-                        try:
-                            from vibe_core.mahamantra.substrate.buddhi import get_buddhi
-                            post_mode = get_buddhi().think(post_topic).mode
-                        except Exception as e:
-                            logger.warning(f"Post Buddhi unavailable: {e}")
+    @staticmethod
+    def _function_to_action(
+        function: str,
+        can_post: bool,
+        zero_streak: bool,
+        chapter: int,
+        own_chapters: set,
+    ) -> str:
+        """Map Buddhi trinity function to action type.
 
-                        highest_prio = max((i.priority for i in intents), default=5)
-                        best_mission = missions[0] if missions else None
-                        mid = best_mission.id if best_mission else "default"
-                        eng = self._engagement_cache.get(mid, {})
-                        post_eng = ""
-                        if eng:
-                            post_eng = f"Success rate: {eng.get('success_rate', 0):.0%}"
-                        elif global_eng:
-                            post_eng = global_eng
-                        intents.append(
-                            StrategicIntent(
-                                action_type="post",
-                                topic=post_topic,
-                                reasoning="Proactive post — synthesizing feed themes",
-                                priority=highest_prio + 1,
-                                mission_id=mid,
-                                engagement_context=post_eng,
-                                content_format=self._buddhi_select_format("post", post_mode),
-                            )
-                        )
-                        logger.info(f"Post intent: synthesizing {len(theme_titles)} feed themes")
-                    else:
-                        logger.info("Post dedup: similar to recent post, skipping")
-            else:
-                logger.info("Zero engagement streak — comments only")
+        BRAHMA (creation) + can_post + novel chapter → "post"
+        Everything else → "comment"
+        """
+        if function == "BRAHMA" and can_post and not zero_streak:
+            if chapter not in own_chapters:
+                return "post"
+        return "comment"
 
-        if not can_post and intents:
-            logger.info("SravanamCheck: insufficient input — comments only this cycle")
-
-        intents.sort(key=lambda i: i.priority, reverse=True)
-        return intents[:TRINITY]
+    @staticmethod
+    def _get_own_chapters(
+        own_post_ids: Optional[Dict[str, Dict[str, object]]],
+    ) -> set:
+        """Extract BG chapters from own recent posts (for dedup)."""
+        chapters: set = set()
+        if not own_post_ids:
+            return chapters
+        for post_info in own_post_ids.values():
+            if isinstance(post_info, dict):
+                ch = post_info.get("buddhi_chapter", 0)
+                if ch:
+                    chapters.add(int(ch))
+        return chapters
 
     @staticmethod
     def _sravanam_check(input_count: int, output_count: int) -> bool:
@@ -599,33 +620,17 @@ class MoltbookStrategyPlanner:
         matches.sort(key=lambda m: m.relevance, reverse=True)
         return matches
 
-    # Stop words — common English words that carry no topical signal
-    _STOP_WORDS = frozenset({
-        "the", "a", "an", "and", "or", "in", "on", "at", "to", "for", "of",
-        "is", "are", "was", "were", "be", "been", "this", "that", "with",
-        "from", "by", "it", "its", "as", "not", "but", "no", "all", "any",
-        "do", "does", "did", "can", "could", "would", "should", "will",
-        "may", "might", "must", "shall", "has", "have", "had", "about",
-        "into", "over", "after", "before", "more", "most", "very", "just",
-        "also", "how", "what", "which", "who", "whom", "when", "where",
-        "why", "than", "then", "so", "if", "only", "own", "same", "too",
-        "each", "every", "both", "few", "some", "such", "other",
-    })
-
     def _tokenize(self, text: str) -> frozenset:
         """Tokenize text into content words. Cached by first 200 chars.
 
-        Strips punctuation, removes stop words and short tokens.
+        Delegates to text_utils.tokenize() for stop-word removal.
         Returns frozenset for O(1) set operations.
         """
+        from vibe_core.cartridges.agent_city.moltbook.core.text_utils import tokenize
+
         key = text[:200]
         if key not in self._token_cache:
-            tokens = set()
-            for word in key.lower().split():
-                clean = "".join(c for c in word if c.isalnum())
-                if clean and clean not in self._STOP_WORDS and len(clean) > 2:
-                    tokens.add(clean)
-            self._token_cache[key] = frozenset(tokens)
+            self._token_cache[key] = tokenize(key)
         return self._token_cache[key]
 
     def _ensure_mission_tokens(self, missions: List[Any]) -> None:
@@ -680,32 +685,6 @@ class MoltbookStrategyPlanner:
             return None, 0.0
 
         return best_id, best_sim
-
-    def _mission_priority_score(self, mission_id: str, missions: List[Any]) -> int:
-        """Convert mission priority enum to integer score (0-10).
-
-        Engagement cache boosts/reduces score.
-        """
-        base = 5  # Default medium
-        for m in missions:
-            if m.id == mission_id:
-                prio = getattr(m.priority, "value", str(m.priority))
-                base = {"critical": 10, "high": 8, "medium": 5, "low": 3}.get(prio, 5)
-                break
-
-        # Engagement adjustment: +2 for high success, -2 for low
-        eng = self._engagement_cache.get(mission_id, {})
-        rate = eng.get("success_rate", 0.5)
-        if rate > 0.7:
-            base = min(10, base + 2)
-        elif rate < 0.3:
-            base = max(1, base - 2)
-
-        # SynapseStore: cross-session learned weight (persistent memory)
-        synapse_boost = self._get_synapse_boost(mission_id)
-        base = max(1, min(10, base + synapse_boost))
-
-        return base
 
     def update_from_engagement(self, engagement_data: Dict[str, Any]) -> None:
         """MOKSHA phase: topic performance → mission priority adjustments.
@@ -769,6 +748,26 @@ class MoltbookStrategyPlanner:
 
             # SynapseStore: persistent cross-session learning
             self._update_synapse_weight(mission.id, net_score > 0)
+
+            # MahaManas: Hebbian learning from engagement outcome
+            try:
+                from vibe_core.mahamantra.protocols._manas import ManaVerdict, PerceptionEntry
+                from vibe_core.mahamantra.substrate.manas import get_manas
+
+                manas = get_manas()
+                perception = PerceptionEntry(
+                    content=topic, source="engagement", category="sthula",
+                    context={"mission_id": mission.id},
+                )
+                verdict = ManaVerdict(
+                    perception=perception, approved=True,
+                    priority_score=50.0, confidence=0.5,
+                    dharma_ok=True, dharma_reason="engagement",
+                    reason="engagement feedback",
+                )
+                manas.record_outcome(verdict, success=(net_score > 0))
+            except Exception as e:
+                logger.warning(f"Manas learn failed: {e}")
 
     def _persist_registry(self) -> None:
         """Persist registry to disk if available."""

@@ -116,6 +116,13 @@ def main() -> int:
     t0 = time.time()
     for i in range(args.cycles):
         try:
+            # Advance VenuOrchestrator — drives MURALI phase rotation
+            try:
+                from vibe_core.mahamantra import mahamantra
+                mahamantra.venu.step()
+            except Exception as e:
+                logger.warning(f"VenuOrchestrator step failed: {e}")
+
             plugin.on_pulse(kernel, None)
             logger.info(f"Heartbeat {i + 1}/{args.cycles} complete")
         except Exception as e:

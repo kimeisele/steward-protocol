@@ -301,6 +301,38 @@ class AgencyDirector:
             },
         )
 
+        # ===== EVALUATE (Buddhi alignment gate) =====
+        input_cognition = process_ctx.get("_cognition")
+        if input_cognition and content:
+            try:
+                from vibe_core.mahamantra.substrate.buddhi import get_buddhi
+
+                evaluation = get_buddhi().evaluate(input_cognition, content)
+                if not evaluation.coherent:
+                    logger.info(
+                        f"Buddhi evaluate: incoherent (alignment={evaluation.alignment:.2f}, "
+                        f"observations={evaluation.observations[:2]})"
+                    )
+                    elapsed = (time.monotonic() - t0) * 1000
+                    self.event_log.record_content_rejected(
+                        content, "buddhi_incoherent", list(evaluation.observations)
+                    )
+                    self._emit("VIOLATION", f"Buddhi incoherent: {evaluation.observations[:2]}")
+                    return CycleResult(
+                        status="VALIDATION_FAILED",
+                        phase="EVALUATE",
+                        cycle_id=cycle_id,
+                        content_type=content_type,
+                        content=content,
+                        violations=list(evaluation.observations),
+                        guna=guna,
+                        guardian=guardian,
+                        duration_ms=elapsed,
+                    )
+                logger.info(f"Buddhi evaluate: aligned={evaluation.alignment:.2f}")
+            except Exception as e:
+                logger.warning(f"Buddhi evaluate skipped: {e}")
+
         # ===== VALIDATE =====
         validation = self.constitution.validate(content, content_type, guna=guna)
         if not validation.is_valid:
@@ -489,6 +521,7 @@ class AgencyDirector:
             "resonance_zone": resonance_zone,
             "rasa": rasa_name,
             "sravanam_ok": sravanam_ok,
+            "_cognition": cognition,  # For post-generation buddhi.evaluate()
         }
         if not sravanam_ok:
             process_ctx["sravanam_advisory"] = sravanam_reason

@@ -30,8 +30,8 @@ class ResearchCapability:
                 from vibe_core.protocols.moltbook_content import ContentProposalProtocol
 
                 self._proposer = ServiceRegistry.get(ContentProposalProtocol)
-            except Exception:
-                pass
+            except Exception as e:
+                logging.getLogger("MOLTBOOK.CAPABILITIES").debug(f"ServiceRegistry unavailable: {e}")
             if self._proposer is None:
                 from vibe_core.plugins.moltbook.resonance_proposer import ResonanceProposer
 
