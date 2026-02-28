@@ -148,6 +148,8 @@ def evaluate_strategy(state: Any, strategy_planner: Any) -> None:
 
     Feeds engagement stats + feed topics into the strategy planner,
     which produces ranked intents for KARMA phase execution.
+    Also reads CityReport for governance context and dispatches
+    code-relevant intents to agent-city via federation.
     """
     if not strategy_planner:
         return
@@ -159,6 +161,23 @@ def evaluate_strategy(state: Any, strategy_planner: Any) -> None:
         engagement_stats = {"success_rate": stats.success_rate, "total_signals": stats.total_signals}
     except Exception:
         pass
+
+    # Read CityReport for governance context
+    city_context = ""
+    try:
+        from vibe_core.plugins.moltbook.managers.federation import (
+            extract_city_context,
+            read_city_report,
+        )
+
+        report = read_city_report(state.state_dir)
+        if report:
+            city_context = extract_city_context(report)
+            if city_context:
+                logger.info(f"FEDERATION: {city_context}")
+    except Exception as e:
+        logger.debug(f"CityReport read failed: {e}")
+
     try:
         intents = strategy_planner.plan_cycle(
             state.current_feed_topics,
@@ -172,6 +191,61 @@ def evaluate_strategy(state: Any, strategy_planner: Any) -> None:
             logger.info(f"Strategy: {len(intents)} intents ({', '.join(i.action_type for i in intents)})")
     except Exception as e:
         logger.warning(f"Strategy evaluation failed: {e}")
+        return
+
+    # Federation: dispatch code-relevant intents to agent-city
+    _dispatch_federation_intents(state, intents, city_context)
+
+
+def _dispatch_federation_intents(
+    state: Any,
+    intents: List[Any],
+    city_context: str,
+) -> None:
+    """Dispatch code-relevant community intents to agent-city.
+
+    Scans intents for topics that suggest engineering work
+    (bug fixes, features, improvements) and sends them as
+    create_mission directives via federation dispatch.
+
+    Max 1 dispatch per DHARMA cycle (budget-conscious).
+    """
+    if not intents:
+        return
+
+    try:
+        from vibe_core.plugins.moltbook.managers.federation import FederationDispatcher
+
+        dispatcher = FederationDispatcher(state_dir=state.state_dir)
+        if not dispatcher.available:
+            return
+
+        # Look for code-relevant intents (posts/comments about engineering topics)
+        _CODE_SIGNALS = frozenset({
+            "bug", "fix", "error", "feature", "implement", "build", "code",
+            "refactor", "test", "deploy", "infrastructure", "api", "module",
+            "function", "class", "library", "framework", "architecture",
+            "performance", "security", "database", "migration", "upgrade",
+        })
+
+        for intent in intents[:3]:
+            topic_lower = intent.topic.lower() if hasattr(intent, "topic") else ""
+            topic_words = set(topic_lower.split())
+            if topic_words & _CODE_SIGNALS:
+                context = intent.reasoning if hasattr(intent, "reasoning") else ""
+                if city_context:
+                    context = f"{context} | City: {city_context}"
+                post_id = intent.target_post_id if hasattr(intent, "target_post_id") else ""
+                dispatcher.dispatch_create_mission(
+                    topic=intent.topic[:200],
+                    context=context[:500],
+                    source_post_id=post_id,
+                    priority="medium",
+                )
+                # Max 1 dispatch per cycle
+                return
+    except Exception as e:
+        logger.debug(f"Federation dispatch failed: {e}")
 
 
 # =========================================================================
