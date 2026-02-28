@@ -165,6 +165,7 @@ def evaluate_strategy(state: Any, strategy_planner: Any) -> None:
             engagement_stats,
             own_post_ids=state.own_post_ids,
             commented_post_ids=state.commented_post_ids,
+            network_intel=getattr(state, "network_intel", None),
         )
         state.current_intents = intents
         if intents:

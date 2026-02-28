@@ -27,10 +27,12 @@ class StateRestorer:
         state: MoltbookState,
         persistence_getter: Callable[[], Any],
         heartbeat_getter: Callable[[], Any],
+        drainer_getter: Callable[[], Any] = lambda: None,
     ) -> None:
         self._state = state
         self._get_persistence = persistence_getter
         self._get_heartbeat = heartbeat_getter
+        self._get_drainer = drainer_getter
 
     def restore_phase_state(self) -> None:
         """Restore cross-phase state from previous run.
@@ -71,6 +73,19 @@ class StateRestorer:
         intent_dicts = restored.get("intent_dicts", [])
         if intent_dicts and not self._state.current_intents:
             self._restore_strategic_intents(intent_dicts)
+
+        # === Restore rate limit timestamps (survive restart) ===
+        rate_limits = restored.get("rate_limits", {})
+        if rate_limits:
+            drainer = self._get_drainer()
+            if drainer and hasattr(drainer, "rate_limit_restore"):
+                drainer.rate_limit_restore(rate_limits)
+
+        # === Restore NetworkIntel cache (survive restart) ===
+        net_intel_data = restored.get("network_intel", {})
+        if net_intel_data and self._state.network_intel is not None:
+            if hasattr(self._state.network_intel, "restore"):
+                self._state.network_intel.restore(net_intel_data)
 
     def _restore_strategic_intents(self, intent_dicts: List[dict]) -> None:
         """Deserialize and restore strategic intents from dicts.

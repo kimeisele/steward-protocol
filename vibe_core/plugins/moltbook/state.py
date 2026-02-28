@@ -91,6 +91,7 @@ class MoltbookState:
         "current_intents",
         "current_feed_topics",
         "own_post_ids",
+        "network_intel",
     )
 
     def __init__(self) -> None:
@@ -149,3 +150,6 @@ class MoltbookState:
         # --- Strategy ---
         self.current_intents: List[Any] = []
         self.current_feed_topics: List[Dict[str, object]] = []
+
+        # --- Network Intelligence ---
+        self.network_intel: Optional[object] = None  # NetworkIntel instance

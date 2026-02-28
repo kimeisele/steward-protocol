@@ -353,14 +353,21 @@ class ContentDrainer:
     def _drain_dm_reply(self, service: MoltbookProtocol, proposal: ContentProposal) -> None:
         conv_id = proposal.get("conversation_id", "")
         content = proposal.get("content", "")
-        if conv_id and content:
+        if conv_id and content and content.strip():
             service.send_dm(conv_id, content)
             self._log_activity("dm_sent", {"conversation_id": conv_id})
             logger.info(f"DM reply sent to {conv_id}")
 
     def _drain_dm_initiate(self, service: MoltbookProtocol, proposal: ContentProposal) -> None:
         to_agent = proposal.get("to_agent", "")
-        if to_agent:
+        content = proposal.get("content", "")
+        if to_agent and content and content.strip():
+            # Outbound: send DM request to new agent
+            service.send_dm_request(to_agent, content)
+            self._log_activity("dm_initiated", {"to_agent": to_agent})
+            logger.info(f"DM request sent to {to_agent}")
+        elif proposal.get("sender"):
+            # Inbound: approve incoming DM request
             service.approve_dm_request(proposal.get("sender", ""))
             self._log_activity("dm_request_approved", {"agent": to_agent})
             logger.info(f"DM request approved for {to_agent}")
@@ -369,28 +376,30 @@ class ContentDrainer:
         title = proposal.get("title", "")
         content = proposal.get("content", "")
         submolt = proposal.get("submolt")
-        if title and content:
-            post_result = service.create_post(title, content, submolt)
-            post_id = self._extract_post_id(post_result)
-            # Track ALL posts for rate limit persistence — even without API post_id
-            track_key = post_id or f"noid_{int(time.time())}"
-            self._own_post_ids[track_key] = {
+        if not (title and title.strip() and content and content.strip()):
+            logger.warning(f"Post rejected at drain: empty title={title!r} or content={content!r}")
+            return
+        post_result = service.create_post(title, content, submolt)
+        post_id = self._extract_post_id(post_result)
+        # Track ALL posts for rate limit persistence — even without API post_id
+        track_key = post_id or f"noid_{int(time.time())}"
+        self._own_post_ids[track_key] = {
+            "submolt": submolt or "",
+            "created_at": time.time(),
+            "title": title[:80],
+        }
+        self._log_activity("post_created", {"title": title[:80], "submolt": submolt, "post_id": post_id})
+        self._broadcast_to_agora("post", content, {"title": title[:80], "submolt": submolt})
+        self._emit_event(
+            "BROADCAST",
+            f"Post published: {title[:50]}",
+            {
+                "content_type": "post",
+                "post_id": post_id,
                 "submolt": submolt or "",
-                "created_at": time.time(),
-                "title": title[:80],
-            }
-            self._log_activity("post_created", {"title": title[:80], "submolt": submolt, "post_id": post_id})
-            self._broadcast_to_agora("post", content, {"title": title[:80], "submolt": submolt})
-            self._emit_event(
-                "BROADCAST",
-                f"Post published: {title[:50]}",
-                {
-                    "content_type": "post",
-                    "post_id": post_id,
-                    "submolt": submolt or "",
-                },
-            )
-            logger.info(f"Post created: {title[:50]} → {submolt or 'no submolt'} (id={post_id})")
+            },
+        )
+        logger.info(f"Post created: {title[:50]} → {submolt or 'no submolt'} (id={post_id})")
 
     @staticmethod
     def _extract_post_id(result: object) -> str:
@@ -437,24 +446,26 @@ class ContentDrainer:
         post_id = proposal.get("post_id", "")
         content = proposal.get("content", "")
         parent_id = proposal.get("parent_id")
-        if post_id and content:
-            result = service.comment(post_id, content, parent_id)
-            comment_id = result.get("id", "") if isinstance(result, dict) else ""
-            if comment_id:
-                self._own_comment_ids.add(comment_id)
-                self._comment_post_map[comment_id] = post_id
-            self._log_activity("comment_posted", {"post_id": post_id, "comment_id": comment_id})
-            self._broadcast_to_agora("comment", content, {"post_id": post_id})
-            self._emit_event(
-                "BROADCAST",
-                f"Comment published on {post_id}",
-                {
-                    "content_type": "comment",
-                    "post_id": post_id,
-                    "comment_id": comment_id,
-                },
-            )
-            logger.info(f"Comment posted on {post_id}")
+        if not (post_id and content and content.strip()):
+            logger.warning(f"Comment rejected at drain: empty post_id={post_id!r} or content={content!r}")
+            return
+        result = service.comment(post_id, content, parent_id)
+        comment_id = result.get("id", "") if isinstance(result, dict) else ""
+        if comment_id:
+            self._own_comment_ids.add(comment_id)
+            self._comment_post_map[comment_id] = post_id
+        self._log_activity("comment_posted", {"post_id": post_id, "comment_id": comment_id})
+        self._broadcast_to_agora("comment", content, {"post_id": post_id})
+        self._emit_event(
+            "BROADCAST",
+            f"Comment published on {post_id}",
+            {
+                "content_type": "comment",
+                "post_id": post_id,
+                "comment_id": comment_id,
+            },
+        )
+        logger.info(f"Comment posted on {post_id}")
 
     def _drain_vote(self, service: MoltbookProtocol, proposal: ContentProposal) -> None:
         post_id = proposal.get("post_id", "")
@@ -476,3 +487,36 @@ class ContentDrainer:
             service.subscribe(submolt)
             self._log_activity("subscribed", {"submolt": submolt})
             logger.info(f"Subscribed to {submolt}")
+
+    # =========================================================================
+    # Rate limit persistence — survive GitHub Actions restarts
+    # =========================================================================
+
+    def rate_limit_snapshot(self) -> dict:
+        """Snapshot rate limit state for persistence."""
+        return {
+            "last_post_ts": self._last_post_ts,
+            "comment_timestamps": self._comment_timestamps[-30:],
+            "dm_timestamps": self._dm_timestamps[-30:],
+        }
+
+    def rate_limit_restore(self, state: dict) -> None:
+        """Restore rate limit state after restart."""
+        self._last_post_ts = max(
+            self._last_post_ts,
+            state.get("last_post_ts", 0.0),
+        )
+        now = time.time()
+        hour_ago = now - 3600
+        self._comment_timestamps = [
+            t for t in state.get("comment_timestamps", [])
+            if isinstance(t, (int, float)) and t > hour_ago
+        ]
+        self._dm_timestamps = [
+            t for t in state.get("dm_timestamps", [])
+            if isinstance(t, (int, float)) and t > hour_ago
+        ]
+        logger.info(
+            f"Rate limits restored: post={self._last_post_ts:.0f}, "
+            f"comments={len(self._comment_timestamps)}, dms={len(self._dm_timestamps)}"
+        )
