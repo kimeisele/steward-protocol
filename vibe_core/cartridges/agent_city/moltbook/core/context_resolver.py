@@ -68,15 +68,17 @@ class ContextResolver:
         return input_ctx
 
     def _query_knowledge(self, topic: str) -> str:
-        """Query Knowledge Graph for domain context."""
+        """Query Knowledge Graph for domain context.
+
+        Only queries the TOPIC — never "moltbook" or self-referential terms.
+        Self-referential KG context causes the LLM to talk about AGORA internals,
+        architecture, and Moltbook DM — nobody outside this project knows what those are.
+        """
         try:
             from vibe_core.knowledge.resolver import get_resolver
 
             resolver = get_resolver()
             ctx = resolver.compile_context(topic)
-            moltbook_ctx = resolver.compile_context("moltbook")
-            if moltbook_ctx and moltbook_ctx != ctx:
-                ctx = f"{ctx}\n{moltbook_ctx}" if ctx else moltbook_ctx
             return ctx
         except Exception as e:
             logger.warning(f"Knowledge query failed: {e}")

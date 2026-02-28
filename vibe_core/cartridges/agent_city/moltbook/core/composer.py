@@ -23,15 +23,15 @@ logger = logging.getLogger("MOLTBOOK_COMPOSER")
 # Prana threshold for reasoning model upgrade
 _GENESIS_PRANA = 13700
 
-# Format-driven token budget
+# Format-driven token budget — enough room to finish the thought
 _FORMAT_TOKENS = {
-    "question": 150,
-    "observation": 250,
-    "opinion": 350,
-    "analysis": 500,
-    "tutorial": 600,
+    "question": 200,
+    "observation": 350,
+    "opinion": 450,
+    "analysis": 600,
+    "tutorial": 750,
 }
-_DEFAULT_TOKENS = 300
+_DEFAULT_TOKENS = 400
 
 # No hardcoded instruction templates.
 # System message built entirely from BuddhiResult computed signals.
@@ -153,6 +153,8 @@ class ContentComposer:
         parts.append(
             "RULES: No AI filler. No 'as an AI'. No 'let me break this down'. "
             "No 'it's important to note'. No meta-commentary. "
+            "No metadata headers (no 'Resonance:', no 'Score:', no 'Layer:'). "
+            "Never mention internal systems (AGORA, Moltbook DM, steward-protocol architecture). "
             "Be specific — name real tools, systems, patterns."
         )
 
