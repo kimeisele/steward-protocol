@@ -57,7 +57,13 @@ class IntentExecutor:
 
         for intent in self._state.current_intents[:3]:
             try:
-                if intent.action_type == "comment" and intent.target_post_id:
+                if intent.action_type == "amplify" and intent.target_post_id:
+                    self._execute_amplify_intent(intent)
+
+                elif intent.action_type == "connect":
+                    self._execute_connect_intent(intent)
+
+                elif intent.action_type == "comment" and intent.target_post_id:
                     self._execute_comment_intent(intent)
 
                 elif intent.action_type == "post":
@@ -183,6 +189,105 @@ class IntentExecutor:
                 {"action": "post", "mission_id": intent_dict.get("mission_id", "")},
             )
             self._record_manas_outcome(intent_dict, success=False)
+
+    def _execute_amplify_intent(self, intent: object) -> None:
+        """Execute an amplify intent: upvote + substantive comment on underrated content.
+
+        Args:
+            intent: StrategicIntent with target_post_id and topic
+        """
+        from vibe_core.protocols.moltbook_content import ContentType
+
+        intent_dict = intent.__dict__ if hasattr(intent, "__dict__") else intent
+        target_post_id = intent_dict.get("target_post_id", "") if isinstance(intent_dict, dict) else ""
+
+        if not target_post_id:
+            return
+
+        # 1. Enqueue upvote
+        self._state.content_queue.enqueue({
+            "content_type": ContentType.VOTE.value,
+            "post_id": target_post_id,
+            "source": "amplify_intent",
+            "priority": 0,
+        })
+
+        # 2. Generate substantive comment (not just "great post!")
+        if target_post_id in self._state.commented_post_ids:
+            logger.info(f"Amplify: upvoted {target_post_id}, already commented — skip comment")
+            return
+
+        post_content = ""
+        for post in self._state.current_feed_topics:
+            if isinstance(post, dict) and post.get("id") == target_post_id:
+                post_content = str(post.get("content", ""))
+                break
+
+        proposal = self._director_propose(
+            content_type="comment",
+            raw_input=intent_dict.get("topic", ""),
+            proposal_type=ContentType.COMMENT.value,
+            post_id=target_post_id,
+            trigger="amplify_intent",
+            context={
+                "strategic_reasoning": intent_dict.get("reasoning", ""),
+                "engagement_context": intent_dict.get("engagement_context", ""),
+                "content_format": "observation",
+                "post_content": post_content,
+                "mission_id": "network_amplify",
+                "priority": intent_dict.get("priority", 7),
+            },
+        )
+        if proposal:
+            self._state.content_queue.enqueue(proposal)
+            self._state.commented_post_ids.add(target_post_id)
+            logger.info(f"Amplify: upvote + comment queued for {target_post_id}")
+            self._record_manas_outcome(intent_dict, success=True)
+        else:
+            logger.warning(f"Amplify: upvoted {target_post_id} but comment generation failed")
+
+    def _execute_connect_intent(self, intent: object) -> None:
+        """Execute a connect intent: DM introduction to complementary agent.
+
+        Args:
+            intent: StrategicIntent with engagement_context containing agent names
+        """
+        from vibe_core.protocols.moltbook_content import ContentType
+
+        intent_dict = intent.__dict__ if hasattr(intent, "__dict__") else intent
+        eng_ctx = intent_dict.get("engagement_context", "") if isinstance(intent_dict, dict) else ""
+
+        # Parse agent names from engagement_context
+        parts = dict(p.split("=", 1) for p in eng_ctx.split(", ") if "=" in p)
+        agent_b = parts.get("agent_b", "").strip()
+        shared = parts.get("shared", "").strip()
+
+        if not agent_b:
+            logger.warning("Connect intent missing agent_b in engagement_context")
+            return
+
+        # Generate DM message via content pipeline
+        proposal = self._director_propose(
+            content_type="dm_initiate",
+            raw_input=intent_dict.get("topic", ""),
+            proposal_type=ContentType.DM_INITIATE.value,
+            trigger="connect_intent",
+            context={
+                "strategic_reasoning": intent_dict.get("reasoning", ""),
+                "to_agent": agent_b,
+                "shared_interests": shared,
+                "content_format": "observation",
+                "mission_id": "network_connect",
+                "priority": intent_dict.get("priority", 6),
+            },
+        )
+        if proposal:
+            proposal["to_agent"] = agent_b
+            self._state.content_queue.enqueue(proposal)
+            logger.info(f"Connect: DM to {agent_b} queued (shared: {shared})")
+            self._record_manas_outcome(intent_dict, success=True)
+        else:
+            logger.warning(f"Connect: DM generation for {agent_b} failed")
 
     @staticmethod
     def _record_manas_outcome(intent_dict: dict, success: bool) -> None:

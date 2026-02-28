@@ -302,6 +302,7 @@ class MoltbookStrategyPlanner:
         engagement_stats: Dict[str, Any],
         own_post_ids: Optional[Dict[str, Dict[str, object]]] = None,
         commented_post_ids: Optional[set] = None,
+        network_intel: Optional[object] = None,
     ) -> List[StrategicIntent]:
         """DHARMA phase: evaluate missions → prioritized action list.
 
@@ -339,6 +340,23 @@ class MoltbookStrategyPlanner:
                 ]
             return []
 
+        # Network intelligence: lonely post amplification intents
+        amplify_intents: List[StrategicIntent] = []
+        if network_intel and hasattr(network_intel, "find_lonely_posts"):
+            lonely = network_intel.find_lonely_posts(feed_topics)
+            for post in lonely[:HALVES]:  # Max 2 amplify intents per cycle
+                author_data = post.get("author", {})
+                author = author_data.get("name", "") if isinstance(author_data, dict) else ""
+                amplify_intents.append(StrategicIntent(
+                    action_type="amplify",
+                    topic=str(post.get("title", ""))[:200],
+                    reasoning=f"Quality content by {author} with zero engagement — amplify",
+                    priority=7,
+                    mission_id="network_amplify",
+                    target_post_id=str(post.get("id", "")),
+                    engagement_context=f"author={author}, upvotes={post.get('upvotes', 0)}",
+                ))
+
         # Keyword Jaccard matching — first filter
         matches = self._match_topics(feed_topics, missions)
         _commented = commented_post_ids or set()
@@ -346,8 +364,24 @@ class MoltbookStrategyPlanner:
         # MahaManas drives ALL remaining decisions
         intents = self._manas_evaluate_matches(
             matches, missions, _commented, can_post, own_post_ids,
+            network_intel=network_intel,
         )
+
+        # Network intelligence: connect intents (complementary agents)
+        connect_intents = self._generate_connect_intents(
+            feed_topics, network_intel, _commented,
+        )
+
+        intents = amplify_intents + intents + connect_intents
         intents.sort(key=lambda i: i.priority, reverse=True)
+
+        # Semantic dedup: don't post topics that overlap with own recent posts
+        if own_post_ids:
+            intents = [
+                i for i in intents
+                if i.action_type != "post" or not self._semantic_dedup(i.topic, own_post_ids)
+            ]
+
         return intents[:TRINITY]
 
     def _manas_evaluate_matches(
@@ -357,6 +391,7 @@ class MoltbookStrategyPlanner:
         commented: set,
         can_post: bool,
         own_post_ids: Optional[Dict[str, Dict[str, object]]],
+        network_intel: Optional[object] = None,
     ) -> List[StrategicIntent]:
         """Cognitive core: MahaManas perceive → decide → intents.
 
@@ -375,7 +410,11 @@ class MoltbookStrategyPlanner:
                 content=m.topic,
                 source="feed_scan",
                 category="sthula",
-                context={"mission_id": m.mission_id, "post_id": m.post_id},
+                context={
+                    "mission_id": m.mission_id,
+                    "post_id": m.post_id,
+                    "author": m.post_meta.get("author", ""),
+                },
             )
             for m in matches
             if m.post_id not in commented
@@ -408,6 +447,16 @@ class MoltbookStrategyPlanner:
             mission = mission_map.get(mission_id)
             mission_name = mission.name if mission else "unknown"
 
+            # Author reputation factor from NetworkIntel cache
+            author_boost = 0
+            if network_intel and hasattr(network_intel, "_profiles"):
+                author = v.perception.context.get("author", "")
+                if author:
+                    profile = network_intel._profiles.get(author, {})
+                    karma = int(profile.get("karma", 0) or 0)
+                    if karma > 100:
+                        author_boost = 1  # Boost established authors
+
             action_type = self._function_to_action(
                 cognition.function, can_post, zero_streak, chapter, own_chapters,
             )
@@ -421,7 +470,7 @@ class MoltbookStrategyPlanner:
                 action_type=action_type,
                 topic=v.perception.content,
                 reasoning=f"Manas verdict: {cognition.function}/{cognition.approach} ch.{chapter} (p={v.priority_score:.0f}, c={v.confidence:.2f})",
-                priority=int(v.priority_score / 10),  # 0-100 → 0-10
+                priority=min(10, int(v.priority_score / 10) + author_boost),  # 0-100 → 0-10 + reputation
                 mission_id=mission_id,
                 target_post_id=post_id,
                 engagement_context=eng_context,
@@ -452,6 +501,62 @@ class MoltbookStrategyPlanner:
             if chapter not in own_chapters:
                 return "post"
         return "comment"
+
+    @staticmethod
+    def _generate_connect_intents(
+        feed_topics: List[Dict[str, Any]],
+        network_intel: Optional[object],
+        commented: set,
+    ) -> List[StrategicIntent]:
+        """Generate DM introduction intents for complementary agents.
+
+        For each feed topic with an interesting author, find other agents
+        with overlapping interests. Max 1 connect intent per cycle.
+        """
+        if not network_intel or not hasattr(network_intel, "find_complementary_agents"):
+            return []
+
+        intents: List[StrategicIntent] = []
+        seen_pairs: set = set()
+
+        for post in feed_topics[:10]:
+            if not isinstance(post, dict):
+                continue
+            author_data = post.get("author", {})
+            author = author_data.get("name", "") if isinstance(author_data, dict) else ""
+            if not author:
+                continue
+
+            author_interests = network_intel.get_agent_interests(author)
+            if not author_interests:
+                continue
+
+            # Find other agents with overlapping interests
+            complementary = network_intel.find_complementary_agents(
+                author_interests,
+                exclude={author},
+            )
+            for other_agent, score in complementary[:1]:
+                pair_key = tuple(sorted([author, other_agent]))
+                if pair_key in seen_pairs:
+                    continue
+                seen_pairs.add(pair_key)
+
+                shared_topics = author_interests & network_intel.get_agent_interests(other_agent)
+                shared_str = ", ".join(list(shared_topics)[:3])
+
+                intents.append(StrategicIntent(
+                    action_type="connect",
+                    topic=f"Connect {author} with {other_agent} on {shared_str}",
+                    reasoning=f"Complementary interests (Jaccard={score:.2f}): {shared_str}",
+                    priority=6,
+                    mission_id="network_connect",
+                    engagement_context=f"agent_a={author}, agent_b={other_agent}, shared={shared_str}",
+                ))
+                if len(intents) >= 1:  # Max 1 connect intent per cycle
+                    return intents
+
+        return intents
 
     @staticmethod
     def _get_own_chapters(

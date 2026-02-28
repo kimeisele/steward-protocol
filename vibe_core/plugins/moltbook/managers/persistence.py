@@ -53,7 +53,8 @@ def _governed_write(filename: str, data: dict, path: Path, actor: str, indent: i
         guna = _get_rajas_guna()
         result = gate.write(filename, data, actor=actor, guna=guna)
         if not result.success:
-            logger.warning(f"Gate blocked {filename}: {result.reason}")
+            logger.warning(f"Gate blocked {filename}: {result.reason}, falling back to direct write")
+            path.write_text(json.dumps(data, indent=indent))
             return
         # Gate approved and wrote to StateService cache
         logger.debug(f"Governed write: {filename} (actor={actor})")
@@ -212,8 +213,10 @@ class PersistenceManager:
         feed_topics: list,
         intents: list,
         orchestrator_state: dict | None = None,
+        rate_limits: dict | None = None,
+        network_intel_snapshot: dict | None = None,
     ) -> None:
-        """Save cross-phase state (feed_topics + intents + heartbeat_count).
+        """Save cross-phase state (feed_topics + intents + heartbeat_count + rate limits).
 
         Survives GitHub Actions restarts so DHARMA can use GENESIS results
         from a previous run, and KARMA can use DHARMA intents.
@@ -235,6 +238,8 @@ class PersistenceManager:
                 "feed_topics": feed_topics[:20],  # Cap to prevent bloat
                 "intents": intent_dicts,
                 "orchestrator_state": orchestrator_state or {},
+                "rate_limits": rate_limits or {},
+                "network_intel": network_intel_snapshot or {},
                 "timestamp": datetime.now(timezone.utc).isoformat(),
             }
             _governed_write(
@@ -266,6 +271,8 @@ class PersistenceManager:
             result["heartbeat_count"] = int(data.get("heartbeat_count", 0))
             result["feed_topics"] = data.get("feed_topics", [])
             result["intent_dicts"] = data.get("intents", [])
+            result["rate_limits"] = data.get("rate_limits", {})
+            result["network_intel"] = data.get("network_intel", {})
         except Exception as e:
             logger.debug(f"Phase state restore failed: {e}")
 

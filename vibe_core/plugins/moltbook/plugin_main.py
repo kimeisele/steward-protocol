@@ -276,6 +276,7 @@ class MoltbookPlugin(KernelPlugin):
                 state=self._s,
                 persistence_getter=lambda: self._persistence,
                 heartbeat_getter=lambda: self._heartbeat,
+                drainer_getter=lambda: self._drainer,
             )
         return self._state_restorer_inst
 
@@ -444,11 +445,19 @@ class MoltbookPlugin(KernelPlugin):
         self._restorer.restore_phase_state()
 
     def _persist_phase_state(self) -> None:
+        rate_limits = {}
+        if hasattr(self, "_drainer") and self._drainer:
+            rate_limits = self._drainer.rate_limit_snapshot()
+        net_intel_snapshot = {}
+        if self._s.network_intel and hasattr(self._s.network_intel, "snapshot"):
+            net_intel_snapshot = self._s.network_intel.snapshot()
         self._persistence.persist_phase_state(
             heartbeat_count=self._heartbeat.current_heartbeat_count,
             feed_topics=self._s.current_feed_topics,
             intents=self._s.current_intents,
             orchestrator_state=self._heartbeat.snapshot(),
+            rate_limits=rate_limits,
+            network_intel_snapshot=net_intel_snapshot,
         )
 
     # =========================================================================
@@ -534,12 +543,20 @@ class MoltbookPlugin(KernelPlugin):
         self._dm.process_dm_requests()
 
     def _scan_feed(self) -> None:
+        # Lazy-init NetworkIntel on first GENESIS scan
+        if self._s.network_intel is None:
+            from vibe_core.plugins.moltbook.managers.network_intel import NetworkIntel
+
+            self._s.network_intel = NetworkIntel(max_profiles=50)
+
         self._s.current_feed_topics = self._feed.scan_feed(
             client=self._s.client,
             proposer=self._s.proposer,
             content_queue=self._s.content_queue,
             service=self._s.service,
             strategy_planner=self.strategy_planner,
+            network_intel=self._s.network_intel,
+            followed_agents=self._s.followed_agents,
         )
 
     def _gather_broadcast_intelligence(self) -> None:

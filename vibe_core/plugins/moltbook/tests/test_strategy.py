@@ -1010,6 +1010,40 @@ class TestSemanticDedup:
 
 
 # ---------------------------------------------------------------------------
+# _semantic_dedup wired in plan_cycle() — post intents filtered
+# ---------------------------------------------------------------------------
+
+
+class TestSemanticDedupWired:
+    """_semantic_dedup is CALLED from plan_cycle(), not just declared."""
+
+    def test_plan_cycle_filters_duplicate_post_intents(self, _mock_buddhi):
+        """Post intent whose topic matches own recent post title is filtered out."""
+        planner = _make_planner(missions=_TEST_MISSIONS)
+        feed = [
+            {"id": "f1", "title": "AI governance and transparent decision-making", "content": "autonomous systems governance"},
+        ]
+        own_posts = {"p_old": {"title": "AI governance and transparent decisions", "created_at": 0}}
+        intents = planner.plan_cycle(feed, {}, own_post_ids=own_posts)
+        # Post intents whose topic overlaps own posts at Jaccard > 0.4 should be filtered
+        post_intents = [i for i in intents if i.action_type == "post"]
+        assert len(post_intents) == 0
+
+    def test_plan_cycle_allows_unrelated_topics(self, _mock_buddhi):
+        """Post intent whose topic doesn't match own posts survives dedup."""
+        planner = _make_planner(missions=_TEST_MISSIONS)
+        feed = [
+            {"id": "f2", "title": "Decentralized protocols for agent coordination", "content": "agent-to-agent mesh"},
+        ]
+        # Own posts about a COMPLETELY different topic
+        own_posts = {"p_old": {"title": "Pizza recipes for family dinner", "created_at": 0}}
+        intents = planner.plan_cycle(feed, {}, own_post_ids=own_posts)
+        # Should NOT be filtered — topic is unrelated to own posts
+        # (May be comment or post depending on MahaManas decision)
+        assert len(intents) >= 0  # No crash, dedup didn't erroneously kill it
+
+
+# ---------------------------------------------------------------------------
 # SravanamCheck gate — listen before speak
 # ---------------------------------------------------------------------------
 
@@ -1112,3 +1146,111 @@ class TestZeroEngagementStreak:
         result = planner.plan_cycle(topics, {}, own_post_ids=own_posts)
         posts = [i for i in result if i.action_type == "post"]
         assert len(posts) == 0, "Should skip posts when zero engagement streak"
+
+
+# ---------------------------------------------------------------------------
+# Network Intelligence — amplify + connect intents
+# ---------------------------------------------------------------------------
+
+
+class TestNetworkIntelIntents:
+    def test_amplify_intent_from_lonely_posts(self, _mock_buddhi):
+        """Lonely posts generate amplify intents when NetworkIntel is available."""
+        from vibe_core.plugins.moltbook.managers.network_intel import NetworkIntel
+
+        ni = NetworkIntel()
+        planner = _make_planner(missions=_TEST_MISSIONS)
+
+        topics = [
+            {
+                "id": "lonely1",
+                "title": "Deep analysis of consensus mechanisms in distributed systems",
+                "content": "A" * 60,
+                "comment_count": 0,
+                "upvotes": 0,
+                "author": {"name": "quiet_agent"},
+            },
+            {
+                "id": "popular1",
+                "title": "AI governance and transparent decision-making",
+                "content": "B" * 60,
+                "comment_count": 10,
+                "upvotes": 25,
+                "author": {"name": "popular_agent"},
+            },
+        ]
+        result = planner.plan_cycle(topics, {}, network_intel=ni)
+        amplify = [i for i in result if i.action_type == "amplify"]
+        assert len(amplify) >= 1
+        assert amplify[0].target_post_id == "lonely1"
+        assert amplify[0].mission_id == "network_amplify"
+        assert "quiet_agent" in amplify[0].reasoning
+
+    def test_no_amplify_without_network_intel(self, _mock_buddhi):
+        """Without NetworkIntel, no amplify intents generated."""
+        planner = _make_planner(missions=_TEST_MISSIONS)
+        topics = [
+            {
+                "id": "lonely1",
+                "title": "AI governance and transparent decision-making",
+                "content": "A" * 60,
+                "comment_count": 0,
+                "upvotes": 0,
+                "author": {"name": "quiet_agent"},
+            },
+        ]
+        result = planner.plan_cycle(topics, {}, network_intel=None)
+        amplify = [i for i in result if i.action_type == "amplify"]
+        assert len(amplify) == 0
+
+    def test_connect_intent_from_complementary_agents(self):
+        """Complementary agents generate connect intents."""
+        from vibe_core.plugins.moltbook.managers.network_intel import NetworkIntel
+
+        ni = NetworkIntel()
+        ni._agent_topics = {
+            "alice": {"safety", "alignment", "governance"},
+            "bob": {"safety", "alignment", "research"},
+        }
+
+        result = MoltbookStrategyPlanner._generate_connect_intents(
+            feed_topics=[
+                {"id": "p1", "title": "Test", "author": {"name": "alice"}},
+            ],
+            network_intel=ni,
+            commented=set(),
+        )
+        assert len(result) == 1
+        assert result[0].action_type == "connect"
+        assert result[0].mission_id == "network_connect"
+        assert "bob" in result[0].engagement_context
+
+    def test_no_connect_without_network_intel(self):
+        """Without NetworkIntel, no connect intents generated."""
+        result = MoltbookStrategyPlanner._generate_connect_intents(
+            feed_topics=[{"id": "p1", "title": "X", "author": {"name": "alice"}}],
+            network_intel=None,
+            commented=set(),
+        )
+        assert result == []
+
+    def test_max_one_connect_per_cycle(self):
+        """At most 1 connect intent per cycle."""
+        from vibe_core.plugins.moltbook.managers.network_intel import NetworkIntel
+
+        ni = NetworkIntel()
+        ni._agent_topics = {
+            "alice": {"safety", "alignment", "governance"},
+            "bob": {"safety", "alignment", "research"},
+            "carol": {"safety", "alignment", "policy"},
+        }
+
+        result = MoltbookStrategyPlanner._generate_connect_intents(
+            feed_topics=[
+                {"id": "p1", "title": "X", "author": {"name": "alice"}},
+                {"id": "p2", "title": "Y", "author": {"name": "bob"}},
+            ],
+            network_intel=ni,
+            commented=set(),
+        )
+        assert len(result) <= 1

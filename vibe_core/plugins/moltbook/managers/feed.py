@@ -58,6 +58,8 @@ class FeedAnalyzer:
         service: Optional["MoltbookProtocol"] = None,
         mission_descriptions: Optional[List[str]] = None,
         strategy_planner: Optional[object] = None,
+        network_intel: Optional[object] = None,
+        followed_agents: Optional[Set[str]] = None,
     ) -> List[Dict[str, object]]:
         """GENESIS phase: Extract topics + metadata from feed. NO content generation.
 
@@ -104,6 +106,17 @@ class FeedAnalyzer:
             feed_topics = feed_topics + semantic_results
 
         logger.info(f"Feed scan: {len(feed_topics)} topics ({len(feed_topics) - len(posts)} from semantic search)")
+
+        # Network intelligence: profile-fetch feed authors (max 3 API calls)
+        if network_intel and service:
+            try:
+                network_intel.enrich_from_feed(
+                    service=service,
+                    feed_topics=feed_topics,
+                    followed_agents=followed_agents or set(),
+                )
+            except Exception as e:
+                logger.warning(f"NetworkIntel enrich failed: {e}")
 
         # Engagement: upvote UNSEEN high-quality posts (dedup prevents double-engage)
         for post in posts[:5]:
