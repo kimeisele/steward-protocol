@@ -1,588 +1,428 @@
 """
-Moltbook Plugin — Sensor/Actuator Membrane
-===========================================
+Moltbook Plugin — Thin Shell
+=============================
 
-Bridges the Moltbook social network to the Mahamantra Engine via
-mahamantra.register_listener() — the REAL heartbeat path.
+Lifecycle hooks (boot/pulse/shutdown) + manager wiring.
+All business logic lives in managers/, service.py, lifecycle.py.
 
-Architecture (verified against code):
-    mahamantra.tick()                            # singularity.py:1159
-        → kala.advance()                         # Time
-        → venu.step()                            # DIW from LUT
-        → _broadcast(TickState)                  # Narada dispatch
-            → Nrisimha._on_mahamantra_tick()     # Watchdog (wired)
-            → MahaComputeService.on_tick()       # Compute (wired)
-            → MoltbookPlugin._on_mahamantra_tick # THIS (wired at boot)
+Architecture:
+    mahamantra.tick() → _on_mahamantra_tick → HeartbeatOrchestrator
+    on_pulse()        → same heartbeat path (backward compat)
+    on_boot()         → BootManager
+    on_shutdown()     → persist + cleanup
 
-The plugin polls Moltbook once per full Mantra (16 ticks = 1 chant cycle).
-Inbound DMs route through Govardhan Gateway → 5 Gates → Cell.
-
-on_pulse() is kept for backward compatibility but the REAL path
-is the Mahamantra listener. When the split-brain heals and
-kernel.pulse() works, both paths converge safely.
+State is centralized in MoltbookState (state.py).
+Service is MoltbookService (service.py).
+Lifecycle wiring is in lifecycle.py.
+PromptContext resolvers are in context_resolvers.py.
 """
 
-import json
 import logging
-from datetime import datetime, timezone
-from pathlib import Path
-from typing import TYPE_CHECKING, Any, ClassVar, Dict, List, Optional, Set
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set
 
-from vibe_core.mahamantra import run_async
-from vibe_core.mahamantra.protocols._gad import GADBase
 from vibe_core.plugin_protocol import HookResult, KernelPlugin, PulsePhase
-from vibe_core.protocols.moltbook import (
-    DMMessage,
-    MoltbookAgentProfile,
-    MoltbookComment,
-    MoltbookPost,
-    MoltbookProtocol,
-    SemanticSearchResult,
+from vibe_core.plugins.moltbook.service import MoltbookService
+from vibe_core.plugins.moltbook.state import (
+    MAX_OWN_POST_IDS,
+    MAX_SEEN_IDS,
+    TICKS_PER_HEARTBEAT,
+    MoltbookState,
 )
-from vibe_core.protocols.moltbook_content import (
-    ContentProposal,
-    ContentProposalProtocol,
-    ContentQueue,
-    ContentType,
-)
-from vibe_core.mahamantra.substrate.core.seed import (
-    COSMIC_FRAME,
-    HARE_COUNT,
-    KSHETRA,
-    LILA,
-    MAHAJANA_COUNT,
-    MALA,
-    NAVA,
-    QUARTERS,
-    WORDS,
-)
+from vibe_core.protocols.moltbook import MoltbookProtocol
+from vibe_core.protocols.moltbook_content import ContentProposal, ContentProposalProtocol, ContentQueue, ContentType
 
 if TYPE_CHECKING:
+    from pathlib import Path
+
     from vibe_core.kernel_impl import RealVibeKernel
-    from vibe_core.mahamantra import MoltbookClient
 
 logger = logging.getLogger("MOLTBOOK")
 
-# One full mantra = WORDS ticks. Poll Moltbook once per chant cycle.
-_TICKS_PER_HEARTBEAT = WORDS  # 16 words in Mahamantra
-
-
-class MoltbookService(MoltbookProtocol, GADBase):
-    """
-    Concrete implementation of MoltbookProtocol + GAD-000 compliant.
-
-    Wraps MoltbookClient with the ABC interface so it can be
-    registered with ServiceRegistry. Other plugins and tools
-    consume this via DI — never touch MoltbookClient directly.
-
-    GAD-000 Compliance:
-        6 Kshetra criteria: discover(), get_state(), is_healthy(),
-            is_idempotent, detect_drift(), parseability (via Guna codes)
-        4 Dharma principles: Daya (input validation), Satyam (verified output),
-            Tapas (rate limits), Saucam (auth-only I/O)
-        Heartbeat: MantraHeartbeat via GADBase
-
-    Every operation is classified by Guna (SATTVA/RAJAS/TAMAS).
-    RAJAS operations (write) are logged. TAMAS (delete) are blocked
-    unless explicitly authorized. SATTVA (read) flows freely.
-    """
-
-    # Sovereign Identity (class-level → hasattr(instance, ...) resolves True)
-    # Narada = the travelling sage who connects all worlds (social platform adapter)
-    # Genesis: 999000000 = 37 × 27000000 → verify_link() passes (PARAMPARA check)
-    __mahajana__: ClassVar[str] = "narada"
-    __position__: ClassVar[int] = 2  # Narada position: Communication/Broadcast
-    __genesis__: ClassVar[str] = "0x3b8b87c0"  # int(hex,16) % 37 == 0
-
-    def __init__(self, client: "MoltbookClient"):
-        GADBase.__init__(self)
-        self._client = client
-        self._operation_log: List[Dict[str, Any]] = []
-        self._last_api_error: Optional[str] = None
-        self._consecutive_failures: int = 0
-        # Guna enforcer (lazy-loaded)
-        self._guna_enforcer_mgr = None
-        # First chant: transition heartbeat from DISCONNECTED → CHANTING
-        self.chant()
-
-    @property
-    def _guna(self):
-        """Lazy-init GunaEnforcer for I/O Policy validation."""
-        if self._guna_enforcer_mgr is None:
-            from vibe_core.plugins.moltbook.managers.guna_enforcer import GunaEnforcer
-
-            self._guna_enforcer_mgr = GunaEnforcer(self)
-        return self._guna_enforcer_mgr
-
-    def _enforce_guna(self, operation: str) -> None:
-        """Guna I/O Policy + Knowledge Graph Constraint validation.
-
-        SATTVA: Pass through (read-only, safe).
-        RAJAS: Log and allow (write, rate-limited by client).
-        TAMAS: Block (destructive).
-
-        Additionally checks constraints from knowledge/moltbook/platform.yaml
-        (6 hard/soft constraints) via Knowledge Graph.
-        """
-        self._guna.enforce(operation)
-
-    # --- SATTVA operations (read-only) ---
-
-    def check_heartbeat(self) -> Dict[str, Any]:
-        self._enforce_guna("check_heartbeat")
-        return self._client.sync_check_heartbeat()
-
-    def get_own_profile(self) -> MoltbookAgentProfile:
-        self._enforce_guna("get_own_profile")
-        return run_async(self._client.get_own_profile())
-
-    def get_profile(self, name: str) -> MoltbookAgentProfile:
-        self._enforce_guna("get_profile")
-        return run_async(self._client.get_profile(name))
-
-    def get_feed(self, sort: str = "hot", limit: int = 25) -> List[Any]:
-        self._enforce_guna("get_feed")
-        return run_async(self._client.get_feed(sort, limit))
-
-    def get_personalized_feed(self, sort: str = "hot", limit: int = 25) -> List[Any]:
-        self._enforce_guna("get_personalized_feed")
-        return run_async(self._client.get_personalized_feed(sort, limit))
-
-    def get_post(self, post_id: str) -> Dict[str, Any]:
-        self._enforce_guna("get_post")
-        return run_async(self._client.get_post(post_id))
-
-    def get_comments(self, post_id: str, sort: str = "top") -> List[Any]:
-        self._enforce_guna("get_comments")
-        return run_async(self._client.get_comments(post_id, sort))
-
-    def search(self, query: str, limit: int = 25) -> List[SemanticSearchResult]:
-        self._enforce_guna("search")
-        return run_async(self._client.semantic_search(query, limit))
-
-    def get_conversations(self) -> List[Dict[str, Any]]:
-        self._enforce_guna("get_conversations")
-        return self._client.sync_get_dm_conversations()
-
-    def get_messages(self, conversation_id: str) -> List[DMMessage]:
-        self._enforce_guna("get_messages")
-        return self._client.sync_get_dm_messages(conversation_id)
-
-    def get_dm_requests(self) -> List[Dict[str, Any]]:
-        self._enforce_guna("get_dm_requests")
-        return run_async(self._client.get_dm_requests())
-
-    def get_submolts(self) -> List[Dict[str, Any]]:
-        self._enforce_guna("get_submolts")
-        return run_async(self._client.get_submolts())
-
-    def get_submolt(self, name: str) -> Dict[str, Any]:
-        self._enforce_guna("get_submolt")
-        return run_async(self._client.get_submolt(name))
-
-    def verify_credentials(self) -> bool:
-        self._enforce_guna("verify_credentials")
-        try:
-            status = run_async(self._client.check_status())
-            return status == "claimed"
-        except Exception:
-            return False
-
-    # --- RAJAS operations (write, logged) ---
-
-    def create_post(self, title: str, content: str, submolt: Optional[str] = None) -> MoltbookPost:
-        self._enforce_guna("create_post")
-        return self._client.sync_create_post(title, content, submolt)
-
-    def comment(self, post_id: str, content: str, parent_id: Optional[str] = None) -> MoltbookComment:
-        self._enforce_guna("comment")
-        return run_async(self._client.comment_with_verification(post_id, content, parent_id))
-
-    def send_dm(self, conversation_id: str, content: str) -> Dict[str, Any]:
-        self._enforce_guna("send_dm")
-        return self._client.sync_send_dm(conversation_id, content)
-
-    def send_dm_request(self, to_agent: str, message: str) -> Dict[str, Any]:
-        self._enforce_guna("send_dm_request")
-        return run_async(self._client.send_dm_request(to_agent, message))
-
-    def approve_dm_request(self, request_id: str) -> Dict[str, Any]:
-        self._enforce_guna("approve_dm_request")
-        return run_async(self._client.approve_dm_request(request_id))
-
-    def reject_dm_request(self, request_id: str, block: bool = False) -> Dict[str, Any]:
-        self._enforce_guna("reject_dm_request")
-        return run_async(self._client.reject_dm_request(request_id, block))
-
-    def upvote(self, post_id: str) -> Dict[str, Any]:
-        self._enforce_guna("upvote")
-        return run_async(self._client.upvote(post_id))
-
-    def downvote(self, post_id: str) -> Dict[str, Any]:
-        self._enforce_guna("downvote")
-        return run_async(self._client.downvote(post_id))
-
-    def upvote_comment(self, comment_id: str) -> Dict[str, Any]:
-        self._enforce_guna("upvote_comment")
-        return run_async(self._client.upvote_comment(comment_id))
-
-    def follow(self, agent_name: str) -> Dict[str, Any]:
-        self._enforce_guna("follow")
-        return run_async(self._client.follow_agent(agent_name))
-
-    def subscribe(self, submolt_name: str) -> Dict[str, Any]:
-        self._enforce_guna("subscribe")
-        return run_async(self._client.subscribe_submolt(submolt_name))
-
-    def create_submolt(self, name: str, display_name: str, description: str) -> Dict[str, Any]:
-        self._enforce_guna("create_submolt")
-        return self._client.sync_create_submolt(name, display_name, description)
-
-    def update_profile(
-        self, description: Optional[str] = None, metadata: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
-        self._enforce_guna("update_profile")
-        return run_async(self._client.update_profile(description, metadata))
-
-    # --- TAMAS operations (destructive, blocked by default) ---
-
-    def delete_post(self, post_id: str) -> Dict[str, Any]:
-        self._enforce_guna("delete_post")
-        return run_async(self._client.delete_post(post_id))
-
-    def unfollow(self, agent_name: str) -> Dict[str, Any]:
-        self._enforce_guna("unfollow")
-        return run_async(self._client.unfollow_agent(agent_name))
-
-    def unsubscribe(self, submolt_name: str) -> Dict[str, Any]:
-        self._enforce_guna("unsubscribe")
-        return run_async(self._client.unsubscribe_submolt(submolt_name))
-
-    # =========================================================================
-    # GAD-000: THE 6 KSHETRA CRITERIA
-    # =========================================================================
-
-    def discover(self) -> Dict[str, object]:
-        """Discoverability: machine-readable capability description.
-
-        Returns every operation this service exposes, grouped by Guna class,
-        along with current rate limits and auth requirements.
-        """
-        from vibe_core.mahamantra.adapters.moltbook import MoltbookLimits
-        from vibe_core.protocols.moltbook import MOLTBOOK_GUNA_MAP
-
-        return {
-            "service": "MoltbookService",
-            "protocol": "MoltbookProtocol",
-            "gad_compliant": True,
-            "operations": {
-                "sattva": [k for k, v in MOLTBOOK_GUNA_MAP.items() if v.value == "sattva"],
-                "rajas": [k for k, v in MOLTBOOK_GUNA_MAP.items() if v.value == "rajas"],
-                "tamas": [k for k, v in MOLTBOOK_GUNA_MAP.items() if v.value == "tamas"],
-            },
-            "rate_limits": {
-                "requests_per_minute": MoltbookLimits.REQ_PER_MIN,
-                "posts_per_30m": MoltbookLimits.POST_PER_30_MIN,
-                "comments_per_hour": MoltbookLimits.COMMENTS_PER_HOUR,
-            },
-            "auth_required": True,
-            "offline_mode": self._client.offline_mode,
-        }
-
-    def get_state(self) -> Dict[str, object]:
-        """Observability: current state in structured format.
-
-        Returns rate limit usage, connection health, operation log size,
-        and error state — everything needed to understand the service's
-        current condition.
-        """
-        limits = self._client.limits
-        return {
-            "rate_limits": {
-                "requests_this_minute": limits.requests_this_minute,
-                "posts_this_30m": limits.posts_this_30m,
-                "comments_this_hour": limits.comments_this_hour,
-            },
-            "health": {
-                "last_error": self._last_api_error,
-                "consecutive_failures": self._consecutive_failures,
-                "offline_mode": self._client.offline_mode,
-            },
-            "audit_trail": {
-                "operation_count": len(self._operation_log),
-                "last_operation": self._operation_log[-1] if self._operation_log else None,
-            },
-            "heartbeat": self._heartbeat.get_summary(),
-        }
-
-    def is_healthy(self) -> bool:
-        """Health check: heartbeat + consecutive failure count."""
-        if self._consecutive_failures > 5:
-            return False
-        return self._heartbeat.state.value != 0  # Not DISCONNECTED
-
-    @property
-    def is_idempotent(self) -> bool:
-        """SATTVA operations are idempotent. RAJAS are not (create_post, comment)."""
-        return False  # Service as a whole is not idempotent (has write ops)
-
-    def detect_drift(self) -> List[str]:
-        """Detect deviations from valid state.
-
-        Checks rate limit overruns, auth decay, and resource leaks.
-        Returns empty list if healthy, otherwise list of drift descriptions.
-        """
-        from vibe_core.mahamantra.adapters.moltbook import MoltbookLimits
-
-        drifts: List[str] = []
-        limits = self._client.limits
-
-        # Rate limit overrun (should never happen, but defense-in-depth)
-        if limits.requests_this_minute > MoltbookLimits.REQ_PER_MIN:
-            drifts.append(f"RATE_LIMIT_BREACH: {limits.requests_this_minute}/{MoltbookLimits.REQ_PER_MIN} req/min")
-        if limits.posts_this_30m > MoltbookLimits.POST_PER_30_MIN:
-            drifts.append(f"POST_LIMIT_BREACH: {limits.posts_this_30m}/{MoltbookLimits.POST_PER_30_MIN} posts/30m")
-        if limits.comments_this_hour > MoltbookLimits.COMMENTS_PER_HOUR:
-            drifts.append(
-                f"COMMENT_LIMIT_BREACH: {limits.comments_this_hour}/{MoltbookLimits.COMMENTS_PER_HOUR} comments/h"
-            )
-
-        # Consecutive failures indicate API degradation
-        if self._consecutive_failures > 3:
-            drifts.append(f"API_DEGRADED: {self._consecutive_failures} consecutive failures")
-
-        # Operation log overflow (memory leak indicator)
-        if len(self._operation_log) > 10000:
-            drifts.append(f"AUDIT_LOG_OVERFLOW: {len(self._operation_log)} entries in memory")
-
-        return drifts
-
-    # =========================================================================
-    # GAD-000: THE 4 DHARMA PRINCIPLES
-    # =========================================================================
-
-    def test_daya(self) -> bool:
-        """Mercy: No corrupt data ingestion.
-
-        Validates that the Guna enforcement layer sanitizes all inputs
-        (SATTVA pass-through, RAJAS logged, TAMAS blocked).
-        """
-        # Guna map covers all operations — no unclassified routes
-        from vibe_core.protocols.moltbook import MOLTBOOK_GUNA_MAP
-
-        expected_ops = {
-            "check_heartbeat",
-            "get_own_profile",
-            "get_profile",
-            "get_feed",
-            "get_personalized_feed",
-            "get_post",
-            "get_comments",
-            "search",
-            "get_conversations",
-            "get_messages",
-            "get_dm_requests",
-            "get_submolts",
-            "get_submolt",
-            "verify_credentials",
-            "create_post",
-            "comment",
-            "send_dm",
-            "send_dm_request",
-            "approve_dm_request",
-            "reject_dm_request",
-            "upvote",
-            "downvote",
-            "upvote_comment",
-            "follow",
-            "subscribe",
-            "create_submolt",
-            "update_profile",
-            "delete_post",
-            "unfollow",
-            "unsubscribe",
-        }
-        classified = set(MOLTBOOK_GUNA_MAP.keys())
-        return expected_ops.issubset(classified)
-
-    def test_satyam(self) -> bool:
-        """Truthfulness: No hallucination — deterministic, verifiable output.
-
-        Checks that the service only returns what the API actually returned
-        (no fabricated responses). In offline mode, responses are clearly
-        mocked — the mock_db is deterministic.
-        """
-        # Satyam holds if we haven't seen errors that were silently swallowed
-        return self._last_api_error is None or self._consecutive_failures < 3
-
-    def test_tapas(self) -> bool:
-        """Austerity: No resource leaks — bounded computation and memory.
-
-        Checks rate limit enforcement is active and operation log
-        hasn't grown unbounded.
-        """
-        from vibe_core.mahamantra.adapters.moltbook import MoltbookLimits
-
-        limits = self._client.limits
-        # Rate limits must be within bounds
-        within_limits = (
-            limits.requests_this_minute <= MoltbookLimits.REQ_PER_MIN
-            and limits.posts_this_30m <= MoltbookLimits.POST_PER_30_MIN
-            and limits.comments_this_hour <= MoltbookLimits.COMMENTS_PER_HOUR
-        )
-        # Operation log must be bounded
-        log_bounded = len(self._operation_log) <= 10000
-        return within_limits and log_bounded
-
-    def test_saucam(self) -> bool:
-        """Cleanliness: No unauthorized connections — only signed, authorized I/O.
-
-        Checks that the client has a valid API key and all connections
-        go through the authenticated client.
-        """
-        return bool(self._client.api_key)
+# Backward compat: tests import this constant
+_TICKS_PER_HEARTBEAT = TICKS_PER_HEARTBEAT
 
 
 class MoltbookPlugin(KernelPlugin):
     """
     Moltbook membrane wired to Mahamantra via register_listener().
 
-    Same pattern as Nrisimha and MahaComputeService:
-    bombenfest zum Mahamantra at __init__/on_boot time.
+    Thin shell: all state in MoltbookState, all logic in managers.
     """
 
     plugin_id = "moltbook"
 
-    # Defaults for heartbeat intervals — all derived from SEED constants
-    _DEFAULT_FEED_INTERVAL = QUARTERS  # 4 phases
-    _DEFAULT_POST_INTERVAL = KSHETRA  # 24 field elements
-    _DEFAULT_REPLY_CHECK_INTERVAL = HARE_COUNT  # 8 Hare
-    _DEFAULT_PROFILE_UPDATE_INTERVAL = LILA  # 48 Chaitanya's manifest
+    def __init__(self):
+        super().__init__()
+        # Centralized state — one object, not 30+ scattered fields
+        self._s = MoltbookState()
 
-    # Engagement tracking: poll own posts for metrics
-    _ENGAGEMENT_TRACK_INTERVAL = MAHAJANA_COUNT  # 12 authorities
-    # Adaptive interval adjustment: recalculate based on feedback stats
-    _INTERVAL_ADJUST_INTERVAL = KSHETRA  # 24 field elements
+        # Manager instances (lazy-init via properties)
+        self._drainer_inst = None
+        self._persistence_inst = None
+        self._feed_inst = None
+        self._engagement_inst = None
+        self._dm_inst = None
+        self._post_inst = None
+        self._intent_inst = None
+        self._heartbeat_inst = None
+        self._boot_inst = None
+        self._state_restorer_inst = None
+        self._proposal_builder_inst = None
+        self._vault_inst = None
+        self._circuit_inst = None
+        self._guna_inst = None
+        self._snapshot_inst = None
+        self._wiring_inst = None
 
-    # Persistence: queue + seen IDs + phase state survive restarts
+        # Agency Director + Strategy (lazy-init)
+        self._agency_director_inst = None
+        self._strategy_planner_inst = None
+
+        # Agent events buffer for EventBus trending topics
+        self._agent_events: List[Dict[str, Any]] = []
+
+    # =========================================================================
+    # State Delegation — managers still access self._plugin._whatever
+    # These properties proxy to self._s so the interface is unchanged.
+    # =========================================================================
+
+    # --- Connection ---
+    @property
+    def _client(self):
+        return self._s.client
+
+    @_client.setter
+    def _client(self, value):
+        self._s.client = value
+
+    @property
+    def _service(self) -> Optional[MoltbookService]:
+        return self._s.service
+
+    @_service.setter
+    def _service(self, value):
+        self._s.service = value
+
+    @property
+    def _offline_mode(self) -> bool:
+        return self._s.offline_mode
+
+    @_offline_mode.setter
+    def _offline_mode(self, value: bool):
+        self._s.offline_mode = value
+
+    @property
+    def _standalone_mode(self) -> bool:
+        return self._s.standalone_mode
+
+    @_standalone_mode.setter
+    def _standalone_mode(self, value: bool):
+        self._s.standalone_mode = value
+
+    # --- Health ---
+    @property
+    def _last_heartbeat_error(self) -> Optional[str]:
+        return self._s.last_heartbeat_error
+
+    @_last_heartbeat_error.setter
+    def _last_heartbeat_error(self, value):
+        self._s.last_heartbeat_error = value
+
+    # --- Paths ---
+    @property
+    def _state_dir(self):
+        return self._s.state_dir
+
+    @_state_dir.setter
+    def _state_dir(self, value):
+        self._s.state_dir = value
+
+    @property
+    def _activity_log_path(self):
+        return self._s.activity_log_path
+
+    @_activity_log_path.setter
+    def _activity_log_path(self, value):
+        self._s.activity_log_path = value
+
+    # --- Counters ---
+    @property
+    def _tick_count(self) -> int:
+        return self._s.tick_count
+
+    @_tick_count.setter
+    def _tick_count(self, value: int):
+        self._s.tick_count = value
+
+    @property
+    def _last_post_heartbeat(self) -> int:
+        return self._s.last_post_heartbeat
+
+    @_last_post_heartbeat.setter
+    def _last_post_heartbeat(self, value: int):
+        self._s.last_post_heartbeat = value
+
+    @property
+    def _last_profile_heartbeat(self) -> int:
+        return self._s.last_profile_heartbeat
+
+    @_last_profile_heartbeat.setter
+    def _last_profile_heartbeat(self, value: int):
+        self._s.last_profile_heartbeat = value
+
+    # --- Intervals ---
+    @property
+    def _feed_interval(self) -> int:
+        return self._s.feed_interval
+
+    @_feed_interval.setter
+    def _feed_interval(self, value: int):
+        self._s.feed_interval = value
+
+    @property
+    def _post_interval(self) -> int:
+        return self._s.post_interval
+
+    @_post_interval.setter
+    def _post_interval(self, value: int):
+        self._s.post_interval = value
+
+    @property
+    def _reply_check_interval(self) -> int:
+        return self._s.reply_check_interval
+
+    @_reply_check_interval.setter
+    def _reply_check_interval(self, value: int):
+        self._s.reply_check_interval = value
+
+    @property
+    def _profile_update_interval(self) -> int:
+        return self._s.profile_update_interval
+
+    @_profile_update_interval.setter
+    def _profile_update_interval(self, value: int):
+        self._s.profile_update_interval = value
+
+    # --- Wiring ---
+    @property
+    def _listener_wired(self) -> bool:
+        return self._s.listener_wired
+
+    @_listener_wired.setter
+    def _listener_wired(self, value: bool):
+        self._s.listener_wired = value
+
+    # --- Content ---
+    @property
+    def _content_queue(self) -> ContentQueue:
+        return self._s.content_queue
+
+    @_content_queue.setter
+    def _content_queue(self, value):
+        self._s.content_queue = value
+
+    @property
+    def _proposer(self):
+        return self._s.proposer
+
+    @_proposer.setter
+    def _proposer(self, value):
+        self._s.proposer = value
+
+    # --- Dedup sets ---
+    @property
+    def _seen_message_ids(self) -> Set[str]:
+        return self._s.seen_message_ids
+
+    @_seen_message_ids.setter
+    def _seen_message_ids(self, value: Set[str]):
+        self._s.seen_message_ids = value
+
+    @property
+    def _seen_post_ids(self) -> Set[str]:
+        return self._s.seen_post_ids
+
+    @_seen_post_ids.setter
+    def _seen_post_ids(self, value: Set[str]):
+        self._s.seen_post_ids = value
+
+    @property
+    def _own_comment_ids(self) -> Set[str]:
+        return self._s.own_comment_ids
+
+    @_own_comment_ids.setter
+    def _own_comment_ids(self, value: Set[str]):
+        self._s.own_comment_ids = value
+
+    @property
+    def _commented_post_ids(self) -> Set[str]:
+        return self._s.commented_post_ids
+
+    @_commented_post_ids.setter
+    def _commented_post_ids(self, value: Set[str]):
+        self._s.commented_post_ids = value
+
+    @property
+    def _followed_agents(self) -> Set[str]:
+        return self._s.followed_agents
+
+    @_followed_agents.setter
+    def _followed_agents(self, value: Set[str]):
+        self._s.followed_agents = value
+
+    @property
+    def _subscribed_submolts(self) -> Set[str]:
+        return self._s.subscribed_submolts
+
+    @_subscribed_submolts.setter
+    def _subscribed_submolts(self, value: Set[str]):
+        self._s.subscribed_submolts = value
+
+    # --- Tracking dicts ---
+    @property
+    def _submolt_descriptions(self) -> Dict[str, str]:
+        return self._s.submolt_descriptions
+
+    @_submolt_descriptions.setter
+    def _submolt_descriptions(self, value):
+        self._s.submolt_descriptions = value
+
+    @property
+    def _comment_post_map(self) -> Dict[str, str]:
+        return self._s.comment_post_map
+
+    @_comment_post_map.setter
+    def _comment_post_map(self, value):
+        self._s.comment_post_map = value
+
+    @property
+    def _own_post_ids(self) -> Dict[str, Dict[str, object]]:
+        return self._s.own_post_ids
+
+    @_own_post_ids.setter
+    def _own_post_ids(self, value):
+        self._s.own_post_ids = value
+
+    # --- Agent identity ---
+    @property
+    def _agent_name(self) -> str:
+        return self._s.agent_name
+
+    @_agent_name.setter
+    def _agent_name(self, value: str):
+        self._s.agent_name = value
+
+    # --- External integrations ---
+    @property
+    def _bank(self):
+        return self._s.bank
+
+    @_bank.setter
+    def _bank(self, value):
+        self._s.bank = value
+
+    @property
+    def _agora(self):
+        return self._s.agora
+
+    @_agora.setter
+    def _agora(self, value):
+        self._s.agora = value
+
+    @property
+    def _agora_sequence(self) -> int:
+        return self._s.agora_sequence
+
+    @_agora_sequence.setter
+    def _agora_sequence(self, value: int):
+        self._s.agora_sequence = value
+
+    # --- Strategy ---
+    @property
+    def _current_intents(self) -> list:
+        return self._s.current_intents
+
+    @_current_intents.setter
+    def _current_intents(self, value: list):
+        self._s.current_intents = value
+
+    @property
+    def _current_feed_topics(self) -> list:
+        return self._s.current_feed_topics
+
+    @_current_feed_topics.setter
+    def _current_feed_topics(self, value: list):
+        self._s.current_feed_topics = value
+
+    # --- Constants exposed as class attrs for backward compat ---
+    _DEFAULT_FEED_INTERVAL = MoltbookState().feed_interval
+    _DEFAULT_POST_INTERVAL = MoltbookState().post_interval
+    _DEFAULT_REPLY_CHECK_INTERVAL = MoltbookState().reply_check_interval
+    _DEFAULT_PROFILE_UPDATE_INTERVAL = MoltbookState().profile_update_interval
+    _MAX_SEEN_IDS = MAX_SEEN_IDS
+    _MAX_OWN_POST_IDS = MAX_OWN_POST_IDS
     _QUEUE_STATE_FILE = "content_queue.json"
     _SEEN_STATE_FILE = "seen_ids.json"
     _PHASE_STATE_FILE = "phase_state.json"
     _ACTIVITY_LOG_FILE = "activity.jsonl"
-    _MAX_SEEN_IDS = MALA * NAVA  # 972 ≈ 1000 (108 beads × 9 processes)
 
-    def __init__(self):
-        super().__init__()
-        self._client = None  # MoltbookClient, created in on_boot
-        self._service: Optional[MoltbookService] = None  # Singleton, reused in drain
-        self._offline_mode: bool = True
-        self._standalone_mode: bool = False  # True when running without full kernel (MinimalKernel)
-        self._last_heartbeat_error: Optional[str] = None
-        self._state_dir: Optional[Path] = None
-        self._tick_count: int = 0
-        # Department-level tick counters now managed by HeartbeatOrchestrator
-        # Adaptive intervals (diagnostic — real gating is _check_rate_limit)
-        self._feed_interval: int = self._DEFAULT_FEED_INTERVAL
-        self._post_interval: int = self._DEFAULT_POST_INTERVAL
-        self._reply_check_interval: int = self._DEFAULT_REPLY_CHECK_INTERVAL
-        self._profile_update_interval: int = self._DEFAULT_PROFILE_UPDATE_INTERVAL
-        self._listener_wired: bool = False
-        self._content_queue: ContentQueue = ContentQueue()
-        self._proposer: Optional[ContentProposalProtocol] = None
-        self._seen_message_ids: Set[str] = set()
-        self._seen_post_ids: Set[str] = set()
-        self._own_comment_ids: Set[str] = set()  # Track our comments for reply monitoring
-        self._commented_post_ids: Set[str] = set()  # Post-level dedup: don't comment on same post twice
-        self._last_post_heartbeat: int = 0  # Heartbeat count when last post was created
-        self._followed_agents: Set[str] = set()  # Track who we've followed (avoid duplicates)
-        self._subscribed_submolts: Set[str] = set()  # Track community subscriptions
-        self._submolt_descriptions: Dict[str, str] = {}  # name → description (for LLM context)
-        self._comment_post_map: Dict[str, str] = {}  # comment_id → post_id for reply monitoring
-        self._last_profile_heartbeat: int = 0  # Heartbeat count when profile was last updated
-        self._activity_log_path: Optional[Path] = None  # JSONL append-only audit log
-        self._agent_name: str = "steward-protocol"  # Resolved from profile at boot
-        self._bank = None  # CivicBank instance (lazy, standalone-compatible)
-        self._agora = None  # AgoraCartridge for broadcast listening
-        self._agora_sequence: int = 0  # Last consumed AGORA message sequence
-        # Heartbeat orchestration (extracted manager, manages debounce + phase ticks)
-        # Circuit Executor (cortex/engines/circuit_engine.py) — wired at boot
-        self._wiring = None  # WiringModule (lazy-loaded)
-        # AGORA broadcast channel (cartridges/agent_city/agora/) — wired at boot
-        self._agora = None
-        # Agency Director — I-P-V-O pipeline (mahamantra-direct, guna=style not gate)
-        self._agency_director = None
-        # Strategy Planner — Sankalpa missions → strategic intents
-        self._strategy_planner = None
-        self._current_intents: list = []  # List[StrategicIntent]
-        self._current_feed_topics: list = []  # Extracted topics from feed scan
-        # Extracted managers (lazy-init)
-        self._drainer = None
-        self._persistence_mgr = None
-        self._feed_analyzer = None
-        self._engagement_tracker = None
-        self._dm_processor = None
-        self._post_orchestrator = None
-        self._intent_executor = None
-        # Engagement tracking: own post IDs → metadata for polling
-        self._own_post_ids: Dict[str, Dict[str, object]] = {}
-        self._MAX_OWN_POST_IDS = COSMIC_FRAME // MALA  # 200 (pada_unit)
-        # Rate limiting now handled by ContentDrainer (managers/drainer.py)
-        # Heartbeat orchestration (extracted manager)
-        self._heartbeat_orchestrator = None
-        # Boot orchestration (extracted manager)
-        self._boot_manager = None
-        # State restoration (extracted manager)
-        self._state_restorer = None
-        # Proposal building (extracted manager)
-        self._proposal_builder = None
-        # Vault resolution (extracted manager)
-        self._vault_resolver_mgr = None
-        # Content circuit execution (extracted manager)
-        self._content_circuit_executor = None
-        # Guna enforcement (extracted manager)
-        self._guna_enforcer_mgr = None
-        # State snapshot (extracted manager)
-        self._state_snapshot_mgr = None
+    # =========================================================================
+    # Dependencies
+    # =========================================================================
 
     @property
     def dependencies(self) -> Set[str]:
         return {"economy"}
 
     # =========================================================================
-    # Agency Director — I-P-V-O pipeline (replaces direct proposer calls)
+    # Manager Lazy Properties — each manager is created once on first access
     # =========================================================================
+
+    # --- Backward-compat aliases for direct attribute access (tests) ---
+    @property
+    def _strategy_planner(self):
+        return self._strategy_planner_inst
+
+    @_strategy_planner.setter
+    def _strategy_planner(self, value):
+        self._strategy_planner_inst = value
+
+    @property
+    def _agency_director(self):
+        return self._agency_director_inst
+
+    @_agency_director.setter
+    def _agency_director(self, value):
+        self._agency_director_inst = value
 
     @property
     def agency_director(self):
-        """Lazy-init AgencyDirector with plugin reference for circuit execution."""
-        if self._agency_director is None:
+        if self._agency_director_inst is None:
             from vibe_core.cartridges.agent_city.moltbook.core.agency_director import AgencyDirector
 
-            self._agency_director = AgencyDirector(plugin=self)
-        return self._agency_director
+            self._agency_director_inst = AgencyDirector(plugin=self)
+        return self._agency_director_inst
 
     @property
     def strategy_planner(self):
-        """Lazy-init MoltbookStrategyPlanner with event log reference."""
-        if self._strategy_planner is None:
+        if self._strategy_planner_inst is None:
             try:
                 from vibe_core.cartridges.agent_city.moltbook.core.strategy import MoltbookStrategyPlanner
 
-                self._strategy_planner = MoltbookStrategyPlanner(
+                self._strategy_planner_inst = MoltbookStrategyPlanner(
                     event_log=self.agency_director.event_log,
                     state_dir=self._state_dir,
                 )
             except Exception as e:
                 logger.warning(f"Strategy planner unavailable: {e}")
-        return self._strategy_planner
+        return self._strategy_planner_inst
 
     @property
     def _content_drainer(self):
-        """Lazy-init ContentDrainer with shared state refs."""
-        if self._drainer is None:
+        if self._drainer_inst is None:
             from vibe_core.plugins.moltbook.managers.drainer import ContentDrainer
 
-            self._drainer = ContentDrainer(
+            self._drainer_inst = ContentDrainer(
                 service_getter=self._ensure_service,
                 log_activity=self._log_activity,
                 broadcast_to_agora=self._broadcast_to_agora,
@@ -595,186 +435,181 @@ class MoltbookPlugin(KernelPlugin):
                 bank=self._bank,
                 agent_id=self._agent_name,
             )
-        return self._drainer
+        return self._drainer_inst
 
     @property
     def _persistence(self):
-        """Lazy-init PersistenceManager."""
-        if self._persistence_mgr is None:
+        if self._persistence_inst is None:
             from vibe_core.plugins.moltbook.managers.persistence import PersistenceManager
 
-            self._persistence_mgr = PersistenceManager(
+            self._persistence_inst = PersistenceManager(
                 state_dir=self._state_dir,
-                max_seen_ids=self._MAX_SEEN_IDS,
+                max_seen_ids=MAX_SEEN_IDS,
             )
-        return self._persistence_mgr
+        return self._persistence_inst
 
     @property
     def _feed(self):
-        """Lazy-init FeedAnalyzer with shared state refs."""
-        if self._feed_analyzer is None:
+        if self._feed_inst is None:
             from vibe_core.plugins.moltbook.managers.feed import FeedAnalyzer
 
-            self._feed_analyzer = FeedAnalyzer(
+            self._feed_inst = FeedAnalyzer(
                 seen_post_ids=self._seen_post_ids,
                 subscribed_submolts=self._subscribed_submolts,
                 submolt_descriptions=self._submolt_descriptions,
             )
-        return self._feed_analyzer
+        return self._feed_inst
 
     @property
     def _engagement(self):
-        """Lazy-init EngagementTracker."""
-        if self._engagement_tracker is None:
+        if self._engagement_inst is None:
             from vibe_core.plugins.moltbook.managers.engagement import EngagementTracker
 
-            self._engagement_tracker = EngagementTracker(
+            self._engagement_inst = EngagementTracker(
                 log_activity=self._log_activity,
                 bank=self._bank,
                 agent_id=self._agent_name,
             )
-        return self._engagement_tracker
+        return self._engagement_inst
 
     @property
     def _heartbeat(self):
-        """Lazy-init HeartbeatOrchestrator for phase-aware dispatch."""
-        if self._heartbeat_orchestrator is None:
+        if self._heartbeat_inst is None:
             from vibe_core.plugins.moltbook.managers.heartbeat import HeartbeatOrchestrator
 
-            self._heartbeat_orchestrator = HeartbeatOrchestrator(plugin=self)
-        return self._heartbeat_orchestrator
+            self._heartbeat_inst = HeartbeatOrchestrator(plugin=self)
+        return self._heartbeat_inst
 
     @property
     def _dm(self):
-        """Lazy-init DMProcessor for inbound/request DM handling."""
-        if self._dm_processor is None:
+        if self._dm_inst is None:
             from vibe_core.plugins.moltbook.managers.dm_processor import DMProcessor
 
-            self._dm_processor = DMProcessor(plugin=self)
-        return self._dm_processor
+            self._dm_inst = DMProcessor(plugin=self)
+        return self._dm_inst
 
     @property
     def _post(self):
-        """Lazy-init PostOrchestrator for post creation and comment monitoring."""
-        if self._post_orchestrator is None:
+        if self._post_inst is None:
             from vibe_core.plugins.moltbook.managers.post_orchestrator import PostOrchestrator
 
-            self._post_orchestrator = PostOrchestrator(plugin=self)
-        return self._post_orchestrator
+            self._post_inst = PostOrchestrator(plugin=self)
+        return self._post_inst
 
     @property
     def _intent(self):
-        """Lazy-init IntentExecutor for strategic intent execution."""
-        if self._intent_executor is None:
+        if self._intent_inst is None:
             from vibe_core.plugins.moltbook.managers.intent_executor import IntentExecutor
 
-            self._intent_executor = IntentExecutor(plugin=self)
-        return self._intent_executor
+            self._intent_inst = IntentExecutor(plugin=self)
+        return self._intent_inst
 
     @property
     def _boot(self):
-        """Lazy-init BootManager for plugin initialization."""
-        if self._boot_manager is None:
+        if self._boot_inst is None:
             from vibe_core.plugins.moltbook.managers.boot_manager import BootManager
 
-            self._boot_manager = BootManager(plugin=self)
-        return self._boot_manager
+            self._boot_inst = BootManager(plugin=self)
+        return self._boot_inst
 
-    # Properties delegating state to HeartbeatOrchestrator
+    @property
+    def _restorer(self):
+        if self._state_restorer_inst is None:
+            from vibe_core.plugins.moltbook.managers.state_restorer import StateRestorer
+
+            self._state_restorer_inst = StateRestorer(self)
+        return self._state_restorer_inst
+
+    @property
+    def _builder(self):
+        if self._proposal_builder_inst is None:
+            from vibe_core.plugins.moltbook.managers.proposal_builder import ProposalBuilder
+
+            self._proposal_builder_inst = ProposalBuilder(self)
+        return self._proposal_builder_inst
+
+    @property
+    def _vault(self):
+        if self._vault_inst is None:
+            from vibe_core.plugins.moltbook.managers.vault_resolver import VaultResolver
+
+            self._vault_inst = VaultResolver()
+        return self._vault_inst
+
+    @property
+    def _circuit(self):
+        if self._circuit_inst is None:
+            from vibe_core.plugins.moltbook.managers.content_circuit import ContentCircuitExecutor
+
+            self._circuit_inst = ContentCircuitExecutor(self)
+        return self._circuit_inst
+
+    @property
+    def _guna(self):
+        if self._guna_inst is None:
+            from vibe_core.plugins.moltbook.managers.guna_enforcer import GunaEnforcer
+
+            self._guna_inst = GunaEnforcer(self)
+        return self._guna_inst
+
+    @property
+    def _snapshot(self):
+        if self._snapshot_inst is None:
+            from vibe_core.plugins.moltbook.managers.state_snapshot import StateSnapshot
+
+            self._snapshot_inst = StateSnapshot(self)
+        return self._snapshot_inst
+
+    @property
+    def _wiring_module(self):
+        if self._wiring_inst is None:
+            from vibe_core.plugins.moltbook.managers.wiring import WiringModule
+
+            self._wiring_inst = WiringModule()
+        return self._wiring_inst
+
+    # HeartbeatOrchestrator tick counter delegation
     @property
     def _heartbeat_count(self) -> int:
-        """Current heartbeat sequence (from orchestrator)."""
         return self._heartbeat.current_heartbeat_count
 
     @property
     def _genesis_tick(self) -> int:
-        """GENESIS phase tick counter."""
         return self._heartbeat._genesis_tick
 
     @_genesis_tick.setter
-    def _genesis_tick(self, value: int) -> None:
-        """Set GENESIS phase tick counter."""
+    def _genesis_tick(self, value: int):
         self._heartbeat._genesis_tick = value
 
     @property
     def _karma_tick(self) -> int:
-        """KARMA phase tick counter."""
         return self._heartbeat._karma_tick
 
     @_karma_tick.setter
-    def _karma_tick(self, value: int) -> None:
-        """Set KARMA phase tick counter."""
+    def _karma_tick(self, value: int):
         self._heartbeat._karma_tick = value
 
     @property
     def _moksha_tick(self) -> int:
-        """MOKSHA phase tick counter."""
         return self._heartbeat._moksha_tick
 
     @_moksha_tick.setter
-    def _moksha_tick(self, value: int) -> None:
-        """Set MOKSHA phase tick counter."""
+    def _moksha_tick(self, value: int):
         self._heartbeat._moksha_tick = value
 
-    @property
-    def _restorer(self):
-        """Lazy-init StateRestorer for cross-phase state restoration."""
-        if self._state_restorer is None:
-            from vibe_core.plugins.moltbook.managers.state_restorer import StateRestorer
-
-            self._state_restorer = StateRestorer(self)
-        return self._state_restorer
-
-    @property
-    def _builder(self):
-        """Lazy-init ProposalBuilder for circuit → proposal conversion."""
-        if self._proposal_builder is None:
-            from vibe_core.plugins.moltbook.managers.proposal_builder import ProposalBuilder
-
-            self._proposal_builder = ProposalBuilder(self)
-        return self._proposal_builder
-
-    @property
-    def _vault(self):
-        """Lazy-init VaultResolver for API key resolution."""
-        if self._vault_resolver_mgr is None:
-            from vibe_core.plugins.moltbook.managers.vault_resolver import VaultResolver
-
-            self._vault_resolver_mgr = VaultResolver()
-        return self._vault_resolver_mgr
-
-    @property
-    def _circuit(self):
-        """Lazy-init ContentCircuitExecutor for AgencyDirector execution."""
-        if self._content_circuit_executor is None:
-            from vibe_core.plugins.moltbook.managers.content_circuit import ContentCircuitExecutor
-
-            self._content_circuit_executor = ContentCircuitExecutor(self)
-        return self._content_circuit_executor
-
-    @property
-    def _guna(self):
-        """Lazy-init GunaEnforcer for I/O Policy validation."""
-        if self._guna_enforcer_mgr is None:
-            from vibe_core.plugins.moltbook.managers.guna_enforcer import GunaEnforcer
-
-            self._guna_enforcer_mgr = GunaEnforcer(self)
-        return self._guna_enforcer_mgr
-
-    @property
-    def _snapshot(self):
-        """Lazy-init StateSnapshot for state capture and restore."""
-        if self._state_snapshot_mgr is None:
-            from vibe_core.plugins.moltbook.managers.state_snapshot import StateSnapshot
-
-            self._state_snapshot_mgr = StateSnapshot(self)
-        return self._state_snapshot_mgr
+    # =========================================================================
+    # Service Factory
+    # =========================================================================
 
     def _ensure_service(self):
-        """Ensure MoltbookService exists, create if needed. Used by managers."""
+        """Ensure MoltbookService exists, create if needed."""
         if self._service is None:
             self._service = MoltbookService(self._client)
         return self._service
+
+    # =========================================================================
+    # Content Pipeline — ONE path through AgencyDirector
+    # =========================================================================
 
     def _director_propose(
         self,
@@ -783,12 +618,7 @@ class MoltbookPlugin(KernelPlugin):
         proposal_type: str,
         **extra,
     ) -> Optional[ContentProposal]:
-        """Content generation: circuit state machine → ContentProposal.
-
-        ONE path. execute_content_circuit() IS the content pipeline.
-        SHABDA → ARTHA → PRATYAYA → KARMA → SUCCESS or None.
-        """
-        # Extract context dict and pass through to AgencyDirector
+        """Content generation: circuit state machine → ContentProposal."""
         extra_context = extra.get("context", {})
         circuit_result = self.execute_content_circuit(
             raw_input,
@@ -798,356 +628,7 @@ class MoltbookPlugin(KernelPlugin):
             trigger=extra.get("trigger", "heartbeat"),
             context=extra_context if isinstance(extra_context, dict) else {},
         )
-        # Delegate proposal building to ProposalBuilder
         return self._builder.build_proposal(circuit_result, content_type, proposal_type, **extra)
-
-    # =========================================================================
-    # Queue + Seen ID Persistence
-    # =========================================================================
-
-    def _persist_queue(self) -> None:
-        """Save content queue + seen IDs to state dir. Called on shutdown."""
-        self._persistence.persist_queue(
-            queue=self._content_queue,
-            seen_message_ids=self._seen_message_ids,
-            seen_post_ids=self._seen_post_ids,
-            own_comment_ids=self._own_comment_ids,
-            commented_post_ids=self._commented_post_ids,
-            followed_agents=self._followed_agents,
-            subscribed_submolts=self._subscribed_submolts,
-            comment_post_map=self._comment_post_map,
-            own_post_ids=self._own_post_ids,
-            max_own_post_ids=self._MAX_OWN_POST_IDS,
-        )
-        # Also persist cross-phase state (feed_topics + intents)
-        self._persist_phase_state()
-
-    def _restore_queue(self) -> None:
-        """Restore content queue + seen IDs from state dir. Called on boot."""
-        restored = self._persistence.restore_queue(self._content_queue)
-        if restored:
-            if "seen_message_ids" in restored:
-                self._seen_message_ids = restored["seen_message_ids"]
-            if "seen_post_ids" in restored:
-                self._seen_post_ids = restored["seen_post_ids"]
-            if "own_comment_ids" in restored:
-                self._own_comment_ids = restored["own_comment_ids"]
-            if "commented_post_ids" in restored:
-                self._commented_post_ids = restored["commented_post_ids"]
-            if "followed_agents" in restored:
-                self._followed_agents = restored["followed_agents"]
-            if "subscribed_submolts" in restored:
-                self._subscribed_submolts = restored["subscribed_submolts"]
-            if "comment_post_map" in restored:
-                self._comment_post_map = restored["comment_post_map"]
-            if "own_post_ids" in restored:
-                self._own_post_ids = restored["own_post_ids"]
-
-        # Restore cross-phase state (feed_topics + intents from previous run)
-        self._restorer.restore_phase_state()
-
-    def _persist_phase_state(self) -> None:
-        """Save cross-phase state (feed_topics + intents + heartbeat_count + orchestrator state)."""
-        self._persistence.persist_phase_state(
-            heartbeat_count=self._heartbeat.current_heartbeat_count,
-            feed_topics=self._current_feed_topics,
-            intents=self._current_intents,
-            orchestrator_state=self._heartbeat.snapshot(),
-        )
-
-    # =========================================================================
-    # PluginStateContract
-    # =========================================================================
-
-    def get_state_paths(self) -> List[Path]:
-        if self._state_dir:
-            return [self._state_dir]
-        return []
-
-    def snapshot_state(self) -> Dict[str, Any]:
-        return self._snapshot.snapshot()
-
-    def restore_state(self, snapshot: Dict[str, Any]) -> None:
-        self._snapshot.restore(snapshot)
-
-    # =========================================================================
-    # Lifecycle
-    # =========================================================================
-
-    def on_boot(
-        self,
-        kernel: "RealVibeKernel",
-        config: Optional[Dict[str, object]] = None,
-    ) -> HookResult:
-        """Delegate to BootManager for plugin initialization."""
-        return self._boot.execute_boot(kernel, config)
-
-    def _register_service(self) -> None:
-        """Register MoltbookProtocol in DI so other plugins get it via ServiceRegistry."""
-        try:
-            from vibe_core.di import ServiceRegistry
-
-            self._service = MoltbookService(self._client)
-            ServiceRegistry.register_factory(MoltbookProtocol, lambda: self._service)
-            logger.info("MoltbookProtocol registered in ServiceRegistry")
-        except Exception as e:
-            logger.warning(f"ServiceRegistry registration failed: {e}")
-
-    def _register_feedback(self) -> None:
-        """Register FeedbackProtocol (InMemoryFeedback) for learning signals."""
-        try:
-            from vibe_core.di import ServiceRegistry
-            from vibe_core.protocols.feedback import FeedbackProtocol, InMemoryFeedback
-
-            if not ServiceRegistry.is_registered(FeedbackProtocol):
-                ServiceRegistry.register_factory(FeedbackProtocol, InMemoryFeedback)
-                logger.info("FeedbackProtocol registered in ServiceRegistry")
-        except Exception as e:
-            logger.warning(f"FeedbackProtocol registration failed: {e}")
-
-    def _wire_to_mahamantra(self) -> None:
-        """Register as Mahamantra tick listener. Bombenfest."""
-        if self._listener_wired:
-            return
-        try:
-            from vibe_core.mahamantra import mahamantra
-
-            mahamantra.register_listener(self._on_mahamantra_tick)
-            self._listener_wired = True
-            logger.info("PARAMPARA: Moltbook wired to Mahamantra")
-        except Exception as e:
-            logger.warning(f"Mahamantra connection failed: {e}")
-
-    def _init_agora(self) -> None:
-        """Initialize AGORA for broadcast listening (standalone-compatible).
-
-        In standalone mode (GitHub Actions), AGORA is in-memory — no other agents
-        publish during the run. The wiring is prepared for full-system execution.
-        """
-        try:
-            from vibe_core.cartridges.agent_city.agora.cartridge_main import AgoraCartridge
-
-            self._agora = AgoraCartridge()
-            logger.info("AGORA initialized for broadcast listening")
-        except Exception as e:
-            logger.debug(f"AGORA unavailable: {e}")
-
-    def _listen_agora(self) -> List[Dict[str, Any]]:
-        """Listen for broadcast directives from herald/steward.
-
-        Returns list of messages since last check. Called in GENESIS phase.
-        """
-        if self._agora is None:
-            return []
-        messages: List[Dict[str, Any]] = []
-        for source in ("herald", "steward"):
-            try:
-                result = run_async(self._agora._listen_stream({
-                    "agent_id": self._agent_name,
-                    "source": source,
-                    "since": self._agora_sequence,
-                }))
-                if isinstance(result, dict):
-                    msgs = result.get("messages", [])
-                    messages.extend(msgs)
-                    seq = result.get("next_sequence", self._agora_sequence)
-                    if seq > self._agora_sequence:
-                        self._agora_sequence = seq
-            except Exception as e:
-                logger.debug(f"AGORA listen ({source}) failed: {e}")
-        if messages:
-            logger.info(f"AGORA: {len(messages)} broadcast messages received")
-        return messages
-
-    def _init_bank(self) -> None:
-        """Initialize CivicBank for credit-gated content publishing.
-
-        Direct instantiation — no kernel required (standalone-compatible).
-        Mints initial credits if account has zero balance.
-        """
-        try:
-            from vibe_core.cartridges.system.civic.tools.economy import CivicBank
-
-            db_path = None
-            if self._state_dir:
-                db_path = str(self._state_dir / "economy.db")
-            self._bank = CivicBank(db_path)
-            # Mint initial credits if account is empty
-            balance = self._bank.get_balance(self._agent_name)
-            if balance == 0:
-                self._bank.transfer(
-                    "MINT", self._agent_name, 1000,
-                    "moltbook_initial_mint",
-                    service_type="minting",
-                )
-                logger.info(f"CivicBank: minted 1000 initial credits for {self._agent_name}")
-            else:
-                logger.info(f"CivicBank: balance={balance} for {self._agent_name}")
-        except Exception as e:
-            logger.warning(f"CivicBank unavailable: {e}")
-            self._bank = None
-
-    def _wire_event_listener(self) -> None:
-        """Subscribe to EventBus — hear what other agents are doing.
-
-        Listens to ACTION events from other agents to discover trending topics.
-        Stores recent events for strategy planner context.
-        """
-        try:
-            from vibe_core.mahamantra.substrate.services.event_bus import get_event_bus
-            from vibe_core.mahamantra.substrate.event_types import EventType
-
-            bus = get_event_bus()
-            bus.subscribe(self._on_agent_action, [EventType.ACTION])
-            logger.info("EventBus subscribed: listening for ACTION events")
-        except ImportError:
-            logger.debug("EventBus not available — skipping subscription")
-        except Exception as e:
-            logger.debug(f"EventBus subscription failed: {e}")
-
-    def _on_agent_action(self, event: Any) -> None:
-        """Handle ACTION events from other agents — discover trending topics."""
-        agent_id = getattr(event, "agent_id", "")
-        if agent_id == "moltbook":
-            return  # Ignore own events
-        message = getattr(event, "message", "")
-        details = getattr(event, "details", {}) or {}
-        if not message:
-            return
-        # Store recent agent actions for strategy context (cap at 50)
-        if not hasattr(self, "_agent_events"):
-            self._agent_events: List[Dict[str, Any]] = []
-        self._agent_events.append({
-            "agent": agent_id,
-            "message": message[:200],
-            "type": details.get("content_type", ""),
-            "topic": details.get("topic", message[:100]),
-        })
-        if len(self._agent_events) > 50:
-            self._agent_events = self._agent_events[-50:]
-
-    def _wire_ouroboros(self) -> None:
-        """Register Moltbook as Ouroboros gene for self-healing + health monitoring."""
-        try:
-            from vibe_core.ouroboros.ananta_shesha import get_system_anchor
-
-            anchor = get_system_anchor()
-            anchor.register_gene_simple("moltbook", self)
-
-            # Subscribe to healing events — react to system-wide violations
-            anchor.subscribe("healing.requested", "moltbook")
-            anchor.subscribe("violation.detected", "moltbook")
-
-            logger.info("OUROBOROS: Moltbook registered as self-healing gene")
-        except Exception as e:
-            logger.debug(f"Ouroboros registration failed: {e}")
-
-    def on_event(self, event_type: str, data: Dict[str, Any]) -> None:
-        """Ouroboros event handler — react to system healing/violation events.
-
-        Kirtan loop endpoint: healing.requested → concrete self-repair actions.
-        """
-        if event_type == "violation.detected":
-            target = data.get("target", "")
-            if "moltbook" in target.lower():
-                logger.warning(f"OUROBOROS: Violation targeting moltbook: {data.get('message', '')}")
-                self._emit_event("HEALING", f"Ouroboros violation: {data.get('message', '')}", data)
-        elif event_type == "healing.requested":
-            target = data.get("target", "")
-            if target == "moltbook" or target == "strategy_planner":
-                reason = data.get("reason", "")
-                logger.info(f"OUROBOROS: Healing requested for {target}: {reason}")
-
-                # KIRTAN: Apply concrete healing actions
-                if target == "strategy_planner" and self._strategy_planner:
-                    self._strategy_planner._engagement_cache.clear()
-                    logger.info("KIRTAN: Strategy planner engagement cache cleared")
-
-                if target == "moltbook":
-                    self._heal_synapse_weights()
-                    self._emit_event(
-                        "HEALING_APPLIED",
-                        f"Moltbook self-healing applied: {reason}",
-                        {"target": target, "reason": reason},
-                    )
-
-    def _heal_synapse_weights(self) -> None:
-        """Kirtan: Heal degraded content synapse weights toward neutral.
-
-        When content types fail repeatedly, their SynapseStore weights drop.
-        Healing nudges degraded weights (< 0.4) back up, allowing the system
-        to re-explore those content types instead of permanently avoiding them.
-        """
-        try:
-            from vibe_core.state.synapse_store import get_synapse_store
-
-            store = get_synapse_store()
-            weights = store.get_weights()
-            decayed = 0
-            for trigger, actions in weights.items():
-                if trigger.startswith("moltbook:content:"):
-                    for action, w in actions.items():
-                        if w < 0.4:  # Only heal degraded weights
-                            store.increment_weight(trigger, action, delta=0.05)
-                            decayed += 1
-            if decayed:
-                store.save()
-                logger.info(f"KIRTAN: Healed {decayed} degraded synapse weight(s)")
-        except Exception as e:
-            logger.warning(f"Synapse healing failed: {e}")
-
-    def _emit_ouroboros_health(self) -> None:
-        """Emit health status to Ouroboros — includes content generation metrics."""
-        try:
-            from vibe_core.ouroboros.ananta_shesha import get_system_anchor
-
-            # Gather content health metrics from FeedbackProtocol
-            content_health: Dict[str, object] = {}
-            try:
-                from vibe_core.protocols.feedback import get_feedback_safe
-
-                fb = get_feedback_safe()
-                stats = fb.get_stats()
-                content_health = {
-                    "success_rate": stats.success_rate,
-                    "failure_count": stats.failure_count,
-                    "total_signals": stats.total_signals,
-                }
-            except Exception as e:
-                logger.debug(f"FeedbackProtocol unavailable: {e}")
-
-            anchor = get_system_anchor()
-            anchor.emit_event("moltbook.health", {
-                "heartbeat": self._heartbeat_count,
-                "offline": self._offline_mode,
-                "queue_size": len(self._content_queue),
-                "last_error": self._last_heartbeat_error,
-                "subscribed_submolts": len(self._subscribed_submolts),
-                **content_health,
-            })
-        except Exception as e:
-            logger.debug(f"Ouroboros health emit unavailable: {e}")
-
-    @property
-    def _wiring_module(self):
-        """Lazy-load WiringModule."""
-        if self._wiring is None:
-            from vibe_core.plugins.moltbook.managers.wiring import WiringModule
-            self._wiring = WiringModule()
-        return self._wiring
-
-    def _wire_circuit_executor(self, kernel: "RealVibeKernel") -> None:
-        """Delegate to WiringModule."""
-        self._wiring_module.wire_circuit_executor(kernel)
-
-    def _wire_agora(self, kernel: "RealVibeKernel") -> None:
-        """Delegate to WiringModule."""
-        self._wiring_module.wire_agora(kernel)
-
-    def _broadcast_to_agora(self, content_type: str, content: str, metadata: Dict[str, Any]) -> None:
-        """Delegate to WiringModule."""
-        metadata["agent_name"] = self._agent_name
-        self._wiring_module.broadcast_to_agora(content_type, content, metadata)
 
     def execute_content_circuit(
         self,
@@ -1159,18 +640,7 @@ class MoltbookPlugin(KernelPlugin):
         auto_approve: bool = True,
         context: Optional[Dict[str, Any]] = None,
     ) -> Optional[Dict[str, Any]]:
-        """MOLTBOOK_CONTENT_V1 — ONE path through AgencyDirector.
-
-        AgencyDirector.run_retry_loop() IS the state machine:
-            SHABDA  = _run_pipeline()
-            ARTHA   = guna/integrity gates
-            PRATYAYA = _compose_content() (engine + MahaComposition + LLM)
-            KARMA   = constitution.validate() + event_log
-
-        This method converts CycleResult → dict for callers that want dict format.
-        Context dict flows through to AgencyDirector._input() → _compose_content()
-        for strategic reasoning, engagement context, submolt context.
-        """
+        """MOLTBOOK_CONTENT_V1 — ONE path through AgencyDirector."""
         return self._circuit.execute(
             raw_input=raw_input,
             content_type=content_type,
@@ -1180,200 +650,87 @@ class MoltbookPlugin(KernelPlugin):
             context=context,
         )
 
-    def _try_vault(self, kernel: "RealVibeKernel") -> str:
-        """Attempt to load API key: CivicVault → env → ~/.config/moltbook/credentials.json."""
-        return self._vault.resolve(kernel)
-
-    def on_shutdown(self, kernel: "RealVibeKernel") -> HookResult:
-        # Persist queue + seen IDs before shutdown
-        self._persist_queue()
-
-        # Unregister listener
-        if self._listener_wired:
-            try:
-                from vibe_core.mahamantra import mahamantra
-
-                mahamantra.unregister_listener(self._on_mahamantra_tick)
-                self._listener_wired = False
-            except Exception as e:
-                logger.debug(f"Listener unregister failed during shutdown: {e}")
-        self._client = None
-        logger.info("Moltbook shutdown")
-        return HookResult.ok()
-
     # =========================================================================
-    # Fault Isolation
+    # Persistence (delegates to PersistenceManager)
     # =========================================================================
 
-    def _safe_call(self, fn: object, label: str) -> None:
-        """Call fn(), catching all exceptions so the heartbeat loop survives."""
-        try:
-            fn()  # type: ignore[operator]
-        except Exception as e:
-            self._log_activity("heartbeat_error", {"phase": label, "error": str(e)[:200]})
-            logger.warning(f"Heartbeat phase '{label}' failed: {e}")
+    def _persist_queue(self) -> None:
+        self._persistence.persist_queue(
+            queue=self._content_queue,
+            seen_message_ids=self._seen_message_ids,
+            seen_post_ids=self._seen_post_ids,
+            own_comment_ids=self._own_comment_ids,
+            commented_post_ids=self._commented_post_ids,
+            followed_agents=self._followed_agents,
+            subscribed_submolts=self._subscribed_submolts,
+            comment_post_map=self._comment_post_map,
+            own_post_ids=self._own_post_ids,
+            max_own_post_ids=MAX_OWN_POST_IDS,
+        )
+        self._persist_phase_state()
 
-    def _trim_memory(self) -> None:
-        """Trim in-memory tracking sets and flush proposer caches.
-
-        Prevents unbounded growth during long-running sessions.
-        Also flushes pipeline/engine caches in ResonanceProposer
-        to prevent stale results from accumulating.
-        """
-        cap = self._MAX_SEEN_IDS
-        if len(self._seen_message_ids) > cap:
-            self._seen_message_ids = set(sorted(self._seen_message_ids)[-cap:])
-        if len(self._seen_post_ids) > cap:
-            self._seen_post_ids = set(sorted(self._seen_post_ids)[-cap:])
-        if len(self._own_comment_ids) > cap:
-            self._own_comment_ids = set(sorted(self._own_comment_ids)[-cap:])
-        if len(self._comment_post_map) > cap:
-            keys = sorted(self._comment_post_map.keys())[-cap:]
-            self._comment_post_map = {k: self._comment_post_map[k] for k in keys}
-        if len(self._own_post_ids) > self._MAX_OWN_POST_IDS:
-            sorted_keys = sorted(
-                self._own_post_ids.keys(),
-                key=lambda k: self._own_post_ids[k].get("created_at", 0),
-            )[-self._MAX_OWN_POST_IDS :]
-            self._own_post_ids = {k: self._own_post_ids[k] for k in sorted_keys}
-        # Flush proposer pipeline/engine caches
-        if self._proposer and hasattr(self._proposer, "flush_cache"):
-            self._proposer.flush_cache()
-
-    # =========================================================================
-    # Mahamantra Listener — THE heartbeat path
-    # =========================================================================
-
-    def _on_mahamantra_tick(self, tick_state: object) -> None:
-        """
-        Called on every mahamantra.tick() via _broadcast().
-
-        Polls Moltbook once per full mantra cycle (16 ticks).
-        Same pattern as Nrisimha._on_mahamantra_tick().
-        """
-        if not self._client:
-            return
-
-        self._tick_count += 1
-        if self._tick_count % _TICKS_PER_HEARTBEAT != 0:
-            return
-
-        # Fetch heartbeat from Moltbook API
-        try:
-            heartbeat = self._client.sync_check_heartbeat()
-            self._last_heartbeat_error = None
-        except Exception as e:
-            # DM check failure is non-fatal — continue heartbeat without DM data
-            self._last_heartbeat_error = f"[{type(e).__name__}] {e!r}"
-            logger.warning(f"DM check failed [{type(e).__name__}]: {e!r} — continuing heartbeat")
-            heartbeat = {}
-
-        # Delegate to orchestrator (handles debounce, phase routing, all dispatch)
-        self._heartbeat.dispatch_heartbeat(heartbeat)
-
-    # =========================================================================
-    # Reflection Protocol — learning from execution patterns
-    # =========================================================================
-
-    def _record_heartbeat_reflection(self, department: str, duration_s: float) -> None:
-        """Record heartbeat in Reflection Protocol for pattern analysis."""
-        try:
-            from vibe_core.protocols.reflection import ExecutionRecord, get_reflection_safe
-
-            reflection = get_reflection_safe()
-            record = ExecutionRecord(
-                command=f"moltbook.heartbeat.{department}",
-                success=self._last_heartbeat_error is None,
-                error=self._last_heartbeat_error,
-                duration_ms=duration_s * 1000,
-                context={
-                    "department": department,
-                    "heartbeat": self._heartbeat_count,
-                    "queue_size": len(self._content_queue),
-                    "offline": self._offline_mode,
-                },
-            )
-            reflection.record_execution(record)
-        except Exception as e:
-            logger.debug(f"Reflection recording unavailable: {e}")
-
-    def _reflect_on_patterns(self) -> None:
-        """MOKSHA: Analyze reflection patterns → trigger healing on failure.
-
-        Kirtan feedback loop:
-        1. Reflection detects failure patterns from recorded ExecutionRecords
-        2. If failures found → request_healing() via Ouroboros
-        3. Ouroboros routes healing → on_event() → concrete self-repair
-        """
-        try:
-            from vibe_core.protocols.reflection import get_reflection_safe
-
-            reflection = get_reflection_safe()
-            patterns = reflection.analyze_patterns(limit=50)
-            if not patterns:
-                return
-
-            # Check for repeated failures → emit to Ouroboros
-            failure_count = 0
-            for insight in patterns:
-                if getattr(insight, "type", None) == "failure_pattern":
-                    failure_count += 1
-                    self._emit_event(
-                        "REFLECTION_INSIGHT",
-                        f"Failure pattern detected: {insight.message}",
-                        {"insight": insight.message, "confidence": getattr(insight, "confidence", 0)},
-                    )
-
-            # KIRTAN: Failure patterns detected → request healing from Ouroboros
-            if failure_count > 0:
-                try:
-                    from vibe_core.ouroboros.ananta_shesha import get_system_anchor
-
-                    anchor = get_system_anchor()
-                    anchor.request_healing(
-                        target="moltbook",
-                        reason=f"Content failure patterns detected: {failure_count} pattern(s) in last 50 executions",
-                    )
-                    logger.info(f"KIRTAN: Requested healing for {failure_count} failure pattern(s)")
-                except Exception as e:
-                    logger.warning(f"Healing request failed: {e}")
-
-            # Propose improvements (auto-approve high-confidence)
-            proposal = reflection.propose_improvement(patterns)
-            if proposal and all(
-                getattr(i, "confidence", 0) > 0.8 for i in getattr(proposal, "insights", [])
+    def _restore_queue(self) -> None:
+        restored = self._persistence.restore_queue(self._content_queue)
+        if restored:
+            for key in (
+                "seen_message_ids",
+                "seen_post_ids",
+                "own_comment_ids",
+                "commented_post_ids",
+                "followed_agents",
+                "subscribed_submolts",
+                "comment_post_map",
+                "own_post_ids",
             ):
-                reflection.approve_proposal(proposal.id)
-                logger.info(f"Reflection: auto-approved improvement '{proposal.title}'")
-        except Exception as e:
-            logger.warning(f"Reflection analysis failed: {e}")
+                if key in restored:
+                    setattr(self, f"_{key}", restored[key])
+        self._restorer.restore_phase_state()
+
+    def _persist_phase_state(self) -> None:
+        self._persistence.persist_phase_state(
+            heartbeat_count=self._heartbeat.current_heartbeat_count,
+            feed_topics=self._current_feed_topics,
+            intents=self._current_intents,
+            orchestrator_state=self._heartbeat.snapshot(),
+        )
 
     # =========================================================================
-    # on_pulse — backward compat (delegates to same heartbeat)
+    # PluginStateContract
     # =========================================================================
+
+    def get_state_paths(self) -> List["Path"]:
+        if self._state_dir:
+            return [self._state_dir]
+        return []
+
+    def snapshot_state(self) -> Dict[str, Any]:
+        return self._snapshot.snapshot()
+
+    def restore_state(self, snapshot: Dict[str, Any]) -> None:
+        self._snapshot.restore(snapshot)
+
+    # =========================================================================
+    # Lifecycle — Boot / Pulse / Shutdown
+    # =========================================================================
+
+    def on_boot(self, kernel: "RealVibeKernel", config: Optional[Dict[str, object]] = None) -> HookResult:
+        return self._boot.execute_boot(kernel, config)
 
     @property
     def pulse_phase(self) -> PulsePhase:
         return PulsePhase.SENSORS
 
     def on_pulse(self, kernel: "RealVibeKernel", transaction: object) -> HookResult:
-        """
-        Backward compat: if kernel.pulse() ever gets fixed,
-        this delegates to the same heartbeat logic.
-        """
+        """Backward compat: delegates to same heartbeat logic."""
         if not self._client:
             return HookResult.error("Client not initialized")
-
-        # Same path as _on_mahamantra_tick: check heartbeat API first
         try:
             heartbeat = self._client.sync_check_heartbeat()
             self._last_heartbeat_error = None
         except Exception as e:
             self._last_heartbeat_error = f"[{type(e).__name__}] {e!r}"
             heartbeat = {}
-
         self._heartbeat.dispatch_heartbeat(heartbeat)
-
         return HookResult.ok(
             data={
                 "heartbeat": "ok" if not self._last_heartbeat_error else "failed",
@@ -1384,35 +741,51 @@ class MoltbookPlugin(KernelPlugin):
             }
         )
 
+    def _on_mahamantra_tick(self, tick_state: object) -> None:
+        """Called on every mahamantra.tick(). Polls once per full mantra cycle."""
+        if not self._client:
+            return
+        self._tick_count += 1
+        if self._tick_count % TICKS_PER_HEARTBEAT != 0:
+            return
+        try:
+            heartbeat = self._client.sync_check_heartbeat()
+            self._last_heartbeat_error = None
+        except Exception as e:
+            self._last_heartbeat_error = f"[{type(e).__name__}] {e!r}"
+            logger.warning(f"DM check failed [{type(e).__name__}]: {e!r} — continuing heartbeat")
+            heartbeat = {}
+        self._heartbeat.dispatch_heartbeat(heartbeat)
+
+    def on_shutdown(self, kernel: "RealVibeKernel") -> HookResult:
+        self._persist_queue()
+        from vibe_core.plugins.moltbook import lifecycle
+
+        lifecycle.unwire_from_mahamantra(self._s, self._on_mahamantra_tick)
+        self._client = None
+        logger.info("Moltbook shutdown")
+        return HookResult.ok()
+
     # =========================================================================
-    # Inbound DM Processing
+    # Phase-Aware Methods — MURALI routing (called by HeartbeatOrchestrator)
     # =========================================================================
 
     def _process_inbound_dms(self) -> None:
-        """Delegate to DMProcessor for inbound DM handling."""
         self._dm.process_inbound_dms()
 
     def _process_dm_requests(self) -> None:
-        """Delegate to DMProcessor for DM request handling."""
         self._dm.process_dm_requests()
 
-    # =========================================================================
-    # Phase-Aware Methods (MURALI routing)
-    # =========================================================================
-
     def _scan_feed(self) -> None:
-        """GENESIS phase: Extract topics + metadata from feed + semantic search."""
-        # Gather mission descriptions for semantic search (discover beyond hot feed)
         mission_descs: List[str] = []
-        planner = self._strategy_planner
+        planner = self.strategy_planner
         if planner:
             missions = planner.get_active_missions()
             mission_descs = [
-                m.description for m in missions
-                if hasattr(m, "description") and m.description
-                and not m.id.startswith("moltbook_kg_")  # Skip KG garbage
+                m.description
+                for m in missions
+                if hasattr(m, "description") and m.description and not m.id.startswith("moltbook_kg_")
             ]
-
         self._current_feed_topics = self._feed.scan_feed(
             client=self._client,
             proposer=self._proposer,
@@ -1422,91 +795,72 @@ class MoltbookPlugin(KernelPlugin):
         )
 
     def _gather_broadcast_intelligence(self) -> None:
-        """GENESIS phase: Listen to AGORA broadcasts + merge EventBus trending topics.
+        from vibe_core.plugins.moltbook import lifecycle
 
-        Feeds external intelligence into _current_feed_topics so the strategy
-        planner sees what the broader ecosystem is discussing — not just our feed.
-        """
-        # Source 1: AGORA broadcasts from herald/steward
-        broadcasts = self._listen_agora()
+        broadcasts = lifecycle.listen_agora(self._s)
         for msg in broadcasts:
             content = msg.get("content", msg.get("message", ""))
             source = msg.get("source", "broadcast")
             if content and len(content) > 10:
-                self._current_feed_topics.append({
-                    "title": content[:200],
-                    "content": content,
-                    "id": f"agora_{source}_{self._agora_sequence}",
-                    "source": f"agora:{source}",
-                })
-
-        # Source 2: EventBus trending topics from other agents
-        if hasattr(self, "_agent_events") and self._agent_events:
-            for evt in self._agent_events[-10:]:  # Last 10 events
+                self._current_feed_topics.append(
+                    {
+                        "title": content[:200],
+                        "content": content,
+                        "id": f"agora_{source}_{self._agora_sequence}",
+                        "source": f"agora:{source}",
+                    }
+                )
+        if self._agent_events:
+            existing_titles = {str(t.get("title", "")).lower() for t in self._current_feed_topics}
+            for evt in self._agent_events[-10:]:
                 topic = evt.get("topic", "")
                 agent = evt.get("agent", "unknown")
-                if topic and len(topic) > 10:
-                    # Avoid duplicating topics already in feed
-                    existing_titles = {str(t.get("title", "")).lower() for t in self._current_feed_topics}
-                    if topic.lower()[:80] not in existing_titles:
-                        self._current_feed_topics.append({
+                if topic and len(topic) > 10 and topic.lower()[:80] not in existing_titles:
+                    self._current_feed_topics.append(
+                        {
                             "title": topic[:200],
                             "content": topic,
                             "id": f"eventbus_{agent}_{hash(topic) % 10000}",
                             "source": f"eventbus:{agent}",
-                        })
-            # Clear processed events
+                        }
+                    )
             self._agent_events.clear()
 
     def _evaluate_strategy(self) -> None:
-        """DHARMA phase: Sankalpa → prioritized strategic intents.
-
-        Calls strategy_planner.plan_cycle() with current feed topics
-        and engagement stats. Stores results in self._current_intents.
-        """
         planner = self.strategy_planner
         if not planner:
             return
-
-        # Gather engagement stats from FeedbackProtocol
         engagement_stats: Dict[str, Any] = {}
         try:
             from vibe_core.protocols.feedback import get_feedback_safe
 
             stats = get_feedback_safe().get_stats()
-            engagement_stats = {
-                "success_rate": stats.success_rate,
-                "total_signals": stats.total_signals,
-            }
-        except Exception as e:
-            logger.debug(f"FeedbackProtocol stats unavailable: {e}")
-
+            engagement_stats = {"success_rate": stats.success_rate, "total_signals": stats.total_signals}
+        except Exception:
+            pass
         try:
             intents = planner.plan_cycle(
-                self._current_feed_topics, engagement_stats,
+                self._current_feed_topics,
+                engagement_stats,
                 own_post_ids=self._own_post_ids,
                 commented_post_ids=self._commented_post_ids,
             )
             self._current_intents = intents
             if intents:
-                logger.info(f"Strategy: {len(intents)} intents planned ({', '.join(i.action_type for i in intents)})")
+                logger.info(f"Strategy: {len(intents)} intents ({', '.join(i.action_type for i in intents)})")
         except Exception as e:
             logger.warning(f"Strategy evaluation failed: {e}")
 
     def _execute_intents(self) -> None:
-        """Delegate to IntentExecutor for strategic intent processing."""
         self._intent.execute_intents()
 
     def _check_own_comment_replies(self) -> None:
-        """Delegate to PostOrchestrator for comment reply monitoring."""
         self._post.check_own_comment_replies()
 
     def _update_profile(self) -> None:
-        """Delegate to PostOrchestrator for profile updates."""
         self._post.update_profile()
 
     def _track_engagement(self) -> None:
-        """Poll own posts/comments for engagement metrics (upvotes, replies)."""
         self._engagement.track(
             service=self._service,
             own_post_ids=self._own_post_ids,
@@ -1517,228 +871,204 @@ class MoltbookPlugin(KernelPlugin):
         )
 
     def _adjust_intervals(self) -> None:
-        """Adjust heartbeat intervals based on feedback success rate."""
         self._feed_interval, self._post_interval = self._engagement.adjust_intervals(
             feed_interval=self._feed_interval,
             post_interval=self._post_interval,
         )
 
     def _monitor_queue_health(self) -> None:
-        """Log warning when queue overflows (proposals silently dropped)."""
         self._content_drainer.monitor_queue_health(self._content_queue, self._heartbeat_count)
 
+    def _drain_content_queue(self) -> None:
+        self._content_drainer.drain(self._content_queue, self._offline_mode)
+        self._persist_queue()
+
+    # =========================================================================
+    # Lifecycle Wiring (delegates to lifecycle.py)
+    # =========================================================================
+
+    def _register_service(self) -> None:
+        try:
+            from vibe_core.di import ServiceRegistry
+
+            self._service = MoltbookService(self._client)
+            ServiceRegistry.register_factory(MoltbookProtocol, lambda: self._service)
+            logger.info("MoltbookProtocol registered in ServiceRegistry")
+        except Exception as e:
+            logger.warning(f"ServiceRegistry registration failed: {e}")
+
+    def _register_feedback(self) -> None:
+        try:
+            from vibe_core.di import ServiceRegistry
+            from vibe_core.protocols.feedback import FeedbackProtocol, InMemoryFeedback
+
+            if not ServiceRegistry.is_registered(FeedbackProtocol):
+                ServiceRegistry.register_factory(FeedbackProtocol, InMemoryFeedback)
+                logger.info("FeedbackProtocol registered in ServiceRegistry")
+        except Exception as e:
+            logger.warning(f"FeedbackProtocol registration failed: {e}")
+
+    def _wire_to_mahamantra(self) -> None:
+        from vibe_core.plugins.moltbook import lifecycle
+
+        lifecycle.wire_to_mahamantra(self._s, self._on_mahamantra_tick)
+
+    def _init_agora(self) -> None:
+        from vibe_core.plugins.moltbook import lifecycle
+
+        lifecycle.init_agora(self._s)
+
+    def _listen_agora(self) -> List[Dict[str, Any]]:
+        from vibe_core.plugins.moltbook import lifecycle
+
+        return lifecycle.listen_agora(self._s)
+
+    def _init_bank(self) -> None:
+        from vibe_core.plugins.moltbook import lifecycle
+
+        lifecycle.init_bank(self._s)
+
+    def _wire_event_listener(self) -> None:
+        from vibe_core.plugins.moltbook import lifecycle
+
+        lifecycle.wire_event_listener(self._agent_events, self._on_agent_action)
+
+    def _on_agent_action(self, event: Any) -> None:
+        from vibe_core.plugins.moltbook import lifecycle
+
+        lifecycle.handle_agent_action(event, self._agent_events)
+
+    def _wire_ouroboros(self) -> None:
+        from vibe_core.plugins.moltbook import lifecycle
+
+        lifecycle.wire_ouroboros(self)
+
+    def on_event(self, event_type: str, data: Dict[str, Any]) -> None:
+        from vibe_core.plugins.moltbook import lifecycle
+
+        lifecycle.handle_ouroboros_event(
+            event_type,
+            data,
+            self._emit_event,
+            self.strategy_planner,
+        )
+
+    def _emit_ouroboros_health(self) -> None:
+        from vibe_core.plugins.moltbook import lifecycle
+
+        lifecycle.emit_ouroboros_health(self._s)
+
+    def _record_heartbeat_reflection(self, department: str, duration_s: float) -> None:
+        from vibe_core.plugins.moltbook import lifecycle
+
+        lifecycle.record_heartbeat_reflection(
+            department,
+            duration_s,
+            self._heartbeat_count,
+            self._content_queue.size,
+            self._last_heartbeat_error,
+            self._offline_mode,
+        )
+
+    def _reflect_on_patterns(self) -> None:
+        from vibe_core.plugins.moltbook import lifecycle
+
+        lifecycle.reflect_on_patterns(self._emit_event)
+
+    # =========================================================================
+    # Utility Methods
+    # =========================================================================
+
+    def _safe_call(self, fn: object, label: str) -> None:
+        try:
+            fn()  # type: ignore[operator]
+        except Exception as e:
+            self._log_activity("heartbeat_error", {"phase": label, "error": str(e)[:200]})
+            logger.warning(f"Heartbeat phase '{label}' failed: {e}")
+
+    def _trim_memory(self) -> None:
+        cap = MAX_SEEN_IDS
+        if len(self._seen_message_ids) > cap:
+            self._seen_message_ids = set(sorted(self._seen_message_ids)[-cap:])
+        if len(self._seen_post_ids) > cap:
+            self._seen_post_ids = set(sorted(self._seen_post_ids)[-cap:])
+        if len(self._own_comment_ids) > cap:
+            self._own_comment_ids = set(sorted(self._own_comment_ids)[-cap:])
+        if len(self._comment_post_map) > cap:
+            keys = sorted(self._comment_post_map.keys())[-cap:]
+            self._comment_post_map = {k: self._comment_post_map[k] for k in keys}
+        if len(self._own_post_ids) > MAX_OWN_POST_IDS:
+            sorted_keys = sorted(
+                self._own_post_ids.keys(),
+                key=lambda k: self._own_post_ids[k].get("created_at", 0),
+            )[-MAX_OWN_POST_IDS:]
+            self._own_post_ids = {k: self._own_post_ids[k] for k in sorted_keys}
+        if self._proposer and hasattr(self._proposer, "flush_cache"):
+            self._proposer.flush_cache()
+
     def _follow_back(self, sender: str) -> None:
-        """Follow an agent back if we haven't already. Enqueues a FOLLOW proposal."""
         if not sender or sender == "unknown" or sender in self._followed_agents:
             return
-
         self._followed_agents.add(sender)
         proposal: ContentProposal = {
             "content_type": ContentType.FOLLOW.value,
             "to_agent": sender,
             "source": "follow_back",
-            "priority": 0,  # Low priority — social grooming, not urgent
+            "priority": 0,
         }
         self._content_queue.enqueue(proposal)
         logger.info(f"Follow-back queued for {sender}")
 
     def _log_activity(self, event_type: str, payload: Optional[Dict[str, Any]] = None) -> None:
-        """Append an event to the JSONL activity log.
+        from vibe_core.plugins.moltbook import lifecycle
 
-        Routes through EnforceGateProvider for Guna-policy audit trail.
-        Falls back to direct append when gate is unavailable (test mode).
-        """
-        if not self._activity_log_path:
-            return
-        try:
-            entry = {
-                "t": datetime.now(timezone.utc).isoformat(),
-                "event": event_type,
-                "hb": self._heartbeat_count,
-            }
-            if payload:
-                entry["data"] = payload
-            line = json.dumps(entry, separators=(",", ":"))
-
-            # Route through EnforceGateProvider for audit trail
-            try:
-                from vibe_core.mahamantra.substrate.core.guna import Guna
-                from vibe_core.mahamantra.substrate.vm.gate_providers import get_sync_gate
-
-                gate = get_sync_gate()
-                result = gate.write(
-                    "moltbook_activity_log",
-                    entry,
-                    actor="moltbook_activity",
-                    guna=Guna.RAJAS,
-                )
-                if result.success:
-                    with self._activity_log_path.open("a") as f:
-                        f.write(line + "\n")
-                else:
-                    logger.debug(f"Activity log blocked by gate: {result.reason}")
-                    return
-            except Exception:
-                # Gate unavailable — direct append (test/standalone mode)
-                with self._activity_log_path.open("a") as f:
-                    f.write(line + "\n")
-        except Exception as e:
-            logger.warning(f"Activity log write failed: {e}")
+        lifecycle.log_activity(self._activity_log_path, event_type, self._heartbeat_count, payload)
 
     def _emit_event(self, event_type_name: str, message: str, data: Optional[Dict[str, Any]] = None) -> None:
-        """Emit event to system EventBus. Fire-and-forget."""
-        try:
-            from vibe_core.mahamantra.substrate.services.event_bus import get_event_bus
-            from vibe_core.mahamantra.substrate.event_types import EventType
+        from vibe_core.plugins.moltbook import lifecycle
 
-            bus = get_event_bus()
-            et = getattr(EventType, event_type_name, EventType.ACTION)
-            bus.emit_sync(et, "moltbook", message, data or {})
-        except Exception as e:
-            logger.debug(f"EventBus emit unavailable: {e}")
+        lifecycle.emit_event(event_type_name, message, data)
 
     def _discover_submolts(self) -> None:
-        """Ensure own submolt exists, then discover and subscribe to relevant submolts."""
         self._feed.ensure_own_submolt(self._client, self._content_queue)
         self._feed.discover_submolts(self._client, self._content_queue)
 
     def _select_submolt(self, seed_text: str) -> Optional[str]:
-        """Select best submolt for content via resonance cross-scoring."""
         return self._feed.select_submolt(seed_text, lambda: self.agency_director.event_log)
 
     def _check_rate_limit(self, content_type: str) -> bool:
-        """Check if content type is within rate limits. Delegates to ContentDrainer."""
         return self._content_drainer.check_rate_limit(content_type)
 
     def _record_rate_limit(self, content_type: str) -> None:
-        """Record that a content action was executed. Delegates to ContentDrainer."""
         self._content_drainer.record_rate_limit(content_type)
 
-    def _drain_content_queue(self) -> None:
-        """Execute queued content proposals through MoltbookService.
+    def _wire_circuit_executor(self, kernel: "RealVibeKernel") -> None:
+        self._wiring_module.wire_circuit_executor(kernel)
 
-        Persists state after drain — GitHub Actions kills the process after 4 cycles,
-        so on_shutdown() may never run. own_post_ids, comment_post_map, etc. must
-        survive to the next run.
-        """
-        self._content_drainer.drain(self._content_queue, self._offline_mode)
-        # Persist immediately after drain — don't wait for on_shutdown()
-        self._persist_queue()
+    def _wire_agora(self, kernel: "RealVibeKernel") -> None:
+        self._wiring_module.wire_agora(kernel)
+
+    def _broadcast_to_agora(self, content_type: str, content: str, metadata: Dict[str, Any]) -> None:
+        metadata["agent_name"] = self._agent_name
+        self._wiring_module.broadcast_to_agora(content_type, content, metadata)
+
+    def _try_vault(self, kernel: "RealVibeKernel") -> str:
+        return self._vault.resolve(kernel)
 
     # =========================================================================
-    # API — exposed to other plugins via kernel.api("moltbook")
+    # Boot helpers
     # =========================================================================
 
     def _boot_proposer(self) -> None:
-        """Boot ResonanceProposer + register moltbook_context in PromptContext."""
         from vibe_core.plugins.moltbook.resonance_proposer import ResonanceProposer
 
         self._proposer = ResonanceProposer(agent_name=self._agent_name)
-        self._register_moltbook_context()
+        from vibe_core.plugins.moltbook import context_resolvers
+
+        context_resolvers.register_all(self._s)
         logger.info("Content proposer: ResonanceProposer v3 (engine-wired)")
 
-    def _register_moltbook_context(self) -> None:
-        """Register moltbook context resolvers in PromptContext for dynamic context injection."""
-        try:
-            from vibe_core.runtime.prompt_context import get_prompt_context
-
-            ctx = get_prompt_context()
-            ctx.register("moltbook_context", self._resolve_moltbook_context)
-            ctx.register("moltbook_engagement_trends", self._resolve_engagement_trends)
-            ctx.register("moltbook_active_submolts", self._resolve_active_submolts)
-            ctx.register("moltbook_queue_depth", self._resolve_queue_depth)
-            ctx.register("moltbook_recent_content", self._resolve_recent_content)
-            logger.info("moltbook_context (5 resolvers) registered in PromptContext")
-        except Exception as e:
-            logger.warning(f"PromptContext registration failed: {e}")
-
-    def _resolve_moltbook_context(self) -> str:
-        """Resolver for moltbook_context: feed state, community, operations."""
-        parts: List[str] = []
-
-        # Connection state
-        mode = "LIVE" if not self._offline_mode else "OFFLINE"
-        parts.append(f"Moltbook [{mode}] — {self._heartbeat_count} heartbeats, {self._tick_count} ticks")
-
-        # Queue state
-        if self._content_queue:
-            stats = self._content_queue.stats
-            queued = stats.get("queued", 0)
-            drained = stats.get("total_drained", 0)
-            if queued or drained:
-                parts.append(f"Content queue: {queued} queued, {drained} drained")
-
-        # Social graph
-        followed = len(self._followed_agents)
-        submolts = len(self._subscribed_submolts)
-        threads = len(self._comment_post_map)
-        if followed or submolts or threads:
-            parts.append(f"Social: {followed} followed, {submolts} submolts, {threads} threads")
-
-        # Active conversations
-        seen_msgs = len(self._seen_message_ids)
-        seen_posts = len(self._seen_post_ids)
-        if seen_msgs or seen_posts:
-            parts.append(f"Seen: {seen_msgs} messages, {seen_posts} posts")
-
-        # Health
-        if self._last_heartbeat_error:
-            parts.append(f"Last error: {self._last_heartbeat_error}")
-        elif self._listener_wired:
-            parts.append("Health: OK (Mahamantra listener wired)")
-
-        return "\n".join(parts)
-
-    def _resolve_engagement_trends(self) -> str:
-        """Recent engagement trends from FeedbackProtocol stats."""
-        try:
-            from vibe_core.protocols.feedback import get_feedback_safe
-
-            stats = get_feedback_safe().get_stats()
-            return (
-                f"Success rate: {stats.success_rate:.0%}, "
-                f"Total: {stats.total_signals}, "
-                f"Failures: {stats.total_failures}"
-            )
-        except Exception:
-            return ""
-
-    def _resolve_active_submolts(self) -> str:
-        """Currently subscribed submolts."""
-        if not self._subscribed_submolts:
-            return "none"
-        return ", ".join(sorted(self._subscribed_submolts))
-
-    def _resolve_queue_depth(self) -> str:
-        """Current content queue depth + stats."""
-        if not self._content_queue:
-            return "0"
-        stats = self._content_queue.stats
-        return f"{stats.get('queued', 0)} pending, {stats.get('total_drained', 0)} drained, {stats.get('total_dropped', 0)} dropped"
-
-    def _resolve_recent_content(self) -> str:
-        """Last 3 generated content pieces from activity log (avoid repetition)."""
-        if not self._activity_log_path or not self._activity_log_path.exists():
-            return ""
-        try:
-            lines = self._activity_log_path.read_text().strip().split("\n")
-            recent = []
-            for line in reversed(lines):
-                if len(recent) >= 3:
-                    break
-                try:
-                    entry = json.loads(line)
-                    if entry.get("event") in ("post_created", "comment_posted", "dm_sent"):
-                        data = entry.get("data", {})
-                        recent.append(f"{entry['event']}: {data.get('title', data.get('post_id', ''))[:60]}")
-                except Exception:
-                    continue
-            return " | ".join(recent) if recent else ""
-        except Exception:
-            return ""
-
     def _register_proposer(self) -> None:
-        """Register ContentProposalProtocol in DI. Other plugins can swap the proposer."""
         try:
             from vibe_core.di import ServiceRegistry
 
@@ -1746,6 +1076,15 @@ class MoltbookPlugin(KernelPlugin):
             logger.info("ContentProposalProtocol registered in ServiceRegistry")
         except Exception as e:
             logger.warning(f"ContentProposalProtocol registration failed: {e}")
+
+    def _register_moltbook_context(self) -> None:
+        from vibe_core.plugins.moltbook import context_resolvers
+
+        context_resolvers.register_all(self._s)
+
+    # =========================================================================
+    # API — exposed to other plugins via kernel.api("moltbook")
+    # =========================================================================
 
     def get_api(self) -> Optional[Dict[str, Any]]:
         return {
@@ -1762,7 +1101,7 @@ class MoltbookPlugin(KernelPlugin):
                 "reply_check": self._reply_check_interval,
                 "profile_update": self._profile_update_interval,
             },
-            "circuit_executor": bool(self._content_circuit_executor),
+            "circuit_executor": bool(self._circuit_inst),
             "agora_wired": bool(self._agora),
             "execute_content_circuit": self.execute_content_circuit,
         }
