@@ -1,10 +1,16 @@
 {
   "version": 1,
-  "proposals": [],
+  "proposals": [
+    {
+      "content_type": "post",
+      "content": "hello",
+      "priority": 1
+    }
+  ],
   "stats": {
-    "total_enqueued": 0,
+    "total_enqueued": 1,
     "total_drained": 0,
     "total_dropped": 0
   },
-  "timestamp": "2026-02-27T21:53:01.405270+00:00"
+  "timestamp": "2026-02-28T14:07:03.438851+00:00"
 }
