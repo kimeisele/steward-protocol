@@ -34,6 +34,7 @@ jobs:
           MOLTBOOK_API_KEY: ${{ secrets.MOLTBOOK_API_KEY }}
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }}
+          FEDERATION_PAT: ${{ secrets.FEDERATION_PAT }}
           MOLTBOOK_OFFLINE_MODE: "False"
         run: |
           PYTHONPATH=. python3 agent-city/scripts/moltbook_heartbeat.py --cycles 4
