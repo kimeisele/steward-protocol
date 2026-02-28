@@ -2,9 +2,12 @@
 
 import logging
 from pathlib import Path
-from typing import TYPE_CHECKING, Dict, Optional
+from typing import TYPE_CHECKING, Any, Dict, Optional, Protocol
 
 from vibe_core.plugin_protocol import HookResult
+
+if TYPE_CHECKING:
+    from vibe_core.kernel_impl import RealVibeKernel
 from vibe_core.plugins.moltbook.state import (
     DEFAULT_FEED_INTERVAL,
     DEFAULT_POST_INTERVAL,
@@ -13,18 +16,34 @@ from vibe_core.plugins.moltbook.state import (
     MoltbookState,
 )
 
-if TYPE_CHECKING:
-    from vibe_core.plugins.moltbook.plugin_main import MoltbookPlugin
-    from vibe_core.runtime.kernel import RealVibeKernel
-
 logger = logging.getLogger("MOLTBOOK.BOOT")
+
+
+class BootActions(Protocol):
+    """Protocol for action callbacks the boot manager needs.
+
+    Implemented structurally by MoltbookPlugin — no import needed.
+    """
+
+    def _try_vault(self, kernel: Any) -> str: ...
+    def _register_service(self) -> None: ...
+    def _register_feedback(self) -> None: ...
+    def _boot_proposer(self) -> None: ...
+    def _register_proposer(self) -> None: ...
+    def _restore_queue(self) -> None: ...
+    def _wire_circuit_executor(self, kernel: Any) -> None: ...
+    def _wire_agora(self, kernel: Any) -> None: ...
+    def _init_bank(self) -> None: ...
+    def _init_agora(self) -> None: ...
+    def _wire_to_mahamantra(self) -> None: ...
+    def _wire_ouroboros(self) -> None: ...
+    def _wire_event_listener(self) -> None: ...
 
 
 class BootManager:
     """Orchestrate plugin lifecycle initialization.
 
-    Receives MoltbookState for data access. Plugin reference used for
-    action methods (register_service, wire_*, etc.).
+    Receives MoltbookState for data access. Actions protocol for callbacks.
 
     Responsibilities:
     - State directory resolution and creation
@@ -42,9 +61,9 @@ class BootManager:
 
     _ACTIVITY_LOG_FILE = "activity.jsonl"
 
-    def __init__(self, state: MoltbookState, plugin: "MoltbookPlugin") -> None:
+    def __init__(self, state: MoltbookState, actions: BootActions) -> None:
         self._state = state
-        self._plugin = plugin
+        self._actions = actions
 
     def execute_boot(
         self,
@@ -98,7 +117,7 @@ class BootManager:
 
             # === STEP 3: Resolve API key ===
             if not api_key:
-                api_key = self._plugin._try_vault(kernel)
+                api_key = self._actions._try_vault(kernel)
 
             if not api_key:
                 api_key = "offline_master_key"
@@ -113,8 +132,8 @@ class BootManager:
             logger.info(f"MoltbookClient created ({'OFFLINE' if self._state.offline_mode else 'LIVE'})")
 
             # === STEP 5: Register services ===
-            self._plugin._register_service()  # MoltbookProtocol
-            self._plugin._register_feedback()  # FeedbackProtocol
+            self._actions._register_service()  # MoltbookProtocol
+            self._actions._register_feedback()  # FeedbackProtocol
 
             # === STEP 6: Resolve agent name ===
             try:
@@ -127,18 +146,18 @@ class BootManager:
                 logger.debug(f"Profile name fetch failed, keeping default: {e}")
 
             # === STEP 7: Boot proposer ===
-            self._plugin._boot_proposer()
-            self._plugin._register_proposer()
+            self._actions._boot_proposer()
+            self._actions._register_proposer()
 
             # === STEP 8: Restore persisted state ===
-            self._plugin._restore_queue()
+            self._actions._restore_queue()
 
             # === STEP 9: Activity log ===
             self._state.activity_log_path = self._state.state_dir / self._ACTIVITY_LOG_FILE
 
             # === STEP 10: Wire integrations ===
-            self._plugin._wire_circuit_executor(kernel)
-            self._plugin._wire_agora(kernel)
+            self._actions._wire_circuit_executor(kernel)
+            self._actions._wire_agora(kernel)
 
             # === STEP 11: Detect standalone mode ===
             # MinimalKernel has no singularity/venu tick loop
@@ -148,13 +167,13 @@ class BootManager:
                 logger.info("Standalone mode detected (no kernel singularity)")
 
             # === STEP 12: Initialize economy + broadcast (standalone-compatible) ===
-            self._plugin._init_bank()
-            self._plugin._init_agora()
+            self._actions._init_bank()
+            self._actions._init_agora()
 
             # === STEP 13: Wire mahamantra listener + ouroboros + EventBus ===
-            self._plugin._wire_to_mahamantra()
-            self._plugin._wire_ouroboros()
-            self._plugin._wire_event_listener()
+            self._actions._wire_to_mahamantra()
+            self._actions._wire_ouroboros()
+            self._actions._wire_event_listener()
 
             mode = "OFFLINE" if self._state.offline_mode else "LIVE"
             logger.info(f"Moltbook booted [{mode}]")

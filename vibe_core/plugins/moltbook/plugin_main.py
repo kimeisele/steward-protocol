@@ -238,7 +238,7 @@ class MoltbookPlugin(KernelPlugin):
         if self._heartbeat_inst is None:
             from vibe_core.plugins.moltbook.managers.heartbeat import HeartbeatOrchestrator
 
-            self._heartbeat_inst = HeartbeatOrchestrator(state=self._s, plugin=self)
+            self._heartbeat_inst = HeartbeatOrchestrator(state=self._s, actions=self)
         return self._heartbeat_inst
 
     @property
@@ -258,7 +258,7 @@ class MoltbookPlugin(KernelPlugin):
         if self._post_inst is None:
             from vibe_core.plugins.moltbook.managers.post_orchestrator import PostOrchestrator
 
-            self._post_inst = PostOrchestrator(state=self._s, plugin=self)
+            self._post_inst = PostOrchestrator(state=self._s, actions=self)
         return self._post_inst
 
     @property
@@ -280,7 +280,7 @@ class MoltbookPlugin(KernelPlugin):
         if self._boot_inst is None:
             from vibe_core.plugins.moltbook.managers.boot_manager import BootManager
 
-            self._boot_inst = BootManager(state=self._s, plugin=self)
+            self._boot_inst = BootManager(state=self._s, actions=self)
         return self._boot_inst
 
     @property
