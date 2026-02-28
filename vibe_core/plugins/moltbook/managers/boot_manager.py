@@ -10,6 +10,7 @@ if TYPE_CHECKING:
     from vibe_core.kernel_impl import RealVibeKernel
 
 from vibe_core.plugins.moltbook.state import (
+    ACTIVITY_LOG_FILE,
     DEFAULT_FEED_INTERVAL,
     DEFAULT_POST_INTERVAL,
     DEFAULT_PROFILE_UPDATE_INTERVAL,
@@ -29,6 +30,7 @@ class BootActions(Protocol):
     def _try_vault(self, kernel: Any) -> str: ...
     def _register_service(self) -> None: ...
     def _register_feedback(self) -> None: ...
+    def _register_reflection(self) -> None: ...
     def _boot_proposer(self) -> None: ...
     def _register_proposer(self) -> None: ...
     def _restore_queue(self) -> None: ...
@@ -59,8 +61,6 @@ class BootManager:
     - Standalone mode detection
     - Error handling with graceful degradation
     """
-
-    _ACTIVITY_LOG_FILE = "activity.jsonl"
 
     def __init__(self, state: MoltbookState, actions: BootActions) -> None:
         self._state = state
@@ -135,6 +135,7 @@ class BootManager:
             # === STEP 5: Register services ===
             self._actions._register_service()  # MoltbookProtocol
             self._actions._register_feedback()  # FeedbackProtocol
+            self._actions._register_reflection()  # ReflectionProtocol
 
             # === STEP 6: Resolve agent name ===
             try:
@@ -154,7 +155,7 @@ class BootManager:
             self._actions._restore_queue()
 
             # === STEP 9: Activity log ===
-            self._state.activity_log_path = self._state.state_dir / self._ACTIVITY_LOG_FILE
+            self._state.activity_log_path = self._state.state_dir / ACTIVITY_LOG_FILE
 
             # === STEP 10: Wire integrations ===
             self._actions._wire_circuit_executor(kernel)
