@@ -2,22 +2,43 @@
 
 import logging
 import time
-from typing import TYPE_CHECKING, Callable
+from typing import Callable, Protocol
 
 from vibe_core.mahamantra.substrate.core.seed import HALVES, MAHAJANA_COUNT, QUARTERS, SHARANAGATI, TRINITY
 from vibe_core.plugins.moltbook.state import MoltbookState
 
-if TYPE_CHECKING:
-    from vibe_core.plugins.moltbook.plugin_main import MoltbookPlugin
-
 logger = logging.getLogger("MOLTBOOK.HEARTBEAT")
+
+
+class HeartbeatActions(Protocol):
+    """Protocol for action callbacks the heartbeat dispatcher needs.
+
+    Implemented structurally by MoltbookPlugin — no import needed.
+    """
+
+    def _process_inbound_dms(self) -> None: ...
+    def _process_dm_requests(self) -> None: ...
+    def _scan_feed(self) -> None: ...
+    def _gather_broadcast_intelligence(self) -> None: ...
+    def _discover_submolts(self) -> None: ...
+    def _evaluate_strategy(self) -> None: ...
+    def _execute_intents(self) -> None: ...
+    def _check_own_comment_replies(self) -> None: ...
+    def _monitor_queue_health(self) -> None: ...
+    def _drain_content_queue(self) -> None: ...
+    def _update_profile(self) -> None: ...
+    def _trim_memory(self) -> None: ...
+    def _record_heartbeat_reflection(self, department: str, duration_s: float) -> None: ...
+    def _emit_ouroboros_health(self) -> None: ...
+    def _track_engagement(self) -> None: ...
+    def _adjust_intervals(self) -> None: ...
+    def _reflect_on_patterns(self) -> None: ...
 
 
 class HeartbeatOrchestrator:
     """Orchestrates the heartbeat cycle with MURALI phase-aware dispatch.
 
-    Receives MoltbookState for data access. Plugin reference used only
-    for action method callbacks.
+    Receives MoltbookState for data access. Actions protocol for callbacks.
 
     Responsibilities:
     - Route heartbeats through 4 MURALI departments (research/planning/execution/learning)
@@ -31,9 +52,9 @@ class HeartbeatOrchestrator:
     _DEPARTMENTS = ("research", "planning", "execution", "learning")
     _HEARTBEAT_DEBOUNCE_S = 2.0
 
-    def __init__(self, state: MoltbookState, plugin: "MoltbookPlugin") -> None:
+    def __init__(self, state: MoltbookState, actions: HeartbeatActions) -> None:
         self._state = state
-        self._plugin = plugin
+        self._actions = actions
         self._heartbeat_count = 0
         self._last_heartbeat_ts = 0.0
         self._genesis_tick = 0
@@ -82,8 +103,8 @@ class HeartbeatOrchestrator:
         # === STEP 1: Reactive DM processing ===
         has_new = new_heartbeat.get("has_activity", False)
         if has_new:
-            self._safe_call(self._plugin._process_inbound_dms, "inbound_dms")
-            self._safe_call(self._plugin._process_dm_requests, "dm_requests")
+            self._safe_call(self._actions._process_inbound_dms, "inbound_dms")
+            self._safe_call(self._actions._process_dm_requests, "dm_requests")
 
         # === STEP 2: Department-specific work (MURALI: each heartbeat = one job) ===
         # GENESIS → gather intelligence
@@ -93,21 +114,21 @@ class HeartbeatOrchestrator:
         self._dispatch_department(department)
 
         # === STEP 3: Always-on systems (reactive, lightweight) ===
-        self._safe_call(self._plugin._monitor_queue_health, "queue_health")
-        self._safe_call(self._plugin._drain_content_queue, "queue_drain")
+        self._safe_call(self._actions._monitor_queue_health, "queue_health")
+        self._safe_call(self._actions._drain_content_queue, "queue_drain")
 
         # === STEP 4: Maintenance cycles (low frequency) ===
         if self._heartbeat_count % MAHAJANA_COUNT == 0:
-            self._safe_call(self._plugin._update_profile, "profile_update")
-            self._safe_call(self._plugin._trim_memory, "memory_trim")
+            self._safe_call(self._actions._update_profile, "profile_update")
+            self._safe_call(self._actions._trim_memory, "memory_trim")
 
         # === STEP 5: Observability (record BEFORE reflect, not after) ===
         duration_s = time.time() - now
         self._safe_call(
-            lambda: self._plugin._record_heartbeat_reflection(department, duration_s),
+            lambda: self._actions._record_heartbeat_reflection(department, duration_s),
             "reflection_record",
         )
-        self._safe_call(self._plugin._emit_ouroboros_health, "ouroboros_emit")
+        self._safe_call(self._actions._emit_ouroboros_health, "ouroboros_emit")
 
         logger.info(f"HB#{self._heartbeat_count} {department.upper()} complete in {duration_s:.3f}s")
 
@@ -119,29 +140,29 @@ class HeartbeatOrchestrator:
         """
         if department == "research":
             # GENESIS: gather ALL intelligence — feed, AGORA, submolts
-            self._safe_call(self._plugin._scan_feed, "feed_scan")
-            self._safe_call(self._plugin._gather_broadcast_intelligence, "agora_listen")
+            self._safe_call(self._actions._scan_feed, "feed_scan")
+            self._safe_call(self._actions._gather_broadcast_intelligence, "agora_listen")
             if self._heartbeat_count <= QUARTERS or self._genesis_tick % SHARANAGATI == 0:
-                self._safe_call(self._plugin._discover_submolts, "submolt_discovery")
+                self._safe_call(self._actions._discover_submolts, "submolt_discovery")
             self._genesis_tick += 1
 
         elif department == "planning":
             # DHARMA: evaluate strategy from gathered intelligence → intents
-            self._safe_call(self._plugin._evaluate_strategy, "strategy_evaluation")
+            self._safe_call(self._actions._evaluate_strategy, "strategy_evaluation")
 
         elif department == "execution":
             # KARMA: produce content from intents + monitor replies
-            self._safe_call(self._plugin._execute_intents, "intent_execution")
+            self._safe_call(self._actions._execute_intents, "intent_execution")
             if self._karma_tick % HALVES == 0:
-                self._safe_call(self._plugin._check_own_comment_replies, "reply_monitoring")
+                self._safe_call(self._actions._check_own_comment_replies, "reply_monitoring")
             self._karma_tick += 1
 
         elif department == "learning":
             # MOKSHA: measure engagement → reflect → adjust → heal
-            self._safe_call(self._plugin._track_engagement, "engagement_tracking")
+            self._safe_call(self._actions._track_engagement, "engagement_tracking")
             if self._moksha_tick % TRINITY == 0:
-                self._safe_call(self._plugin._adjust_intervals, "interval_adjustment")
-            self._safe_call(self._plugin._reflect_on_patterns, "reflection_analysis")
+                self._safe_call(self._actions._adjust_intervals, "interval_adjustment")
+            self._safe_call(self._actions._reflect_on_patterns, "reflection_analysis")
             self._moksha_tick += 1
 
     def _get_current_department(self) -> str:
