@@ -29,9 +29,12 @@ from vibe_core.mahamantra import MoltbookClient
 from vibe_core.plugin_protocol import HookResult, KernelPlugin, PulsePhase
 from vibe_core.plugins.moltbook.managers.drainer import ContentDrainer
 from vibe_core.plugins.moltbook.plugin_main import (
-    _TICKS_PER_HEARTBEAT,
     MoltbookPlugin,
     MoltbookService,
+)
+from vibe_core.plugins.moltbook.state import (
+    MAX_SEEN_IDS,
+    TICKS_PER_HEARTBEAT,
 )
 from vibe_core.protocols.moltbook import (
     MOLTBOOK_GUNA_MAP,
@@ -116,7 +119,7 @@ class TestPluginIdentity:
 
     def test_ticks_per_heartbeat_is_16(self):
         """One full mantra = 16 ticks = 1 chant cycle. SSOT constant."""
-        assert _TICKS_PER_HEARTBEAT == 16
+        assert TICKS_PER_HEARTBEAT == 16
 
 
 # =============================================================================
@@ -240,9 +243,9 @@ class TestMahamantraListener:
 
     def test_heartbeat_fires_every_16_ticks(self, plugin):
         """Multiple full mantra cycles each trigger heartbeat."""
-        for _ in range(_TICKS_PER_HEARTBEAT * 3):
+        for _ in range(TICKS_PER_HEARTBEAT * 3):
             plugin._on_mahamantra_tick({})
-        assert plugin._tick_count == _TICKS_PER_HEARTBEAT * 3
+        assert plugin._tick_count == TICKS_PER_HEARTBEAT * 3
         assert plugin._heartbeat_count == 3
 
     def test_heartbeat_at_exact_multiples(self, plugin):
@@ -251,12 +254,12 @@ class TestMahamantraListener:
 
         for i in range(1, 49):
             plugin._on_mahamantra_tick({})
-            expected_heartbeats = i // _TICKS_PER_HEARTBEAT
+            expected_heartbeats = i // TICKS_PER_HEARTBEAT
             assert plugin._heartbeat_count == expected_heartbeats, (
                 f"At tick {i}, expected {expected_heartbeats} heartbeats"
             )
             # Small delay after heartbeat triggers to let debounce reset for next cycle
-            if i % _TICKS_PER_HEARTBEAT == 0:
+            if i % TICKS_PER_HEARTBEAT == 0:
                 time_module.sleep(0.05)  # Just enough to clear debounce guard
 
     def test_skips_without_client(self, bare_plugin):
@@ -267,7 +270,7 @@ class TestMahamantraListener:
     def test_error_captured_not_raised(self, plugin):
         """Failed heartbeat sets error string, does not raise."""
         plugin._client.limits.requests_this_minute = 100  # Will trigger rate limit
-        for _ in range(_TICKS_PER_HEARTBEAT):
+        for _ in range(TICKS_PER_HEARTBEAT):
             plugin._on_mahamantra_tick({})
         assert plugin._last_heartbeat_error is not None
         assert "rate limit" in plugin._last_heartbeat_error.lower()
@@ -275,7 +278,7 @@ class TestMahamantraListener:
     def test_error_clears_on_success(self, plugin):
         """Successful heartbeat clears previous error."""
         plugin._last_heartbeat_error = "previous error"
-        for _ in range(_TICKS_PER_HEARTBEAT):
+        for _ in range(TICKS_PER_HEARTBEAT):
             plugin._on_mahamantra_tick({})
         assert plugin._last_heartbeat_error is None
 
@@ -1219,22 +1222,22 @@ class TestMemoryTrimming:
     """In-memory sets are trimmed to prevent unbounded growth."""
 
     def test_trim_seen_messages(self, plugin):
-        """_trim_memory caps _seen_message_ids to _MAX_SEEN_IDS."""
+        """_trim_memory caps _seen_message_ids to MAX_SEEN_IDS."""
         # Overfill
-        for i in range(plugin._MAX_SEEN_IDS + 500):
+        for i in range(MAX_SEEN_IDS + 500):
             plugin._seen_message_ids.add(f"msg_{i:05d}")
-        assert len(plugin._seen_message_ids) > plugin._MAX_SEEN_IDS
+        assert len(plugin._seen_message_ids) > MAX_SEEN_IDS
 
         plugin._trim_memory()
-        assert len(plugin._seen_message_ids) == plugin._MAX_SEEN_IDS
+        assert len(plugin._seen_message_ids) == MAX_SEEN_IDS
 
     def test_trim_comment_post_map(self, plugin):
         """_trim_memory caps _comment_post_map."""
-        for i in range(plugin._MAX_SEEN_IDS + 100):
+        for i in range(MAX_SEEN_IDS + 100):
             plugin._comment_post_map[f"c{i:05d}"] = f"p{i}"
 
         plugin._trim_memory()
-        assert len(plugin._comment_post_map) == plugin._MAX_SEEN_IDS
+        assert len(plugin._comment_post_map) == MAX_SEEN_IDS
 
     def test_trim_noop_when_under_limit(self, plugin):
         """_trim_memory does nothing when sets are small."""
@@ -1244,12 +1247,12 @@ class TestMemoryTrimming:
 
     def test_trim_keeps_most_recent(self, plugin):
         """Trimming keeps the most recent (highest sorted) IDs."""
-        for i in range(plugin._MAX_SEEN_IDS + 10):
+        for i in range(MAX_SEEN_IDS + 10):
             plugin._seen_post_ids.add(f"p_{i:05d}")
 
         plugin._trim_memory()
         # The highest IDs should remain
-        assert f"p_{plugin._MAX_SEEN_IDS + 9:05d}" in plugin._seen_post_ids
+        assert f"p_{MAX_SEEN_IDS + 9:05d}" in plugin._seen_post_ids
         # The lowest should be gone
         assert "p_00000" not in plugin._seen_post_ids
 
@@ -1507,11 +1510,15 @@ class TestCommentDedup:
         import json
 
         seen_file = tmp_path / "seen_ids.json"
-        seen_file.write_text(json.dumps({
-            "version": 4,
-            "message_ids": [],
-            "post_ids": [],
-        }))
+        seen_file.write_text(
+            json.dumps(
+                {
+                    "version": 4,
+                    "message_ids": [],
+                    "post_ids": [],
+                }
+            )
+        )
 
         plugin._state_dir = tmp_path
         plugin._restore_queue()
@@ -1613,9 +1620,7 @@ class TestKirtanSynapseHealing:
             plugin.on_event("healing.requested", {"target": "moltbook", "reason": "test"})
 
         # Only the degraded weight (0.3) should be incremented
-        mock_store.increment_weight.assert_called_once_with(
-            "moltbook:content:comment", "generate", delta=0.05
-        )
+        mock_store.increment_weight.assert_called_once_with("moltbook:content:comment", "generate", delta=0.05)
         mock_store.save.assert_called_once()
 
     def test_on_event_healing_no_degraded_weights(self, plugin):
