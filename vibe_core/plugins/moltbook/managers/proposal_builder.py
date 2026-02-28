@@ -1,23 +1,17 @@
 """Moltbook Proposal Builder — Circuit result → ContentProposal conversion."""
 
 import logging
-from typing import Optional, Protocol
+from typing import Any, Callable, Dict, Optional
 
 from vibe_core.protocols.moltbook_content import ContentProposal
 
 logger = logging.getLogger("MOLTBOOK.PROPOSAL")
 
 
-class ProposalBuilderCallbacks(Protocol):
-    """Callbacks that MoltbookPlugin provides to ProposalBuilder."""
-
-    def _emit_event(self, event_type_name: str, message: str, data: Optional[dict] = None) -> None:
-        """Emit system event."""
-        ...
-
-
 class ProposalBuilder:
     """Build ContentProposal from circuit execution results.
+
+    Receives explicit emit_event callable — no back-reference to plugin.
 
     Responsibilities:
     - Convert CycleResult → ContentProposal
@@ -25,21 +19,10 @@ class ProposalBuilder:
     - Attach gateway response data (success, position, guardian, guna)
     - Emit PROPOSAL_CREATED event with metadata
     - Compute priority via knowledge graph
-
-    YANTRA Discipline:
-    - Protocol-based callbacks (no Any types)
-    - One-to-one mapping: circuit result fields → proposal fields
-    - Explicit event emission for audit trail
-    - No fallbacks: return None if content missing
     """
 
-    def __init__(self, plugin: "ProposalBuilderCallbacks") -> None:
-        """Initialize with parent plugin callbacks.
-
-        Args:
-            plugin: MoltbookPlugin instance providing callbacks
-        """
-        self._plugin: "ProposalBuilderCallbacks" = plugin
+    def __init__(self, emit_event: Callable[..., None]) -> None:
+        self._emit_event = emit_event
 
     def build_proposal(
         self,
@@ -91,7 +74,7 @@ class ProposalBuilder:
             proposal["gateway_guna"] = gw.get("guna", "sattva")
 
         # Emit audit event
-        self._plugin._emit_event(
+        self._emit_event(
             "PROPOSAL_CREATED",
             f"Proposal: {content_type}",
             {
