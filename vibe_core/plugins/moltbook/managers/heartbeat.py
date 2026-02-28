@@ -2,9 +2,10 @@
 
 import logging
 import time
-from typing import TYPE_CHECKING, Callable, Protocol
+from typing import TYPE_CHECKING, Callable
 
 from vibe_core.mahamantra.substrate.core.seed import HALVES, MAHAJANA_COUNT, QUARTERS, SHARANAGATI, TRINITY
+from vibe_core.plugins.moltbook.state import MoltbookState
 
 if TYPE_CHECKING:
     from vibe_core.plugins.moltbook.plugin_main import MoltbookPlugin
@@ -12,80 +13,11 @@ if TYPE_CHECKING:
 logger = logging.getLogger("MOLTBOOK.HEARTBEAT")
 
 
-class HeartbeatCallbacks(Protocol):
-    """Callbacks that MoltbookPlugin provides to HeartbeatOrchestrator."""
-
-    def _process_inbound_dms(self) -> None:
-        """Handle incoming direct messages."""
-        ...
-
-    def _process_dm_requests(self) -> None:
-        """Process new DM requests."""
-        ...
-
-    def _scan_feed(self) -> None:
-        """Scan the feed for new topics."""
-        ...
-
-    def _gather_broadcast_intelligence(self) -> None:
-        """Gather AGORA broadcasts + EventBus trending topics into feed context."""
-        ...
-
-    def _evaluate_strategy(self) -> None:
-        """Evaluate strategy based on current state."""
-        ...
-
-    def _execute_intents(self) -> None:
-        """Execute top-ranked intents."""
-        ...
-
-    def _track_engagement(self) -> None:
-        """Track engagement metrics."""
-        ...
-
-    def _discover_submolts(self) -> None:
-        """Discover available submolts (GENESIS phase)."""
-        ...
-
-    def _check_own_comment_replies(self) -> None:
-        """Monitor replies to own comments (KARMA phase)."""
-        ...
-
-    def _adjust_intervals(self) -> None:
-        """Adjust heartbeat intervals (MOKSHA phase)."""
-        ...
-
-    def _reflect_on_patterns(self) -> None:
-        """Analyze patterns and apply learning (MOKSHA phase)."""
-        ...
-
-    def _update_profile(self) -> None:
-        """Update agent profile on Moltbook."""
-        ...
-
-    def _trim_memory(self) -> None:
-        """Trim in-memory caches."""
-        ...
-
-    def _monitor_queue_health(self) -> None:
-        """Warn if content queue is unhealthy."""
-        ...
-
-    def _drain_content_queue(self) -> None:
-        """Send queued content to Moltbook."""
-        ...
-
-    def _record_heartbeat_reflection(self, department: str, duration_s: float) -> None:
-        """Record execution metrics in Reflection Protocol."""
-        ...
-
-    def _emit_ouroboros_health(self) -> None:
-        """Emit health signal to Ouroboros monitoring."""
-        ...
-
-
 class HeartbeatOrchestrator:
     """Orchestrates the heartbeat cycle with MURALI phase-aware dispatch.
+
+    Receives MoltbookState for data access. Plugin reference used only
+    for action method callbacks.
 
     Responsibilities:
     - Route heartbeats through 4 MURALI departments (research/planning/execution/learning)
@@ -94,24 +26,14 @@ class HeartbeatOrchestrator:
     - Manage maintenance cycles (profile, memory, queue)
     - Record execution patterns via Reflection Protocol
     - Emit health signals to Ouroboros
-
-    YANTRA Discipline:
-    - No ANY types (Protocol-based)
-    - Idempotent: can resume after kill -9
-    - Explicit logging for all state changes
-    - No hidden side effects
     """
 
     _DEPARTMENTS = ("research", "planning", "execution", "learning")
     _HEARTBEAT_DEBOUNCE_S = 2.0
 
-    def __init__(self, plugin: "MoltbookPlugin") -> None:
-        """Initialize orchestrator with parent plugin callbacks.
-
-        Args:
-            plugin: MoltbookPlugin instance providing callbacks
-        """
-        self._plugin: "MoltbookPlugin" = plugin
+    def __init__(self, state: MoltbookState, plugin: "MoltbookPlugin") -> None:
+        self._state = state
+        self._plugin = plugin
         self._heartbeat_count = 0
         self._last_heartbeat_ts = 0.0
         self._genesis_tick = 0
@@ -149,17 +71,13 @@ class HeartbeatOrchestrator:
 
         # Log entry
         plugin_queue_size = 0
-        if hasattr(self._plugin, "_content_queue"):
-            try:
-                queue_stats = getattr(self._plugin._content_queue, "stats", {})
-                plugin_queue_size = queue_stats.get("pending", 0)
-            except Exception:
-                pass
+        try:
+            queue_stats = self._state.content_queue.stats
+            plugin_queue_size = queue_stats.get("pending", 0) if isinstance(queue_stats, dict) else 0
+        except Exception:
+            pass
 
-        logger.info(
-            f"HB#{self._heartbeat_count} → {department.upper()} "
-            f"(queue={plugin_queue_size})"
-        )
+        logger.info(f"HB#{self._heartbeat_count} → {department.upper()} (queue={plugin_queue_size})")
 
         # === STEP 1: Reactive DM processing ===
         has_new = new_heartbeat.get("has_activity", False)
@@ -235,7 +153,7 @@ class HeartbeatOrchestrator:
         Returns:
             Department name: research, planning, execution, or learning
         """
-        if not getattr(self._plugin, "_standalone_mode", True):
+        if not self._state.standalone_mode:
             try:
                 from vibe_core.cartridges.agent_city.moltbook.core.agency_director import (
                     MuraliRouter,

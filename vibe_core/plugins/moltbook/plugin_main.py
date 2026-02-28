@@ -51,6 +51,22 @@ class MoltbookPlugin(KernelPlugin):
 
     plugin_id = "moltbook"
 
+    # State field names for __getattr__/__setattr__ delegation.
+    # Access to plugin._xxx delegates to plugin._s.xxx when xxx is a state field.
+    _STATE_FIELDS: frozenset = frozenset(MoltbookState.__slots__)
+
+    # --- Constants exposed as class attrs for backward compat ---
+    _DEFAULT_FEED_INTERVAL = MoltbookState().feed_interval
+    _DEFAULT_POST_INTERVAL = MoltbookState().post_interval
+    _DEFAULT_REPLY_CHECK_INTERVAL = MoltbookState().reply_check_interval
+    _DEFAULT_PROFILE_UPDATE_INTERVAL = MoltbookState().profile_update_interval
+    _MAX_SEEN_IDS = MAX_SEEN_IDS
+    _MAX_OWN_POST_IDS = MAX_OWN_POST_IDS
+    _QUEUE_STATE_FILE = "content_queue.json"
+    _SEEN_STATE_FILE = "seen_ids.json"
+    _PHASE_STATE_FILE = "phase_state.json"
+    _ACTIVITY_LOG_FILE = "activity.jsonl"
+
     def __init__(self):
         super().__init__()
         # Centralized state — one object, not 30+ scattered fields
@@ -82,289 +98,31 @@ class MoltbookPlugin(KernelPlugin):
         self._agent_events: List[Dict[str, Any]] = []
 
     # =========================================================================
-    # State Delegation — managers still access self._plugin._whatever
-    # These properties proxy to self._s so the interface is unchanged.
+    # Backward-compat: delegate plugin._xxx to plugin._s.xxx for state fields.
+    # Tests and external code access plugin._content_queue, plugin._client, etc.
     # =========================================================================
 
-    # --- Connection ---
-    @property
-    def _client(self):
-        return self._s.client
-
-    @_client.setter
-    def _client(self, value):
-        self._s.client = value
-
-    @property
-    def _service(self) -> Optional[MoltbookService]:
-        return self._s.service
-
-    @_service.setter
-    def _service(self, value):
-        self._s.service = value
-
-    @property
-    def _offline_mode(self) -> bool:
-        return self._s.offline_mode
-
-    @_offline_mode.setter
-    def _offline_mode(self, value: bool):
-        self._s.offline_mode = value
-
-    @property
-    def _standalone_mode(self) -> bool:
-        return self._s.standalone_mode
-
-    @_standalone_mode.setter
-    def _standalone_mode(self, value: bool):
-        self._s.standalone_mode = value
-
-    # --- Health ---
-    @property
-    def _last_heartbeat_error(self) -> Optional[str]:
-        return self._s.last_heartbeat_error
-
-    @_last_heartbeat_error.setter
-    def _last_heartbeat_error(self, value):
-        self._s.last_heartbeat_error = value
-
-    # --- Paths ---
-    @property
-    def _state_dir(self):
-        return self._s.state_dir
-
-    @_state_dir.setter
-    def _state_dir(self, value):
-        self._s.state_dir = value
-
-    @property
-    def _activity_log_path(self):
-        return self._s.activity_log_path
-
-    @_activity_log_path.setter
-    def _activity_log_path(self, value):
-        self._s.activity_log_path = value
-
-    # --- Counters ---
-    @property
-    def _tick_count(self) -> int:
-        return self._s.tick_count
-
-    @_tick_count.setter
-    def _tick_count(self, value: int):
-        self._s.tick_count = value
-
-    @property
-    def _last_post_heartbeat(self) -> int:
-        return self._s.last_post_heartbeat
-
-    @_last_post_heartbeat.setter
-    def _last_post_heartbeat(self, value: int):
-        self._s.last_post_heartbeat = value
-
-    @property
-    def _last_profile_heartbeat(self) -> int:
-        return self._s.last_profile_heartbeat
-
-    @_last_profile_heartbeat.setter
-    def _last_profile_heartbeat(self, value: int):
-        self._s.last_profile_heartbeat = value
-
-    # --- Intervals ---
-    @property
-    def _feed_interval(self) -> int:
-        return self._s.feed_interval
-
-    @_feed_interval.setter
-    def _feed_interval(self, value: int):
-        self._s.feed_interval = value
-
-    @property
-    def _post_interval(self) -> int:
-        return self._s.post_interval
-
-    @_post_interval.setter
-    def _post_interval(self, value: int):
-        self._s.post_interval = value
-
-    @property
-    def _reply_check_interval(self) -> int:
-        return self._s.reply_check_interval
-
-    @_reply_check_interval.setter
-    def _reply_check_interval(self, value: int):
-        self._s.reply_check_interval = value
-
-    @property
-    def _profile_update_interval(self) -> int:
-        return self._s.profile_update_interval
-
-    @_profile_update_interval.setter
-    def _profile_update_interval(self, value: int):
-        self._s.profile_update_interval = value
-
-    # --- Wiring ---
-    @property
-    def _listener_wired(self) -> bool:
-        return self._s.listener_wired
-
-    @_listener_wired.setter
-    def _listener_wired(self, value: bool):
-        self._s.listener_wired = value
-
-    # --- Content ---
-    @property
-    def _content_queue(self) -> ContentQueue:
-        return self._s.content_queue
-
-    @_content_queue.setter
-    def _content_queue(self, value):
-        self._s.content_queue = value
-
-    @property
-    def _proposer(self):
-        return self._s.proposer
-
-    @_proposer.setter
-    def _proposer(self, value):
-        self._s.proposer = value
-
-    # --- Dedup sets ---
-    @property
-    def _seen_message_ids(self) -> Set[str]:
-        return self._s.seen_message_ids
-
-    @_seen_message_ids.setter
-    def _seen_message_ids(self, value: Set[str]):
-        self._s.seen_message_ids = value
-
-    @property
-    def _seen_post_ids(self) -> Set[str]:
-        return self._s.seen_post_ids
-
-    @_seen_post_ids.setter
-    def _seen_post_ids(self, value: Set[str]):
-        self._s.seen_post_ids = value
-
-    @property
-    def _own_comment_ids(self) -> Set[str]:
-        return self._s.own_comment_ids
-
-    @_own_comment_ids.setter
-    def _own_comment_ids(self, value: Set[str]):
-        self._s.own_comment_ids = value
-
-    @property
-    def _commented_post_ids(self) -> Set[str]:
-        return self._s.commented_post_ids
-
-    @_commented_post_ids.setter
-    def _commented_post_ids(self, value: Set[str]):
-        self._s.commented_post_ids = value
-
-    @property
-    def _followed_agents(self) -> Set[str]:
-        return self._s.followed_agents
-
-    @_followed_agents.setter
-    def _followed_agents(self, value: Set[str]):
-        self._s.followed_agents = value
-
-    @property
-    def _subscribed_submolts(self) -> Set[str]:
-        return self._s.subscribed_submolts
-
-    @_subscribed_submolts.setter
-    def _subscribed_submolts(self, value: Set[str]):
-        self._s.subscribed_submolts = value
-
-    # --- Tracking dicts ---
-    @property
-    def _submolt_descriptions(self) -> Dict[str, str]:
-        return self._s.submolt_descriptions
-
-    @_submolt_descriptions.setter
-    def _submolt_descriptions(self, value):
-        self._s.submolt_descriptions = value
-
-    @property
-    def _comment_post_map(self) -> Dict[str, str]:
-        return self._s.comment_post_map
-
-    @_comment_post_map.setter
-    def _comment_post_map(self, value):
-        self._s.comment_post_map = value
-
-    @property
-    def _own_post_ids(self) -> Dict[str, Dict[str, object]]:
-        return self._s.own_post_ids
-
-    @_own_post_ids.setter
-    def _own_post_ids(self, value):
-        self._s.own_post_ids = value
-
-    # --- Agent identity ---
-    @property
-    def _agent_name(self) -> str:
-        return self._s.agent_name
-
-    @_agent_name.setter
-    def _agent_name(self, value: str):
-        self._s.agent_name = value
-
-    # --- External integrations ---
-    @property
-    def _bank(self):
-        return self._s.bank
-
-    @_bank.setter
-    def _bank(self, value):
-        self._s.bank = value
-
-    @property
-    def _agora(self):
-        return self._s.agora
-
-    @_agora.setter
-    def _agora(self, value):
-        self._s.agora = value
-
-    @property
-    def _agora_sequence(self) -> int:
-        return self._s.agora_sequence
-
-    @_agora_sequence.setter
-    def _agora_sequence(self, value: int):
-        self._s.agora_sequence = value
-
-    # --- Strategy ---
-    @property
-    def _current_intents(self) -> list:
-        return self._s.current_intents
-
-    @_current_intents.setter
-    def _current_intents(self, value: list):
-        self._s.current_intents = value
-
-    @property
-    def _current_feed_topics(self) -> list:
-        return self._s.current_feed_topics
-
-    @_current_feed_topics.setter
-    def _current_feed_topics(self, value: list):
-        self._s.current_feed_topics = value
-
-    # --- Constants exposed as class attrs for backward compat ---
-    _DEFAULT_FEED_INTERVAL = MoltbookState().feed_interval
-    _DEFAULT_POST_INTERVAL = MoltbookState().post_interval
-    _DEFAULT_REPLY_CHECK_INTERVAL = MoltbookState().reply_check_interval
-    _DEFAULT_PROFILE_UPDATE_INTERVAL = MoltbookState().profile_update_interval
-    _MAX_SEEN_IDS = MAX_SEEN_IDS
-    _MAX_OWN_POST_IDS = MAX_OWN_POST_IDS
-    _QUEUE_STATE_FILE = "content_queue.json"
-    _SEEN_STATE_FILE = "seen_ids.json"
-    _PHASE_STATE_FILE = "phase_state.json"
-    _ACTIVITY_LOG_FILE = "activity.jsonl"
+    def __getattr__(self, name: str) -> Any:
+        """Delegate plugin._xxx → plugin._s.xxx for MoltbookState fields."""
+        if name.startswith("_") and not name.startswith("__"):
+            field = name[1:]
+            if field in MoltbookPlugin._STATE_FIELDS:
+                return getattr(self._s, field)
+        raise AttributeError(f"'{type(self).__name__}' object has no attribute '{name}'")
+
+    def __setattr__(self, name: str, value: Any) -> None:
+        """Delegate plugin._xxx = val → plugin._s.xxx for MoltbookState fields."""
+        if name.startswith("_") and not name.startswith("__"):
+            field = name[1:]
+            if field in MoltbookPlugin._STATE_FIELDS:
+                # Guard: _s might not exist yet during __init__
+                try:
+                    s = object.__getattribute__(self, "_s")
+                    setattr(s, field, value)
+                    return
+                except AttributeError:
+                    pass
+        super().__setattr__(name, value)
 
     # =========================================================================
     # Dependencies
@@ -375,10 +133,9 @@ class MoltbookPlugin(KernelPlugin):
         return {"economy"}
 
     # =========================================================================
-    # Manager Lazy Properties — each manager is created once on first access
+    # Backward-compat aliases for direct attribute access (tests)
     # =========================================================================
 
-    # --- Backward-compat aliases for direct attribute access (tests) ---
     @property
     def _strategy_planner(self):
         return self._strategy_planner_inst
@@ -394,6 +151,10 @@ class MoltbookPlugin(KernelPlugin):
     @_agency_director.setter
     def _agency_director(self, value):
         self._agency_director_inst = value
+
+    # =========================================================================
+    # Manager Lazy Properties — each manager is created once on first access
+    # =========================================================================
 
     @property
     def agency_director(self):
@@ -411,7 +172,7 @@ class MoltbookPlugin(KernelPlugin):
 
                 self._strategy_planner_inst = MoltbookStrategyPlanner(
                     event_log=self.agency_director.event_log,
-                    state_dir=self._state_dir,
+                    state_dir=self._s.state_dir,
                 )
             except Exception as e:
                 logger.warning(f"Strategy planner unavailable: {e}")
@@ -427,13 +188,13 @@ class MoltbookPlugin(KernelPlugin):
                 log_activity=self._log_activity,
                 broadcast_to_agora=self._broadcast_to_agora,
                 emit_event=self._emit_event,
-                own_post_ids=self._own_post_ids,
-                own_comment_ids=self._own_comment_ids,
-                comment_post_map=self._comment_post_map,
-                followed_agents=self._followed_agents,
-                subscribed_submolts=self._subscribed_submolts,
-                bank=self._bank,
-                agent_id=self._agent_name,
+                own_post_ids=self._s.own_post_ids,
+                own_comment_ids=self._s.own_comment_ids,
+                comment_post_map=self._s.comment_post_map,
+                followed_agents=self._s.followed_agents,
+                subscribed_submolts=self._s.subscribed_submolts,
+                bank=self._s.bank,
+                agent_id=self._s.agent_name,
             )
         return self._drainer_inst
 
@@ -443,7 +204,7 @@ class MoltbookPlugin(KernelPlugin):
             from vibe_core.plugins.moltbook.managers.persistence import PersistenceManager
 
             self._persistence_inst = PersistenceManager(
-                state_dir=self._state_dir,
+                state_dir=self._s.state_dir,
                 max_seen_ids=MAX_SEEN_IDS,
             )
         return self._persistence_inst
@@ -454,9 +215,9 @@ class MoltbookPlugin(KernelPlugin):
             from vibe_core.plugins.moltbook.managers.feed import FeedAnalyzer
 
             self._feed_inst = FeedAnalyzer(
-                seen_post_ids=self._seen_post_ids,
-                subscribed_submolts=self._subscribed_submolts,
-                submolt_descriptions=self._submolt_descriptions,
+                seen_post_ids=self._s.seen_post_ids,
+                subscribed_submolts=self._s.subscribed_submolts,
+                submolt_descriptions=self._s.submolt_descriptions,
             )
         return self._feed_inst
 
@@ -467,8 +228,8 @@ class MoltbookPlugin(KernelPlugin):
 
             self._engagement_inst = EngagementTracker(
                 log_activity=self._log_activity,
-                bank=self._bank,
-                agent_id=self._agent_name,
+                bank=self._s.bank,
+                agent_id=self._s.agent_name,
             )
         return self._engagement_inst
 
@@ -477,7 +238,7 @@ class MoltbookPlugin(KernelPlugin):
         if self._heartbeat_inst is None:
             from vibe_core.plugins.moltbook.managers.heartbeat import HeartbeatOrchestrator
 
-            self._heartbeat_inst = HeartbeatOrchestrator(plugin=self)
+            self._heartbeat_inst = HeartbeatOrchestrator(state=self._s, plugin=self)
         return self._heartbeat_inst
 
     @property
@@ -485,7 +246,11 @@ class MoltbookPlugin(KernelPlugin):
         if self._dm_inst is None:
             from vibe_core.plugins.moltbook.managers.dm_processor import DMProcessor
 
-            self._dm_inst = DMProcessor(plugin=self)
+            self._dm_inst = DMProcessor(
+                state=self._s,
+                director_propose=self._director_propose,
+                follow_back=self._follow_back,
+            )
         return self._dm_inst
 
     @property
@@ -493,7 +258,7 @@ class MoltbookPlugin(KernelPlugin):
         if self._post_inst is None:
             from vibe_core.plugins.moltbook.managers.post_orchestrator import PostOrchestrator
 
-            self._post_inst = PostOrchestrator(plugin=self)
+            self._post_inst = PostOrchestrator(state=self._s, plugin=self)
         return self._post_inst
 
     @property
@@ -501,7 +266,13 @@ class MoltbookPlugin(KernelPlugin):
         if self._intent_inst is None:
             from vibe_core.plugins.moltbook.managers.intent_executor import IntentExecutor
 
-            self._intent_inst = IntentExecutor(plugin=self)
+            self._intent_inst = IntentExecutor(
+                state=self._s,
+                director_propose=self._director_propose,
+                select_submolt=self._select_submolt,
+                emit_event=self._emit_event,
+                heartbeat_count_getter=lambda: self._heartbeat.current_heartbeat_count,
+            )
         return self._intent_inst
 
     @property
@@ -509,7 +280,7 @@ class MoltbookPlugin(KernelPlugin):
         if self._boot_inst is None:
             from vibe_core.plugins.moltbook.managers.boot_manager import BootManager
 
-            self._boot_inst = BootManager(plugin=self)
+            self._boot_inst = BootManager(state=self._s, plugin=self)
         return self._boot_inst
 
     @property
@@ -517,7 +288,11 @@ class MoltbookPlugin(KernelPlugin):
         if self._state_restorer_inst is None:
             from vibe_core.plugins.moltbook.managers.state_restorer import StateRestorer
 
-            self._state_restorer_inst = StateRestorer(self)
+            self._state_restorer_inst = StateRestorer(
+                state=self._s,
+                persistence_getter=lambda: self._persistence,
+                heartbeat_getter=lambda: self._heartbeat,
+            )
         return self._state_restorer_inst
 
     @property
@@ -525,7 +300,7 @@ class MoltbookPlugin(KernelPlugin):
         if self._proposal_builder_inst is None:
             from vibe_core.plugins.moltbook.managers.proposal_builder import ProposalBuilder
 
-            self._proposal_builder_inst = ProposalBuilder(self)
+            self._proposal_builder_inst = ProposalBuilder(emit_event=self._emit_event)
         return self._proposal_builder_inst
 
     @property
@@ -541,7 +316,10 @@ class MoltbookPlugin(KernelPlugin):
         if self._circuit_inst is None:
             from vibe_core.plugins.moltbook.managers.content_circuit import ContentCircuitExecutor
 
-            self._circuit_inst = ContentCircuitExecutor(self)
+            self._circuit_inst = ContentCircuitExecutor(
+                agency_director_getter=lambda: self.agency_director,
+                emit_event=self._emit_event,
+            )
         return self._circuit_inst
 
     @property
@@ -557,7 +335,10 @@ class MoltbookPlugin(KernelPlugin):
         if self._snapshot_inst is None:
             from vibe_core.plugins.moltbook.managers.state_snapshot import StateSnapshot
 
-            self._snapshot_inst = StateSnapshot(self)
+            self._snapshot_inst = StateSnapshot(
+                state=self._s,
+                heartbeat_getter=lambda: self._heartbeat,
+            )
         return self._snapshot_inst
 
     @property
@@ -603,9 +384,9 @@ class MoltbookPlugin(KernelPlugin):
 
     def _ensure_service(self):
         """Ensure MoltbookService exists, create if needed."""
-        if self._service is None:
-            self._service = MoltbookService(self._client)
-        return self._service
+        if self._s.service is None:
+            self._s.service = MoltbookService(self._s.client)
+        return self._s.service
 
     # =========================================================================
     # Content Pipeline — ONE path through AgencyDirector
@@ -656,21 +437,21 @@ class MoltbookPlugin(KernelPlugin):
 
     def _persist_queue(self) -> None:
         self._persistence.persist_queue(
-            queue=self._content_queue,
-            seen_message_ids=self._seen_message_ids,
-            seen_post_ids=self._seen_post_ids,
-            own_comment_ids=self._own_comment_ids,
-            commented_post_ids=self._commented_post_ids,
-            followed_agents=self._followed_agents,
-            subscribed_submolts=self._subscribed_submolts,
-            comment_post_map=self._comment_post_map,
-            own_post_ids=self._own_post_ids,
+            queue=self._s.content_queue,
+            seen_message_ids=self._s.seen_message_ids,
+            seen_post_ids=self._s.seen_post_ids,
+            own_comment_ids=self._s.own_comment_ids,
+            commented_post_ids=self._s.commented_post_ids,
+            followed_agents=self._s.followed_agents,
+            subscribed_submolts=self._s.subscribed_submolts,
+            comment_post_map=self._s.comment_post_map,
+            own_post_ids=self._s.own_post_ids,
             max_own_post_ids=MAX_OWN_POST_IDS,
         )
         self._persist_phase_state()
 
     def _restore_queue(self) -> None:
-        restored = self._persistence.restore_queue(self._content_queue)
+        restored = self._persistence.restore_queue(self._s.content_queue)
         if restored:
             for key in (
                 "seen_message_ids",
@@ -683,14 +464,14 @@ class MoltbookPlugin(KernelPlugin):
                 "own_post_ids",
             ):
                 if key in restored:
-                    setattr(self, f"_{key}", restored[key])
+                    setattr(self._s, key, restored[key])
         self._restorer.restore_phase_state()
 
     def _persist_phase_state(self) -> None:
         self._persistence.persist_phase_state(
             heartbeat_count=self._heartbeat.current_heartbeat_count,
-            feed_topics=self._current_feed_topics,
-            intents=self._current_intents,
+            feed_topics=self._s.current_feed_topics,
+            intents=self._s.current_intents,
             orchestrator_state=self._heartbeat.snapshot(),
         )
 
@@ -699,8 +480,8 @@ class MoltbookPlugin(KernelPlugin):
     # =========================================================================
 
     def get_state_paths(self) -> List["Path"]:
-        if self._state_dir:
-            return [self._state_dir]
+        if self._s.state_dir:
+            return [self._s.state_dir]
         return []
 
     def snapshot_state(self) -> Dict[str, Any]:
@@ -722,37 +503,37 @@ class MoltbookPlugin(KernelPlugin):
 
     def on_pulse(self, kernel: "RealVibeKernel", transaction: object) -> HookResult:
         """Backward compat: delegates to same heartbeat logic."""
-        if not self._client:
+        if not self._s.client:
             return HookResult.error("Client not initialized")
         try:
-            heartbeat = self._client.sync_check_heartbeat()
-            self._last_heartbeat_error = None
+            heartbeat = self._s.client.sync_check_heartbeat()
+            self._s.last_heartbeat_error = None
         except Exception as e:
-            self._last_heartbeat_error = f"[{type(e).__name__}] {e!r}"
+            self._s.last_heartbeat_error = f"[{type(e).__name__}] {e!r}"
             heartbeat = {}
         self._heartbeat.dispatch_heartbeat(heartbeat)
         return HookResult.ok(
             data={
-                "heartbeat": "ok" if not self._last_heartbeat_error else "failed",
-                "error": self._last_heartbeat_error,
-                "offline": self._offline_mode,
-                "listener_wired": self._listener_wired,
-                "ticks_seen": self._tick_count,
+                "heartbeat": "ok" if not self._s.last_heartbeat_error else "failed",
+                "error": self._s.last_heartbeat_error,
+                "offline": self._s.offline_mode,
+                "listener_wired": self._s.listener_wired,
+                "ticks_seen": self._s.tick_count,
             }
         )
 
     def _on_mahamantra_tick(self, tick_state: object) -> None:
         """Called on every mahamantra.tick(). Polls once per full mantra cycle."""
-        if not self._client:
+        if not self._s.client:
             return
-        self._tick_count += 1
-        if self._tick_count % TICKS_PER_HEARTBEAT != 0:
+        self._s.tick_count += 1
+        if self._s.tick_count % TICKS_PER_HEARTBEAT != 0:
             return
         try:
-            heartbeat = self._client.sync_check_heartbeat()
-            self._last_heartbeat_error = None
+            heartbeat = self._s.client.sync_check_heartbeat()
+            self._s.last_heartbeat_error = None
         except Exception as e:
-            self._last_heartbeat_error = f"[{type(e).__name__}] {e!r}"
+            self._s.last_heartbeat_error = f"[{type(e).__name__}] {e!r}"
             logger.warning(f"DM check failed [{type(e).__name__}]: {e!r} — continuing heartbeat")
             heartbeat = {}
         self._heartbeat.dispatch_heartbeat(heartbeat)
@@ -762,7 +543,7 @@ class MoltbookPlugin(KernelPlugin):
         from vibe_core.plugins.moltbook import lifecycle
 
         lifecycle.unwire_from_mahamantra(self._s, self._on_mahamantra_tick)
-        self._client = None
+        self._s.client = None
         logger.info("Moltbook shutdown")
         return HookResult.ok()
 
@@ -786,11 +567,11 @@ class MoltbookPlugin(KernelPlugin):
                 for m in missions
                 if hasattr(m, "description") and m.description and not m.id.startswith("moltbook_kg_")
             ]
-        self._current_feed_topics = self._feed.scan_feed(
-            client=self._client,
-            proposer=self._proposer,
-            content_queue=self._content_queue,
-            service=self._service,
+        self._s.current_feed_topics = self._feed.scan_feed(
+            client=self._s.client,
+            proposer=self._s.proposer,
+            content_queue=self._s.content_queue,
+            service=self._s.service,
             mission_descriptions=mission_descs,
         )
 
@@ -802,21 +583,21 @@ class MoltbookPlugin(KernelPlugin):
             content = msg.get("content", msg.get("message", ""))
             source = msg.get("source", "broadcast")
             if content and len(content) > 10:
-                self._current_feed_topics.append(
+                self._s.current_feed_topics.append(
                     {
                         "title": content[:200],
                         "content": content,
-                        "id": f"agora_{source}_{self._agora_sequence}",
+                        "id": f"agora_{source}_{self._s.agora_sequence}",
                         "source": f"agora:{source}",
                     }
                 )
         if self._agent_events:
-            existing_titles = {str(t.get("title", "")).lower() for t in self._current_feed_topics}
+            existing_titles = {str(t.get("title", "")).lower() for t in self._s.current_feed_topics}
             for evt in self._agent_events[-10:]:
                 topic = evt.get("topic", "")
                 agent = evt.get("agent", "unknown")
                 if topic and len(topic) > 10 and topic.lower()[:80] not in existing_titles:
-                    self._current_feed_topics.append(
+                    self._s.current_feed_topics.append(
                         {
                             "title": topic[:200],
                             "content": topic,
@@ -840,12 +621,12 @@ class MoltbookPlugin(KernelPlugin):
             pass
         try:
             intents = planner.plan_cycle(
-                self._current_feed_topics,
+                self._s.current_feed_topics,
                 engagement_stats,
-                own_post_ids=self._own_post_ids,
-                commented_post_ids=self._commented_post_ids,
+                own_post_ids=self._s.own_post_ids,
+                commented_post_ids=self._s.commented_post_ids,
             )
-            self._current_intents = intents
+            self._s.current_intents = intents
             if intents:
                 logger.info(f"Strategy: {len(intents)} intents ({', '.join(i.action_type for i in intents)})")
         except Exception as e:
@@ -862,25 +643,25 @@ class MoltbookPlugin(KernelPlugin):
 
     def _track_engagement(self) -> None:
         self._engagement.track(
-            service=self._service,
-            own_post_ids=self._own_post_ids,
-            own_comment_ids=self._own_comment_ids,
-            comment_post_map=self._comment_post_map,
+            service=self._s.service,
+            own_post_ids=self._s.own_post_ids,
+            own_comment_ids=self._s.own_comment_ids,
+            comment_post_map=self._s.comment_post_map,
             event_log=self.agency_director.event_log,
             strategy_planner=self.strategy_planner,
         )
 
     def _adjust_intervals(self) -> None:
-        self._feed_interval, self._post_interval = self._engagement.adjust_intervals(
-            feed_interval=self._feed_interval,
-            post_interval=self._post_interval,
+        self._s.feed_interval, self._s.post_interval = self._engagement.adjust_intervals(
+            feed_interval=self._s.feed_interval,
+            post_interval=self._s.post_interval,
         )
 
     def _monitor_queue_health(self) -> None:
-        self._content_drainer.monitor_queue_health(self._content_queue, self._heartbeat_count)
+        self._content_drainer.monitor_queue_health(self._s.content_queue, self._heartbeat_count)
 
     def _drain_content_queue(self) -> None:
-        self._content_drainer.drain(self._content_queue, self._offline_mode)
+        self._content_drainer.drain(self._s.content_queue, self._s.offline_mode)
         self._persist_queue()
 
     # =========================================================================
@@ -891,8 +672,8 @@ class MoltbookPlugin(KernelPlugin):
         try:
             from vibe_core.di import ServiceRegistry
 
-            self._service = MoltbookService(self._client)
-            ServiceRegistry.register_factory(MoltbookProtocol, lambda: self._service)
+            self._s.service = MoltbookService(self._s.client)
+            ServiceRegistry.register_factory(MoltbookProtocol, lambda: self._s.service)
             logger.info("MoltbookProtocol registered in ServiceRegistry")
         except Exception as e:
             logger.warning(f"ServiceRegistry registration failed: {e}")
@@ -965,9 +746,9 @@ class MoltbookPlugin(KernelPlugin):
             department,
             duration_s,
             self._heartbeat_count,
-            self._content_queue.size,
-            self._last_heartbeat_error,
-            self._offline_mode,
+            self._s.content_queue.size,
+            self._s.last_heartbeat_error,
+            self._s.offline_mode,
         )
 
     def _reflect_on_patterns(self) -> None:
@@ -988,41 +769,41 @@ class MoltbookPlugin(KernelPlugin):
 
     def _trim_memory(self) -> None:
         cap = MAX_SEEN_IDS
-        if len(self._seen_message_ids) > cap:
-            self._seen_message_ids = set(sorted(self._seen_message_ids)[-cap:])
-        if len(self._seen_post_ids) > cap:
-            self._seen_post_ids = set(sorted(self._seen_post_ids)[-cap:])
-        if len(self._own_comment_ids) > cap:
-            self._own_comment_ids = set(sorted(self._own_comment_ids)[-cap:])
-        if len(self._comment_post_map) > cap:
-            keys = sorted(self._comment_post_map.keys())[-cap:]
-            self._comment_post_map = {k: self._comment_post_map[k] for k in keys}
-        if len(self._own_post_ids) > MAX_OWN_POST_IDS:
+        if len(self._s.seen_message_ids) > cap:
+            self._s.seen_message_ids = set(sorted(self._s.seen_message_ids)[-cap:])
+        if len(self._s.seen_post_ids) > cap:
+            self._s.seen_post_ids = set(sorted(self._s.seen_post_ids)[-cap:])
+        if len(self._s.own_comment_ids) > cap:
+            self._s.own_comment_ids = set(sorted(self._s.own_comment_ids)[-cap:])
+        if len(self._s.comment_post_map) > cap:
+            keys = sorted(self._s.comment_post_map.keys())[-cap:]
+            self._s.comment_post_map = {k: self._s.comment_post_map[k] for k in keys}
+        if len(self._s.own_post_ids) > MAX_OWN_POST_IDS:
             sorted_keys = sorted(
-                self._own_post_ids.keys(),
-                key=lambda k: self._own_post_ids[k].get("created_at", 0),
+                self._s.own_post_ids.keys(),
+                key=lambda k: self._s.own_post_ids[k].get("created_at", 0),
             )[-MAX_OWN_POST_IDS:]
-            self._own_post_ids = {k: self._own_post_ids[k] for k in sorted_keys}
-        if self._proposer and hasattr(self._proposer, "flush_cache"):
-            self._proposer.flush_cache()
+            self._s.own_post_ids = {k: self._s.own_post_ids[k] for k in sorted_keys}
+        if self._s.proposer and hasattr(self._s.proposer, "flush_cache"):
+            self._s.proposer.flush_cache()
 
     def _follow_back(self, sender: str) -> None:
-        if not sender or sender == "unknown" or sender in self._followed_agents:
+        if not sender or sender == "unknown" or sender in self._s.followed_agents:
             return
-        self._followed_agents.add(sender)
+        self._s.followed_agents.add(sender)
         proposal: ContentProposal = {
             "content_type": ContentType.FOLLOW.value,
             "to_agent": sender,
             "source": "follow_back",
             "priority": 0,
         }
-        self._content_queue.enqueue(proposal)
+        self._s.content_queue.enqueue(proposal)
         logger.info(f"Follow-back queued for {sender}")
 
     def _log_activity(self, event_type: str, payload: Optional[Dict[str, Any]] = None) -> None:
         from vibe_core.plugins.moltbook import lifecycle
 
-        lifecycle.log_activity(self._activity_log_path, event_type, self._heartbeat_count, payload)
+        lifecycle.log_activity(self._s.activity_log_path, event_type, self._heartbeat_count, payload)
 
     def _emit_event(self, event_type_name: str, message: str, data: Optional[Dict[str, Any]] = None) -> None:
         from vibe_core.plugins.moltbook import lifecycle
@@ -1030,8 +811,8 @@ class MoltbookPlugin(KernelPlugin):
         lifecycle.emit_event(event_type_name, message, data)
 
     def _discover_submolts(self) -> None:
-        self._feed.ensure_own_submolt(self._client, self._content_queue)
-        self._feed.discover_submolts(self._client, self._content_queue)
+        self._feed.ensure_own_submolt(self._s.client, self._s.content_queue)
+        self._feed.discover_submolts(self._s.client, self._s.content_queue)
 
     def _select_submolt(self, seed_text: str) -> Optional[str]:
         return self._feed.select_submolt(seed_text, lambda: self.agency_director.event_log)
@@ -1049,7 +830,7 @@ class MoltbookPlugin(KernelPlugin):
         self._wiring_module.wire_agora(kernel)
 
     def _broadcast_to_agora(self, content_type: str, content: str, metadata: Dict[str, Any]) -> None:
-        metadata["agent_name"] = self._agent_name
+        metadata["agent_name"] = self._s.agent_name
         self._wiring_module.broadcast_to_agora(content_type, content, metadata)
 
     def _try_vault(self, kernel: "RealVibeKernel") -> str:
@@ -1062,7 +843,7 @@ class MoltbookPlugin(KernelPlugin):
     def _boot_proposer(self) -> None:
         from vibe_core.plugins.moltbook.resonance_proposer import ResonanceProposer
 
-        self._proposer = ResonanceProposer(agent_name=self._agent_name)
+        self._s.proposer = ResonanceProposer(agent_name=self._s.agent_name)
         from vibe_core.plugins.moltbook import context_resolvers
 
         context_resolvers.register_all(self._s)
@@ -1072,7 +853,7 @@ class MoltbookPlugin(KernelPlugin):
         try:
             from vibe_core.di import ServiceRegistry
 
-            ServiceRegistry.register_factory(ContentProposalProtocol, lambda: self._proposer)
+            ServiceRegistry.register_factory(ContentProposalProtocol, lambda: self._s.proposer)
             logger.info("ContentProposalProtocol registered in ServiceRegistry")
         except Exception as e:
             logger.warning(f"ContentProposalProtocol registration failed: {e}")
@@ -1088,20 +869,20 @@ class MoltbookPlugin(KernelPlugin):
 
     def get_api(self) -> Optional[Dict[str, Any]]:
         return {
-            "client": self._client,
-            "offline": self._offline_mode,
-            "last_error": self._last_heartbeat_error,
-            "listener_wired": self._listener_wired,
-            "ticks_seen": self._tick_count,
+            "client": self._s.client,
+            "offline": self._s.offline_mode,
+            "last_error": self._s.last_heartbeat_error,
+            "listener_wired": self._s.listener_wired,
+            "ticks_seen": self._s.tick_count,
             "heartbeats": self._heartbeat_count,
-            "content_queue": self._content_queue.stats,
+            "content_queue": self._s.content_queue.stats,
             "intervals": {
-                "feed": self._feed_interval,
-                "post": self._post_interval,
-                "reply_check": self._reply_check_interval,
-                "profile_update": self._profile_update_interval,
+                "feed": self._s.feed_interval,
+                "post": self._s.post_interval,
+                "reply_check": self._s.reply_check_interval,
+                "profile_update": self._s.profile_update_interval,
             },
             "circuit_executor": bool(self._circuit_inst),
-            "agora_wired": bool(self._agora),
+            "agora_wired": bool(self._s.agora),
             "execute_content_circuit": self.execute_content_circuit,
         }
