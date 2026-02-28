@@ -558,79 +558,23 @@ class MoltbookPlugin(KernelPlugin):
         self._dm.process_dm_requests()
 
     def _scan_feed(self) -> None:
-        mission_descs: List[str] = []
-        planner = self.strategy_planner
-        if planner:
-            missions = planner.get_active_missions()
-            mission_descs = [
-                m.description
-                for m in missions
-                if hasattr(m, "description") and m.description and not m.id.startswith("moltbook_kg_")
-            ]
         self._s.current_feed_topics = self._feed.scan_feed(
             client=self._s.client,
             proposer=self._s.proposer,
             content_queue=self._s.content_queue,
             service=self._s.service,
-            mission_descriptions=mission_descs,
+            strategy_planner=self.strategy_planner,
         )
 
     def _gather_broadcast_intelligence(self) -> None:
         from vibe_core.plugins.moltbook import lifecycle
 
-        broadcasts = lifecycle.listen_agora(self._s)
-        for msg in broadcasts:
-            content = msg.get("content", msg.get("message", ""))
-            source = msg.get("source", "broadcast")
-            if content and len(content) > 10:
-                self._s.current_feed_topics.append(
-                    {
-                        "title": content[:200],
-                        "content": content,
-                        "id": f"agora_{source}_{self._s.agora_sequence}",
-                        "source": f"agora:{source}",
-                    }
-                )
-        if self._agent_events:
-            existing_titles = {str(t.get("title", "")).lower() for t in self._s.current_feed_topics}
-            for evt in self._agent_events[-10:]:
-                topic = evt.get("topic", "")
-                agent = evt.get("agent", "unknown")
-                if topic and len(topic) > 10 and topic.lower()[:80] not in existing_titles:
-                    self._s.current_feed_topics.append(
-                        {
-                            "title": topic[:200],
-                            "content": topic,
-                            "id": f"eventbus_{agent}_{hash(topic) % 10000}",
-                            "source": f"eventbus:{agent}",
-                        }
-                    )
-            self._agent_events.clear()
+        lifecycle.gather_broadcast_intelligence(self._s, self._agent_events)
 
     def _evaluate_strategy(self) -> None:
-        planner = self.strategy_planner
-        if not planner:
-            return
-        engagement_stats: Dict[str, Any] = {}
-        try:
-            from vibe_core.protocols.feedback import get_feedback_safe
+        from vibe_core.plugins.moltbook import lifecycle
 
-            stats = get_feedback_safe().get_stats()
-            engagement_stats = {"success_rate": stats.success_rate, "total_signals": stats.total_signals}
-        except Exception:
-            pass
-        try:
-            intents = planner.plan_cycle(
-                self._s.current_feed_topics,
-                engagement_stats,
-                own_post_ids=self._s.own_post_ids,
-                commented_post_ids=self._s.commented_post_ids,
-            )
-            self._s.current_intents = intents
-            if intents:
-                logger.info(f"Strategy: {len(intents)} intents ({', '.join(i.action_type for i in intents)})")
-        except Exception as e:
-            logger.warning(f"Strategy evaluation failed: {e}")
+        lifecycle.evaluate_strategy(self._s, self.strategy_planner)
 
     def _execute_intents(self) -> None:
         self._intent.execute_intents()
@@ -737,7 +681,7 @@ class MoltbookPlugin(KernelPlugin):
     def _emit_ouroboros_health(self) -> None:
         from vibe_core.plugins.moltbook import lifecycle
 
-        lifecycle.emit_ouroboros_health(self._s)
+        lifecycle.emit_ouroboros_health(self._s, self._heartbeat_count)
 
     def _record_heartbeat_reflection(self, department: str, duration_s: float) -> None:
         from vibe_core.plugins.moltbook import lifecycle

@@ -93,6 +93,9 @@ class EngagementTracker:
             reverse=True,
         )[:5]
 
+        # Cache fetched post data to avoid double API calls
+        fetched_posts: Dict[str, dict] = {}
+
         for post_id, meta in recent_posts:
             try:
                 post = service.get_post(post_id)
@@ -102,6 +105,8 @@ class EngagementTracker:
 
             if not isinstance(post, dict):
                 continue
+
+            fetched_posts[post_id] = post
 
             upvotes = int(post.get("upvotes", 0))
             downvotes = int(post.get("downvotes", 0))
@@ -126,7 +131,6 @@ class EngagementTracker:
             ctx = {"submolt": submolt, "upvotes": upvotes, "replies": replies, "net_score": net_score}
             if net_score > 0 or replies > 0:
                 feedback.signal_success("moltbook.post", ctx, duration_ms=0.0)
-                # Credit reward for engagement received
                 self._reward_engagement(post_id, upvotes + replies, "post")
             elif net_score < 0:
                 feedback.signal_failure("moltbook.post", "negative_engagement", ctx, duration_ms=0.0)
@@ -164,12 +168,12 @@ class EngagementTracker:
                         feedback.signal_failure("moltbook.comment", "negative_engagement", ctx, duration_ms=0.0)
                     break
 
-        # Feed engagement data to strategy planner for mission priority adjustment
+        # Feed cached engagement data to strategy planner (no extra API calls)
         if strategy_planner:
             for post_id, meta in recent_posts:
-                try:
-                    post = service.get_post(post_id)
-                    if isinstance(post, dict):
+                post = fetched_posts.get(post_id)
+                if post is not None:
+                    try:
                         strategy_planner.update_from_engagement(
                             {
                                 "post_id": post_id,
@@ -178,8 +182,8 @@ class EngagementTracker:
                                 "topic": str(meta.get("title", "")),
                             }
                         )
-                except Exception as e:
-                    logger.debug(f"Strategy planner update failed for {post_id}: {e}")
+                    except Exception as e:
+                        logger.debug(f"Strategy planner update failed for {post_id}: {e}")
 
         logger.debug(f"Engagement tracked: {len(recent_posts)} posts, {len(comment_ids)} comments")
 
@@ -200,7 +204,9 @@ class EngagementTracker:
         reward = delta * self._REWARD_PER_UPVOTE
         try:
             self._bank.transfer(
-                "ENGAGEMENT_REWARD", self._agent_id, reward,
+                "ENGAGEMENT_REWARD",
+                self._agent_id,
+                reward,
                 f"moltbook_{content_type}_engagement",
                 service_type="reward",
             )
