@@ -13,13 +13,14 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, Optional, Set
 
+from vibe_core.plugins.moltbook.state import (
+    PHASE_STATE_FILE,
+    QUEUE_STATE_FILE,
+    SEEN_STATE_FILE,
+)
 from vibe_core.protocols.moltbook_content import ContentQueue
 
 logger = logging.getLogger("MOLTBOOK_PERSIST")
-
-_QUEUE_STATE_FILE = "content_queue.json"
-_SEEN_STATE_FILE = "seen_ids.json"
-_PHASE_STATE_FILE = "phase_state.json"
 
 
 def _get_rajas_guna() -> object:
@@ -102,9 +103,9 @@ class PersistenceManager:
                 "timestamp": datetime.now(timezone.utc).isoformat(),
             }
             _governed_write(
-                _QUEUE_STATE_FILE,
+                QUEUE_STATE_FILE,
                 queue_data,
-                self._state_dir / _QUEUE_STATE_FILE,
+                self._state_dir / QUEUE_STATE_FILE,
                 actor="moltbook_persistence",
             )
 
@@ -135,9 +136,9 @@ class PersistenceManager:
                 "timestamp": datetime.now(timezone.utc).isoformat(),
             }
             _governed_write(
-                _SEEN_STATE_FILE,
+                SEEN_STATE_FILE,
                 seen_data,
-                self._state_dir / _SEEN_STATE_FILE,
+                self._state_dir / SEEN_STATE_FILE,
                 actor="moltbook_persistence",
             )
 
@@ -157,7 +158,7 @@ class PersistenceManager:
             return result
 
         # Restore queue
-        queue_path = self._state_dir / _QUEUE_STATE_FILE
+        queue_path = self._state_dir / QUEUE_STATE_FILE
         try:
             if queue_path.exists():
                 data = json.loads(queue_path.read_text())
@@ -178,7 +179,7 @@ class PersistenceManager:
             logger.warning(f"Queue restore failed: {e}")
 
         # Restore seen IDs + tracking sets
-        seen_path = self._state_dir / _SEEN_STATE_FILE
+        seen_path = self._state_dir / SEEN_STATE_FILE
         try:
             if seen_path.exists():
                 data = json.loads(seen_path.read_text())
@@ -236,9 +237,9 @@ class PersistenceManager:
                 "timestamp": datetime.now(timezone.utc).isoformat(),
             }
             _governed_write(
-                _PHASE_STATE_FILE,
+                PHASE_STATE_FILE,
                 phase_data,
-                self._state_dir / _PHASE_STATE_FILE,
+                self._state_dir / PHASE_STATE_FILE,
                 actor="moltbook_persistence",
             )
         except Exception as e:
@@ -253,7 +254,7 @@ class PersistenceManager:
         result: Dict[str, Any] = {}
         if not self._state_dir:
             return result
-        phase_path = self._state_dir / _PHASE_STATE_FILE
+        phase_path = self._state_dir / PHASE_STATE_FILE
         try:
             if not phase_path.exists():
                 return result

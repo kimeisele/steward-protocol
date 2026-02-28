@@ -609,6 +609,17 @@ class MoltbookPlugin(KernelPlugin):
         except Exception as e:
             logger.warning(f"FeedbackProtocol registration failed: {e}")
 
+    def _register_reflection(self) -> None:
+        try:
+            from vibe_core.di import ServiceRegistry
+            from vibe_core.protocols.reflection import BasicReflection, ReflectionProtocol
+
+            if not ServiceRegistry.is_registered(ReflectionProtocol):
+                ServiceRegistry.register_factory(ReflectionProtocol, BasicReflection)
+                logger.info("ReflectionProtocol registered in ServiceRegistry")
+        except Exception as e:
+            logger.warning(f"ReflectionProtocol registration failed: {e}")
+
     def _wire_to_mahamantra(self) -> None:
         from vibe_core.plugins.moltbook import lifecycle
 
