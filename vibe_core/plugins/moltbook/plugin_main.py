@@ -29,7 +29,7 @@ from vibe_core.plugins.moltbook.state import (
     MoltbookState,
 )
 from vibe_core.protocols.moltbook import MoltbookProtocol
-from vibe_core.protocols.moltbook_content import ContentProposal, ContentProposalProtocol, ContentQueue, ContentType
+from vibe_core.protocols.moltbook_content import ContentProposal, ContentProposalProtocol, ContentType
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -37,9 +37,6 @@ if TYPE_CHECKING:
     from vibe_core.kernel_impl import RealVibeKernel
 
 logger = logging.getLogger("MOLTBOOK")
-
-# Backward compat: tests import this constant
-_TICKS_PER_HEARTBEAT = TICKS_PER_HEARTBEAT
 
 
 class MoltbookPlugin(KernelPlugin):
@@ -54,18 +51,6 @@ class MoltbookPlugin(KernelPlugin):
     # State field names for __getattr__/__setattr__ delegation.
     # Access to plugin._xxx delegates to plugin._s.xxx when xxx is a state field.
     _STATE_FIELDS: frozenset = frozenset(MoltbookState.__slots__)
-
-    # --- Constants exposed as class attrs for backward compat ---
-    _DEFAULT_FEED_INTERVAL = MoltbookState().feed_interval
-    _DEFAULT_POST_INTERVAL = MoltbookState().post_interval
-    _DEFAULT_REPLY_CHECK_INTERVAL = MoltbookState().reply_check_interval
-    _DEFAULT_PROFILE_UPDATE_INTERVAL = MoltbookState().profile_update_interval
-    _MAX_SEEN_IDS = MAX_SEEN_IDS
-    _MAX_OWN_POST_IDS = MAX_OWN_POST_IDS
-    _QUEUE_STATE_FILE = "content_queue.json"
-    _SEEN_STATE_FILE = "seen_ids.json"
-    _PHASE_STATE_FILE = "phase_state.json"
-    _ACTIVITY_LOG_FILE = "activity.jsonl"
 
     def __init__(self):
         super().__init__()
@@ -86,7 +71,6 @@ class MoltbookPlugin(KernelPlugin):
         self._proposal_builder_inst = None
         self._vault_inst = None
         self._circuit_inst = None
-        self._guna_inst = None
         self._snapshot_inst = None
         self._wiring_inst = None
 
@@ -321,14 +305,6 @@ class MoltbookPlugin(KernelPlugin):
                 emit_event=self._emit_event,
             )
         return self._circuit_inst
-
-    @property
-    def _guna(self):
-        if self._guna_inst is None:
-            from vibe_core.plugins.moltbook.managers.guna_enforcer import GunaEnforcer
-
-            self._guna_inst = GunaEnforcer(actions=self)
-        return self._guna_inst
 
     @property
     def _snapshot(self):

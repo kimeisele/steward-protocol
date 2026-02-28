@@ -88,7 +88,8 @@ class TestEnsureOwnSubmolt:
         with patch("vibe_core.plugins.moltbook.managers.feed.run_async", return_value=submolts):
             feed.ensure_own_submolt(client, queue)
         client.sync_create_submolt.assert_called_once_with(
-            "steward-protocol", "Steward Protocol",
+            "steward-protocol",
+            "Steward Protocol",
             "Autonomous systems engineering — infrastructure, observability, distributed systems.",
         )
         assert "steward-protocol" in feed._subscribed_submolts
@@ -122,8 +123,9 @@ class TestSelectSubmolt:
         result = feed.select_submolt("test", lambda: MagicMock())
         assert result is None
 
-    def test_returns_none_without_resonate(self):
+    def test_returns_none_with_empty_content(self):
+        """select_submolt returns None when content tokenizes to nothing."""
         feed = _make_feed(subscribed_submolts={"general"})
-        with patch("vibe_core.mahamantra.substrate.encoding.resonance_ranker.resonate", side_effect=Exception("no resonate")):
-            result = feed.select_submolt("test", lambda: MagicMock())
+        # All short/stop words → empty token set → no Jaccard match possible
+        result = feed.select_submolt("a to is", lambda: MagicMock())
         assert result is None
