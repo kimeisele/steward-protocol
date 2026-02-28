@@ -209,6 +209,11 @@ class SankalpaRegistry:
     # Public API
     # -------------------------------------------------------------------------
 
+    def add_mission(self, mission: SankalpaMission) -> None:
+        """Add a mission to the registry and persist."""
+        self._missions[mission.id] = mission
+        self._save()
+
     def get_active_missions(self) -> List[SankalpaMission]:
         """Get all active missions."""
         return [m for m in self._missions.values() if m.status == MissionStatus.ACTIVE]
