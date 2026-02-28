@@ -1485,6 +1485,7 @@ class MoltbookPlugin(KernelPlugin):
             intents = planner.plan_cycle(
                 self._current_feed_topics, engagement_stats,
                 own_post_ids=self._own_post_ids,
+                commented_post_ids=self._commented_post_ids,
             )
             self._current_intents = intents
             if intents:

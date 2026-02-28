@@ -951,11 +951,10 @@ class TestIntentDiversity:
             {"id": "p2", "title": "decentralized protocols for agent coordination analysis", "content": ""},
         ]
         result = planner.plan_cycle(topics, {})
-        posts = [i for i in result if i.action_type == "post"]
         comments = [i for i in result if i.action_type == "comment"]
-        # All matched → comments only, no forced post
-        assert len(posts) == 0, f"Should not force post when all missions matched: {[(i.action_type, i.mission_id) for i in result]}"
+        # With fewer than TRINITY comments, a post may be synthesized from feed
         assert len(comments) >= 1, "Should have comment intents"
+        assert len(result) <= TRINITY, "Should not exceed TRINITY intents"
 
     def test_semantic_dedup_skips_recent_post(self, _mock_buddhi):
         """Post intent is skipped when topic semantically overlaps with own recent post."""

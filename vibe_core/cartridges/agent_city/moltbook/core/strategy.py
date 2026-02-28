@@ -297,6 +297,7 @@ class MoltbookStrategyPlanner:
         feed_topics: List[Dict[str, Any]],
         engagement_stats: Dict[str, Any],
         own_post_ids: Optional[Dict[str, Dict[str, object]]] = None,
+        commented_post_ids: Optional[set] = None,
     ) -> List[StrategicIntent]:
         """DHARMA phase: evaluate missions → prioritized action list.
 
@@ -363,8 +364,12 @@ class MoltbookStrategyPlanner:
             shuffled = list(matches)
             random.shuffle(shuffled)
 
-        # Build comment intents from matches
+        # Build comment intents — skip already-commented posts
+        _commented = commented_post_ids or set()
         for match in shuffled:
+            if match.post_id in _commented:
+                continue  # Already commented — don't waste an intent slot
+
             eng = self._engagement_cache.get(match.mission_id, {})
             eng_context = ""
             if eng:
@@ -386,74 +391,58 @@ class MoltbookStrategyPlanner:
                 )
             )
 
-        # COMMENT-FIRST: Only add a post when:
-        # 1. There's an unmatched mission
-        # 2. SravanamCheck passed (consumed enough feed)
-        # 3. Topic doesn't semantically overlap recent posts
-        # 4. Engagement threshold: skip posts if 0 engagement on recent posts
-        matched_mission_ids = {m.mission_id for m in matches}
-        highest_prio = max((i.priority for i in intents), default=5)
-
-        if not can_post:
-            logger.info("SravanamCheck: insufficient input — comments only this cycle")
-            intents.sort(key=lambda i: i.priority, reverse=True)
-            return intents[:TRINITY]
-
-        # Engagement threshold: if we've posted ≥3 times with 0 engagement, comments only
-        if own_post_ids and self._zero_engagement_streak(own_post_ids):
-            logger.info("Engagement threshold: 0 engagement on recent posts — comments only")
-            intents.sort(key=lambda i: i.priority, reverse=True)
-            return intents[:TRINITY]
-
-        for mission in missions:
-            if mission.id not in matched_mission_ids:
-                post_topic = ""
-                if feed_topics:
-                    top_by_engagement = sorted(
-                        feed_topics, key=lambda t: t.get("upvotes", 0), reverse=True
-                    )
-                    theme_titles = [
-                        str(t.get("title", "")) for t in top_by_engagement[:3] if t.get("title")
-                    ]
-                    if theme_titles:
-                        post_topic = "; ".join(theme_titles)[:300]
-                if not post_topic:
-                    logger.info(f"No feed topics for post — staying silent (mission '{mission.name}')")
-                    continue
-
-                # Keyword Jaccard dedup against own recent posts
-                if own_post_ids and self._semantic_dedup(post_topic, own_post_ids):
-                    logger.info(f"Semantic dedup: '{post_topic[:60]}' similar to recent post")
-                    continue
-
-                eng = self._engagement_cache.get(mission.id, {})
-                eng_context = ""
-                if eng:
-                    eng_context = f"Success rate: {eng.get('success_rate', 0):.0%}"
-                elif global_eng:
-                    eng_context = global_eng
-
-                # Buddhi-driven format for post
-                post_mode = "SATTVA"
-                try:
-                    from vibe_core.mahamantra.substrate.buddhi import get_buddhi
-                    post_mode = get_buddhi().think(post_topic).mode
-                except Exception as e:
-                    logger.warning(f"Post Buddhi unavailable, using SATTVA: {e}")
-
-                intents.append(
-                    StrategicIntent(
-                        action_type="post",
-                        topic=post_topic,
-                        reasoning=f"Mission '{mission.name}' — proactive post, themes from feed",
-                        priority=highest_prio + 1,
-                        mission_id=mission.id,
-                        engagement_context=eng_context,
-                        content_format=self._buddhi_select_format("post", post_mode),
-                    )
+        # POST LOGIC: when we have capacity AND feed themes to synthesize.
+        # Post when: SravanamCheck passes + not in zero-engagement streak +
+        # fewer than TRINITY comment intents (room for a post).
+        if can_post and len(intents) < TRINITY and feed_topics:
+            if not (own_post_ids and self._zero_engagement_streak(own_post_ids)):
+                # Synthesize from top feed themes
+                top_by_engagement = sorted(
+                    feed_topics, key=lambda t: t.get("upvotes", 0), reverse=True
                 )
-                logger.info(f"Post from unmatched mission '{mission.name}'")
-                break
+                theme_titles = [
+                    str(t.get("title", "")) for t in top_by_engagement[:3] if t.get("title")
+                ]
+                if theme_titles:
+                    post_topic = "; ".join(theme_titles)[:300]
+
+                    # Dedup against own recent posts
+                    if not (own_post_ids and self._semantic_dedup(post_topic, own_post_ids)):
+                        post_mode = "SATTVA"
+                        try:
+                            from vibe_core.mahamantra.substrate.buddhi import get_buddhi
+                            post_mode = get_buddhi().think(post_topic).mode
+                        except Exception as e:
+                            logger.warning(f"Post Buddhi unavailable: {e}")
+
+                        highest_prio = max((i.priority for i in intents), default=5)
+                        best_mission = missions[0] if missions else None
+                        mid = best_mission.id if best_mission else "default"
+                        eng = self._engagement_cache.get(mid, {})
+                        post_eng = ""
+                        if eng:
+                            post_eng = f"Success rate: {eng.get('success_rate', 0):.0%}"
+                        elif global_eng:
+                            post_eng = global_eng
+                        intents.append(
+                            StrategicIntent(
+                                action_type="post",
+                                topic=post_topic,
+                                reasoning="Proactive post — synthesizing feed themes",
+                                priority=highest_prio + 1,
+                                mission_id=mid,
+                                engagement_context=post_eng,
+                                content_format=self._buddhi_select_format("post", post_mode),
+                            )
+                        )
+                        logger.info(f"Post intent: synthesizing {len(theme_titles)} feed themes")
+                    else:
+                        logger.info("Post dedup: similar to recent post, skipping")
+            else:
+                logger.info("Zero engagement streak — comments only")
+
+        if not can_post and intents:
+            logger.info("SravanamCheck: insufficient input — comments only this cycle")
 
         intents.sort(key=lambda i: i.priority, reverse=True)
         return intents[:TRINITY]
