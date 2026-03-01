@@ -342,6 +342,14 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         callback(gate: TattvaGate, ctx: dict) -> None
             gate: which gate was entered
             ctx: mutable dict with pipeline state at that point
+
+        PRODUCTION CALLERS: 0 (2026-03-01).
+        Prepared infrastructure. The gate_hooks dict is initialized and
+        _fire_gate() checks it on every pipeline execution — but no hooks
+        are registered in production. Gate observers use the GateProvider
+        protocol (gate_providers.py / wire_gate_providers()) instead.
+        Register here for lightweight ad-hoc callbacks that don't need
+        the full observer wiring.
         """
         if gate not in self._gate_hooks:
             self._gate_hooks[gate] = []

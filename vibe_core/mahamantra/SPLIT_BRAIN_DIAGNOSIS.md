@@ -162,11 +162,17 @@ obwohl VenuService sie schon separat treibt. Das ist jetzt revertiert.
 - [x] `test_daemon_soul.py`: Mock-Target von `daemon.mahamantra` → `daemon._singularity` angepasst
 - **3920 Tests grün** (1 pre-existing failure in test_io_sentinel)
 
-### Priorität 2: Tote Code-Pfade markieren
-- [ ] MantraKernel.process_queue() wird nie aufgerufen → Docstring: "Called by VenuService when intents are queued"
-- [ ] MantraClock hat 0 Voices → Docstring: "Voices are added by consumers via VenuService.clock.add_voice()"
-- [ ] gate_hooks hat 0 Hooks → Docstring: "Hooks registered via lotus.on_gate()"
-- [ ] TattvaRegistry hat 0 Gate Providers → Docstring: "Providers registered via registry.register_gate_provider()"
+### Priorität 2: Tote Code-Pfade markieren — DONE (2026-03-01)
+- [x] MantraKernel.process_queue() → Docstring: IS called from singularity.tick() every tick,
+      queue is empty because nobody calls MantraKernel.queue() yet. HealingIntentResolver registered.
+- [x] MantraClock.add_voice() → Docstring: 0 production callers. Prepared via VenuService.clock.add_voice().
+- [x] lotus_core.on_gate() → Docstring: 0 hooks registered. GateProvider protocol used instead in production.
+- [x] chamber.sankirtan() → Docstring: 0 production callers. Prepared for batch cell processing.
+- [x] chamber.spell_kirtan() → Docstring: 0 production callers. Prepared for phoneme-driven transformation.
+- [x] antaranga.set_slot() → Docstring: 0 production callers. Direct-write alternative to collide();
+      production uses collide() (merge semantics). Use set_slot() for initialization/testing.
+- [ ] TattvaRegistry has 0 Gate Providers → gate_providers.wire_gate_providers() called at boot,
+      but providers fire 0 callbacks because no external agents have subscribed yet.
 
 ### Priorität 3: MahaKernel-Singleton klären — DONE
 - [x] `MahaKernel.__getattr__` entfernt (war toter Code, niemand greift über MahaKernel auf Singularity-Attribute zu)

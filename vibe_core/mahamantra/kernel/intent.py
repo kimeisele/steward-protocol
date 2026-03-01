@@ -380,7 +380,15 @@ class MantraKernel:
         self._queue.push(intent)
 
     def process_queue(self) -> List[IntentResult[object]]:
-        """Process all queued intents."""
+        """
+        Process all queued intents and return results.
+
+        CALLER: singularity.py Singularity.tick() (via get_kernel().process_queue()).
+        Called on every tick inside a try/except — silently skipped if kernel
+        not available. The queue is typically empty (0 intents) in production
+        because nobody calls MantraKernel.queue() yet. The only registered
+        resolver is HealingIntentResolver (wired at lotus.bootstrap()).
+        """
         results: List[IntentResult[object]] = []
         while not self._queue.is_empty:
             intent = self._queue.pop()

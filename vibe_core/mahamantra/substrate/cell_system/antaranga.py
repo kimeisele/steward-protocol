@@ -121,12 +121,14 @@ def _get_shabda_salt() -> tuple:
         for p in range(WORDS):
             r0, v0, f0, c0 = unpack_frame(prabhupada_salt(p * 2))
             r1, v1, f1, c1 = unpack_frame(prabhupada_salt(p * 2 + 1))
-            entries.append((
-                (r0 + r1) // 2,
-                (v0 + v1) // 2,
-                (f0 + f1) // 2,
-                (c0 + c1) // 2,
-            ))
+            entries.append(
+                (
+                    (r0 + r1) // 2,
+                    (v0 + v1) // 2,
+                    (f0 + f1) // 2,
+                    (c0 + c1) // 2,
+                )
+            )
         _SHABDA_SALT = tuple(entries)
     except Exception:
         _SHABDA_SALT = (_NEUTRAL_SALT,) * WORDS
@@ -240,7 +242,24 @@ class AntarangaRegistry:
         integrity: int,
         cycle: int,
     ) -> None:
-        """Write full slot. O(1)."""
+        """
+        Unconditional direct-write to a slot. O(1).
+
+        SEMANTICS vs collide():
+            set_slot()  — Overwrites unconditionally. No merge, no resonance check.
+                          Use for initialization, snapshot restore, and testing.
+            collide()   — Context-aware write: SILENCE → Presence (visitor takes slot),
+                          RESONANCE → merge (prana add, integrity avg).
+                          Used in the production path (dance() → chamber).
+
+        PRODUCTION CALLERS: 0 (2026-03-01).
+        The hot path (chamber.dance) exclusively uses collide() + apply_diw()
+        because merge semantics are always required there.
+        snapshot()/restore() bypass both by copying raw bytes directly.
+
+        Use set_slot() when you need to place a known state unconditionally —
+        e.g., seeding initial conditions or writing from outside the dance() flow.
+        """
         offset = slot * SLOT_BYTES
         struct.pack_into(
             _SLOT_FMT,

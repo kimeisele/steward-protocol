@@ -73,7 +73,14 @@ class MantraClock:
         return self._tick.position
 
     def add_voice(self) -> MantraVoiceProtocol:
-        """Create and register a new voice."""
+        """
+        Create and register a new voice.
+
+        PRODUCTION CALLERS: 0 (2026-03-01).
+        This is prepared infrastructure. Consumers register via VenuService.clock.add_voice().
+        The VenuService owns the MantraClock instance; nobody has registered a voice yet.
+        MantraClock.tick_once() runs every heartbeat but fires 0 voice tasks until voices are added.
+        """
         voice = MantraVoice(voice_id=self._next_voice_id)
         self._next_voice_id += 1
         self._voices.append(voice)

@@ -180,12 +180,14 @@ def _get_shabda_salt() -> tuple:
         for p in range(WORDS):
             r0, v0, f0, c0 = unpack_frame(prabhupada_salt(p * 2))
             r1, v1, f1, c1 = unpack_frame(prabhupada_salt(p * 2 + 1))
-            entries.append((
-                (r0 + r1) // 2,      # RMS average
-                (v0 + v1) // 2,      # Varga average (integer)
-                (f0 + f1) // 2,      # F0×10 average
-                (c0 + c1) // 2,      # Centroid/100 average
-            ))
+            entries.append(
+                (
+                    (r0 + r1) // 2,  # RMS average
+                    (v0 + v1) // 2,  # Varga average (integer)
+                    (f0 + f1) // 2,  # F0×10 average
+                    (c0 + c1) // 2,  # Centroid/100 average
+                )
+            )
         _SHABDA_SALT = tuple(entries)
     except Exception:
         _SHABDA_SALT = (_NEUTRAL_SALT,) * WORDS
@@ -427,6 +429,12 @@ class SankirtanChamber(Generic[C]):
 
         Cells merge into a MahaCluster (Unity in Diversity).
 
+        PRODUCTION CALLERS: 0 (2026-03-01).
+        Prepared for batch-processing scenarios (e.g. city districts processing
+        multiple citizen cells in one beat). The logic is correct and tested;
+        it is not yet called from any production path. Use when you need to
+        process a list of cells as a group and get their combined resonance.
+
         Args:
             cells: List of cells to transform/merge
 
@@ -472,12 +480,17 @@ class SankirtanChamber(Generic[C]):
         THE_FLUTE_CYCLE. The input's RAMA coordinates literally play
         through Krishna's flute, and each phoneme becomes a transformation.
 
-        dance()  = heartbeat (LUT)
-        kirtan() = heartbeat × cycles
-        spell_kirtan() = melody (input-derived DIWs via shared orchestrator)
+        dance()       = heartbeat (LUT, 1 step)
+        kirtan()      = heartbeat × cycles (N × 16 steps)
+        spell_kirtan() = melody (input-derived DIWs via orchestrator.spell())
 
         Same reactor (_apply_diw), same memory (Registry), same resonance.
-        Different fuel.
+        Different fuel: phonetic coordinates → DIW sequence.
+
+        PRODUCTION CALLERS: 0 (2026-03-01).
+        Prepared for phoneme-driven transformation (e.g. user speech input
+        directly modulating cell state via RAMA coordinates). Use when you
+        have varnamala_codec output and want the cell to resonate with it.
 
         Args:
             cell: The cell to transform
@@ -617,7 +630,9 @@ class SankirtanChamber(Generic[C]):
         # Centroid → integrity: spectral brightness amplifies integrity effect
         # Median ~120. Normalize: 0→0.5×, 128→1.0×, 511→1.5×
         cent_factor = (128 + min(255, salt_cent)) / 256
-        cell.lifecycle.integrity = max(0, min(COSMIC_FRAME, cell.lifecycle.integrity + int(ic_cf * intensity * cent_factor)))
+        cell.lifecycle.integrity = max(
+            0, min(COSMIC_FRAME, cell.lifecycle.integrity + int(ic_cf * intensity * cent_factor))
+        )
 
         # Varga → cycle: articulation depth modulates progression
         # Varga 0 (throat/deep) adds more, Varga 4 (lips/shallow) adds less
