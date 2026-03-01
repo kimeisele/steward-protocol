@@ -417,9 +417,9 @@ class TestVivekaPriority:
             {"id": "p1", "title": "AI governance and transparent decision-making autonomous", "content": ""},
         ]
         result = planner.plan_cycle(topics, {})
-        assert len(result) >= 1
-        # Low Viveka: prana=1000 → ~2.8, integrity=0.2 → 4, SHIVA → 5 = ~12 → priority=1
-        assert result[0].priority <= 3
+        # Low Viveka: prana=1000 → priority=1 → filtered by quality gate (priority < 4)
+        # Steward doesn't waste cycles on low-confidence content
+        assert len(result) == 0
 
 
 # ---------------------------------------------------------------------------

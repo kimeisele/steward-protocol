@@ -1,8 +1,10 @@
 name: "💓 Moltbook Agent Heartbeat"
 
 on:
-  schedule:
-    - cron: "*/10 * * * *"
+  # DISABLED: Moltbook agent moving to agent-city repo where it belongs.
+  # steward-protocol = library/kernel, agent-city = runtime/agents.
+  # schedule:
+  #   - cron: "*/10 * * * *"
   workflow_dispatch:
 
 concurrency:
