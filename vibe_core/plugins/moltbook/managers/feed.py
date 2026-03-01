@@ -217,8 +217,11 @@ class FeedAnalyzer:
                 client.sync_create_submolt(self._OWN_SUBMOLT, self._OWN_SUBMOLT_DISPLAY, self._OWN_SUBMOLT_DESC)
                 logger.info(f"Created submolt: {self._OWN_SUBMOLT}")
             except Exception as e:
-                logger.warning(f"Submolt creation failed: {e}")
-                return
+                if "409" in str(e) or "already taken" in str(e).lower():
+                    logger.info(f"Submolt '{self._OWN_SUBMOLT}' already exists (409)")
+                else:
+                    logger.warning(f"Submolt creation failed: {e}")
+                    return
 
         # Subscribe
         self._subscribed_submolts.add(self._OWN_SUBMOLT)

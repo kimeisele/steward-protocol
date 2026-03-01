@@ -64,6 +64,12 @@ _AUTHORIZED_FILES: Final[FrozenSet[str]] = frozenset(
         "io_sentinel.py",
         "sync_holon.py",
         "commit_authority.py",
+        # Moltbook plugin persistence (governed write path)
+        "persistence.py",
+        "lifecycle.py",
+        # Mahamantra core serialization
+        "compression.py",
+        "will.py",
     }
 )
 
@@ -121,10 +127,14 @@ def _inspect_caller(call_type: str) -> Optional[SentinelViolation]:
     # stack[1] = _guarded_dump / _guarded_dumps
     # stack[2+] = real caller chain
     for frame_info in stack[2:]:
-        filename = Path(frame_info.filename).name
+        filepath = frame_info.filename
+        filename = Path(filepath).name
         # Skip internal frames (json module itself, this module)
         if filename in ("__init__.py", "io_sentinel.py", "encoder.py"):
             continue
+        # Skip external libraries — they serialize for HTTP/SDK, not rogue disk I/O
+        if "site-packages" in filepath:
+            return None
         if filename in _AUTHORIZED_FILES:
             return None
         return SentinelViolation(

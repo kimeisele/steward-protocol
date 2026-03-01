@@ -839,8 +839,9 @@ class MoltbookClient:
             if isinstance(res, dict):
                 return res.get("posts", res.get("items", []))
             return res if isinstance(res, list) else []
-        except Exception:
-            # Endpoint may not exist — fallback to personalized feed + filter
+        except Exception as e:
+            # 404 = endpoint doesn't exist, expected — fallback to feed + filter
+            logger.debug(f"Submolt feed endpoint unavailable for '{name}': {e}")
             feed = await self.get_personalized_feed(sort=sort, limit=limit * 2)
             return [p for p in feed if isinstance(p, dict) and (p.get("submolt", {}) or {}).get("name", "") == name]
 
