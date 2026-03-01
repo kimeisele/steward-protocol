@@ -10,7 +10,6 @@ Tests what matters:
     6. Backward compat: compose_from_wave delegates to adapter
 """
 
-
 from vibe_core.mahamantra.protocols._seed import HALVES, PANCHA, QUARTERS, SEVEN
 
 # =============================================================================

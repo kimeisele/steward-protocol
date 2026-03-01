@@ -13,13 +13,20 @@ neighborhoods because the RAMA coord system IS structured by articulation.
 Key insight from experiment 6: elements MATCH even when exact coords differ.
 The element-weighted edit distance handles this.
 """
-import sys; sys.path.insert(0, ".")
+
+import sys
+
+sys.path.insert(0, ".")
 
 from vibe_core.mahamantra.sound.shabda_intake import ShabdaIntake
 from vibe_core.mahamantra.sound.shabda_processor import stream_to_rama
 from vibe_core.mahamantra.sound.shabda_decoder import (
-    segment_stream, _dedup_coords, _stable_coords, _score_candidate,
-    get_pronunciation_dict, PronunciationDict,
+    segment_stream,
+    _dedup_coords,
+    _stable_coords,
+    _score_candidate,
+    get_pronunciation_dict,
+    PronunciationDict,
 )
 from vibe_core.mahamantra.substrate.encoding.phonetic_encoder import encode_text
 
@@ -50,13 +57,9 @@ for si, seg in enumerate(segments):
 
     # Wider search: ±2 on first coord + length-based
     for fc in range(max(0, first_coord - 2), min(49, first_coord + 3)):
-        candidates.extend(
-            pdict.candidates_for_segment(fc, coord_len, length_tolerance=3)
-        )
+        candidates.extend(pdict.candidates_for_segment(fc, coord_len, length_tolerance=3))
     if len(candidates) < 20:
-        candidates.extend(
-            pdict.all_candidates_for_length(coord_len, length_tolerance=2)
-        )
+        candidates.extend(pdict.all_candidates_for_length(coord_len, length_tolerance=2))
 
     best_word = ""
     best_score = 0.0
@@ -75,8 +78,10 @@ for si, seg in enumerate(segments):
 
     if best_score >= 0.25:
         deduped = _dedup_coords(raw)
-        print(f"  [{ms_s:5d}-{ms_e:5d}ms] {best_word:20s} conf={best_score:.3f}  "
-              f"stable={stable[:5]} (raw={len(raw)},ded={len(deduped)},stab={len(stable)})")
+        print(
+            f"  [{ms_s:5d}-{ms_e:5d}ms] {best_word:20s} conf={best_score:.3f}  "
+            f"stable={stable[:5]} (raw={len(raw)},ded={len(deduped)},stab={len(stable)})"
+        )
         words_out.append(best_word)
 
 EXPECTED = "Eh not exactly But I came to preach the gospel of Krishna consciousness and fortunately I met some enthusiastic young boys and girls"
@@ -86,4 +91,4 @@ print(f"\nTRANSCRIPT: {' '.join(words_out)}")
 print(f"\nEXPECTED: {EXPECTED}")
 
 correct = sum(1 for w in words_out if w.lower() in expected_words)
-print(f"\nCorrect: {correct}/{len(words_out)} ({correct/max(1,len(words_out))*100:.0f}%)")
+print(f"\nCorrect: {correct}/{len(words_out)} ({correct / max(1, len(words_out)) * 100:.0f}%)")

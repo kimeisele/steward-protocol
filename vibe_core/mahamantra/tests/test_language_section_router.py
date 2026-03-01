@@ -4,7 +4,6 @@ Tests for substrate/language/section_router.py — Kapitel 18 Section Routing.
 Only tests what is DERIVED from protocol constants, not invented.
 """
 
-
 from vibe_core.mahamantra.protocols._seed import (
     GITA_CHAPTERS,
     HARE_COUNT,

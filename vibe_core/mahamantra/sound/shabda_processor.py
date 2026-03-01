@@ -60,10 +60,7 @@ from vibe_core.mahamantra.substrate import (
 # Pre-build: for each (element, varga_class) pair, which RAMA coords are possible?
 # varga_class: 0=SVARA (vowel), 1=SPARSHA (consonant stop), 2=SHESHA (semivowel/sibilant)
 _ELEMENT_VARGA_TO_COORDS: Tuple[Tuple[Tuple[int, ...], ...], ...] = tuple(
-    tuple(
-        tuple(c for c in range(49) if COORD_ELEMENT[c] == elem and COORD_VARGA[c] == vc)
-        for vc in range(3)
-    )
+    tuple(tuple(c for c in range(49) if COORD_ELEMENT[c] == elem and COORD_VARGA[c] == vc) for vc in range(3))
     for elem in range(PANCHA)
 )
 
@@ -72,10 +69,7 @@ _ELEMENT_VARGA_TO_COORDS: Tuple[Tuple[Tuple[int, ...], ...], ...] = tuple(
 # For SPARSHA: unvoiced stop (sub=0) is the neutral form
 # For SHESHA: first member (sub=0)
 _REPRESENTATIVE: Tuple[Tuple[int, ...], ...] = tuple(
-    tuple(
-        _ELEMENT_VARGA_TO_COORDS[elem][vc][0] if _ELEMENT_VARGA_TO_COORDS[elem][vc] else 0
-        for vc in range(3)
-    )
+    tuple(_ELEMENT_VARGA_TO_COORDS[elem][vc][0] if _ELEMENT_VARGA_TO_COORDS[elem][vc] else 0 for vc in range(3))
     for elem in range(PANCHA)
 )
 
@@ -94,14 +88,18 @@ _RMS_VOWEL_THRESHOLD = 80
 _CENTROID_SIBILANT_THRESHOLD = 150
 
 # Transition detection thresholds (consonants within voiced speech)
-_RMS_DIP_NUMER = 6       # rms < prev_rms * 6 // 10 → 40% energy drop = closure
+_RMS_DIP_NUMER = 6  # rms < prev_rms * 6 // 10 → 40% energy drop = closure
 _RMS_DIP_DENOM = 10
-_CENTROID_JUMP = 25       # |Δcentroid_100| > 25 (≈250 Hz shift) = articulation change
+_CENTROID_JUMP = 25  # |Δcentroid_100| > 25 (≈250 Hz shift) = articulation change
 
 
 def _classify_sound(
-    rms: int, f0_x10: int, centroid_100: int,
-    prev_rms: int = 0, prev_f0_x10: int = 0, prev_centroid_100: int = 0,
+    rms: int,
+    f0_x10: int,
+    centroid_100: int,
+    prev_rms: int = 0,
+    prev_f0_x10: int = 0,
+    prev_centroid_100: int = 0,
 ) -> int:
     """Classify a frame into sound class.
 
@@ -208,7 +206,11 @@ def _audio_to_sthana(rms: int, f0_x10: int, centroid_100: int) -> int:
 
 
 def _refine_sub_index(
-    sound_class: int, rms: int, f0_x10: int, centroid_100: int, element: int,
+    sound_class: int,
+    rms: int,
+    f0_x10: int,
+    centroid_100: int,
+    element: int,
 ) -> int:
     """Refine sub-index within a sound class using Sthana-aware features.
 
@@ -240,7 +242,8 @@ def _refine_sub_index(
 
 
 def frame_to_rama(
-    packed: int, prev_packed: int = 0,
+    packed: int,
+    prev_packed: int = 0,
 ) -> int:
     """Convert one uint32 audio frame to a RAMA coordinate (0-48).
 
@@ -264,8 +267,12 @@ def frame_to_rama(
 
     # Silence → no coordinate
     sound_class = _classify_sound(
-        rms, f0_x10, centroid_100,
-        prev_rms, prev_f0, prev_cent,
+        rms,
+        f0_x10,
+        centroid_100,
+        prev_rms,
+        prev_f0,
+        prev_cent,
     )
     if sound_class < 0:
         return -1
@@ -410,7 +417,8 @@ def stream_to_signature(frames: Sequence[int]) -> str:
 
 
 def compare_streams(
-    frames_a: Sequence[int], frames_b: Sequence[int],
+    frames_a: Sequence[int],
+    frames_b: Sequence[int],
 ) -> float:
     """Compare two audio streams by element-histogram distance.
 

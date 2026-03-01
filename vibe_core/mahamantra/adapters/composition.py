@@ -379,15 +379,17 @@ class MahaComposition:
         # Expose per-word scorer breakdowns (top 5) for downstream consumers
         top_scored = []
         for item in ranked[:PANCHA]:
-            top_scored.append({
-                "word": str(item.get("meaning", "")).split()[0] if item.get("meaning") else "",
-                "total": round(float(item.get("_total_score", 0.0)), 4),
-                "prana": round(float(item.get("_prana_score", 0.0)), 4),
-                "rhythm": round(float(item.get("_rhythm_score", 0.0)), 4),
-                "semantic": round(float(item.get("_semantic_score", 0.0)), 4),
-                "mode": round(float(item.get("_mode_score", 0.0)), 4),
-                "state": round(float(item.get("_state_score", 0.0)), 4),
-            })
+            top_scored.append(
+                {
+                    "word": str(item.get("meaning", "")).split()[0] if item.get("meaning") else "",
+                    "total": round(float(item.get("_total_score", 0.0)), 4),
+                    "prana": round(float(item.get("_prana_score", 0.0)), 4),
+                    "rhythm": round(float(item.get("_rhythm_score", 0.0)), 4),
+                    "semantic": round(float(item.get("_semantic_score", 0.0)), 4),
+                    "mode": round(float(item.get("_mode_score", 0.0)), 4),
+                    "state": round(float(item.get("_state_score", 0.0)), 4),
+                }
+            )
 
         # Scorer averages across ranked pool
         scorer_avgs: Dict[str, float] = {}

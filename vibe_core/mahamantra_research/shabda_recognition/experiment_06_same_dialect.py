@@ -25,12 +25,17 @@ the dialects are truly incompatible.
 
 Let's measure this for known words in the transcript.
 """
-import sys; sys.path.insert(0, ".")
+
+import sys
+
+sys.path.insert(0, ".")
 
 from vibe_core.mahamantra.sound.shabda_intake import ShabdaIntake
 from vibe_core.mahamantra.sound.shabda_processor import stream_to_rama
 from vibe_core.mahamantra.sound.shabda_decoder import (
-    segment_stream, _dedup_coords, _score_candidate,
+    segment_stream,
+    _dedup_coords,
+    _score_candidate,
 )
 from vibe_core.mahamantra.substrate.encoding.phonetic_encoder import encode_text
 from vibe_core.mahamantra.substrate.encoding.pancha_walk import COORD_ELEMENT, COORD_VARGA
@@ -63,14 +68,13 @@ for si, seg in enumerate(segments):
     elem_pattern = [ELEM_NAMES[COORD_ELEMENT[c]] for c in deduped[:8]]
     varga_pattern = [VARGA_NAMES[COORD_VARGA[c]] for c in deduped[:8]]
 
-    print(f"\n[{si:2d}] {ms_s:5d}-{ms_e:5d}ms ({ms_e-ms_s:4d}ms, {len(seg.frames):3d}fr)")
+    print(f"\n[{si:2d}] {ms_s:5d}-{ms_e:5d}ms ({ms_e - ms_s:4d}ms, {len(seg.frames):3d}fr)")
     print(f"     raw({len(raw)}) deduped({len(deduped)}): {deduped[:8]}")
     print(f"     elements: {elem_pattern}")
     print(f"     vargas:   {varga_pattern}")
 
     # Score against some known words using encode_text
-    for word in ["eh", "not", "exactly", "but", "came", "preach",
-                 "the", "gospel", "of", "i", "and", "some"]:
+    for word in ["eh", "not", "exactly", "but", "came", "preach", "the", "gospel", "of", "i", "and", "some"]:
         word_coords = encode_text(word)
         if not word_coords:
             continue

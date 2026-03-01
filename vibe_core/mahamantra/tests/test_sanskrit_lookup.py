@@ -4,7 +4,6 @@ Tests for Sanskrit Lookup - Verse Word-for-Word via RAMA Coordinates.
 Verifies production access to the Gita word-for-word lexicon.
 """
 
-
 from vibe_core.mahamantra.substrate.sanskrit_lookup import (
     WordEntry,
     hkr_signature,

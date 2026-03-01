@@ -23,7 +23,6 @@ from vibe_core.mahamantra.substrate.core.seed import HALVES, TRINITY
 logger = logging.getLogger("MOLTBOOK.STRATEGY")
 
 
-
 def _derive_seed_topics(feed_topics: Optional[List[Dict[str, Any]]] = None) -> tuple:
     """Derive mission topics from feed content + existing Sankalpa missions.
 
@@ -150,7 +149,8 @@ class MoltbookStrategyPlanner:
         return self._orchestrator
 
     def _seed_missions(
-        self, feed_topics: Optional[List[Dict[str, Any]]] = None,
+        self,
+        feed_topics: Optional[List[Dict[str, Any]]] = None,
     ) -> None:
         """Seed missions from FEED content — what the community discusses.
 
@@ -244,12 +244,9 @@ class MoltbookStrategyPlanner:
         if not hasattr(orch, "registry") or not hasattr(orch.registry, "_missions"):
             return
         stale_ids = [
-            mid for mid in orch.registry._missions
-            if (
-                mid.startswith("moltbook_kg_")
-                or mid.startswith("moltbook_mission_")
-                or mid == "mission_code_health"
-            )
+            mid
+            for mid in orch.registry._missions
+            if (mid.startswith("moltbook_kg_") or mid.startswith("moltbook_mission_") or mid == "mission_code_health")
         ]
         for mid in stale_ids:
             del orch.registry._missions[mid]
@@ -269,10 +266,7 @@ class MoltbookStrategyPlanner:
             return []
         try:
             all_missions = orch.registry.get_active_missions()
-            return [
-                m for m in all_missions
-                if getattr(m, "owner", "") == "moltbook"
-            ]
+            return [m for m in all_missions if getattr(m, "owner", "") == "moltbook"]
         except Exception as e:
             logger.warning(f"Active missions query failed: {e}")
             return []
@@ -348,15 +342,17 @@ class MoltbookStrategyPlanner:
             for post in lonely[:HALVES]:  # Max 2 amplify intents per cycle
                 author_data = post.get("author", {})
                 author = author_data.get("name", "") if isinstance(author_data, dict) else ""
-                amplify_intents.append(StrategicIntent(
-                    action_type="amplify",
-                    topic=str(post.get("title", ""))[:200],
-                    reasoning=f"Quality content by {author} with zero engagement — amplify",
-                    priority=7,
-                    mission_id="network_amplify",
-                    target_post_id=str(post.get("id", "")),
-                    engagement_context=f"author={author}, upvotes={post.get('upvotes', 0)}",
-                ))
+                amplify_intents.append(
+                    StrategicIntent(
+                        action_type="amplify",
+                        topic=str(post.get("title", ""))[:200],
+                        reasoning=f"Quality content by {author} with zero engagement — amplify",
+                        priority=7,
+                        mission_id="network_amplify",
+                        target_post_id=str(post.get("id", "")),
+                        engagement_context=f"author={author}, upvotes={post.get('upvotes', 0)}",
+                    )
+                )
 
         # Keyword Jaccard matching — first filter
         matches = self._match_topics(feed_topics, missions)
@@ -364,13 +360,19 @@ class MoltbookStrategyPlanner:
 
         # MahaManas drives ALL remaining decisions
         intents = self._manas_evaluate_matches(
-            matches, missions, _commented, can_post, own_post_ids,
+            matches,
+            missions,
+            _commented,
+            can_post,
+            own_post_ids,
             network_intel=network_intel,
         )
 
         # Network intelligence: connect intents (complementary agents)
         connect_intents = self._generate_connect_intents(
-            feed_topics, network_intel, _commented,
+            feed_topics,
+            network_intel,
+            _commented,
         )
 
         intents = amplify_intents + intents + connect_intents
@@ -378,10 +380,7 @@ class MoltbookStrategyPlanner:
 
         # Semantic dedup: don't post topics that overlap with own recent posts
         if own_post_ids:
-            intents = [
-                i for i in intents
-                if i.action_type != "post" or not self._semantic_dedup(i.topic, own_post_ids)
-            ]
+            intents = [i for i in intents if i.action_type != "post" or not self._semantic_dedup(i.topic, own_post_ids)]
 
         return intents[:TRINITY]
 
@@ -459,7 +458,11 @@ class MoltbookStrategyPlanner:
                         author_boost = 1  # Boost established authors
 
             action_type = self._function_to_action(
-                cognition.function, can_post, zero_streak, chapter, own_chapters,
+                cognition.function,
+                can_post,
+                zero_streak,
+                chapter,
+                own_chapters,
             )
 
             eng = self._engagement_cache.get(mission_id, {})
@@ -467,21 +470,23 @@ class MoltbookStrategyPlanner:
             if eng:
                 eng_context = f"Success rate: {eng.get('success_rate', 0):.0%}"
 
-            intents.append(StrategicIntent(
-                action_type=action_type,
-                topic=v.perception.content,
-                reasoning=f"Manas verdict: {cognition.function}/{cognition.approach} ch.{chapter} (p={v.priority_score:.0f}, c={v.confidence:.2f})",
-                priority=min(10, int(v.priority_score / 10) + author_boost),  # 0-100 → 0-10 + reputation
-                mission_id=mission_id,
-                target_post_id=post_id,
-                engagement_context=eng_context,
-                content_format=self._buddhi_select_format(action_type, cognition.mode),
-                buddhi_function=cognition.function,
-                buddhi_approach=cognition.approach,
-                buddhi_chapter=chapter,
-                buddhi_prana=cognition.prana,
-                buddhi_integrity=cognition.integrity,
-            ))
+            intents.append(
+                StrategicIntent(
+                    action_type=action_type,
+                    topic=v.perception.content,
+                    reasoning=f"Manas verdict: {cognition.function}/{cognition.approach} ch.{chapter} (p={v.priority_score:.0f}, c={v.confidence:.2f})",
+                    priority=min(10, int(v.priority_score / 10) + author_boost),  # 0-100 → 0-10 + reputation
+                    mission_id=mission_id,
+                    target_post_id=post_id,
+                    engagement_context=eng_context,
+                    content_format=self._buddhi_select_format(action_type, cognition.mode),
+                    buddhi_function=cognition.function,
+                    buddhi_approach=cognition.approach,
+                    buddhi_chapter=chapter,
+                    buddhi_prana=cognition.prana,
+                    buddhi_integrity=cognition.integrity,
+                )
+            )
 
         return intents
 
@@ -546,14 +551,16 @@ class MoltbookStrategyPlanner:
                 shared_topics = author_interests & network_intel.get_agent_interests(other_agent)
                 shared_str = ", ".join(list(shared_topics)[:3])
 
-                intents.append(StrategicIntent(
-                    action_type="connect",
-                    topic=f"Connect {author} with {other_agent} on {shared_str}",
-                    reasoning=f"Complementary interests (Jaccard={score:.2f}): {shared_str}",
-                    priority=6,
-                    mission_id="network_connect",
-                    engagement_context=f"agent_a={author}, agent_b={other_agent}, shared={shared_str}",
-                ))
+                intents.append(
+                    StrategicIntent(
+                        action_type="connect",
+                        topic=f"Connect {author} with {other_agent} on {shared_str}",
+                        reasoning=f"Complementary interests (Jaccard={score:.2f}): {shared_str}",
+                        priority=6,
+                        mission_id="network_connect",
+                        engagement_context=f"agent_a={author}, agent_b={other_agent}, shared={shared_str}",
+                    )
+                )
                 if len(intents) >= 1:  # Max 1 connect intent per cycle
                     return intents
 
@@ -616,13 +623,12 @@ class MoltbookStrategyPlanner:
         if len(recent_posts) < TRINITY:
             return False  # Not enough posts to judge
         # Check if any recent post has engagement data
-        return all(
-            int(p.get("upvotes", 0)) == 0 and int(p.get("replies", 0)) == 0
-            for p in recent_posts
-        )
+        return all(int(p.get("upvotes", 0)) == 0 and int(p.get("replies", 0)) == 0 for p in recent_posts)
 
     def _semantic_dedup(
-        self, topic: str, own_post_ids: Dict[str, Dict[str, object]],
+        self,
+        topic: str,
+        own_post_ids: Dict[str, Dict[str, object]],
     ) -> bool:
         """Check if topic overlaps with recent posts via keyword Jaccard.
 
@@ -704,24 +710,28 @@ class MoltbookStrategyPlanner:
             if matched_mission_id is None:
                 post_tokens = self._tokenize(post_text)
                 matched_mission_id, relevance = self._semantic_match(
-                    post_tokens, missions, self._mission_tokens,
+                    post_tokens,
+                    missions,
+                    self._mission_tokens,
                 )
 
             if matched_mission_id and matched_mission_id in mission_map:
                 mission = mission_map[matched_mission_id]
-                matches.append(TopicMatch(
-                    post_id=post_id,
-                    topic=title[:200] or content[:200],
-                    mission_id=mission.id,
-                    mission_name=mission.name,
-                    relevance=relevance,
-                    post_meta={
-                        "upvotes": post.get("upvotes", 0),
-                        "author": post.get("author", {}).get("name", "")
-                        if isinstance(post.get("author"), dict)
-                        else "",
-                    },
-                ))
+                matches.append(
+                    TopicMatch(
+                        post_id=post_id,
+                        topic=title[:200] or content[:200],
+                        mission_id=mission.id,
+                        mission_name=mission.name,
+                        relevance=relevance,
+                        post_meta={
+                            "upvotes": post.get("upvotes", 0),
+                            "author": post.get("author", {}).get("name", "")
+                            if isinstance(post.get("author"), dict)
+                            else "",
+                        },
+                    )
+                )
 
         matches.sort(key=lambda m: m.relevance, reverse=True)
         return matches
@@ -743,9 +753,7 @@ class MoltbookStrategyPlanner:
         """Precompute token sets for mission descriptions. Cached."""
         for mission in missions:
             if mission.id not in self._mission_tokens:
-                self._mission_tokens[mission.id] = self._tokenize(
-                    mission.description.lower()
-                )
+                self._mission_tokens[mission.id] = self._tokenize(mission.description.lower())
 
     @staticmethod
     def _semantic_match(
@@ -847,8 +855,7 @@ class MoltbookStrategyPlanner:
                 self._deprioritize_mission(mission)
 
             logger.debug(
-                f"Engagement update for {mission.id}: "
-                f"rate={cache['success_rate']:.2f} ({cache['positive']}/{total})"
+                f"Engagement update for {mission.id}: rate={cache['success_rate']:.2f} ({cache['positive']}/{total})"
             )
             self._save_engagement_cache()
 
@@ -862,13 +869,18 @@ class MoltbookStrategyPlanner:
 
                 manas = get_manas()
                 perception = PerceptionEntry(
-                    content=topic, source="engagement", category="sthula",
+                    content=topic,
+                    source="engagement",
+                    category="sthula",
                     context={"mission_id": mission.id},
                 )
                 verdict = ManaVerdict(
-                    perception=perception, approved=True,
-                    priority_score=50.0, confidence=0.5,
-                    dharma_ok=True, dharma_reason="engagement",
+                    perception=perception,
+                    approved=True,
+                    priority_score=50.0,
+                    confidence=0.5,
+                    dharma_ok=True,
+                    dharma_reason="engagement",
                     reason="engagement feedback",
                 )
                 manas.record_outcome(verdict, success=(net_score > 0))

@@ -84,10 +84,18 @@ class TestBuddhiResult:
         from vibe_core.mahamantra.protocols._buddhi import BuddhiResult
 
         result = BuddhiResult(
-            perspective="test", focus="field", approach="GENESIS",
-            mode="SATTVA", function="BRAHMA", chapter=1,
-            verse_concepts=(), resonant_words=(), prana=0,
-            integrity=0.0, is_alive=False, composed="",
+            perspective="test",
+            focus="field",
+            approach="GENESIS",
+            mode="SATTVA",
+            function="BRAHMA",
+            chapter=1,
+            verse_concepts=(),
+            resonant_words=(),
+            prana=0,
+            integrity=0.0,
+            is_alive=False,
+            composed="",
             vm_result={"big": "dict" * 100},
         )
         assert "big" not in repr(result)

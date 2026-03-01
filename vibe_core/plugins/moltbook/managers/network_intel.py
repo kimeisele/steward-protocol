@@ -26,9 +26,9 @@ class NetworkIntel:
     """
 
     def __init__(self, max_profiles: int = 50):
-        self._profiles: Dict[str, dict] = {}        # agent_name -> profile dict
+        self._profiles: Dict[str, dict] = {}  # agent_name -> profile dict
         self._agent_topics: Dict[str, Set[str]] = {}  # agent_name -> topic keywords
-        self._last_fetched: Dict[str, float] = {}   # agent_name -> timestamp
+        self._last_fetched: Dict[str, float] = {}  # agent_name -> timestamp
         self._max_profiles = max_profiles
 
     def enrich_from_feed(
@@ -50,12 +50,7 @@ class NetworkIntel:
                 continue
             author_data = post.get("author", {})
             author = author_data.get("name", "") if isinstance(author_data, dict) else ""
-            if (
-                author
-                and author != own_name
-                and author not in self._profiles
-                and author not in uncached_authors
-            ):
+            if author and author != own_name and author not in self._profiles and author not in uncached_authors:
                 uncached_authors.append(author)
 
         # Fetch profiles for up to 3 new authors
@@ -158,9 +153,7 @@ class NetworkIntel:
             return
         self._profiles = data.get("profiles", {})
         raw_topics = data.get("agent_topics", {})
-        self._agent_topics = {
-            k: set(v) for k, v in raw_topics.items() if isinstance(v, list)
-        }
+        self._agent_topics = {k: set(v) for k, v in raw_topics.items() if isinstance(v, list)}
         self._last_fetched = data.get("last_fetched", {})
         if self._profiles:
             logger.info(f"NetworkIntel restored: {len(self._profiles)} cached profiles")

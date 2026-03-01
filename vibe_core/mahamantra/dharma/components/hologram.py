@@ -8,7 +8,6 @@ Responsibility:
 - Tree Structure (Node -> Mantra)
 """
 
-
 from vibe_core.mahamantra.dharma.components.linguist import Linguist
 from vibe_core.mahamantra.protocols.dharma_protocol import FractalNodeData, SwarupaData
 

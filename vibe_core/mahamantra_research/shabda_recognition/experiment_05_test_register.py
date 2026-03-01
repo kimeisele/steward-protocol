@@ -9,15 +9,21 @@ Then: frame → best ARPAbet → ARPABET_TO_RAMA → dedup → dict match.
 This is the DATA REGISTER approach: no score_frame(), no hand-tuned weights.
 Just argmax(cosine_sim) over the register.
 """
-import sys; sys.path.insert(0, ".")
+
+import sys
+
+sys.path.insert(0, ".")
 import json
 import math
 from typing import Dict, List, Tuple
 
 from vibe_core.mahamantra.sound.shabda_intake import ShabdaIntake, extract_mfcc
 from vibe_core.mahamantra.sound.shabda_decoder import (
-    segment_stream, _dedup_coords, _stable_coords,
-    _score_candidate, get_pronunciation_dict,
+    segment_stream,
+    _dedup_coords,
+    _stable_coords,
+    _score_candidate,
+    get_pronunciation_dict,
 )
 from vibe_core.mahamantra.substrate.encoding.phonetic_bridge import ARPABET_TO_RAMA
 
@@ -102,13 +108,9 @@ for si, seg in enumerate(segments):
 
     for fc in (first_coord, first_coord - 1, first_coord + 1):
         if 0 <= fc < 49:
-            candidates.extend(
-                pdict.candidates_for_segment(fc, coord_len, length_tolerance=3)
-            )
+            candidates.extend(pdict.candidates_for_segment(fc, coord_len, length_tolerance=3))
     if len(candidates) < 10:
-        candidates.extend(
-            pdict.all_candidates_for_length(coord_len, length_tolerance=2)
-        )
+        candidates.extend(pdict.all_candidates_for_length(coord_len, length_tolerance=2))
 
     best_word = ""
     best_score = 0.0
@@ -136,4 +138,4 @@ print(f"\nREGISTER TRANSCRIPT: {' '.join(words_out)}")
 print(f"\nEXPECTED: {EXPECTED}")
 
 correct = sum(1 for w in words_out if w.lower() in expected_words)
-print(f"\nCorrect words: {correct}/{len(words_out)} ({correct/max(1,len(words_out))*100:.0f}%)")
+print(f"\nCorrect words: {correct}/{len(words_out)} ({correct / max(1, len(words_out)) * 100:.0f}%)")

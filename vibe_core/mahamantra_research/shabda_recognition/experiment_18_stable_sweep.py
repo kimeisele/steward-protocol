@@ -8,12 +8,18 @@ Higher N = fewer spurious coords, but might lose real short consonants.
 
 Also: compare element sequences at different min_run values.
 """
-import sys; sys.path.insert(0, ".")
+
+import sys
+
+sys.path.insert(0, ".")
 
 from vibe_core.mahamantra.sound.shabda_intake import ShabdaIntake
 from vibe_core.mahamantra.sound.shabda_processor import stream_to_rama
 from vibe_core.mahamantra.sound.shabda_decoder import (
-    segment_stream, _dedup_coords, _stable_coords, get_pronunciation_dict,
+    segment_stream,
+    _dedup_coords,
+    _stable_coords,
+    get_pronunciation_dict,
     _score_candidate,
 )
 from vibe_core.mahamantra.substrate.encoding.pancha_walk import COORD_ELEMENT
@@ -23,10 +29,31 @@ stream = intake.process_file("temp/prabhupada-talk.wav")
 segments = segment_stream(stream.frames)
 pdict = get_pronunciation_dict()
 
-EXPECTED = ["eh", "not", "exactly", "but", "i", "came", "to", "preach",
-            "the", "gospel", "of", "krishna", "consciousness", "and",
-            "fortunately", "i", "met", "some", "enthusiastic", "young",
-            "boys", "and", "girls"]
+EXPECTED = [
+    "eh",
+    "not",
+    "exactly",
+    "but",
+    "i",
+    "came",
+    "to",
+    "preach",
+    "the",
+    "gospel",
+    "of",
+    "krishna",
+    "consciousness",
+    "and",
+    "fortunately",
+    "i",
+    "met",
+    "some",
+    "enthusiastic",
+    "young",
+    "boys",
+    "and",
+    "girls",
+]
 
 ELEM_NAMES = ["AK", "VA", "AG", "JA", "PR"]
 
@@ -86,7 +113,7 @@ for mr in [2, 3, 4, 5, 7]:
         total += 1
 
     pct = correct / max(1, total) * 100
-    transcript = " ".join(words_out[:len(EXPECTED)])
+    transcript = " ".join(words_out[: len(EXPECTED)])
     print(f"  min_run={mr}: {correct}/{min(total, len(EXPECTED))} correct ({pct:.0f}%)")
     print(f"    transcript: {transcript}")
 
@@ -120,5 +147,7 @@ for si, seg in enumerate(segments[:10]):
 
     expected = EXPECTED[si] if si < len(EXPECTED) else "?"
     match = "✓" if best_word == expected else " "
-    print(f"  [{ms_s:5d}-{ms_e:5d}ms] {best_word:15s} score={best_score:.4f} {match}  "
-          f"(expected: {expected})  coords={coords[:6]}")
+    print(
+        f"  [{ms_s:5d}-{ms_e:5d}ms] {best_word:15s} score={best_score:.4f} {match}  "
+        f"(expected: {expected})  coords={coords[:6]}"
+    )

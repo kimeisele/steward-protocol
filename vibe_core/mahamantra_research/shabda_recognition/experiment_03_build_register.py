@@ -19,7 +19,10 @@ Strategy:
 This is NOT a perfect forced alignment, but it's a reasonable
 first approximation for building the register.
 """
-import sys; sys.path.insert(0, ".")
+
+import sys
+
+sys.path.insert(0, ".")
 import json
 import numpy as np
 from collections import defaultdict
@@ -37,22 +40,25 @@ n_fft = stream.n_fft
 
 # Load CMU dict
 import nltk
+
 cmu = nltk.corpus.cmudict.dict()
+
 
 def get_phonemes(word):
     """Get ARPAbet phonemes for a word (strip stress digits)."""
     prons = cmu.get(word.lower())
     if not prons:
         return None
-    return [''.join(c for c in p if not c.isdigit()) for p in prons[0]]
+    return ["".join(c for c in p if not c.isdigit()) for p in prons[0]]
+
 
 # Manual alignment: (start_ms, end_ms, word)
 # Based on segment timings + known transcript
 # Only include words we're CONFIDENT about
 ALIGNMENT = [
     # "Eh... not exactly"
-    (180, 560, "eh"),       # segment 0 - filler
-    (970, 1110, "not"),     # roughly
+    (180, 560, "eh"),  # segment 0 - filler
+    (970, 1110, "not"),  # roughly
     (1110, 1360, "exactly"),
     # "But I came to preach"
     (1470, 1600, "but"),
@@ -149,6 +155,7 @@ print(f"Saved to: {output_path}")
 
 # Also show which ARPAbet phonemes we're MISSING
 from vibe_core.mahamantra.substrate.encoding.phonetic_bridge import ARPABET_TO_RAMA
+
 all_arpabet = set(ARPABET_TO_RAMA.keys())
 covered = set(register.keys())
 missing = all_arpabet - covered

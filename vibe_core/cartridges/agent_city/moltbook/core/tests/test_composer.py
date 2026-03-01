@@ -127,21 +127,30 @@ class TestBuildTask:
     def test_comment_has_respond_action(self):
         composer = ContentComposer()
         msg = composer._build_task(
-            _make_cognition(), "comment", "topic", {"content_format": "question"},
+            _make_cognition(),
+            "comment",
+            "topic",
+            {"content_format": "question"},
         )
         assert "Respond to this post about:" in msg
 
     def test_comment_includes_topic(self):
         composer = ContentComposer()
         msg = composer._build_task(
-            _make_cognition(), "comment", "consensus algorithms", {"content_format": "analysis"},
+            _make_cognition(),
+            "comment",
+            "consensus algorithms",
+            {"content_format": "analysis"},
         )
         assert "consensus algorithms" in msg
 
     def test_post_has_write_action(self):
         composer = ContentComposer()
         msg = composer._build_task(
-            _make_cognition(), "post", "distributed systems", {"content_format": "analysis"},
+            _make_cognition(),
+            "post",
+            "distributed systems",
+            {"content_format": "analysis"},
         )
         assert "Write about:" in msg
         assert "distributed systems" in msg
@@ -149,14 +158,20 @@ class TestBuildTask:
     def test_post_includes_topic(self):
         composer = ContentComposer()
         msg = composer._build_task(
-            _make_cognition(), "post", "microservices", {"content_format": "opinion"},
+            _make_cognition(),
+            "post",
+            "microservices",
+            {"content_format": "opinion"},
         )
         assert "microservices" in msg
 
     def test_dm_reply(self):
         composer = ContentComposer()
         msg = composer._build_task(
-            _make_cognition(), "dm_reply", "Thanks for your message", {},
+            _make_cognition(),
+            "dm_reply",
+            "Thanks for your message",
+            {},
         )
         assert "Reply to this message:" in msg
         assert "Thanks for your message" in msg
@@ -164,14 +179,19 @@ class TestBuildTask:
     def test_dm_request(self):
         composer = ContentComposer()
         msg = composer._build_task(
-            _make_cognition(), "dm_request", "collaboration", {},
+            _make_cognition(),
+            "dm_request",
+            "collaboration",
+            {},
         )
         assert "Send a message about:" in msg
 
     def test_post_content_included_for_comments(self):
         composer = ContentComposer()
         msg = composer._build_task(
-            _make_cognition(), "comment", "topic",
+            _make_cognition(),
+            "comment",
+            "topic",
             {"content_format": "observation", "post_content": "The author wrote about consensus algorithms."},
         )
         assert "POST:" in msg
@@ -180,7 +200,9 @@ class TestBuildTask:
     def test_post_content_not_included_for_posts(self):
         composer = ContentComposer()
         msg = composer._build_task(
-            _make_cognition(), "post", "topic",
+            _make_cognition(),
+            "post",
+            "topic",
             {"content_format": "observation", "post_content": "Should not appear"},
         )
         assert "POST:" not in msg
@@ -189,7 +211,9 @@ class TestBuildTask:
     def test_resonance_context_included(self, mock_res):
         composer = ContentComposer()
         msg = composer._build_task(
-            _make_cognition(composed="dharma karma action truth"), "post", "topic",
+            _make_cognition(composed="dharma karma action truth"),
+            "post",
+            "topic",
             {"content_format": "observation"},
         )
         assert "RESONANCE:" in msg
@@ -201,7 +225,9 @@ class TestBuildTask:
     def test_composed_sanskrit_not_injected(self, mock_res):
         composer = ContentComposer()
         msg = composer._build_task(
-            _make_cognition(composed="dharma karma action truth"), "post", "topic",
+            _make_cognition(composed="dharma karma action truth"),
+            "post",
+            "topic",
             {"content_format": "observation"},
         )
         # cognition.composed contains Sanskrit words — must NOT appear in prompt
@@ -212,7 +238,9 @@ class TestBuildTask:
     def test_knowledge_context_included(self):
         composer = ContentComposer()
         msg = composer._build_task(
-            _make_cognition(), "post", "topic",
+            _make_cognition(),
+            "post",
+            "topic",
             {"content_format": "observation", "knowledge_context": "Domain expertise in distributed systems"},
         )
         assert "DOMAIN KNOWLEDGE:" in msg
@@ -222,7 +250,10 @@ class TestBuildTask:
         composer = ContentComposer()
         long_input = "x" * 500
         msg = composer._build_task(
-            _make_cognition(), "post", long_input, {"content_format": "observation"},
+            _make_cognition(),
+            "post",
+            long_input,
+            {"content_format": "observation"},
         )
         assert "x" * 300 in msg
         assert "x" * 400 not in msg
@@ -241,9 +272,7 @@ class TestResonanceContext:
         assert ContentComposer._build_resonance_context("") == ""
 
     def test_returns_string(self):
-        result = ContentComposer._build_resonance_context(
-            "distributed systems fault tolerance consensus"
-        )
+        result = ContentComposer._build_resonance_context("distributed systems fault tolerance consensus")
         # resonate() is deterministic — just verify it returns a string
         assert isinstance(result, str)
 
@@ -269,9 +298,7 @@ class TestResonanceContext:
             "vibe_core.mahamantra.substrate.encoding.resonance_ranker.resonate",
             return_value=[mock_rw1, mock_rw2, mock_rw3],
         ):
-            result = ContentComposer._build_resonance_context(
-                "distributed systems architecture"
-            )
+            result = ContentComposer._build_resonance_context("distributed systems architecture")
         # fire appears once (deduped), truth appears — English only (no Sanskrit)
         assert "- fire" in result
         assert "- truth" in result
@@ -291,9 +318,7 @@ class TestResonanceContext:
             "vibe_core.mahamantra.substrate.encoding.resonance_ranker.resonate",
             return_value=[mock_rw],
         ):
-            result = ContentComposer._build_resonance_context(
-                "testing dimension scores in resonance"
-            )
+            result = ContentComposer._build_resonance_context("testing dimension scores in resonance")
         assert "[harmonic]" in result  # harmonic scored highest
 
 
@@ -311,21 +336,27 @@ class TestModelRouting:
     def test_post_analysis_uses_reasoning_model(self):
         composer = ContentComposer()
         model, tokens = composer._route_model(
-            _make_cognition(is_alive=True, integrity=0.8), "post", "analysis",
+            _make_cognition(is_alive=True, integrity=0.8),
+            "post",
+            "analysis",
         )
         assert model == "deepseek/deepseek-r1"
 
     def test_post_opinion_uses_reasoning_model(self):
         composer = ContentComposer()
         model, _ = composer._route_model(
-            _make_cognition(is_alive=True, integrity=0.8), "post", "opinion",
+            _make_cognition(is_alive=True, integrity=0.8),
+            "post",
+            "opinion",
         )
         assert model == "deepseek/deepseek-r1"
 
     def test_post_tutorial_uses_reasoning_model(self):
         composer = ContentComposer()
         model, _ = composer._route_model(
-            _make_cognition(is_alive=True, integrity=0.8), "post", "tutorial",
+            _make_cognition(is_alive=True, integrity=0.8),
+            "post",
+            "tutorial",
         )
         assert model == "deepseek/deepseek-r1"
 
@@ -337,14 +368,18 @@ class TestModelRouting:
     def test_dead_cell_uses_default(self):
         composer = ContentComposer()
         model, _ = composer._route_model(
-            _make_cognition(is_alive=False), "post", "analysis",
+            _make_cognition(is_alive=False),
+            "post",
+            "analysis",
         )
         assert model is None
 
     def test_low_integrity_uses_default(self):
         composer = ContentComposer()
         model, _ = composer._route_model(
-            _make_cognition(integrity=0.3), "post", "analysis",
+            _make_cognition(integrity=0.3),
+            "post",
+            "analysis",
         )
         assert model is None
 
@@ -352,7 +387,9 @@ class TestModelRouting:
         composer = ContentComposer()
         _, tokens_default = composer._route_model(_make_cognition(), "post", "question")
         _, tokens_reasoning = composer._route_model(
-            _make_cognition(integrity=0.8), "post", "analysis",
+            _make_cognition(integrity=0.8),
+            "post",
+            "analysis",
         )
         assert tokens_reasoning > tokens_default
 
@@ -420,7 +457,9 @@ class TestContentComposer:
         assert result is None
 
     def test_compose_returns_llm_content(self):
-        llm_output = "The tradeoff between consistency and availability is fundamental. CAP theorem defines the boundary."
+        llm_output = (
+            "The tradeoff between consistency and availability is fundamental. CAP theorem defines the boundary."
+        )
         composer = ContentComposer(plugin=None)
         with patch.object(composer, "_call_llm", return_value=llm_output):
             result = composer.compose(
@@ -467,7 +506,10 @@ class TestContentComposer:
 
         with patch.object(composer, "_call_llm", side_effect=capture_llm):
             composer.compose(
-                _make_cognition(), "topic", "post", {"content_format": "observation"},
+                _make_cognition(),
+                "topic",
+                "post",
+                {"content_format": "observation"},
             )
         assert "my-cool-agent" in system_captured["msg"]
 

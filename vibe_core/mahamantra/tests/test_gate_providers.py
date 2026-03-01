@@ -170,4 +170,3 @@ class TestInferGateProvider:
         p.infer(seed=37, attractor=7)
         stats = p.stats
         assert stats is not None
-

@@ -20,10 +20,10 @@ logger = logging.getLogger("MOLTBOOK_MURALI")
 
 # MURALI 4-bit phase (0-3) → department name
 _MURALI_DEPARTMENTS = (
-    "research",   # 0 GENESIS: scan, discover, extract topics
-    "planning",   # 1 DHARMA: evaluate strategy, prioritize topics
+    "research",  # 0 GENESIS: scan, discover, extract topics
+    "planning",  # 1 DHARMA: evaluate strategy, prioritize topics
     "execution",  # 2 KARMA: generate content, publish
-    "learning",   # 3 MOKSHA: track engagement, analyze patterns
+    "learning",  # 3 MOKSHA: track engagement, analyze patterns
 )
 
 

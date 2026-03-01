@@ -54,10 +54,38 @@ _DATA_PATH: Final[Path] = DATA_DIR / "shabda_bridge.json"
 
 # 32 syllable positions in one Mahamantra round
 _MAHAMANTRA_SYLLABLES: Final[Tuple[str, ...]] = (
-    "ha", "re", "kṛ", "ṣṇa", "ha", "re", "kṛ", "ṣṇa",
-    "kṛ", "ṣṇa", "kṛ", "ṣṇa", "ha", "re", "ha", "re",
-    "ha", "re", "rā", "ma", "ha", "re", "rā", "ma",
-    "rā", "ma", "rā", "ma", "ha", "re", "ha", "re",
+    "ha",
+    "re",
+    "kṛ",
+    "ṣṇa",
+    "ha",
+    "re",
+    "kṛ",
+    "ṣṇa",
+    "kṛ",
+    "ṣṇa",
+    "kṛ",
+    "ṣṇa",
+    "ha",
+    "re",
+    "ha",
+    "re",
+    "ha",
+    "re",
+    "rā",
+    "ma",
+    "ha",
+    "re",
+    "rā",
+    "ma",
+    "rā",
+    "ma",
+    "rā",
+    "ma",
+    "ha",
+    "re",
+    "ha",
+    "re",
 )
 
 # Loaded state (lazily initialized)
@@ -245,6 +273,7 @@ def _word_rama_coords(packed_hex: str) -> Tuple[int, ...]:
             return tuple(word.coords)
         if word and hasattr(word, "sanskrit"):
             from vibe_core.mahamantra.substrate.encoding.varnamala_codec import encode
+
             return encode(word.sanskrit)
     except Exception:
         pass
@@ -442,17 +471,19 @@ def diagnose() -> None:
     print("  " + "─" * 50)
     for syl, data in _syllable_data.items():
         coords_str = str(data.get("rama_coords", []))
-        print(f"  {syl:5s} {coords_str:>12s} "
-              f"{data.get('n_frames', 0):6d} "
-              f"{data.get('avg_rms', 0):6d} "
-              f"{data.get('avg_f0_x10', 0) / 10:6.1f}Hz "
-              f"{data.get('avg_centroid_100', 0) * 100:6.0f}Hz")
+        print(
+            f"  {syl:5s} {coords_str:>12s} "
+            f"{data.get('n_frames', 0):6d} "
+            f"{data.get('avg_rms', 0):6d} "
+            f"{data.get('avg_f0_x10', 0) / 10:6.1f}Hz "
+            f"{data.get('avg_centroid_100', 0) * 100:6.0f}Hz"
+        )
 
     print(f"\nHarmonic Series (VibIDs): {list(_harmonic_vib_ids)}")
 
     print("\nSalt LUT (32 positions):")
     for i in range(0, len(_salt_lut), 8):
-        chunk = _salt_lut[i:i + 8]
+        chunk = _salt_lut[i : i + 8]
         syls = [_MAHAMANTRA_SYLLABLES[j] for j in range(i, min(i + 8, len(_salt_lut)))]
         for j, (syl, packed) in enumerate(zip(syls, chunk)):
             rms, varga, f0_x10, cent = unpack_frame(packed)

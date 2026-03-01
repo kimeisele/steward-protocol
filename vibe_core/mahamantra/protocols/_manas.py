@@ -100,9 +100,7 @@ class ManasProtocol(Protocol):
     Perceives, filters, prioritizes, decides, learns.
     """
 
-    def perceive(
-        self, entries: Sequence[PerceptionEntry]
-    ) -> Sequence[PerceptionEntry]:
+    def perceive(self, entries: Sequence[PerceptionEntry]) -> Sequence[PerceptionEntry]:
         """Receive and filter perceptions through Chitta.
 
         Deduplicates, classifies, returns clean perception list.

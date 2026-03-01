@@ -4,7 +4,6 @@ Tests for substrate/language/mantra_grid.py — 32-Step Mantra Sequencer.
 Only tests what is DERIVED from seed.MAHAMANTRA, not invented.
 """
 
-
 from vibe_core.mahamantra.protocols._seed import HALVES, KSETRAJNA, QUARTERS, WORDS
 from vibe_core.mahamantra.substrate.language.mantra_grid import (
     GridStep,

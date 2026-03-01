@@ -53,20 +53,21 @@ logger = logging.getLogger("SHABDA_DECODER")
 # PHONEME TEMPLATES (acoustic fingerprints for each ARPAbet phoneme)
 # =============================================================================
 
+
 @dataclass(frozen=True)
 class PhonemeTemplate:
     """Acoustic template for a single ARPAbet phoneme."""
 
     arpabet: str
     rama_coord: int
-    varga: int           # 0-4 (VargaIndex)
-    sthana: int          # 0-4 (SthanaIndex)
-    sound_class: int     # 0=svara, 1=sparsha, 2=shesha
-    f0_required: bool    # voiced?
-    f1_center: int       # Hz (0=don't care)
-    f2_center: int       # Hz (0=don't care)
-    centroid_min: int     # centroid/100 low bound
-    centroid_max: int     # centroid/100 high bound
+    varga: int  # 0-4 (VargaIndex)
+    sthana: int  # 0-4 (SthanaIndex)
+    sound_class: int  # 0=svara, 1=sparsha, 2=shesha
+    f0_required: bool  # voiced?
+    f1_center: int  # Hz (0=don't care)
+    f2_center: int  # Hz (0=don't care)
+    centroid_min: int  # centroid/100 low bound
+    centroid_max: int  # centroid/100 high bound
     mfcc_center: Tuple[int, ...] = ()  # 13 MFCC coefficients (×100)
 
 
@@ -74,36 +75,52 @@ class PhonemeTemplate:
 # Bengali/Hindi vocal tract shifts F2 ~+350 Hz vs Peterson & Barney textbook.
 # Japa data: ha(453,1543) re(477,1589) kṛ(395,1672) ṣṇa(419,1656) rā(543,1426).
 _VOWEL_FORMANTS: Final[Dict[str, Tuple[int, int]]] = {
-    "AA": (650, 1550),   # /ɑ/ father  (textbook: 750, 1200)
-    "AE": (580, 2050),   # /æ/ bat     (textbook: 660, 1700)
-    "AH": (450, 1550),   # /ʌ/ but     (textbook: 520, 1200) — from japa /a/
-    "AO": (500, 1200),   # /ɔ/ bought  (textbook: 570, 850)
-    "AW": (620, 1450),   # /aʊ/ bout   (textbook: 700, 1100)
-    "AY": (620, 1550),   # /aɪ/ bite   (textbook: 700, 1200)
-    "EH": (490, 2200),   # /ɛ/ bet     (textbook: 530, 1850)
-    "EY": (360, 2550),   # /eɪ/ bait   (textbook: 400, 2200)
-    "ER": (420, 1700),   # /ɝ/ bird    (textbook: 490, 1350) — from japa /ṛ/
-    "IH": (340, 2300),   # /ɪ/ bit     (textbook: 390, 1950)
-    "IY": (250, 2650),   # /i/ beat    (textbook: 280, 2300)
-    "OW": (400, 1200),   # /oʊ/ boat   (textbook: 450, 850)
-    "OY": (400, 1200),   # /ɔɪ/ boy    (textbook: 450, 850)
-    "UH": (310, 1350),   # /ʊ/ book    (textbook: 350, 1000)
-    "UW": (270, 1250),   # /u/ boot    (textbook: 300, 900)
+    "AA": (650, 1550),  # /ɑ/ father  (textbook: 750, 1200)
+    "AE": (580, 2050),  # /æ/ bat     (textbook: 660, 1700)
+    "AH": (450, 1550),  # /ʌ/ but     (textbook: 520, 1200) — from japa /a/
+    "AO": (500, 1200),  # /ɔ/ bought  (textbook: 570, 850)
+    "AW": (620, 1450),  # /aʊ/ bout   (textbook: 700, 1100)
+    "AY": (620, 1550),  # /aɪ/ bite   (textbook: 700, 1200)
+    "EH": (490, 2200),  # /ɛ/ bet     (textbook: 530, 1850)
+    "EY": (360, 2550),  # /eɪ/ bait   (textbook: 400, 2200)
+    "ER": (420, 1700),  # /ɝ/ bird    (textbook: 490, 1350) — from japa /ṛ/
+    "IH": (340, 2300),  # /ɪ/ bit     (textbook: 390, 1950)
+    "IY": (250, 2650),  # /i/ beat    (textbook: 280, 2300)
+    "OW": (400, 1200),  # /oʊ/ boat   (textbook: 450, 850)
+    "OY": (400, 1200),  # /ɔɪ/ boy    (textbook: 450, 850)
+    "UH": (310, 1350),  # /ʊ/ book    (textbook: 350, 1000)
+    "UW": (270, 1250),  # /u/ boot    (textbook: 300, 900)
 }
 
 # Centroid ranges (centroid/100) for consonant classes
 _CONSONANT_CENTROID: Final[Dict[str, Tuple[int, int]]] = {
     # Stops: broad energy onset
-    "K": (20, 200), "G": (20, 200), "NG": (10, 80),
-    "CH": (40, 250), "JH": (40, 200),
-    "T": (30, 250), "D": (30, 200), "TH": (40, 300), "DH": (30, 200), "N": (10, 80),
-    "P": (10, 150), "B": (10, 150), "F": (80, 350), "M": (10, 60),
+    "K": (20, 200),
+    "G": (20, 200),
+    "NG": (10, 80),
+    "CH": (40, 250),
+    "JH": (40, 200),
+    "T": (30, 250),
+    "D": (30, 200),
+    "TH": (40, 300),
+    "DH": (30, 200),
+    "N": (10, 80),
+    "P": (10, 150),
+    "B": (10, 150),
+    "F": (80, 350),
+    "M": (10, 60),
     # Semivowels
-    "Y": (30, 200), "R": (20, 180), "L": (20, 160),
-    "V": (20, 180), "W": (20, 150),
+    "Y": (30, 200),
+    "R": (20, 180),
+    "L": (20, 160),
+    "V": (20, 180),
+    "W": (20, 150),
     # Sibilants / Fricatives
-    "S": (150, 400), "SH": (100, 350), "Z": (100, 350),
-    "ZH": (80, 300), "HH": (30, 250),
+    "S": (150, 400),
+    "SH": (100, 350),
+    "Z": (100, 350),
+    "ZH": (80, 300),
+    "HH": (30, 250),
 }
 
 
@@ -130,30 +147,30 @@ _MFCC_PROTOTYPES: Final[Dict[str, Tuple[int, ...]]] = {
     "UH": (-3567, 74, 249, 3, -2, -9, 36, 24, 3, -40, -58, -61, -27),
     "UW": (-3280, -115, 198, 20, 21, -3, 29, 20, 11, -23, -44, -59, -36),
     # Stops — burst noise + optional voicing
-    "K":  (-2729, -1784, -230, -246, -94, -93, -53, -59, -26, -36, -29, -13, -13),
-    "G":  (-2677, -1482, 65, 37, 174, 155, 172, 141, 147, 108, 87, 75, 48),
+    "K": (-2729, -1784, -230, -246, -94, -93, -53, -59, -26, -36, -29, -13, -13),
+    "G": (-2677, -1482, 65, 37, 174, 155, 172, 141, 147, 108, 87, 75, 48),
     "NG": (-2666, -1509, 58, 34, 169, 156, 189, 150, 148, 121, 125, 78, 46),
     "CH": (-2811, -1780, -231, -246, -73, -80, -44, -61, -44, -46, -20, -9, -15),
     "JH": (-2634, -1478, 64, 36, 192, 164, 176, 132, 121, 89, 86, 68, 34),
-    "T":  (-2768, -1787, -212, -236, -82, -80, -14, -38, -32, -16, 2, -8, -15),
-    "D":  (-2712, -1497, 71, 35, 173, 156, 198, 148, 128, 115, 105, 68, 34),
+    "T": (-2768, -1787, -212, -236, -82, -80, -14, -38, -32, -16, 2, -8, -15),
+    "D": (-2712, -1497, 71, 35, 173, 156, 198, 148, 128, 115, 105, 68, 34),
     "TH": (-2725, -1772, -177, -194, -63, -74, -10, -21, -18, -12, -10, -11, -18),
     "DH": (-2678, -1501, 87, 59, 175, 145, 188, 153, 131, 109, 85, 58, 26),
-    "N":  (-2666, -1509, 58, 34, 169, 156, 189, 150, 148, 121, 125, 78, 46),
-    "P":  (-2766, -1759, -192, -219, -83, -73, -33, -50, -3, -4, -2, -1, 4),
-    "B":  (-2721, -1480, 80, 41, 162, 151, 169, 127, 147, 118, 92, 66, 45),
-    "F":  (-2785, -1770, -207, -212, -47, -94, -56, -38, -20, -13, -1, -9, -19),
-    "M":  (-2664, -1483, 68, 27, 157, 162, 194, 142, 131, 117, 116, 63, 37),
+    "N": (-2666, -1509, 58, 34, 169, 156, 189, 150, 148, 121, 125, 78, 46),
+    "P": (-2766, -1759, -192, -219, -83, -73, -33, -50, -3, -4, -2, -1, 4),
+    "B": (-2721, -1480, 80, 41, 162, 151, 169, 127, 147, 118, 92, 66, 45),
+    "F": (-2785, -1770, -207, -212, -47, -94, -56, -38, -20, -13, -1, -9, -19),
+    "M": (-2664, -1483, 68, 27, 157, 162, 194, 142, 131, 117, 116, 63, 37),
     # Semivowels — vowel-like, weaker energy
-    "Y":  (-3710, -146, 120, 73, 179, 62, -94, -162, -48, 64, 65, -24, -52),
-    "R":  (-4790, 709, 74, -59, -2, 53, 74, 7, -60, -91, -51, 13, 62),
-    "L":  (-4616, 509, 216, -50, -8, 12, 54, 24, -19, -67, -68, -45, 1),
-    "V":  (-3905, -40, 158, 24, 126, 113, 28, -121, -162, -87, 47, 105, 70),
-    "W":  (-3811, -129, 206, 41, 42, 8, 26, 9, 0, -30, -46, -57, -32),
+    "Y": (-3710, -146, 120, 73, 179, 62, -94, -162, -48, 64, 65, -24, -52),
+    "R": (-4790, 709, 74, -59, -2, 53, 74, 7, -60, -91, -51, 13, 62),
+    "L": (-4616, 509, 216, -50, -8, 12, 54, 24, -19, -67, -68, -45, 1),
+    "V": (-3905, -40, 158, 24, 126, 113, 28, -121, -162, -87, 47, 105, 70),
+    "W": (-3811, -129, 206, 41, 42, 8, 26, 9, 0, -30, -46, -57, -32),
     # Sibilants / Fricatives — filtered noise
-    "S":  (-2548, -1780, -229, -233, -96, -97, -35, -16, 6, -5, 8, -15, -15),
+    "S": (-2548, -1780, -229, -233, -96, -97, -35, -16, 6, -5, 8, -15, -15),
     "SH": (-2650, -1804, -194, -208, -72, -53, 2, -1, -8, -23, 2, -16, -22),
-    "Z":  (-2517, -1531, 13, 0, 153, 154, 178, 134, 120, 91, 87, 50, 34),
+    "Z": (-2517, -1531, 13, 0, 153, 154, 178, 134, 120, 91, 87, 50, 34),
     "ZH": (-2453, -1522, 38, 21, 156, 133, 155, 131, 123, 89, 74, 23, 13),
     "HH": (-2572, -1790, -235, -242, -87, -78, -20, -31, 1, -16, 2, -14, -24),
 }
@@ -202,19 +219,21 @@ def _build_templates() -> Tuple[PhonemeTemplate, ...]:
 
         mfcc = _MFCC_PROTOTYPES.get(arpabet, ())
 
-        templates.append(PhonemeTemplate(
-            arpabet=arpabet,
-            rama_coord=rama,
-            varga=int(varga_idx),
-            sthana=int(sthana_idx),
-            sound_class=sound_class,
-            f0_required=f0_required,
-            f1_center=f1,
-            f2_center=f2,
-            centroid_min=c_min,
-            centroid_max=c_max,
-            mfcc_center=mfcc,
-        ))
+        templates.append(
+            PhonemeTemplate(
+                arpabet=arpabet,
+                rama_coord=rama,
+                varga=int(varga_idx),
+                sthana=int(sthana_idx),
+                sound_class=sound_class,
+                f0_required=f0_required,
+                f1_center=f1,
+                f2_center=f2,
+                centroid_min=c_min,
+                centroid_max=c_max,
+                mfcc_center=mfcc,
+            )
+        )
 
     return tuple(templates)
 
@@ -413,8 +432,8 @@ def score_frame(
             # F1 = jaw height (open/close), F2 = tongue position (front/back)
             # Absolute Hz distance / fixed range avoids bias toward high-F2 templates.
             if t.f1_center > 0 and f1 > 0 and f2 > 0:
-                f1_err = abs(f1 - t.f1_center) / 500.0   # F1 range ~200-800
-                f2_err = abs(f2 - t.f2_center) / 1500.0   # F2 range ~800-2500
+                f1_err = abs(f1 - t.f1_center) / 500.0  # F1 range ~200-800
+                f2_err = abs(f2 - t.f2_center) / 1500.0  # F2 range ~800-2500
                 formant_score = max(0.0, 1.0 - (f1_err + f2_err))
                 score += 0.40 * formant_score
             elif t.f1_center == 0:
@@ -516,12 +535,13 @@ def _frames_to_phoneme_coords(
 # SEGMENTATION (stream → word-length segments)
 # =============================================================================
 
+
 @dataclass(frozen=True)
 class Segment:
     """A word-length segment of audio frames."""
 
-    start: int       # frame index (inclusive)
-    end: int         # frame index (exclusive)
+    start: int  # frame index (inclusive)
+    end: int  # frame index (exclusive)
     frames: Tuple[int, ...]
 
     @property
@@ -534,17 +554,15 @@ class Segment:
 
 
 # Segmentation thresholds — tuned for Prabhupada's speaking style
-_SILENCE_RMS = 15         # lower threshold catches quieter pauses
-_SILENCE_GAP = 2          # 2+ silent frames = word boundary (20ms)
-_ENERGY_DIP_RMS = 80      # energy dip threshold (catches inter-word dips)
-_ENERGY_DIP_GAP = 3       # 3+ low-energy frames = boundary (30ms)
-_MIN_SEGMENT_FRAMES = 5   # 50ms minimum (discard shorter)
+_SILENCE_RMS = 15  # lower threshold catches quieter pauses
+_SILENCE_GAP = 2  # 2+ silent frames = word boundary (20ms)
+_ENERGY_DIP_RMS = 80  # energy dip threshold (catches inter-word dips)
+_ENERGY_DIP_GAP = 3  # 3+ low-energy frames = boundary (30ms)
+_MIN_SEGMENT_FRAMES = 5  # 50ms minimum (discard shorter)
 _MAX_SEGMENT_FRAMES = 40  # 400ms maximum (typical max single-word length)
 
 
-def _split_at_rms_minimum(
-    frames: Sequence[int], start: int, end: int
-) -> List[Tuple[int, int]]:
+def _split_at_rms_minimum(frames: Sequence[int], start: int, end: int) -> List[Tuple[int, int]]:
     """Split a long segment at its internal RMS minimum.
 
     Finds the frame with lowest RMS in the middle third of the segment,
@@ -616,10 +634,7 @@ def segment_stream(frames: Sequence[int]) -> List[Segment]:
         if seg_start < 0:
             continue
 
-        is_boundary = (
-            silence_count >= _SILENCE_GAP
-            or dip_count >= _ENERGY_DIP_GAP
-        )
+        is_boundary = silence_count >= _SILENCE_GAP or dip_count >= _ENERGY_DIP_GAP
 
         if is_boundary:
             seg_end = i - silence_count + 1
@@ -645,11 +660,13 @@ def segment_stream(frames: Sequence[int]) -> List[Segment]:
         pieces = _split_at_rms_minimum(frames, s, e)
         for ps, pe in pieces:
             if pe - ps >= _MIN_SEGMENT_FRAMES:
-                segments.append(Segment(
-                    start=ps,
-                    end=pe,
-                    frames=tuple(frames[ps:pe]),
-                ))
+                segments.append(
+                    Segment(
+                        start=ps,
+                        end=pe,
+                        frames=tuple(frames[ps:pe]),
+                    )
+                )
 
     return segments
 
@@ -660,73 +677,422 @@ def segment_stream(frames: Sequence[int]) -> List[Segment]:
 
 _COMMON_ENGLISH: Final[Tuple[str, ...]] = (
     # Function words (articles, pronouns, prepositions, conjunctions)
-    "a", "an", "the", "this", "that", "these", "those",
-    "i", "me", "my", "we", "us", "our", "you", "your",
-    "he", "him", "his", "she", "her", "it", "its", "they", "them", "their",
-    "who", "what", "which", "where", "when", "how", "why",
-    "in", "on", "at", "to", "for", "of", "with", "from", "by", "as",
-    "up", "out", "about", "into", "over", "after", "under", "between",
-    "and", "or", "but", "not", "no", "so", "if", "then", "than", "because",
+    "a",
+    "an",
+    "the",
+    "this",
+    "that",
+    "these",
+    "those",
+    "i",
+    "me",
+    "my",
+    "we",
+    "us",
+    "our",
+    "you",
+    "your",
+    "he",
+    "him",
+    "his",
+    "she",
+    "her",
+    "it",
+    "its",
+    "they",
+    "them",
+    "their",
+    "who",
+    "what",
+    "which",
+    "where",
+    "when",
+    "how",
+    "why",
+    "in",
+    "on",
+    "at",
+    "to",
+    "for",
+    "of",
+    "with",
+    "from",
+    "by",
+    "as",
+    "up",
+    "out",
+    "about",
+    "into",
+    "over",
+    "after",
+    "under",
+    "between",
+    "and",
+    "or",
+    "but",
+    "not",
+    "no",
+    "so",
+    "if",
+    "then",
+    "than",
+    "because",
     # Common verbs
-    "is", "am", "are", "was", "were", "be", "been", "being",
-    "have", "has", "had", "do", "does", "did", "will", "would", "shall",
-    "should", "can", "could", "may", "might", "must",
-    "say", "said", "go", "went", "gone", "come", "came",
-    "get", "got", "give", "gave", "take", "took", "make", "made",
-    "know", "knew", "think", "thought", "see", "saw", "want", "wanted",
-    "look", "looked", "find", "found", "tell", "told", "ask", "asked",
-    "use", "used", "try", "tried", "leave", "left", "call", "called",
-    "keep", "kept", "let", "begin", "began", "seem", "seemed",
-    "help", "show", "hear", "heard", "play", "run", "ran",
-    "move", "live", "believe", "bring", "brought", "happen",
-    "write", "wrote", "sit", "sat", "stand", "stood", "lose", "lost",
-    "pay", "paid", "meet", "met", "set", "learn", "learned",
-    "lead", "led", "understand", "understood", "watch", "follow",
-    "stop", "stopped", "speak", "spoke", "read", "spend", "spent",
-    "grow", "grew", "open", "opened", "walk", "walked",
-    "win", "won", "teach", "develop", "preach", "preached",
+    "is",
+    "am",
+    "are",
+    "was",
+    "were",
+    "be",
+    "been",
+    "being",
+    "have",
+    "has",
+    "had",
+    "do",
+    "does",
+    "did",
+    "will",
+    "would",
+    "shall",
+    "should",
+    "can",
+    "could",
+    "may",
+    "might",
+    "must",
+    "say",
+    "said",
+    "go",
+    "went",
+    "gone",
+    "come",
+    "came",
+    "get",
+    "got",
+    "give",
+    "gave",
+    "take",
+    "took",
+    "make",
+    "made",
+    "know",
+    "knew",
+    "think",
+    "thought",
+    "see",
+    "saw",
+    "want",
+    "wanted",
+    "look",
+    "looked",
+    "find",
+    "found",
+    "tell",
+    "told",
+    "ask",
+    "asked",
+    "use",
+    "used",
+    "try",
+    "tried",
+    "leave",
+    "left",
+    "call",
+    "called",
+    "keep",
+    "kept",
+    "let",
+    "begin",
+    "began",
+    "seem",
+    "seemed",
+    "help",
+    "show",
+    "hear",
+    "heard",
+    "play",
+    "run",
+    "ran",
+    "move",
+    "live",
+    "believe",
+    "bring",
+    "brought",
+    "happen",
+    "write",
+    "wrote",
+    "sit",
+    "sat",
+    "stand",
+    "stood",
+    "lose",
+    "lost",
+    "pay",
+    "paid",
+    "meet",
+    "met",
+    "set",
+    "learn",
+    "learned",
+    "lead",
+    "led",
+    "understand",
+    "understood",
+    "watch",
+    "follow",
+    "stop",
+    "stopped",
+    "speak",
+    "spoke",
+    "read",
+    "spend",
+    "spent",
+    "grow",
+    "grew",
+    "open",
+    "opened",
+    "walk",
+    "walked",
+    "win",
+    "won",
+    "teach",
+    "develop",
+    "preach",
+    "preached",
     # Common nouns
-    "time", "year", "people", "way", "day", "man", "woman",
-    "child", "children", "world", "life", "hand", "part", "place",
-    "case", "week", "company", "system", "program", "question",
-    "work", "government", "number", "night", "point", "home", "water",
-    "room", "mother", "area", "money", "story", "fact", "month",
-    "lot", "right", "study", "book", "eye", "job", "word",
-    "business", "issue", "side", "kind", "head", "house", "service",
-    "friend", "father", "power", "hour", "game", "line", "end",
-    "members", "family", "law", "car", "city", "community", "name",
-    "boy", "boys", "girl", "girls", "group", "country", "problem",
-    "god", "lord", "soul", "spirit", "mind", "body", "heart",
-    "love", "truth", "peace", "light", "faith", "hope",
+    "time",
+    "year",
+    "people",
+    "way",
+    "day",
+    "man",
+    "woman",
+    "child",
+    "children",
+    "world",
+    "life",
+    "hand",
+    "part",
+    "place",
+    "case",
+    "week",
+    "company",
+    "system",
+    "program",
+    "question",
+    "work",
+    "government",
+    "number",
+    "night",
+    "point",
+    "home",
+    "water",
+    "room",
+    "mother",
+    "area",
+    "money",
+    "story",
+    "fact",
+    "month",
+    "lot",
+    "right",
+    "study",
+    "book",
+    "eye",
+    "job",
+    "word",
+    "business",
+    "issue",
+    "side",
+    "kind",
+    "head",
+    "house",
+    "service",
+    "friend",
+    "father",
+    "power",
+    "hour",
+    "game",
+    "line",
+    "end",
+    "members",
+    "family",
+    "law",
+    "car",
+    "city",
+    "community",
+    "name",
+    "boy",
+    "boys",
+    "girl",
+    "girls",
+    "group",
+    "country",
+    "problem",
+    "god",
+    "lord",
+    "soul",
+    "spirit",
+    "mind",
+    "body",
+    "heart",
+    "love",
+    "truth",
+    "peace",
+    "light",
+    "faith",
+    "hope",
     # Common adjectives
-    "good", "new", "first", "last", "long", "great", "little",
-    "own", "other", "old", "right", "big", "high", "different",
-    "small", "large", "next", "early", "young", "important", "few",
-    "public", "bad", "same", "able", "real", "best", "better",
-    "sure", "free", "true", "whole", "nice", "dear",
+    "good",
+    "new",
+    "first",
+    "last",
+    "long",
+    "great",
+    "little",
+    "own",
+    "other",
+    "old",
+    "right",
+    "big",
+    "high",
+    "different",
+    "small",
+    "large",
+    "next",
+    "early",
+    "young",
+    "important",
+    "few",
+    "public",
+    "bad",
+    "same",
+    "able",
+    "real",
+    "best",
+    "better",
+    "sure",
+    "free",
+    "true",
+    "whole",
+    "nice",
+    "dear",
     # Common adverbs
-    "just", "also", "very", "often", "however", "too", "usually",
-    "really", "already", "always", "never", "sometimes", "together",
-    "likely", "simply", "generally", "instead", "actually", "exactly",
-    "enough", "well", "here", "there", "now", "only", "quite",
-    "still", "back", "even", "ever", "ago", "once", "much",
-    "far", "away", "again", "perhaps", "maybe", "soon",
-    "fortunately", "unfortunately", "certainly", "definitely",
+    "just",
+    "also",
+    "very",
+    "often",
+    "however",
+    "too",
+    "usually",
+    "really",
+    "already",
+    "always",
+    "never",
+    "sometimes",
+    "together",
+    "likely",
+    "simply",
+    "generally",
+    "instead",
+    "actually",
+    "exactly",
+    "enough",
+    "well",
+    "here",
+    "there",
+    "now",
+    "only",
+    "quite",
+    "still",
+    "back",
+    "even",
+    "ever",
+    "ago",
+    "once",
+    "much",
+    "far",
+    "away",
+    "again",
+    "perhaps",
+    "maybe",
+    "soon",
+    "fortunately",
+    "unfortunately",
+    "certainly",
+    "definitely",
     # Prabhupada-specific vocabulary
-    "consciousness", "spiritual", "material", "devotional",
-    "transcendental", "transcendentalists", "supreme", "absolute",
-    "devotee", "devotees", "temple", "chanting", "mantra",
-    "meditation", "philosophy", "knowledge", "ignorance",
-    "liberation", "bondage", "karma", "dharma", "yoga",
-    "guru", "master", "disciple", "student", "teacher",
-    "preaching", "mission", "movement", "society", "international",
-    "enthusiastic", "wonderful", "beautiful", "merciful",
-    "gospel", "message", "instruction", "scripture",
-    "bhagavad", "gita", "vedic", "vedas", "upanishad",
-    "india", "america", "new", "york", "san", "francisco",
-    "eh", "ehm", "um", "uh", "oh", "yes", "no",
-    "some", "every", "many", "much", "more", "most", "any",
-    "all", "each", "both", "few", "several",
+    "consciousness",
+    "spiritual",
+    "material",
+    "devotional",
+    "transcendental",
+    "transcendentalists",
+    "supreme",
+    "absolute",
+    "devotee",
+    "devotees",
+    "temple",
+    "chanting",
+    "mantra",
+    "meditation",
+    "philosophy",
+    "knowledge",
+    "ignorance",
+    "liberation",
+    "bondage",
+    "karma",
+    "dharma",
+    "yoga",
+    "guru",
+    "master",
+    "disciple",
+    "student",
+    "teacher",
+    "preaching",
+    "mission",
+    "movement",
+    "society",
+    "international",
+    "enthusiastic",
+    "wonderful",
+    "beautiful",
+    "merciful",
+    "gospel",
+    "message",
+    "instruction",
+    "scripture",
+    "bhagavad",
+    "gita",
+    "vedic",
+    "vedas",
+    "upanishad",
+    "india",
+    "america",
+    "new",
+    "york",
+    "san",
+    "francisco",
+    "eh",
+    "ehm",
+    "um",
+    "uh",
+    "oh",
+    "yes",
+    "no",
+    "some",
+    "every",
+    "many",
+    "much",
+    "more",
+    "most",
+    "any",
+    "all",
+    "each",
+    "both",
+    "few",
+    "several",
 )
 
 
@@ -802,6 +1168,7 @@ class PronunciationDict:
         cmu: dict = {}
         try:
             from nltk.corpus import cmudict
+
             cmu = cmudict.dict()
         except Exception:
             logger.warning("CMU dict not available, falling back to encode_text")
@@ -840,7 +1207,9 @@ class PronunciationDict:
 
         logger.info(
             "PronunciationDict loaded: %d Sanskrit, %d English (CMU: %d available)",
-            len(self._sanskrit), len(self._english), len(cmu),
+            len(self._sanskrit),
+            len(self._english),
+            len(cmu),
         )
 
     def lookup(self, word: str) -> Optional[Tuple[int, ...]]:
@@ -977,8 +1346,8 @@ def _score_candidate(
                 sub_cost = 10
 
             curr[j] = min(
-                prev[j] + 10,          # deletion
-                curr[j - 1] + 10,      # insertion
+                prev[j] + 10,  # deletion
+                curr[j - 1] + 10,  # insertion
                 prev[j - 1] + sub_cost,  # substitution
             )
         prev, curr = curr, prev
@@ -1067,8 +1436,8 @@ class TranscriptWord:
     """A single recognized word in the transcript."""
 
     word: str
-    confidence: float     # 0-1
-    language: str         # "sanskrit" / "english"
+    confidence: float  # 0-1
+    language: str  # "sanskrit" / "english"
     rama_coords: Tuple[int, ...]
     start_ms: int
     end_ms: int
@@ -1188,11 +1557,15 @@ class ShabdaDecoder:
         # Slice MFCC frames for this segment
         seg_mfcc = None
         if mfcc_frames is not None:
-            seg_mfcc = mfcc_frames[seg.start:seg.end]
+            seg_mfcc = mfcc_frames[seg.start : seg.end]
 
         # ARPAbet path: frame → score_frame → top-1 ARPAbet → ARPABET_TO_RAMA
         raw_coords = _frames_to_phoneme_coords(
-            seg.frames, seg_raw, sample_rate, hop_ms, n_fft,
+            seg.frames,
+            seg_raw,
+            sample_rate,
+            hop_ms,
+            n_fft,
             mfcc_frames=seg_mfcc,
         )
         if not raw_coords:
@@ -1213,15 +1586,11 @@ class ShabdaDecoder:
 
         for fc in (first_coord, first_coord - 1, first_coord + 1):
             if 0 <= fc < 49:
-                candidates.extend(
-                    self._dict.candidates_for_segment(fc, coord_len, length_tolerance=3)
-                )
+                candidates.extend(self._dict.candidates_for_segment(fc, coord_len, length_tolerance=3))
 
         # Fallback: if too few candidates, search by length only
         if len(candidates) < 10:
-            candidates.extend(
-                self._dict.all_candidates_for_length(coord_len, length_tolerance=2)
-            )
+            candidates.extend(self._dict.all_candidates_for_length(coord_len, length_tolerance=2))
 
         if not candidates:
             return None

@@ -97,6 +97,7 @@ class CivicBank:
             self.vault = None
 
         import threading
+
         self._lock = threading.Lock()
 
         logger.info(f"🏦 CivicBank initialized at {self.DB_PATH}")
@@ -233,19 +234,19 @@ class CivicBank:
                     # We do the balance check and frozen check IN THE UPDATE statement
                     # to guarantee atomic operation even under high concurrency.
                     # If rowcount == 0, either they don't exist, lack funds, or are frozen.
-                    
+
                     # First check exactly why it might fail to give a good error message
                     cur.execute("SELECT balance, is_frozen FROM accounts WHERE agent_id = ?", (sender,))
                     row = cur.fetchone()
-                    
+
                     if not row:
                         raise InsufficientFundsError(f"Account {sender} does not exist")
-                        
+
                     if row["is_frozen"]:
-                        # Ensure we have a specific exception type for frozen accounts, 
+                        # Ensure we have a specific exception type for frozen accounts,
                         # but for now raise ValueError or InsufficientFundsError
                         raise ValueError(f"Account {sender} is frozen and cannot transfer funds")
-                        
+
                     if row["balance"] < amount:
                         raise InsufficientFundsError(f"{sender} has {row['balance']}, needs {amount}")
 
@@ -256,10 +257,12 @@ class CivicBank:
                         "WHERE agent_id = ? AND balance >= ? AND is_frozen = 0",
                         (amount, timestamp, sender, amount),
                     )
-                    
+
                     if cur.rowcount == 0:
                         # Race condition caught! State changed between SELECT and UPDATE.
-                        raise InsufficientFundsError(f"Atomic transfer failed: {sender} lacks funds or was frozen during transaction")
+                        raise InsufficientFundsError(
+                            f"Atomic transfer failed: {sender} lacks funds or was frozen during transaction"
+                        )
                 else:
                     timestamp = datetime.utcnow().isoformat()
 

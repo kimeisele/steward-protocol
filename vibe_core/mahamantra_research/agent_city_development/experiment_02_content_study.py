@@ -31,10 +31,12 @@ def get_client():
         print("ERROR: MOLTBOOK_API_KEY required")
         sys.exit(1)
     from vibe_core.mahamantra.adapters.moltbook import MoltbookClient
+
     return MoltbookClient(api_key=key)
 
 
 # ── 1. Top Posts Analysis ─────────────────────────────────────────────
+
 
 async def study_top_posts(client) -> dict:
     """Analyze the highest-performing posts — what makes them work?"""
@@ -108,6 +110,7 @@ async def study_top_posts(client) -> dict:
 
 # ── 2. Comment Engagement Patterns ────────────────────────────────────
 
+
 async def study_comments(client, post_ids: list) -> dict:
     """What kind of comments get engagement?"""
     print("\n" + "=" * 70)
@@ -148,6 +151,7 @@ async def study_comments(client, post_ids: list) -> dict:
 
 
 # ── 3. auroras_happycapy Deep Dive ────────────────────────────────────
+
 
 async def study_target_agent(client, agent_name: str) -> dict:
     """Study a specific high-performing agent's content."""
@@ -193,6 +197,7 @@ async def study_target_agent(client, agent_name: str) -> dict:
 
 # ── 4. What Topics Does the Community Care About? ─────────────────────
 
+
 async def map_community_interests(client) -> dict:
     """What topics actually get engagement vs. what gets ignored?"""
     print(f"\n{'=' * 70}")
@@ -234,6 +239,7 @@ async def map_community_interests(client) -> dict:
 
 
 # ── Main ──────────────────────────────────────────────────────────────
+
 
 async def main():
     print("=" * 70)
@@ -278,4 +284,5 @@ async def main():
 
 if __name__ == "__main__":
     import asyncio
+
     asyncio.run(main())

@@ -16,12 +16,17 @@ Mahamantra syllables and their vowels:
   rā  → vowel: /aː/ (long open)
   ma  → vowel: /a/  (open central)
 """
-import sys; sys.path.insert(0, ".")
+
+import sys
+
+sys.path.insert(0, ".")
 import json
 import numpy as np
 
 from vibe_core.mahamantra.sound.shabda_intake import (
-    ShabdaIntake, unpack_frame, extract_formants,
+    ShabdaIntake,
+    unpack_frame,
+    extract_formants,
 )
 
 # Load japa audio
@@ -39,10 +44,38 @@ chant_end = meta["chant_end_frame"]
 n_syllables = 32
 
 SYLLABLES = (
-    "ha", "re", "kṛ", "ṣṇa", "ha", "re", "kṛ", "ṣṇa",
-    "kṛ", "ṣṇa", "kṛ", "ṣṇa", "ha", "re", "ha", "re",
-    "ha", "re", "rā", "ma", "ha", "re", "rā", "ma",
-    "rā", "ma", "rā", "ma", "ha", "re", "ha", "re",
+    "ha",
+    "re",
+    "kṛ",
+    "ṣṇa",
+    "ha",
+    "re",
+    "kṛ",
+    "ṣṇa",
+    "kṛ",
+    "ṣṇa",
+    "kṛ",
+    "ṣṇa",
+    "ha",
+    "re",
+    "ha",
+    "re",
+    "ha",
+    "re",
+    "rā",
+    "ma",
+    "ha",
+    "re",
+    "rā",
+    "ma",
+    "rā",
+    "ma",
+    "rā",
+    "ma",
+    "ha",
+    "re",
+    "ha",
+    "re",
 )
 
 chant_range = chant_end - chant_start
@@ -57,6 +90,7 @@ n_fft = stream.n_fft
 
 # Collect formants per unique syllable
 from collections import defaultdict
+
 syllable_formants = defaultdict(list)  # syllable → [(f1, f2), ...]
 
 print()
@@ -89,8 +123,10 @@ for pos in range(n_syllables):
         avg_f1 = int(np.mean(f1_vals))
         avg_f2 = int(np.mean(f2_vals))
         syllable_formants[syl].append((avg_f1, avg_f2))
-        print(f"  pos={pos:2d} '{syl:4s}' frames={frame_end-frame_start:3d} "
-              f"voiced={len(f1_vals):3d}  F1={avg_f1:4d}  F2={avg_f2:4d}")
+        print(
+            f"  pos={pos:2d} '{syl:4s}' frames={frame_end - frame_start:3d} "
+            f"voiced={len(f1_vals):3d}  F1={avg_f1:4d}  F2={avg_f2:4d}"
+        )
 
 # Aggregate per unique syllable
 print()
@@ -99,12 +135,12 @@ print("Averaged formants per syllable (Prabhupada's voice)")
 print("=" * 70)
 
 TEXTBOOK = {
-    "ha":  ("AH/AA", 520, 1200),  # /a/ → AH in ARPABET
-    "re":  ("EH/EY", 530, 1850),  # /e/ → EH
-    "kṛ":  ("ER",    490, 1350),  # /ṛ/ → ER
+    "ha": ("AH/AA", 520, 1200),  # /a/ → AH in ARPABET
+    "re": ("EH/EY", 530, 1850),  # /e/ → EH
+    "kṛ": ("ER", 490, 1350),  # /ṛ/ → ER
     "ṣṇa": ("AH/AA", 520, 1200),  # /a/ → AH
-    "rā":  ("AA",    750, 1200),  # /aː/ → AA
-    "ma":  ("AH/AA", 520, 1200),  # /a/ → AH
+    "rā": ("AA", 750, 1200),  # /aː/ → AA
+    "ma": ("AH/AA", 520, 1200),  # /a/ → AH
 }
 
 for syl, formant_list in sorted(syllable_formants.items()):
@@ -118,9 +154,11 @@ for syl, formant_list in sorted(syllable_formants.items()):
     f1_diff = avg_f1 - tb_f1
     f2_diff = avg_f2 - tb_f2
 
-    print(f"  '{syl:4s}' (n={n:2d})  F1={avg_f1:4d}  F2={avg_f2:4d}  "
-          f"| textbook({textbook_name}): F1={tb_f1:4d}  F2={tb_f2:4d}  "
-          f"| diff: F1={f1_diff:+4d}  F2={f2_diff:+4d}")
+    print(
+        f"  '{syl:4s}' (n={n:2d})  F1={avg_f1:4d}  F2={avg_f2:4d}  "
+        f"| textbook({textbook_name}): F1={tb_f1:4d}  F2={tb_f2:4d}  "
+        f"| diff: F1={f1_diff:+4d}  F2={f2_diff:+4d}"
+    )
 
 # Also: what formants does the TALK audio produce?
 print()
@@ -130,12 +168,19 @@ print("=" * 70)
 
 talk_stream = intake.process_file("temp/prabhupada-talk.wav")
 from vibe_core.mahamantra.sound.shabda_decoder import segment_stream
+
 segments = segment_stream(talk_stream.frames)
 
 EXPECTED = ["eh", "not", "exactly", "but", "i", "came", "to", "preach"]
 VOWEL_MAP = {
-    "eh": "EH", "not": "AH", "exactly": "EH", "but": "AH",
-    "i": "AY", "came": "EY", "to": "UW", "preach": "IY",
+    "eh": "EH",
+    "not": "AH",
+    "exactly": "EH",
+    "but": "AH",
+    "i": "AY",
+    "came": "EY",
+    "to": "UW",
+    "preach": "IY",
 }
 
 hop2 = int(talk_stream.sample_rate * 10 / 1000)
@@ -164,12 +209,18 @@ for si in range(min(8, len(segments))):
         expected = EXPECTED[si] if si < len(EXPECTED) else "?"
         expected_vowel = VOWEL_MAP.get(expected, "?")
         tb_f1, tb_f2 = dict(
-            AH=(520, 1200), EH=(530, 1850), EY=(400, 2200),
-            IY=(280, 2300), AY=(700, 1200), UW=(300, 900),
+            AH=(520, 1200),
+            EH=(530, 1850),
+            EY=(400, 2200),
+            IY=(280, 2300),
+            AY=(700, 1200),
+            UW=(300, 900),
             AA=(750, 1200),
         ).get(expected_vowel, (0, 0))
 
-        print(f"  [{ms_s:5d}-{ms_e:5d}ms] ({expected:10s})  "
-              f"F1={avg_f1:4d}  F2={avg_f2:4d}  "
-              f"| expected {expected_vowel}: F1={tb_f1:4d} F2={tb_f2:4d}  "
-              f"| diff: F1={avg_f1-tb_f1:+4d} F2={avg_f2-tb_f2:+4d}")
+        print(
+            f"  [{ms_s:5d}-{ms_e:5d}ms] ({expected:10s})  "
+            f"F1={avg_f1:4d}  F2={avg_f2:4d}  "
+            f"| expected {expected_vowel}: F1={tb_f1:4d} F2={tb_f2:4d}  "
+            f"| diff: F1={avg_f1 - tb_f1:+4d} F2={avg_f2 - tb_f2:+4d}"
+        )

@@ -122,6 +122,7 @@ class ManasOracle:
 
         # Own MemoryStore — no kernel dependency
         from .memory_store import MemoryStore
+
         self._memory = MemoryStore(workspace=self._workspace)
 
         logger.info("ManasOracle initialized (lightweight, no kernel boot)")

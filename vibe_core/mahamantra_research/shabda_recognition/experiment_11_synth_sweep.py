@@ -16,7 +16,10 @@ The attractor histogram across all frequencies = high-dimensional fingerprint.
 
 THEN: compare fingerprints using existing infrastructure (cosine similarity).
 """
-import sys; sys.path.insert(0, ".")
+
+import sys
+
+sys.path.insert(0, ".")
 import math
 from typing import Dict, List, Sequence, Tuple
 
@@ -24,13 +27,20 @@ from vibe_core.mahamantra.sound.shabda_intake import ShabdaIntake
 from vibe_core.mahamantra.sound.shabda_vibration import stream_to_vibrations
 from vibe_core.mahamantra.sound.shabda_decoder import segment_stream
 from vibe_core.mahamantra.substrate.algorithm.maha import (
-    MahaModularSynth, MahaSynthParams,
+    MahaModularSynth,
+    MahaSynthParams,
 )
 from vibe_core.mahamantra.substrate.phonetics.shabda import (
-    text_to_vibration, VibrationSignature,
+    text_to_vibration,
+    VibrationSignature,
 )
 from vibe_core.mahamantra.protocols._seed import (
-    MAHA_QUANTUM, PANCHA, NAVA, QUARTERS, SEVEN, WORDS,
+    MAHA_QUANTUM,
+    PANCHA,
+    NAVA,
+    QUARTERS,
+    SEVEN,
+    WORDS,
 )
 
 synth = MahaModularSynth(default_preset="quantum")
@@ -40,9 +50,13 @@ SWEEP_PARAMS: List[MahaSynthParams] = []
 for mod in [MAHA_QUANTUM, 37, 49, 17, 512]:
     for fb in [0, 1, 3, 5]:
         for offset in [0, 4, 8]:
-            SWEEP_PARAMS.append(MahaSynthParams(
-                mod_space=mod, feedback=fb, phase_offset=offset,
-            ))
+            SWEEP_PARAMS.append(
+                MahaSynthParams(
+                    mod_space=mod,
+                    feedback=fb,
+                    phase_offset=offset,
+                )
+            )
 
 N_FREQS = len(SWEEP_PARAMS)
 print(f"Sweep: {N_FREQS} frequency combinations")
@@ -50,24 +64,24 @@ print(f"Sweep: {N_FREQS} frequency combinations")
 
 def multi_freq_fingerprint(sigs: Sequence[VibrationSignature]) -> Tuple[float, ...]:
     """Play phonemes through all frequency combinations.
-    
+
     Returns: histogram of attractors across all frequencies.
     Bin count = largest mod_space (512) → 512-dim vector.
     """
     BINS = 512
     hist = [0.0] * BINS
-    
+
     for sig in sigs:
         seed = sig.signature_id
         for params in SWEEP_PARAMS:
             attractor = synth.transform(seed, params=params)
             hist[attractor % BINS] += 1.0
-    
+
     # Normalize
     total = sum(hist)
     if total > 0:
         hist = [h / total for h in hist]
-    
+
     return tuple(hist)
 
 
@@ -82,10 +96,29 @@ def cosine_sim(a: Tuple[float, ...], b: Tuple[float, ...]) -> float:
 
 
 # Build word fingerprints
-VOCAB = ["the", "and", "not", "but", "i", "came", "to", "preach", 
-         "gospel", "of", "krishna", "consciousness", "fortunately",
-         "met", "some", "enthusiastic", "young", "boys", "girls",
-         "eh", "exactly"]
+VOCAB = [
+    "the",
+    "and",
+    "not",
+    "but",
+    "i",
+    "came",
+    "to",
+    "preach",
+    "gospel",
+    "of",
+    "krishna",
+    "consciousness",
+    "fortunately",
+    "met",
+    "some",
+    "enthusiastic",
+    "young",
+    "boys",
+    "girls",
+    "eh",
+    "exactly",
+]
 
 print(f"\nBuilding fingerprints for {len(VOCAB)} words...")
 word_fps: Dict[str, Tuple[float, ...]] = {}
@@ -127,9 +160,9 @@ for si, seg in enumerate(segments):
     vibs = stream_to_vibrations(seg.frames)
     if not vibs:
         continue
-    
+
     audio_fp = multi_freq_fingerprint(vibs)
-    
+
     best_word = ""
     best_sim = -1.0
     for word, word_fp in word_fps.items():
@@ -137,7 +170,7 @@ for si, seg in enumerate(segments):
         if sim > best_sim:
             best_sim = sim
             best_word = word
-    
+
     if best_sim >= 0.3:
         print(f"  [{ms_s:5d}-{ms_e:5d}ms] {best_word:20s} sim={best_sim:.3f}")
         words_out.append(best_word)
@@ -145,4 +178,4 @@ for si, seg in enumerate(segments):
 correct = sum(1 for w in words_out if w.lower() in expected_words)
 print(f"\nTRANSCRIPT: {' '.join(words_out)}")
 print(f"EXPECTED:   {EXPECTED}")
-print(f"\nCorrect: {correct}/{len(words_out)} ({correct/max(1,len(words_out))*100:.0f}%)")
+print(f"\nCorrect: {correct}/{len(words_out)} ({correct / max(1, len(words_out)) * 100:.0f}%)")

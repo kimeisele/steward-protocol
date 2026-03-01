@@ -11,16 +11,19 @@ logger = logging.getLogger("MOLTBOOK.WIRING")
 
 class CircuitExecutor(Protocol):
     """Circuit executor interface."""
+
     circuits: dict
 
 
 class MetaCircuitManager(Protocol):
     """Meta circuit manager interface."""
+
     pass
 
 
 class AgoraAgent(Protocol):
     """AGORA agent interface."""
+
     def publish_message(
         self,
         source: str,
@@ -49,9 +52,7 @@ class WiringModule:
             if "MOLTBOOK_CONTENT_V1" in executor.circuits:
                 self.circuit_executor = executor
                 self.meta_circuit_manager = manager
-                logger.info(
-                    f"Circuit executor wired: {len(executor.circuits)} circuits loaded"
-                )
+                logger.info(f"Circuit executor wired: {len(executor.circuits)} circuits loaded")
             else:
                 logger.warning("MOLTBOOK_CONTENT_V1 not found in circuits")
         except Exception as e:
@@ -69,9 +70,7 @@ class WiringModule:
         except Exception as e:
             logger.warning(f"AGORA wiring skipped: {e}")
 
-    def broadcast_to_agora(
-        self, content_type: str, content: str, metadata: dict
-    ) -> None:
+    def broadcast_to_agora(self, content_type: str, content: str, metadata: dict) -> None:
         """Broadcast content to AGORA."""
         if not self.agora:
             return

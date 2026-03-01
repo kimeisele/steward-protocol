@@ -4,7 +4,6 @@ Tests for substrate/language/phonetics.py — 3D Syllable Vectors from CMU ARPAb
 Tests what is DERIVED from the protocol, not invented.
 """
 
-
 from vibe_core.mahamantra.protocols._seed import KSETRAJNA
 from vibe_core.mahamantra.substrate.language.phonetics import (
     _VOWEL_GROUP_RE,

@@ -30,9 +30,9 @@ _CREDIT_COSTS: Dict[str, int] = {
     ContentType.COMMENT.value: 2,
     ContentType.DM_REPLY.value: 1,
     ContentType.DM_INITIATE.value: 1,
-    ContentType.VOTE.value: 0,      # Free — social grooming
-    ContentType.FOLLOW.value: 0,    # Free — social grooming
-    ContentType.SUBSCRIBE.value: 0, # Free — discovery
+    ContentType.VOTE.value: 0,  # Free — social grooming
+    ContentType.FOLLOW.value: 0,  # Free — social grooming
+    ContentType.SUBSCRIBE.value: 0,  # Free — discovery
 }
 
 
@@ -85,8 +85,7 @@ class ContentDrainer:
         self._last_post_ts: float = 0.0
         if own_post_ids:
             latest = max(
-                (v.get("created_at", 0.0) for v in own_post_ids.values()
-                 if isinstance(v, dict)),
+                (v.get("created_at", 0.0) for v in own_post_ids.values() if isinstance(v, dict)),
                 default=0.0,
             )
             if latest > 0:
@@ -155,7 +154,9 @@ class ContentDrainer:
             return
         try:
             tx_id = self._bank.transfer(
-                self._agent_id, "CIVIC", cost,
+                self._agent_id,
+                "CIVIC",
+                cost,
                 f"moltbook_{content_type}",
                 service_type="content",
             )
@@ -509,12 +510,10 @@ class ContentDrainer:
         now = time.time()
         hour_ago = now - 3600
         self._comment_timestamps = [
-            t for t in state.get("comment_timestamps", [])
-            if isinstance(t, (int, float)) and t > hour_ago
+            t for t in state.get("comment_timestamps", []) if isinstance(t, (int, float)) and t > hour_ago
         ]
         self._dm_timestamps = [
-            t for t in state.get("dm_timestamps", [])
-            if isinstance(t, (int, float)) and t > hour_ago
+            t for t in state.get("dm_timestamps", []) if isinstance(t, (int, float)) and t > hour_ago
         ]
         logger.info(
             f"Rate limits restored: post={self._last_post_ts:.0f}, "

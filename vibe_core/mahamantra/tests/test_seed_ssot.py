@@ -298,4 +298,3 @@ class TestSeedCrossValidation:
 
         assert COSMIC_FRAME == 21600
         assert JIVA_QUALITIES == COSMIC_FRAME // JIVA_CYCLE == 50
-

@@ -46,8 +46,8 @@ logger = logging.getLogger("MOLTBOOK_DIRECTOR")
 # Per-guna integrity thresholds — ALL gunas can skip, not just TAMAS.
 # Derived from COSMIC_FRAME (21600). Higher guna = lower bar (more trust).
 _INTEGRITY_THRESHOLDS = {
-    "SATTVA": COSMIC_FRAME * HALVES // PANCHA,        # 8640 — low bar, SATTVA is usually clean
-    "RAJAS": COSMIC_FRAME * TRINITY // PANCHA,        # 12960 — medium, RAJAS is 90% of traffic
+    "SATTVA": COSMIC_FRAME * HALVES // PANCHA,  # 8640 — low bar, SATTVA is usually clean
+    "RAJAS": COSMIC_FRAME * TRINITY // PANCHA,  # 12960 — medium, RAJAS is 90% of traffic
     "TAMAS": COSMIC_FRAME * SHARANAGATI // (QUARTERS * PANCHA),  # 6480 — same as before
 }
 
@@ -314,9 +314,7 @@ class AgencyDirector:
                         f"observations={evaluation.observations[:2]})"
                     )
                     elapsed = (time.monotonic() - t0) * 1000
-                    self.event_log.record_content_rejected(
-                        content, "buddhi_incoherent", list(evaluation.observations)
-                    )
+                    self.event_log.record_content_rejected(content, "buddhi_incoherent", list(evaluation.observations))
                     self._emit("VIOLATION", f"Buddhi incoherent: {evaluation.observations[:2]}")
                     return CycleResult(
                         status="VALIDATION_FAILED",
@@ -499,7 +497,9 @@ class AgencyDirector:
             input_tokens = len(seed_text.split())
             output_tokens = len(content.split())
             sravanam_ok, sravanam_reason = SravanamCheck.can_emit(
-                input_tokens, output_tokens, integrity,
+                input_tokens,
+                output_tokens,
+                integrity,
             )
             if not sravanam_ok:
                 safe_size = SravanamCheck.compute_safe_output_size(input_tokens)

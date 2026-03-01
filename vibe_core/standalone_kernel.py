@@ -98,10 +98,7 @@ class StandaloneManifestRegistry(ManifestRegistry):
         return self._manifests.get(agent_id)
 
     def find_by_capability(self, capability: str) -> List[AgentManifest]:
-        return [
-            m for m in self._manifests.values()
-            if capability in (m.capabilities or [])
-        ]
+        return [m for m in self._manifests.values() if capability in (m.capabilities or [])]
 
     def list_all(self) -> List[AgentManifest]:
         return list(self._manifests.values())
@@ -133,6 +130,7 @@ class StandaloneKernel(VibeKernel):
             self._ledger = ledger
         else:
             from vibe_core.mahamantra.substrate.state.ledger import InMemoryLedger
+
             self._ledger = InMemoryLedger()
 
         self._agents: Dict[str, VibeAgent] = {}
@@ -202,10 +200,7 @@ class StandaloneKernel(VibeKernel):
         return {
             "status": self._status.value,
             "agents": len(self._agents),
-            "ledger_events": (
-                self._ledger.count_events()
-                if hasattr(self._ledger, "count_events") else "N/A"
-            ),
+            "ledger_events": (self._ledger.count_events() if hasattr(self._ledger, "count_events") else "N/A"),
             "queue": self._scheduler.get_queue_status(),
         }
 
@@ -214,12 +209,7 @@ class StandaloneKernel(VibeKernel):
 
     def find_agents_by_capability(self, capability: str) -> List[VibeAgent]:
         manifests = self._manifest_registry.find_by_capability(capability)
-        return [
-            self._agents[m.agent_id]
-            for m in manifests
-            if m.agent_id in self._agents
-        ]
-
+        return [self._agents[m.agent_id] for m in manifests if m.agent_id in self._agents]
 
 
 # =============================================================================

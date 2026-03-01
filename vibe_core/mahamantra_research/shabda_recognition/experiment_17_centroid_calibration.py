@@ -23,7 +23,10 @@ centroid_100 ranges should be:
 Let's verify: what centroid_100 values do we actually see, and
 what varga did they get?
 """
-import sys; sys.path.insert(0, ".")
+
+import sys
+
+sys.path.insert(0, ".")
 
 from vibe_core.mahamantra.sound.shabda_intake import ShabdaIntake, unpack_frame
 from vibe_core.mahamantra.sound.shabda_decoder import segment_stream
@@ -64,9 +67,11 @@ for v in range(5):
         avg = sum(vals) / len(vals)
         lo = min(vals)
         hi = max(vals)
-        print(f"  varga={v} ({VARGA_NAMES[v]:5s}): n={len(vals):4d} "
-              f"cent_100: avg={avg:.0f} min={lo} max={hi} "
-              f"(Hz: avg={avg*100:.0f} min={lo*100} max={hi*100})")
+        print(
+            f"  varga={v} ({VARGA_NAMES[v]:5s}): n={len(vals):4d} "
+            f"cent_100: avg={avg:.0f} min={lo} max={hi} "
+            f"(Hz: avg={avg * 100:.0f} min={lo * 100} max={hi * 100})"
+        )
 
 print()
 print("Expected varga from centroid_100 thresholds:")

@@ -105,7 +105,11 @@ class TestCreditDeduction:
         drainer = _make_drainer(bank=bank)
         drainer.deduct_credits("post")
         bank.transfer.assert_called_once_with(
-            "test-agent", "CIVIC", 5, "moltbook_post", service_type="content",
+            "test-agent",
+            "CIVIC",
+            5,
+            "moltbook_post",
+            service_type="content",
         )
 
     def test_deducts_on_comment(self):
@@ -114,7 +118,11 @@ class TestCreditDeduction:
         drainer = _make_drainer(bank=bank)
         drainer.deduct_credits("comment")
         bank.transfer.assert_called_once_with(
-            "test-agent", "CIVIC", 2, "moltbook_comment", service_type="content",
+            "test-agent",
+            "CIVIC",
+            2,
+            "moltbook_comment",
+            service_type="content",
         )
 
     def test_no_deduction_for_free_actions(self):
@@ -150,12 +158,14 @@ class TestDrainCreditGating:
         drainer._get_service = MagicMock(return_value=service)
 
         queue = ContentQueue()
-        queue.enqueue({
-            "content_type": ContentType.POST.value,
-            "title": "Test Post",
-            "content": "Test content",
-            "priority": 5,
-        })
+        queue.enqueue(
+            {
+                "content_type": ContentType.POST.value,
+                "title": "Test Post",
+                "content": "Test content",
+                "priority": 5,
+            }
+        )
 
         drainer.drain(queue, offline_mode=False)
 
@@ -178,11 +188,13 @@ class TestDrainCreditGating:
         drainer._get_service = MagicMock(return_value=service)
 
         queue = ContentQueue()
-        queue.enqueue({
-            "content_type": ContentType.VOTE.value,
-            "post_id": "p1",
-            "priority": 1,
-        })
+        queue.enqueue(
+            {
+                "content_type": ContentType.VOTE.value,
+                "post_id": "p1",
+                "priority": 1,
+            }
+        )
 
         drainer.drain(queue, offline_mode=False)
 
@@ -220,7 +232,7 @@ class TestBankInit:
         mock_bank.transfer.assert_called_once()
         args = mock_bank.transfer.call_args
         assert args[0][0] == "MINT"  # sender
-        assert args[0][2] == 1000    # amount
+        assert args[0][2] == 1000  # amount
 
     def test_init_bank_skips_mint_when_funded(self):
         """Don't mint if account already has credits."""

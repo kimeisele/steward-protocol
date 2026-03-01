@@ -154,6 +154,7 @@ class HeartbeatOrchestrator:
             # KARMA: Meditation gate — Manas decides if we should act
             try:
                 from vibe_core.mahamantra.substrate.manas import get_manas
+
                 if not get_manas().should_act():
                     logger.info("MEDITATION: Manas says skip — observing only")
                     self._safe_call(self._actions._check_own_comment_replies, "reply_monitoring")

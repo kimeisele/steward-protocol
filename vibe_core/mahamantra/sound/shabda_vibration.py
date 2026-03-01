@@ -154,32 +154,34 @@ def stream_to_vibrations(frames: Sequence[int]) -> Tuple[VibrationSignature, ...
         if rms < _RMS_VOICED_THRESHOLD:
             # Silence: flush current phoneme
             if current_art is not None and duration > 0:
-                signatures.append(VibrationSignature(
-                    articulation=current_art,
-                    voicing=current_voicing,
-                    base_frequency=current_freq,
-                    duration_ratio=min(duration, AKSARA_COUNT),
-                ))
+                signatures.append(
+                    VibrationSignature(
+                        articulation=current_art,
+                        voicing=current_voicing,
+                        base_frequency=current_freq,
+                        duration_ratio=min(duration, AKSARA_COUNT),
+                    )
+                )
                 current_art = None
                 duration = 0
             continue
 
         sig = frame_to_vibration(packed)
 
-        if (sig.articulation == current_art
-                and sig.voicing == current_voicing
-                and sig.base_frequency == current_freq):
+        if sig.articulation == current_art and sig.voicing == current_voicing and sig.base_frequency == current_freq:
             # Same phoneme continues — accumulate duration
             duration += KSETRAJNA
         else:
             # New phoneme — flush previous
             if current_art is not None and duration > 0:
-                signatures.append(VibrationSignature(
-                    articulation=current_art,
-                    voicing=current_voicing,
-                    base_frequency=current_freq,
-                    duration_ratio=min(duration, AKSARA_COUNT),
-                ))
+                signatures.append(
+                    VibrationSignature(
+                        articulation=current_art,
+                        voicing=current_voicing,
+                        base_frequency=current_freq,
+                        duration_ratio=min(duration, AKSARA_COUNT),
+                    )
+                )
             current_art = sig.articulation
             current_voicing = sig.voicing
             current_freq = sig.base_frequency
@@ -187,12 +189,14 @@ def stream_to_vibrations(frames: Sequence[int]) -> Tuple[VibrationSignature, ...
 
     # Flush last phoneme
     if current_art is not None and duration > 0:
-        signatures.append(VibrationSignature(
-            articulation=current_art,
-            voicing=current_voicing,
-            base_frequency=current_freq,
-            duration_ratio=min(duration, AKSARA_COUNT),
-        ))
+        signatures.append(
+            VibrationSignature(
+                articulation=current_art,
+                voicing=current_voicing,
+                base_frequency=current_freq,
+                duration_ratio=min(duration, AKSARA_COUNT),
+            )
+        )
 
     return tuple(signatures)
 
