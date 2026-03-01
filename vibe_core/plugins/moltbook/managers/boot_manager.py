@@ -145,7 +145,7 @@ class BootManager:
                     self._state.agent_name = name
                     logger.info(f"Agent name: {name}")
             except Exception as e:
-                logger.debug(f"Profile name fetch failed, keeping default: {e}")
+                logger.warning(f"Profile name fetch failed, keeping default: {e}")
 
             # === STEP 7: Boot proposer ===
             self._actions._boot_proposer()

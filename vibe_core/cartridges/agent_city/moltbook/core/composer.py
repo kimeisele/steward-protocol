@@ -87,10 +87,6 @@ class ContentComposer:
             if not self._verify_topic_overlap(content, input_text):
                 logger.warning("Topic drift detected — rejecting")
                 return None
-            # Post-LLM: chapter coherence (mechanical — Buddhi re-evaluation)
-            if not self._verify_chapter_coherence(content, cognition):
-                logger.warning("Chapter drift detected — rejecting")
-                return None
             # Clean mid-sentence cuts
             if not content.rstrip().endswith((".", "!", "?", ":", "```")):
                 content = self.truncate_smart(content, len(content))
@@ -362,28 +358,6 @@ class ContentComposer:
             return True
         except Exception as e:
             logger.warning(f"Topic overlap check failed: {e}")
-            return True  # Can't verify, pass through
-
-    @staticmethod
-    def _verify_chapter_coherence(output: str, input_cognition: BuddhiResult) -> bool:
-        """Mechanical check: output cognitive chapter matches input.
-
-        Re-runs Buddhi.think() on the OUTPUT. If chapter diverged,
-        the LLM drifted off-topic. Pure VM computation, no LLM.
-        """
-        try:
-            from vibe_core.mahamantra.substrate.buddhi import get_buddhi
-
-            output_cognition = get_buddhi().think(output)
-            if output_cognition.chapter != input_cognition.chapter:
-                logger.warning(
-                    f"Chapter drift: input ch.{input_cognition.chapter} "
-                    f"→ output ch.{output_cognition.chapter}"
-                )
-                return False
-            return True
-        except Exception as e:
-            logger.warning(f"Chapter coherence check failed: {e}")
             return True  # Can't verify, pass through
 
     @staticmethod

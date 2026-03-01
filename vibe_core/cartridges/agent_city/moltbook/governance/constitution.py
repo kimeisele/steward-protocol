@@ -84,6 +84,10 @@ UNTRANSLATED_INTERNALS = [
     "pada_sevanam",
     "atma_nivedanam",
     "sravanam",
+    # Guna pipeline terms — pipeline jargon, never in user-facing content
+    "sattva",
+    "rajas",
+    "tamas",
 ]
 
 # AI slop patterns — filler phrases that signal LLM template output.
@@ -169,10 +173,10 @@ class MoltbookConstitution:
         """Check for mechanical quality issues (slop, untranslated terms)."""
         content_lower = content.lower()
 
-        # Warnings: untranslated Sanskrit pipeline terms
+        # Violations: untranslated pipeline terms — internal jargon must not leak
         for term in UNTRANSLATED_INTERNALS:
             if term in content_lower:
-                warnings.append(f"Untranslated pipeline term: '{term}' — needs translation layer")
+                violations.append(f"Internal term leak: '{term}' — pipeline jargon in content")
 
         # AI slop detection: filler patterns that signal template output
         slop_count = sum(1 for p in SLOP_PATTERNS if p in content_lower)

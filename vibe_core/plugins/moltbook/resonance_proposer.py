@@ -255,7 +255,7 @@ class ResonanceProposer(ContentProposalProtocol):
                 composer = MahaComposition()
                 composer.compose(pipeline_result, user_input)  # analytics side-effect only
             except Exception as e:
-                logger.debug(f"MahaComposition analytics: {e}")
+                logger.warning(f"MahaComposition analytics: {e}")
 
         # Extract engine data for context
         guardian_name = getattr(engine_result, "guardian_name", "") or "" if engine_result else ""

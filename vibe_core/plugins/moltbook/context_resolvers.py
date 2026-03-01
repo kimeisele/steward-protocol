@@ -114,7 +114,7 @@ def resolve_recent_content(state: "MoltbookState") -> str:
                     data = entry.get("data", {})
                     recent.append(f"{entry['event']}: {data.get('title', data.get('post_id', ''))[:60]}")
             except Exception as e:
-                logger.debug(f"Activity log entry malformed: {e}")
+                logger.warning(f"Activity log entry malformed: {e}")
                 continue
         return " | ".join(recent) if recent else ""
     except Exception as e:

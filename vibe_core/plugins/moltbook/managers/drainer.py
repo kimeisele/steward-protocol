@@ -414,7 +414,7 @@ class ContentDrainer:
         - {"success": true, "id": "..."}  (with status flag)
         """
         if not isinstance(result, dict):
-            logger.debug(f"Post API response is not dict: {type(result).__name__}")
+            logger.warning(f"Post API response is not dict: {type(result).__name__}")
             return ""
 
         # Log response keys for debugging (first time helps identify format)

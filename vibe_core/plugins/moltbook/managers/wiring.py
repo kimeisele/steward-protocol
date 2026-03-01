@@ -67,7 +67,7 @@ class WiringModule:
             else:
                 logger.info("AGORA not available")
         except Exception as e:
-            logger.debug(f"AGORA wiring skipped: {e}")
+            logger.warning(f"AGORA wiring skipped: {e}")
 
     def broadcast_to_agora(
         self, content_type: str, content: str, metadata: dict
@@ -86,4 +86,4 @@ class WiringModule:
                 },
             )
         except Exception as e:
-            logger.debug(f"AGORA broadcast failed: {e}")
+            logger.warning(f"AGORA broadcast failed: {e}")

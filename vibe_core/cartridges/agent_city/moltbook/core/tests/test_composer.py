@@ -512,14 +512,14 @@ class TestConstitutionHardGates:
 
         self.constitution = MoltbookConstitution()
 
-    def test_tamas_blocks_post(self):
+    def test_tamas_allows_post(self):
+        """Guna = STYLE, not GATE. TAMAS does NOT block posts."""
         result = self.constitution.validate(
             "Valid content here with multiple sentences. This should be enough.",
             "post",
             guna="TAMAS",
         )
-        assert not result.is_valid
-        assert any("TAMAS" in v for v in result.violations)
+        assert result.is_valid
 
     def test_tamas_allows_comment(self):
         result = self.constitution.validate(

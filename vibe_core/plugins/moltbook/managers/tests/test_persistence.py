@@ -173,8 +173,8 @@ class TestGovernedWrite:
         written = json.loads(target.read_text())
         assert written["fallback"] is True
 
-    def test_gate_blocked_does_not_write_file(self, tmp_path):
-        """When gate blocks the write, no file is written."""
+    def test_gate_blocked_falls_back_to_direct_write(self, tmp_path):
+        """When gate blocks the write, fallback to direct write (state > policy)."""
         mock_gate = MagicMock()
         mock_result = MagicMock()
         mock_result.success = False
@@ -193,8 +193,8 @@ class TestGovernedWrite:
         ):
             _governed_write("blocked.json", {"data": 1}, target, actor="test")
 
-        # File should NOT exist — gate blocked it
-        assert not target.exists()
+        # File SHOULD exist — gate blocked but fallback direct write fires
+        assert target.exists()
 
 
 class TestGovernedPersistence:

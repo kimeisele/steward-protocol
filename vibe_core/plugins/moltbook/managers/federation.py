@@ -155,7 +155,7 @@ def read_city_report(state_dir: Optional[Path] = None) -> Optional[Dict]:
             return data
         return None
     except Exception as e:
-        logger.debug(f"CityReport read failed: {e}")
+        logger.warning(f"CityReport read failed: {e}")
         return None
 
 

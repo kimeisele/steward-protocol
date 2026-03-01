@@ -96,7 +96,7 @@ class HeartbeatOrchestrator:
             queue_stats = self._state.content_queue.stats
             plugin_queue_size = queue_stats.get("pending", 0) if isinstance(queue_stats, dict) else 0
         except Exception as e:
-            logger.debug(f"Queue stats unavailable: {e}")
+            logger.warning(f"Queue stats unavailable: {e}")
 
         logger.info(f"HB#{self._heartbeat_count} → {department.upper()} (queue={plugin_queue_size})")
 

@@ -52,7 +52,7 @@ def unwire_from_mahamantra(state: Any, listener_fn: Callable) -> None:
         mahamantra.unregister_listener(listener_fn)
         state.listener_wired = False
     except Exception as e:
-        logger.debug(f"Listener unregister failed during shutdown: {e}")
+        logger.warning(f"Listener unregister failed during shutdown: {e}")
 
 
 # =========================================================================
@@ -68,7 +68,7 @@ def init_agora(state: Any) -> None:
         state.agora = AgoraCartridge()
         logger.info("AGORA initialized for broadcast listening")
     except Exception as e:
-        logger.debug(f"AGORA unavailable: {e}")
+        logger.warning(f"AGORA unavailable: {e}")
 
 
 def listen_agora(state: Any) -> List[Dict[str, Any]]:
@@ -96,7 +96,7 @@ def listen_agora(state: Any) -> List[Dict[str, Any]]:
                 if seq > state.agora_sequence:
                     state.agora_sequence = seq
         except Exception as e:
-            logger.debug(f"AGORA listen ({source}) failed: {e}")
+            logger.warning(f"AGORA listen ({source}) failed: {e}")
     if messages:
         logger.info(f"AGORA: {len(messages)} broadcast messages received")
     return messages
@@ -176,7 +176,7 @@ def evaluate_strategy(state: Any, strategy_planner: Any) -> None:
             if city_context:
                 logger.info(f"FEDERATION: {city_context}")
     except Exception as e:
-        logger.debug(f"CityReport read failed: {e}")
+        logger.warning(f"CityReport read failed: {e}")
 
     try:
         intents = strategy_planner.plan_cycle(
@@ -245,7 +245,7 @@ def _dispatch_federation_intents(
                 # Max 1 dispatch per cycle
                 return
     except Exception as e:
-        logger.debug(f"Federation dispatch failed: {e}")
+        logger.warning(f"Federation dispatch failed: {e}")
 
 
 # =========================================================================
@@ -294,9 +294,9 @@ def wire_event_listener(agent_events: List[Dict[str, Any]], on_action: Callable)
         bus.subscribe(on_action, [EventType.ACTION])
         logger.info("EventBus subscribed: listening for ACTION events")
     except ImportError:
-        logger.debug("EventBus not available — skipping subscription")
+        logger.warning("EventBus not available — skipping subscription")
     except Exception as e:
-        logger.debug(f"EventBus subscription failed: {e}")
+        logger.warning(f"EventBus subscription failed: {e}")
 
 
 def handle_agent_action(event: Any, agent_events: List[Dict[str, Any]]) -> None:
@@ -336,7 +336,7 @@ def wire_ouroboros(event_handler: Any) -> None:
         anchor.subscribe("violation.detected", "moltbook")
         logger.info("OUROBOROS: Moltbook registered as self-healing gene")
     except Exception as e:
-        logger.debug(f"Ouroboros registration failed: {e}")
+        logger.warning(f"Ouroboros registration failed: {e}")
 
 
 def handle_ouroboros_event(
@@ -408,7 +408,7 @@ def emit_ouroboros_health(state: Any, heartbeat_count: int = 0) -> None:
                 "total_signals": stats.total_signals,
             }
         except Exception as e:
-            logger.debug(f"FeedbackProtocol unavailable: {e}")
+            logger.warning(f"FeedbackProtocol unavailable: {e}")
 
         anchor = get_system_anchor()
         anchor.emit_event(
@@ -423,7 +423,7 @@ def emit_ouroboros_health(state: Any, heartbeat_count: int = 0) -> None:
             },
         )
     except Exception as e:
-        logger.debug(f"Ouroboros health emit unavailable: {e}")
+        logger.warning(f"Ouroboros health emit unavailable: {e}")
 
 
 # =========================================================================
@@ -458,7 +458,7 @@ def record_heartbeat_reflection(
         )
         reflection.record_execution(record)
     except Exception as e:
-        logger.debug(f"Reflection recording unavailable: {e}")
+        logger.warning(f"Reflection recording unavailable: {e}")
 
 
 def reflect_on_patterns(emit_event: Callable) -> None:
@@ -569,4 +569,4 @@ def emit_event(event_type_name: str, message: str, data: Optional[Dict[str, Any]
         et = getattr(EventType, event_type_name, EventType.ACTION)
         bus.emit_sync(et, "moltbook", message, data or {})
     except Exception as e:
-        logger.debug(f"EventBus emit unavailable: {e}")
+        logger.warning(f"EventBus emit unavailable: {e}")

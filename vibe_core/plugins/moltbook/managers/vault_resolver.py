@@ -43,7 +43,7 @@ class VaultResolver:
                         logger.info("API key resolved from CivicVault")
                         return key
         except Exception as e:
-            logger.debug(f"Vault lookup skipped: {e}")
+            logger.warning(f"Vault lookup skipped: {e}")
 
         # === SOURCE 2: Environment variable ===
         try:
@@ -54,7 +54,7 @@ class VaultResolver:
                 logger.info("API key resolved from MOLTBOOK_API_KEY environment variable")
                 return env_key
         except Exception as e:
-            logger.debug(f"Environment variable lookup failed: {e}")
+            logger.warning(f"Environment variable lookup failed: {e}")
 
         # === SOURCE 3: Credentials file (~/.config/moltbook/credentials.json) ===
         try:
@@ -68,7 +68,7 @@ class VaultResolver:
                     logger.info("API key resolved from ~/.config/moltbook/credentials.json")
                     return key
         except Exception as e:
-            logger.debug(f"Credentials file lookup skipped: {e}")
+            logger.warning(f"Credentials file lookup skipped: {e}")
 
         # No key found
         return ""

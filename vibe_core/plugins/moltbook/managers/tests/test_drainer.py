@@ -140,6 +140,68 @@ class TestDrainHandlers:
         service.subscribe.assert_called_once_with("general")
 
 
+class TestContentValidation:
+    """Drainer MUST reject whitespace/empty content before API call."""
+
+    def test_drain_post_rejects_whitespace_content(self):
+        service = MagicMock(spec=MoltbookProtocol)
+        drainer = _make_drainer()
+        proposal = {"content_type": "post", "title": "Title", "content": "   ", "submolt": "g"}
+        drainer._drain_post(service, proposal)
+        service.create_post.assert_not_called()
+
+    def test_drain_post_rejects_empty_title(self):
+        service = MagicMock(spec=MoltbookProtocol)
+        drainer = _make_drainer()
+        proposal = {"content_type": "post", "title": "", "content": "Real content", "submolt": "g"}
+        drainer._drain_post(service, proposal)
+        service.create_post.assert_not_called()
+
+    def test_drain_comment_rejects_whitespace_content(self):
+        service = MagicMock(spec=MoltbookProtocol)
+        drainer = _make_drainer()
+        proposal = {"content_type": "comment", "post_id": "p1", "content": " \n "}
+        drainer._drain_comment(service, proposal)
+        service.comment.assert_not_called()
+
+    def test_drain_dm_reply_rejects_whitespace_content(self):
+        service = MagicMock(spec=MoltbookProtocol)
+        drainer = _make_drainer()
+        proposal = {"content_type": "dm_reply", "conversation_id": "c1", "content": "  "}
+        drainer._drain_dm_reply(service, proposal)
+        service.send_dm.assert_not_called()
+
+
+class TestRateLimitPersistence:
+    """Rate limit state must survive restart."""
+
+    def test_snapshot_restore_roundtrip(self):
+        drainer = _make_drainer()
+        drainer._last_post_ts = 1000000.0
+        drainer._comment_timestamps = [time.time() - 100, time.time() - 200]
+        drainer._dm_timestamps = [time.time() - 50]
+        snap = drainer.rate_limit_snapshot()
+
+        drainer2 = _make_drainer()
+        drainer2.rate_limit_restore(snap)
+        assert drainer2._last_post_ts == 1000000.0
+        assert len(drainer2._comment_timestamps) == 2
+        assert len(drainer2._dm_timestamps) == 1
+
+    def test_restore_filters_expired_timestamps(self):
+        drainer = _make_drainer()
+        old_ts = time.time() - 7200  # 2 hours ago
+        recent_ts = time.time() - 100  # recent
+        state = {
+            "last_post_ts": 500.0,
+            "comment_timestamps": [old_ts, recent_ts],
+            "dm_timestamps": [old_ts],
+        }
+        drainer.rate_limit_restore(state)
+        assert len(drainer._comment_timestamps) == 1  # Only recent survives
+        assert len(drainer._dm_timestamps) == 0  # All expired
+
+
 class TestQueueHealthMonitoring:
     def test_no_warning_when_healthy(self):
         drainer = _make_drainer()
