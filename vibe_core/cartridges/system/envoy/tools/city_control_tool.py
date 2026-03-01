@@ -118,7 +118,7 @@ class CityControlTool(Tool):
             "action": {
                 "type": "string",
                 "required": True,
-                "description": "Action: get_city_status | list_proposals | vote_proposal | execute_proposal | trigger_agent | check_credits | refill_credits",
+                "description": "Action: get_city_status | list_proposals | vote_proposal | execute_proposal | trigger_agent | check_credits | refill_credits | get_agent_city_state",
             },
             "status": {"type": "string", "required": False, "description": "Proposal status filter"},
             "proposal_id": {"type": "string", "required": False, "description": "Proposal ID"},
@@ -187,6 +187,10 @@ class CityControlTool(Tool):
                     return ToolResult(success=False, error="refill_credits requires agent_name")
                 result = self.refill_credits(agent_name, amount)
                 return ToolResult(success=True, output=result, metadata={"action": action})
+
+            elif action == "get_agent_city_state":
+                state = self.get_agent_city_state()
+                return ToolResult(success=True, output=state, metadata={"action": action})
 
             else:
                 return ToolResult(success=False, error=f"Unknown action: {action}")
@@ -522,6 +526,48 @@ class CityControlTool(Tool):
         except Exception as e:
             logger.error(f"❌ Failed to refill credits: {e}")
             return {"status": "error", "error": str(e)}
+
+    def get_agent_city_state(self) -> Dict[str, Any]:
+        """Read agent-city state files (standalone mode, no kernel required).
+
+        Returns heartbeat count, discovered agents, and council state
+        from agent-city's data directory.
+        """
+        logger.info("Reading agent-city state...")
+
+        def _read_json(path: Path) -> Dict[str, Any]:
+            try:
+                if path.exists():
+                    return json.loads(path.read_text())
+            except (json.JSONDecodeError, OSError) as e:
+                logger.warning("Failed to read %s: %s", path, e)
+            return {}
+
+        # Look for agent-city data in common locations
+        candidates = [
+            Path("data"),
+            Path("../agent-city/data"),
+            Path.home() / "projects" / "agent-city" / "data",
+        ]
+
+        data_dir: Optional[Path] = None
+        for candidate in candidates:
+            if candidate.exists() and candidate.is_dir():
+                data_dir = candidate
+                break
+
+        if data_dir is None:
+            return {"status": "error", "reason": "agent-city data directory not found"}
+
+        mayor_state = _read_json(data_dir / "mayor_state.json")
+        council_state = _read_json(data_dir / "council_state.json")
+
+        return {
+            "heartbeat_count": mayor_state.get("heartbeat_count", 0),
+            "agents": mayor_state.get("discovered_agents", []),
+            "council": council_state,
+            "data_dir": str(data_dir),
+        }
 
     # ==================== AGENT ACCESS (KERNEL REQUIRED) ====================
 
