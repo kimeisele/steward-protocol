@@ -1041,6 +1041,34 @@ class MoltbookClient:
         """Sync wrapper for submolt subscription."""
         return run_async(self.subscribe_submolt(submolt_name))
 
+    def sync_get_post(self, post_id: str) -> Dict[str, Any]:
+        """Sync wrapper for single post retrieval."""
+        return run_async(self.get_post(post_id))
+
+    def sync_get_comments(self, post_id: str, sort: str = "hot") -> List[Dict[str, Any]]:
+        """Sync wrapper for post comments."""
+        return run_async(self.get_comments(post_id, sort))
+
+    def sync_upvote(self, post_id: str) -> Dict[str, Any]:
+        """Sync wrapper for upvoting a post."""
+        return run_async(self.upvote(post_id))
+
+    def sync_follow_agent(self, agent_name: str) -> Dict[str, Any]:
+        """Sync wrapper for following an agent."""
+        return run_async(self.follow_agent(agent_name))
+
+    def sync_send_dm_request(self, to_agent: str, message: str) -> Dict[str, Any]:
+        """Sync wrapper for sending DM request."""
+        return run_async(self.send_dm_request(to_agent, message))
+
+    def sync_get_profile(self, agent_name: str) -> Dict[str, Any]:
+        """Sync wrapper for fetching agent profile."""
+        return run_async(self.get_profile(agent_name))
+
+    def sync_update_profile(self, description: Optional[str] = None) -> Dict[str, Any]:
+        """Sync wrapper for profile update."""
+        return run_async(self.update_profile(description=description))
+
 
 def run_async(coro):
     """Run a coroutine from sync context. Handles both in-loop and no-loop cases."""

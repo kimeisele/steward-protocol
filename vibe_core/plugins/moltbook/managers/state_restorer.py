@@ -110,6 +110,13 @@ class StateRestorer:
                         target_post_id=d.get("target_post_id", ""),
                         engagement_context=d.get("engagement_context", ""),
                         submolt_context=d.get("submolt_context", ""),
+                        content_format=d.get("content_format", ""),
+                        buddhi_function=d.get("buddhi_function", ""),
+                        buddhi_approach=d.get("buddhi_approach", ""),
+                        buddhi_chapter=int(d.get("buddhi_chapter", 0)),
+                        buddhi_prana=int(d.get("buddhi_prana", 0)),
+                        buddhi_integrity=float(d.get("buddhi_integrity", 0.0)),
+                        target_submolt=d.get("target_submolt", ""),
                     )
                 )
             self._state.current_intents = intents
