@@ -410,6 +410,7 @@ class TestMoltbookProtocolContract:
             "get_dm_requests",
             "get_submolts",
             "get_submolt",
+            "get_submolt_feed",
             "verify_credentials",
             # RAJAS
             "create_post",
@@ -444,7 +445,7 @@ class TestMoltbookProtocolContract:
     def test_method_count_matches(self):
         """Service implements exactly the methods defined by protocol."""
         abstract_count = len(MoltbookProtocol.__abstractmethods__)
-        assert abstract_count == 30
+        assert abstract_count == 31
 
 
 # =============================================================================

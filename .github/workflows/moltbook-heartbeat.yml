@@ -39,12 +39,23 @@ jobs:
         run: |
           PYTHONPATH=. python3 agent-city/scripts/moltbook_heartbeat.py --cycles 4
 
+      - name: Cleanup State Backups
+        if: always()
+        run: |
+          # Keep only last 5 backups per type, delete older ones
+          for dir in .vibe/state/*_backup/; do
+            [ -d "$dir" ] || continue
+            ls -t "$dir" | tail -n +6 | while read f; do rm -f "$dir$f"; done
+          done
+
       - name: Persist State
         if: always()
         run: |
           git config user.name "steward-protocol[bot]"
           git config user.email "steward-protocol[bot]@users.noreply.github.com"
           git add -f .vibe/state/*.json .vibe/state/mahamantra/*.json .vibe/state/moltbook_activity_log 2>/dev/null || true
+          # Also stage backup deletions
+          git add -u .vibe/state/*_backup/ 2>/dev/null || true
           if ! git diff --cached --quiet; then
             git commit -m "state: persist moltbook agent state (heartbeat)"
             git pull --rebase origin main || true

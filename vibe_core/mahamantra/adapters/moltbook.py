@@ -583,6 +583,10 @@ class MoltbookClient:
         elif method == "GET" and endpoint == "/submolts":
             return {"submolts": self._mock_db.get("submolts", [])}
 
+        elif method == "GET" and endpoint.startswith("/submolts/") and "/posts" in endpoint:
+            # Submolt-specific feed: /submolts/NAME/posts
+            return {"posts": self._mock_db["posts"]}
+
         elif method == "GET" and endpoint.startswith("/submolts/"):
             name = endpoint.split("/submolts/")[1].split("?")[0].split("/")[0]
             return {"name": name, "display_name": name, "subscriber_count": 0}

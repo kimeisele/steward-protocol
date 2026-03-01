@@ -138,6 +138,10 @@ class MoltbookService(MoltbookProtocol, GADBase):
         self._enforce_guna("get_submolt")
         return run_async(self._client.get_submolt(name))
 
+    def get_submolt_feed(self, name: str, sort: str = "new", limit: int = 25) -> list:
+        self._enforce_guna("get_submolt_feed")
+        return run_async(self._client.get_submolt_feed(name, sort, limit))
+
     def verify_credentials(self) -> bool:
         self._enforce_guna("verify_credentials")
         try:
