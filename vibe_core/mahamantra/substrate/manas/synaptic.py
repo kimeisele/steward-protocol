@@ -104,3 +104,46 @@ class HebbianSynaptic:
     def snapshot(self) -> Dict[str, float]:
         """Return copy of current weights."""
         return dict(self._weights)
+
+    def decay(self, factor: float = 0.01) -> int:
+        """Apply temporal decay: all weights regress toward 0.5 (default).
+
+        w = w + factor * (0.5 - w)
+
+        Prevents rigidity. Old patterns fade. New patterns dominate.
+        Returns count of weights decayed.
+        """
+        count = 0
+        for key in list(self._weights.keys()):
+            w = self._weights[key]
+            w += factor * (_DEFAULT_WEIGHT - w)
+            w = max(0.0, min(1.0, w))
+            self._weights[key] = w
+            count += 1
+
+        if count:
+            self._dirty = True
+            logger.debug("Synaptic decay: %d weights regressed by %.3f", count, factor)
+        return count
+
+    def trim(self, max_entries: int = 500) -> int:
+        """Remove weakest synapses when over capacity.
+
+        Keeps weights closest to 0.0 or 1.0 (most learned).
+        Removes weights closest to 0.5 (least decisive).
+        """
+        if len(self._weights) <= max_entries:
+            return 0
+
+        # Sort by decisiveness: |w - 0.5| (high = keep, low = forget)
+        scored = sorted(
+            self._weights.items(),
+            key=lambda kv: abs(kv[1] - _DEFAULT_WEIGHT),
+        )
+        # Remove least decisive
+        to_remove = len(scored) - max_entries
+        for key, _w in scored[:to_remove]:
+            del self._weights[key]
+        self._dirty = True
+        logger.info("Synaptic trim: removed %d weak synapses", to_remove)
+        return to_remove
