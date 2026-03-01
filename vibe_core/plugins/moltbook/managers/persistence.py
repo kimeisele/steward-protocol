@@ -34,34 +34,34 @@ def _get_rajas_guna() -> object:
 
 
 def _governed_write(filename: str, data: dict, path: Path, actor: str, indent: int = 2) -> None:
-    """Write state through EnforceGateProvider when available.
+    """Write state to disk, with gate audit trail when available.
 
-    Routes through get_sync_gate().write() for Guna-policy enforcement + audit trail.
-    Falls back to direct Path.write_text() when gate is unavailable (test mode).
+    Always writes to disk (path). Additionally routes through
+    get_sync_gate().write() for Guna-policy enforcement + audit trail.
+    Gate writes to StateService RAM cache (governance), disk write is
+    the actual persistence mechanism.
 
     Args:
         filename: State filename (for gate audit key)
         data: JSON-serializable dict
-        path: Full path for direct write fallback
+        path: Full path for disk write
         actor: Who is writing (for audit trail)
         indent: JSON indentation
     """
+    # Gate audit trail (best-effort, never blocks disk write)
     try:
         from vibe_core.mahamantra.substrate.vm.gate_providers import get_sync_gate
 
         gate = get_sync_gate()
         guna = _get_rajas_guna()
         result = gate.write(filename, data, actor=actor, guna=guna)
-        if not result.success:
-            logger.warning(f"Gate blocked {filename}: {result.reason}, falling back to direct write")
-            path.write_text(json.dumps(data, indent=indent))
-            return
-        # Gate approved and wrote to StateService cache
-        logger.debug(f"Governed write: {filename} (actor={actor})")
-    except Exception as e:
-        # Gate unavailable — direct write (test/standalone mode)
-        logger.warning(f"Gate unavailable for {filename}, direct write: {e}")
-        path.write_text(json.dumps(data, indent=indent))
+        if not result["success"]:
+            logger.warning(f"Gate audit: {filename} denied ({result['reason']})")
+    except Exception:
+        pass  # Gate unavailable — no audit, disk write still happens
+
+    # Always write to disk — this is the actual persistence
+    path.write_text(json.dumps(data, indent=indent))
 
 
 class PersistenceManager:

@@ -613,75 +613,35 @@ class TestMuraliRouter:
 
         return MuraliRouter()
 
-    def test_fallback_cycles_all_departments(self):
-        """Without venu, fallback_tick should cycle through all 4 departments."""
+    def test_cycles_all_departments(self):
+        """heartbeat_count % 4 cycles through all 4 departments."""
         router = self._make_router()
-        # Patch mahamantra.venu to None
-        with patch("vibe_core.mahamantra.mahamantra") as mock_mm:
-            mock_mm.venu = None
-            departments = [router.current_department(fallback_tick=i) for i in range(4)]
+        departments = [router.current_department(fallback_tick=i) for i in range(4)]
         assert departments == ["research", "planning", "execution", "learning"]
 
-    def test_fallback_wraps_around(self):
+    def test_wraps_around(self):
+        """Department cycle wraps at 4."""
         router = self._make_router()
-        with patch("vibe_core.mahamantra.mahamantra") as mock_mm:
-            mock_mm.venu = None
-            assert router.current_department(fallback_tick=0) == "research"
-            assert router.current_department(fallback_tick=4) == "research"
-            assert router.current_department(fallback_tick=7) == "learning"
+        assert router.current_department(fallback_tick=0) == "research"
+        assert router.current_department(fallback_tick=4) == "research"
+        assert router.current_department(fallback_tick=7) == "learning"
 
-    def test_venu_tick_drives_department(self):
-        """With venu available, tick position determines department."""
+    def test_four_heartbeats_covers_all_departments(self):
+        """4 heartbeats per GH Actions run = 1 full MURALI rotation.
+
+        This was the root cause of zero content: old DIW path had all 4
+        heartbeats landing in GENESIS (research). Now each heartbeat = one dept.
+        """
         router = self._make_router()
-        mock_venu = MagicMock()
-
-        with patch("vibe_core.mahamantra.mahamantra") as mock_mm:
-            mock_mm.venu = mock_venu
-
-            # tick 0-3 → research (GENESIS quarter)
-            mock_venu.tick = 0
-            assert router.current_department() == "research"
-
-            # tick 4-7 → planning (DHARMA quarter)
-            mock_venu.tick = 5
-            assert router.current_department() == "planning"
-
-            # tick 8-11 → execution (KARMA quarter)
-            mock_venu.tick = 9
-            assert router.current_department() == "execution"
-
-            # tick 12-15 → learning (MOKSHA quarter)
-            mock_venu.tick = 14
-            assert router.current_department() == "learning"
-
-    def test_venu_tick_wraps_at_16(self):
-        router = self._make_router()
-        mock_venu = MagicMock()
-
-        with patch("vibe_core.mahamantra.mahamantra") as mock_mm:
-            mock_mm.venu = mock_venu
-            mock_venu.tick = 16  # Wraps: 16 % 16 = 0 → research
-            assert router.current_department() == "research"
-
-            mock_venu.tick = 21  # 21 % 16 = 5 → planning
-            assert router.current_department() == "planning"
+        # Simulate 4 heartbeats starting from count=1 (first heartbeat)
+        departments = [router.current_department(fallback_tick=i) for i in range(1, 5)]
+        assert set(departments) == {"research", "planning", "execution", "learning"}
 
     def test_should_prioritize(self):
         router = self._make_router()
-        with patch("vibe_core.mahamantra.mahamantra") as mock_mm:
-            mock_mm.venu = None
-            assert router.should_prioritize("research", fallback_tick=0) is True
-            assert router.should_prioritize("execution", fallback_tick=0) is False
-
-    def test_exception_in_mahamantra_uses_fallback(self):
-        router = self._make_router()
-        with patch(
-            "vibe_core.mahamantra.mahamantra",
-            new_callable=lambda: property(lambda self: (_ for _ in ()).throw(RuntimeError("no mahamantra"))),
-        ):
-            # Should not crash, should use fallback
-            dept = router.current_department(fallback_tick=2)
-            assert dept == "execution"
+        assert router.should_prioritize("research", fallback_tick=0) is True
+        assert router.should_prioritize("execution", fallback_tick=0) is False
+        assert router.should_prioritize("execution", fallback_tick=2) is True
 
 
 # ---------------------------------------------------------------------------

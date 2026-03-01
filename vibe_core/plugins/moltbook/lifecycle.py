@@ -541,11 +541,11 @@ def log_activity(
                 actor="moltbook_activity",
                 guna=Guna.RAJAS,
             )
-            if result.success:
+            if result["success"]:
                 with activity_log_path.open("a") as f:
                     f.write(line + "\n")
             else:
-                logger.debug(f"Activity log blocked by gate: {result.reason}")
+                logger.debug(f"Activity log blocked by gate: {result['reason']}")
                 return
         except Exception:
             with activity_log_path.open("a") as f:
