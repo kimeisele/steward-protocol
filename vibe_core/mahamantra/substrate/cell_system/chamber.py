@@ -87,6 +87,23 @@ DEFAULT_CHORUS_SIZE: Final[int] = WORDS
 
 
 # =============================================================================
+# DOMAIN CONVERSIONS (Cell ↔ Antaranga)
+# =============================================================================
+# CellLifecycleState.integrity lives in COSMIC_FRAME space (0–21600).
+# AntarangaRegistry slots store integrity as uint16 (0–65535, = INTEGRITY_FULL).
+# These are DIFFERENT scales. Always use the helper below — never inline the math.
+
+
+def _to_u16_integrity(cf_integrity: int) -> int:
+    """Convert CellLifecycleState.integrity (COSMIC_FRAME, 0–21600) → Antaranga uint16 (0–65535).
+
+    COSMIC_FRAME (21600) maps to INTEGRITY_FULL (65535).
+    Do NOT compare the result with cell.lifecycle.integrity directly.
+    """
+    return cf_integrity * INTEGRITY_FULL // COSMIC_FRAME
+
+
+# =============================================================================
 # KIRTAN MODE (Transformation Types)
 # =============================================================================
 
@@ -375,7 +392,7 @@ class SankirtanChamber(Generic[C]):
             v_arcanam=cell.header.arcanam & 0xFFFFFFFF,
             v_atma=cell.header.atma_nivedanam & 0xFFFFFFFF,
             v_prana=min(cell.lifecycle.prana, 0xFFFFFFFF),
-            v_integrity=cell.lifecycle.integrity * INTEGRITY_FULL // COSMIC_FRAME,
+            v_integrity=_to_u16_integrity(cell.lifecycle.integrity),
             v_cycle=min(cell.lifecycle.cycle, 0xFFFF),
         )
 

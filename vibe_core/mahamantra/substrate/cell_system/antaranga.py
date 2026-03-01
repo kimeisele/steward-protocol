@@ -259,6 +259,9 @@ class AntarangaRegistry:
 
         Use set_slot() when you need to place a known state unconditionally —
         e.g., seeding initial conditions or writing from outside the dance() flow.
+
+        SCALE: integrity is uint16 (0–65535 = INTEGRITY_FULL), NOT COSMIC_FRAME (0–21600).
+        Use chamber._to_u16_integrity(cell.lifecycle.integrity) to convert.
         """
         offset = slot * SLOT_BYTES
         struct.pack_into(
@@ -300,6 +303,9 @@ class AntarangaRegistry:
         Logic (mirrors MahaCellUnified.interact()):
             Resident prana == 0 → SILENCE → visitor takes slot (Presence)
             Resident prana > 0  → RESONANCE → merge (prana add, integrity avg)
+
+        SCALE: v_integrity is uint16 (0–65535 = INTEGRITY_FULL), NOT COSMIC_FRAME (0–21600).
+        Use chamber._to_u16_integrity(cell.lifecycle.integrity) to convert.
         """
         s = self._slots[slot]
 
