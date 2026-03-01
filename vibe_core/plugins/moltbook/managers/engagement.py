@@ -26,6 +26,29 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger("MOLTBOOK_ENGAGEMENT")
 
+# Agent-city acknowledgment format:
+# "Noted by Agent City -- tracking signals: fix, test. Mission created: signal_fix_test_post_abc."
+_ACK_MISSION_PREFIX = "Mission created:"
+
+
+def _extract_mission_id(body: str) -> str:
+    """Extract mission-ID from agent-city acknowledgment comment.
+
+    Format: "... Mission created: signal_fix_test_post_abc."
+    Returns mission-ID string or empty string.
+    """
+    idx = body.find(_ACK_MISSION_PREFIX)
+    if idx < 0:
+        return ""
+    rest = body[idx + len(_ACK_MISSION_PREFIX):].strip()
+    # Mission-ID ends at period, newline, or end of string
+    mission_id = ""
+    for ch in rest:
+        if ch in (".", "\n", "\r", " "):
+            break
+        mission_id += ch
+    return mission_id.strip()
+
 
 def _safe_int(val: object) -> int:
     """Convert API value to int, returning 0 on failure."""
@@ -176,6 +199,44 @@ class EngagementTracker:
                         feedback.signal_failure("moltbook.comment", "negative_engagement", ctx, duration_ms=0.0)
                     break
 
+        # Federation acknowledgment loop: scan comments on our m/agent-city posts
+        # for "Noted by Agent City -- tracking signals: ... Mission created: signal_..."
+        federation_posts = [
+            (pid, m) for pid, m in recent_posts
+            if str(m.get("submolt", "")) == "agent-city"
+        ]
+        acked_missions: list = []
+        for post_id, meta in federation_posts[:3]:
+            try:
+                comments = service.get_comments(post_id, sort="new")
+            except Exception as e:
+                logger.warning(f"Federation ack poll failed for {post_id}: {e}")
+                continue
+            for c in comments or []:
+                if not isinstance(c, dict):
+                    continue
+                body = str(c.get("content", c.get("body", "")))
+                if "Noted by Agent City" not in body:
+                    continue
+                # Parse mission-ID: "Mission created: signal_fix_test_post_abc."
+                mission_id = _extract_mission_id(body)
+                if mission_id:
+                    acked_missions.append({
+                        "post_id": post_id,
+                        "mission_id": mission_id,
+                        "title": str(meta.get("title", ""))[:80],
+                    })
+                    logger.info(
+                        f"FEDERATION ACK: {mission_id} for post {post_id[:12]}"
+                    )
+        for ack in acked_missions:
+            event_log.record_engagement(
+                action="federation_ack",
+                target=ack["mission_id"],
+                post_id=ack["post_id"],
+                title=ack["title"],
+            )
+
         # Feed cached engagement data to strategy planner (no extra API calls)
         if strategy_planner:
             for post_id, meta in recent_posts:
@@ -193,7 +254,10 @@ class EngagementTracker:
                     except Exception as e:
                         logger.warning(f"Strategy planner update failed for {post_id}: {e}")
 
-        logger.debug(f"Engagement tracked: {len(recent_posts)} posts, {len(comment_ids)} comments")
+        logger.debug(
+            f"Engagement tracked: {len(recent_posts)} posts, {len(comment_ids)} comments, "
+            f"{len(acked_missions)} federation acks"
+        )
 
     def _reward_engagement(self, content_id: str, total_score: int, content_type: str) -> None:
         """Credit reward for engagement received on own content.

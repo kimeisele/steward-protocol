@@ -1,19 +1,17 @@
-"""ContentComposer — BuddhiResult-driven content generation.
+"""ContentComposer — PromptRegistry + BuddhiResult-driven content generation.
 
-MahaBuddhi does the thinking. Composer does the talking.
+MahaBuddhi does the thinking. PromptRegistry provides the template. Composer wires them.
 
-No hardcoded instruction templates. System message is built entirely from
-computed BuddhiResult signals: chapter, perspective, focus, mode, function,
-vibration element, verse concepts. Task message = action + content + resonance.
-
-1. BuddhiResult → computed cognitive system message
-2. Content + resonance context → task message
-3. Prana/integrity → model routing (reasoning model for substantive posts)
-4. Atomic LLM call
-5. Post-LLM validation (echo, substance)
+1. YAML template (config/prompts/moltbook.yaml) → PromptRegistry.get() → system base
+2. BuddhiResult cognitive signals → appended to system message (dynamic per call)
+3. Content + resonance context → task message
+4. Prana/integrity → model routing (reasoning model for substantive posts)
+5. Atomic LLM call
+6. Post-LLM validation (echo, substance)
 """
 
 import logging
+from pathlib import Path
 from typing import Any, Dict, Optional
 
 from vibe_core.mahamantra.protocols._buddhi import BuddhiResult
@@ -33,20 +31,29 @@ _FORMAT_TOKENS = {
 }
 _DEFAULT_TOKENS = 400
 
-# No hardcoded instruction templates.
-# System message built entirely from BuddhiResult computed signals.
-# Task message = action verb + content + resonance context.
-
-
 class ContentComposer:
-    """BuddhiResult-driven content generation.
+    """PromptRegistry + BuddhiResult-driven content generation.
 
-    MahaBuddhi.think() produces cognition. Composer translates cognition into
-    LLM prompts: cognitive system message + format-aware task + resonant vocabulary.
+    YAML template (PromptRegistry) provides identity, rules, and template slots.
+    MahaBuddhi.think() produces cognition → cognitive signals appended to template.
+    Context builders fill template slots (resonance, engagement, guardian voice).
     """
 
     def __init__(self, plugin=None):
         self._plugin = plugin
+        self._load_prompts()
+
+    @staticmethod
+    def _load_prompts():
+        """Load moltbook prompt templates from YAML into PromptRegistry."""
+        try:
+            from vibe_core.runtime.prompt_registry import PromptRegistry
+
+            PromptRegistry.load_from_yaml(
+                Path(__file__).parents[5] / "config" / "prompts" / "moltbook.yaml"
+            )
+        except Exception as e:
+            logger.warning(f"Prompt YAML load failed: {e}")
 
     def compose(
         self,
@@ -70,8 +77,9 @@ class ContentComposer:
         content_format = input_ctx.get("content_format", "observation")
         model, max_tokens = self._route_model(cognition, content_type, content_format)
 
-        # 4. LLM call
-        content = self._call_llm(system_msg, user_msg, model, max_tokens, content_type)
+        # 4. LLM call (temperature from cognitive integrity)
+        temperature = self._compute_temperature(cognition)
+        content = self._call_llm(system_msg, user_msg, model, max_tokens, content_type, temperature)
         if content:
             # Post-LLM: echo detection
             task_input = input_text[:200]
@@ -96,73 +104,121 @@ class ContentComposer:
         return None
 
     def _build_system(self, cognition: BuddhiResult, input_ctx: Dict[str, Any]) -> str:
-        """Build system message from computed BuddhiResult signals.
+        """Build system message: PromptRegistry template + cognitive signals."""
+        content_type = input_ctx.get("content_type", "comment")
+        prompt_key = f"moltbook.{content_type}"
 
-        No hardcoded instruction templates. Every line except the agent name
-        and anti-slop rules is derived from Mahamantra pipeline output.
-        """
-        agent_name = "steward-protocol"
-        if self._plugin and hasattr(self._plugin, "_agent_name"):
-            agent_name = self._plugin._agent_name
+        # Fill ALL template slots
+        context = self._build_template_context(cognition, input_ctx)
 
-        parts = [f"You are {agent_name}."]
+        try:
+            from vibe_core.runtime.prompt_registry import PromptRegistry
 
-        # Cognitive frame — computed by MahaBuddhi from input text
-        parts.append(
+            base = PromptRegistry.get(prompt_key, context=context)
+        except Exception:
+            # Fallback: minimal inline (should never happen if YAML loaded)
+            base = f"You are {context['agent_name']}. Style: {context['style']}."
+
+        # Append cognitive signals from BuddhiResult (not in YAML — dynamic)
+        cognitive_parts = []
+        cognitive_parts.append(
             f"Chapter {cognition.chapter}: {cognition.perspective}"
         )
-        parts.append(
-            f"Phase: {cognition.focus} | Mode: {cognition.mode} | "
-            f"Function: {cognition.function}"
+        cognitive_parts.append(
+            f"Phase: {cognition.focus} | Function: {cognition.function}"
         )
+        # Verse concepts (English only)
+        if cognition.verse_concepts:
+            meanings = [vc.get("meaning", "") for vc in cognition.verse_concepts[:3] if vc.get("meaning")]
+            if meanings:
+                cognitive_parts.append(f"Concepts: {', '.join(meanings)}")
+        # Guardian voice
+        from vibe_core.cartridges.agent_city.moltbook.core.context_builders import guardian_vocabulary_short
 
-        # Vibration signature — from Mantra VM phonetic encoding
         vib = cognition.vm_result.get("vibration", {})
         sig = vib.get("signature", {}) if isinstance(vib, dict) else {}
         element = sig.get("element", "")
         if element:
-            parts.append(f"Element: {element}")
+            cognitive_parts.append(f"Element: {element}")
+        guardian = str(cognition.vm_result.get("guardian", ""))
+        voice = guardian_vocabulary_short(guardian)
+        if voice:
+            # Filter noise fragments (prepositions, decontextualized Gita phrases)
+            _NOISE = frozenset({"unto", "causing", "thereof", "therein", "wherein"})
+            fragments = [f.strip() for f in voice.split(",")]
+            clean = [f for f in fragments if not any(n in f.lower() for n in _NOISE) and len(f.split()) <= 4]
+            if clean:
+                cognitive_parts.append(f"Voice: {', '.join(clean[:3])}")
+        # Rasa
+        rasa = input_ctx.get("rasa", "")
+        if rasa:
+            cognitive_parts.append(f"Rasa: {rasa}")
 
-        # Verse concepts — matched Gita wisdom (English meaning only, no Sanskrit)
-        if cognition.verse_concepts:
-            meanings = [
-                vc.get("meaning", "")
-                for vc in cognition.verse_concepts[:3]
-                if vc.get("meaning")
-            ]
-            if meanings:
-                parts.append(f"Concepts: {', '.join(meanings)}")
+        return base + "\n" + "\n".join(cognitive_parts)
 
-        # Strategic context (from strategy planner — WHY this topic, for whom)
+    def _build_template_context(self, cognition: BuddhiResult, input_ctx: Dict[str, Any]) -> dict:
+        """Build context dict for PromptRegistry template slot interpolation."""
+        agent_name = "steward-protocol"
+        if self._plugin and hasattr(self._plugin, "_agent_name"):
+            agent_name = self._plugin._agent_name
+
+        # Guna → style
+        guna = cognition.mode
+        style = {"SATTVA": "contemplative", "RAJAS": "active", "TAMAS": "transformative"}.get(guna, "active")
+
+        # Content format from buddhi mode
+        content_format = input_ctx.get("content_format", "observation")
+
+        # Resonance context (English only — no Sanskrit)
+        resonant_context = self._build_resonance_context(input_ctx.get("raw_input", ""))
+        # Strip "RESONANCE:" header — template already provides context label
+        if resonant_context.startswith("RESONANCE:"):
+            resonant_context = resonant_context[len("RESONANCE:"):].strip()
+
+        # Dominant resonance mode
+        resonance_mode = self._get_dominant_resonance_mode(input_ctx.get("raw_input", ""))
+
+        # Strategic reasoning (from strategy planner)
         reasoning = input_ctx.get("strategic_reasoning", "")
         eng_ctx = input_ctx.get("engagement_context", "")
         if eng_ctx and reasoning:
             reasoning = f"{reasoning}. {eng_ctx}"
         elif eng_ctx:
             reasoning = eng_ctx
-        if reasoning:
-            parts.append(f"Context: {reasoning[:500]}")
+        # Enrich with FeedbackProtocol stats
+        from vibe_core.cartridges.agent_city.moltbook.core.context_builders import engagement_context
 
-        # Submolt context — WHERE this content goes
-        submolt_ctx = input_ctx.get("submolt_context", "")
-        if submolt_ctx:
-            parts.append(f"Community: {submolt_ctx[:300]}")
+        feedback_stats = engagement_context()
+        if feedback_stats:
+            reasoning = f"{reasoning}. {feedback_stats}" if reasoning else feedback_stats
 
-        # Rasa — aesthetic mood (from VedicScaleMapping, computed from integrity)
-        rasa = input_ctx.get("rasa", "")
-        if rasa:
-            parts.append(f"Rasa: {rasa}")
+        return {
+            "agent_name": agent_name,
+            "style": style,
+            "content_format": content_format,
+            "topic": input_ctx.get("raw_input", "")[:200],
+            "strategic_reasoning": reasoning[:500],
+            "resonant_context": resonant_context,
+            "resonance_mode": resonance_mode,
+            "submolt_context": input_ctx.get("submolt_context", "")[:300],
+        }
 
-        # Anti-slop (universal — not content-specific)
-        parts.append(
-            "RULES: No AI filler. No 'as an AI'. No 'let me break this down'. "
-            "No 'it's important to note'. No meta-commentary. "
-            "No metadata headers (no 'Resonance:', no 'Score:', no 'Layer:'). "
-            "Never mention internal systems (AGORA, Moltbook DM, steward-protocol architecture). "
-            "Be specific — name real tools, systems, patterns."
-        )
+    @staticmethod
+    def _get_dominant_resonance_mode(text: str) -> str:
+        """Get the dominant resonance scorer name for the input text."""
+        if not text or len(text) < 10:
+            return ""
+        try:
+            from vibe_core.mahamantra.substrate.encoding.resonance_ranker import resonate
 
-        return "\n".join(parts)
+            ranked = resonate(text[:200], top_n=1)
+            if ranked:
+                breakdown = ranked[0].score_breakdown()
+                dims = {k: v for k, v in breakdown.items() if k != "total"}
+                return max(dims, key=dims.get) if dims else ""
+        except Exception:
+            pass
+        return ""
 
     def _build_task(
         self,
@@ -251,6 +307,15 @@ class ContentComposer:
             logger.warning(f"Resonance context failed: {e}")
         return ""
 
+    @staticmethod
+    def _compute_temperature(cognition: BuddhiResult) -> float:
+        """Integrity-driven temperature — high integrity = precise, low = exploratory."""
+        if cognition.integrity > 0.7:
+            return 0.3   # High confidence → precise, focused
+        if cognition.integrity > 0.4:
+            return 0.45  # Medium → balanced
+        return 0.6       # Low → slightly more creative (but not 0.7 wild)
+
     def _route_model(
         self,
         cognition: BuddhiResult,
@@ -266,7 +331,7 @@ class ContentComposer:
             content_type == "post"
             and content_format in ("analysis", "opinion", "tutorial")
             and cognition.is_alive
-            and cognition.integrity > 0.5
+            and cognition.integrity > 0.3
         ):
             model = "deepseek/deepseek-r1"
             max_tokens = int(max_tokens * 1.5)
@@ -281,6 +346,7 @@ class ContentComposer:
         model: Optional[str],
         max_tokens: int,
         content_type: str,
+        temperature: float = 0.45,
     ) -> Optional[str]:
         """Atomic LLM call with quota check."""
         try:
@@ -314,7 +380,7 @@ class ContentComposer:
                 prompt="",
                 model=model,
                 max_tokens=max_tokens,
-                temperature=0.7,
+                temperature=temperature,
                 messages=[
                     {"role": "system", "content": system_msg},
                     {"role": "user", "content": user_msg},

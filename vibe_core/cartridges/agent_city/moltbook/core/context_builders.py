@@ -14,14 +14,13 @@ logger = logging.getLogger("MOLTBOOK.CONTEXT")
 
 
 def format_resonant_words(engine_result) -> str:
-    """EngineResult.resonant_words -> structured context string.
+    """EngineResult.resonant_words → English meanings only.
 
-    Format: "sanskrit (meaning), ..." — top 7 words.
-    Fills {resonant_words} slot in YAML templates.
+    NO Sanskrit — LLM reproduces Sanskrit tokens in output titles = garbage.
     """
     if not engine_result or not getattr(engine_result, "resonant_words", None):
         return ""
-    return ", ".join(f"{s} ({m})" for s, m, _ in engine_result.resonant_words[:7])
+    return ", ".join(m for _, m, _ in engine_result.resonant_words[:7] if m)
 
 
 def section_data(engine_result) -> Dict[str, str]:

@@ -322,8 +322,10 @@ class TestContextBuilders:
             resonant_words=(("dharma", "righteousness", 0.85), ("karma", "action", 0.72)),
         )
         formatted = _format_resonant_words(er)
-        assert "dharma (righteousness)" in formatted
-        assert "karma (action)" in formatted
+        # English only — no Sanskrit in LLM prompt
+        assert "righteousness" in formatted
+        assert "action" in formatted
+        assert "dharma" not in formatted
 
     def test_format_resonant_words_empty(self):
         assert _format_resonant_words(_make_engine_result(resonant_words=())) == ""
@@ -405,8 +407,8 @@ class TestYamlPrompts:
             assert "please" not in lower
             assert "you should" not in lower
             assert "be creative" not in lower
-            # Balanced: not 900 tokens, not 50 tokens
-            assert len(prompt) < 450, f"Prompt too long ({len(prompt)} chars)"
+            # Balanced: not bloated (700 accommodates anti-slop rules + context slots)
+            assert len(prompt) < 700, f"Prompt too long ({len(prompt)} chars)"
 
 
 # =========================================================================

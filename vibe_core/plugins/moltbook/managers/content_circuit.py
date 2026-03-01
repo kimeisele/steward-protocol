@@ -11,6 +11,16 @@ class ContentCircuitExecutor:
 
     Receives explicit callables — no back-reference to plugin.
 
+    MOLTBOOK_CONTENT_V1 circuit YAML (config/moltbook_content.yaml) is the
+    authoritative SPEC. This Python code is the IMPLEMENTATION. The circuit
+    can't execute via CognitiveCircuitExecutor in GH Actions (no kernel, no
+    agents, no syscall dispatcher), but the code path is semantically equivalent:
+
+        YAML SHABDA   = AgencyDirector._process() buddhi.think()
+        YAML ARTHA    = AgencyDirector._process() integrity gate
+        YAML PRATYAYA = ContentComposer.compose() (via PromptRegistry)
+        YAML KARMA    = AgencyDirector.run_cycle() OUTPUT phase event
+
     Responsibilities:
     - Build kwargs dict for AgencyDirector.run_retry_loop()
     - Call director with context passthrough (strategic reasoning, engagement, etc.)

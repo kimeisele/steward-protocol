@@ -60,17 +60,17 @@ class TestBuildSystem:
     def test_cognitive_frame_rajas(self):
         composer = ContentComposer()
         msg = composer._build_system(_make_cognition(mode="RAJAS"), {})
-        assert "Mode: RAJAS" in msg
+        assert "Style: active" in msg
 
     def test_cognitive_frame_sattva(self):
         composer = ContentComposer()
         msg = composer._build_system(_make_cognition(mode="SATTVA"), {})
-        assert "Mode: SATTVA" in msg
+        assert "Style: contemplative" in msg
 
     def test_cognitive_frame_tamas(self):
         composer = ContentComposer()
         msg = composer._build_system(_make_cognition(mode="TAMAS"), {})
-        assert "Mode: TAMAS" in msg
+        assert "Style: transformative" in msg
 
     def test_chapter_perspective_included(self):
         composer = ContentComposer()
@@ -461,7 +461,7 @@ class TestContentComposer:
 
         system_captured = {}
 
-        def capture_llm(system_msg, user_msg, model, max_tokens, content_type):
+        def capture_llm(system_msg, user_msg, model, max_tokens, content_type, temperature=0.45):
             system_captured["msg"] = system_msg
             return "Real content with substance here."
 

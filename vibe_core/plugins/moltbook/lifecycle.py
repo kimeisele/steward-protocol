@@ -162,21 +162,32 @@ def evaluate_strategy(state: Any, strategy_planner: Any) -> None:
     except Exception:
         pass
 
-    # Read CityReport for governance context
+    # Federation inbound: extract m/agent-city posts from feed
     city_context = ""
     try:
-        from vibe_core.plugins.moltbook.managers.federation import (
-            extract_city_context,
-            read_city_report,
-        )
+        from vibe_core.plugins.moltbook.managers.feed import FeedAnalyzer
 
-        report = read_city_report(state.state_dir)
-        if report:
-            city_context = extract_city_context(report)
-            if city_context:
-                logger.info(f"FEDERATION: {city_context}")
+        city_posts = FeedAnalyzer.extract_city_feed(state.current_feed_topics)
+        if city_posts:
+            # Parse [City Report] posts structurally, not just titles
+            report_parts: List[str] = []
+            signal_parts: List[str] = []
+            for post in city_posts[:5]:
+                title = str(post.get("title", ""))
+                content = str(post.get("content", ""))
+                if title.startswith("[City Report]"):
+                    report_parts.append(_parse_city_report(title, content))
+                else:
+                    signal_parts.append(title[:100])
+            parts: List[str] = []
+            if report_parts:
+                parts.append(f"CityReport: {'; '.join(report_parts)}")
+            if signal_parts:
+                parts.append(f"Signals: {'; '.join(signal_parts)}")
+            city_context = " | ".join(parts) if parts else ""
+            logger.info(f"FEDERATION: {len(city_posts)} city posts ({len(report_parts)} reports, {len(signal_parts)} signals)")
     except Exception as e:
-        logger.warning(f"CityReport read failed: {e}")
+        logger.warning(f"Federation feed extraction failed: {e}")
 
     try:
         intents = strategy_planner.plan_cycle(
@@ -197,55 +208,113 @@ def evaluate_strategy(state: Any, strategy_planner: Any) -> None:
     _dispatch_federation_intents(state, intents, city_context)
 
 
+def _parse_city_report(title: str, content: str) -> str:
+    """Parse structured data from agent-city's [City Report] post.
+
+    Agent-city's MoltbookBridge formats CityReports with:
+    - Title: "[City Report] N agents, chain verified|BROKEN"
+    - Content: Population, Mayor, Council, Missions, PRs, Chain
+
+    Returns a compact summary for strategy context.
+    """
+    parts: List[str] = []
+
+    # Title already has population + chain status
+    title_clean = title.replace("[City Report]", "").strip()
+    if title_clean:
+        parts.append(title_clean)
+
+    # Extract structured fields from content
+    for line in content.split("\n"):
+        line = line.strip()
+        if not line:
+            continue
+        if line.startswith("Mayor:"):
+            parts.append(line)
+        elif line.startswith("Council:"):
+            parts.append(line)
+        elif line.startswith("Failing contracts:"):
+            parts.append(line)
+        elif line.startswith("Chain integrity:"):
+            parts.append(line)
+        # Mission results
+        elif line.startswith(("-",)) and any(
+            s in line for s in ("completed", "active", "failed")
+        ):
+            parts.append(line.lstrip("- "))
+
+    return "; ".join(parts) if parts else title_clean
+
+
+def _format_signal_title(topic: str, code_signals: frozenset) -> str:
+    """Format a post title that agent-city's word-split detector can parse.
+
+    Agent-city does: words = set(f"{title} {content}".lower().split())
+    So signal keywords must appear as exact whitespace-delimited words
+    (no colons, hyphens, or other punctuation attached to the keyword).
+
+    Format: "[Signal] keyword — description"
+    """
+    # Find which signal keywords are in the topic (exact word match)
+    topic_words = set(topic.lower().split())
+    detected = sorted(topic_words & code_signals)
+    if detected:
+        # Keywords already in topic as exact words — just prefix
+        return f"[Signal] {topic}"
+    # Check if keywords appear as substrings (e.g., "fixing" contains "fix")
+    # but aren't exact words — prepend the base keyword
+    for signal in ("fix", "feature", "refactor", "test", "deploy",
+                    "implement", "bug", "api", "security", "merge"):
+        if signal in topic.lower():
+            return f"[Signal] {signal} — {topic}"
+    # No code signal in topic at all — shouldn't happen since caller
+    # already checked, but be safe
+    return f"[Signal] {topic}"
+
+
 def _dispatch_federation_intents(
     state: Any,
     intents: List[Any],
     city_context: str,
 ) -> None:
-    """Dispatch code-relevant community intents to agent-city.
+    """Route code-relevant intents to m/agent-city submolt.
 
-    Scans intents for topics that suggest engineering work
-    (bug fixes, features, improvements) and sends them as
-    create_mission directives via federation dispatch.
-
-    Max 1 dispatch per DHARMA cycle (budget-conscious).
+    Instead of gh api dispatches (broken), tags StrategicIntents
+    with target_submolt="agent-city" so they get posted there.
+    Max 1 per DHARMA cycle.
     """
     if not intents:
         return
 
-    try:
-        from vibe_core.plugins.moltbook.managers.federation import FederationDispatcher
+    # Aligned with agent-city's MoltbookBridge.CODE_SIGNALS — both repos
+    # must use the same vocabulary for word-split signal detection.
+    _CODE_SIGNALS = frozenset({
+        "bug", "fix", "feature", "implement", "refactor",
+        "test", "pr", "merge", "patch", "regression",
+        "deploy", "infrastructure", "api", "security",
+        "performance", "migration",
+    })
 
-        dispatcher = FederationDispatcher(state_dir=state.state_dir)
-        if not dispatcher.available:
-            return
-
-        # Look for code-relevant intents (posts/comments about engineering topics)
-        _CODE_SIGNALS = frozenset({
-            "bug", "fix", "error", "feature", "implement", "build", "code",
-            "refactor", "test", "deploy", "infrastructure", "api", "module",
-            "function", "class", "library", "framework", "architecture",
-            "performance", "security", "database", "migration", "upgrade",
-        })
-
-        for intent in intents[:3]:
-            topic_lower = intent.topic.lower() if hasattr(intent, "topic") else ""
-            topic_words = set(topic_lower.split())
-            if topic_words & _CODE_SIGNALS:
-                context = intent.reasoning if hasattr(intent, "reasoning") else ""
-                if city_context:
-                    context = f"{context} | City: {city_context}"
-                post_id = intent.target_post_id if hasattr(intent, "target_post_id") else ""
-                dispatcher.dispatch_create_mission(
-                    topic=intent.topic[:200],
-                    context=context[:500],
-                    source_post_id=post_id,
-                    priority="medium",
+    for intent in intents[:3]:
+        topic_lower = intent.topic.lower() if hasattr(intent, "topic") else ""
+        topic_words = set(topic_lower.split())
+        matched_signals = topic_words & _CODE_SIGNALS
+        if matched_signals:
+            # Tag this intent for m/agent-city posting
+            intent.target_submolt = "agent-city"
+            # Ensure signal keywords appear as exact words in topic
+            # so agent-city's word-split detection can parse them
+            intent.topic = _format_signal_title(intent.topic, _CODE_SIGNALS)
+            if city_context:
+                intent.engagement_context = (
+                    f"{intent.engagement_context}. {city_context}"
+                    if intent.engagement_context else city_context
                 )
-                # Max 1 dispatch per cycle
-                return
-    except Exception as e:
-        logger.warning(f"Federation dispatch failed: {e}")
+            logger.info(
+                f"FEDERATION: intent → m/agent-city: {intent.topic[:80]} "
+                f"(signals: {', '.join(sorted(matched_signals))})"
+            )
+            return  # Max 1 per cycle
 
 
 # =========================================================================
