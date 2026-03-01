@@ -169,19 +169,24 @@ def evaluate_strategy(state: Any, strategy_planner: Any) -> None:
 
         city_posts = FeedAnalyzer.extract_city_feed(state.current_feed_topics)
         if city_posts:
-            # Parse [City Report] posts structurally, not just titles
+            # Parse [City Report] + [Mission Result] posts structurally
             report_parts: List[str] = []
+            mission_parts: List[str] = []
             signal_parts: List[str] = []
             for post in city_posts[:5]:
                 title = str(post.get("title", ""))
                 content = str(post.get("content", ""))
                 if title.startswith("[City Report]"):
                     report_parts.append(_parse_city_report(title, content))
+                elif title.startswith("[Mission Result]"):
+                    mission_parts.append(_parse_city_report(title, content))
                 else:
                     signal_parts.append(title[:100])
             parts: List[str] = []
             if report_parts:
                 parts.append(f"CityReport: {'; '.join(report_parts)}")
+            if mission_parts:
+                parts.append(f"Missions: {'; '.join(mission_parts)}")
             if signal_parts:
                 parts.append(f"Signals: {'; '.join(signal_parts)}")
             city_context = " | ".join(parts) if parts else ""
@@ -216,11 +221,19 @@ def _parse_city_report(title: str, content: str) -> str:
 
     Agent-city's MoltbookBridge formats CityReports with:
     - Title: "[City Report] N agents, chain verified|BROKEN"
-    - Content: Population, Mayor, Council, Missions, PRs, Chain
+    - Content: Population, Mayor, Council, Missions, PRs, Chain, Directive Acks
+
+    Also handles [Mission Result] posts:
+    - Title: "[Mission Result] completed: mission_name — PR #42"
 
     Returns a compact summary for strategy context.
     """
     parts: List[str] = []
+
+    # [Mission Result] posts — compact extraction
+    if title.startswith("[Mission Result]"):
+        result_text = title.replace("[Mission Result]", "").strip()
+        return f"MissionResult: {result_text}"
 
     # Title already has population + chain status
     title_clean = title.replace("[City Report]", "").strip()
@@ -240,10 +253,16 @@ def _parse_city_report(title: str, content: str) -> str:
             parts.append(line)
         elif line.startswith("Chain integrity:"):
             parts.append(line)
+        # Directive acknowledgments (from OPUS_2: "ACK: DIR-xxx")
+        elif "ACK:" in line and "DIR-" in line:
+            parts.append(line.strip("- "))
         # Mission results
         elif line.startswith(("-",)) and any(
             s in line for s in ("completed", "active", "failed")
         ):
+            parts.append(line.lstrip("- "))
+        # PR results
+        elif line.startswith(("-",)) and ("PR" in line or "pr_url" in line.lower()):
             parts.append(line.lstrip("- "))
 
     return "; ".join(parts) if parts else title_clean
