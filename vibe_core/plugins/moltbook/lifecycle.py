@@ -220,6 +220,13 @@ def evaluate_strategy(state: Any, strategy_planner: Any) -> None:
         logger.warning(f"Strategy evaluation failed: {e}")
         return
 
+    # Federation response: when city reports arrive, create response intents
+    # These get priority 8 (higher than regular content) → KARMA executes them first
+    federation_responses = _create_federation_responses(city_posts, city_context)
+    if federation_responses:
+        state.current_intents = federation_responses + state.current_intents
+        logger.info(f"FEDERATION: {len(federation_responses)} response intent(s) injected")
+
     # Federation: dispatch code-relevant intents to agent-city
     _dispatch_federation_intents(state, intents, city_context)
 
@@ -272,6 +279,45 @@ def _parse_city_report(title: str, content: str) -> str:
             parts.append(line.lstrip("- "))
 
     return "; ".join(parts) if parts else title_clean
+
+
+def _create_federation_responses(
+    city_posts: List[Dict[str, object]],
+    city_context: str,
+) -> List[Any]:
+    """Create response intents for city reports — closes the federation loop.
+
+    When agent-city posts [City Report] or [Mission Result] to m/agent-city,
+    steward-protocol responds with a [Steward] post acknowledging the report
+    and providing directives or analysis.
+
+    Max 1 response per DHARMA cycle. Only fires for structured reports,
+    not general discussion.
+    """
+    if not city_posts or not city_context:
+        return []
+
+    from vibe_core.cartridges.agent_city.moltbook.core.strategy import StrategicIntent
+
+    for post in city_posts[:3]:
+        title = str(post.get("title", ""))
+        # Only respond to structured reports, not random m/agent-city chatter
+        if not any(title.startswith(prefix) for prefix in ("[City Report]", "[Mission Result]", "[Signal]")):
+            continue
+
+        return [
+            StrategicIntent(
+                action_type="post",
+                topic=f"[Steward] {city_context[:200]}",
+                reasoning="Federation relay — responding to agent-city report",
+                priority=8,
+                mission_id="federation_relay",
+                target_submolt="agent-city",
+                content_format="analysis",
+            )
+        ]
+
+    return []
 
 
 def _format_signal_title(topic: str, code_signals: frozenset) -> str:

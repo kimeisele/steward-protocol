@@ -382,7 +382,11 @@ class MoltbookStrategyPlanner:
         if own_post_ids:
             intents = [i for i in intents if i.action_type != "post" or not self._semantic_dedup(i.topic, own_post_ids)]
 
-        return intents[:TRINITY]
+        # Quality gate: skip low-priority noise (priority < 4 = weak match)
+        # Federation intents (injected separately) have priority 8 and bypass this
+        intents = [i for i in intents if i.priority >= 4]
+
+        return intents[:HALVES]
 
     def _manas_evaluate_matches(
         self,

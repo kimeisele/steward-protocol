@@ -132,6 +132,10 @@ class IntentExecutor:
     def _execute_post_intent(self, intent: object) -> None:
         """Execute a post intent with submolt selection and title extraction.
 
+        Thread-reuse: if target_submolt is set and we already have a post
+        in that submolt, comment on the existing thread instead of creating
+        a new post. Prevents cluttering submolts with many small posts.
+
         Args:
             intent: StrategicIntent with topic for seed text
         """
@@ -143,6 +147,18 @@ class IntentExecutor:
         # Select submolt: explicit target (federation) or resonance cross-scoring
         target = intent_dict.get("target_submolt", "")
         selected_submolt = target if target else self._select_submolt(seed)
+
+        # Thread-reuse: check if we already have a post in this submolt
+        # If yes → comment on existing thread instead of creating new post
+        if target:
+            existing_thread_id = self._find_existing_thread(target)
+            if existing_thread_id:
+                logger.info(
+                    f"Thread reuse: commenting on {existing_thread_id} in m/{target} "
+                    f"instead of creating new post"
+                )
+                self._execute_comment_intent_on_thread(intent_dict, existing_thread_id, seed)
+                return
 
         # Build meaningful context: name + description (not bare name)
         submolt_ctx = intent_dict.get("submolt_context", "")
@@ -189,6 +205,53 @@ class IntentExecutor:
                 "Post intent failed (no content)",
                 {"action": "post", "mission_id": intent_dict.get("mission_id", "")},
             )
+            self._record_manas_outcome(intent_dict, success=False)
+
+    def _find_existing_thread(self, submolt: str) -> str:
+        """Find the most recent own post in a submolt for thread reuse.
+
+        Returns post_id if found, empty string if not.
+        """
+        candidates = [
+            (pid, info)
+            for pid, info in self._state.own_post_ids.items()
+            if isinstance(info, dict) and info.get("submolt") == submolt
+        ]
+        if not candidates:
+            return ""
+        # Most recent post in this submolt
+        candidates.sort(key=lambda x: x[1].get("created_at", 0), reverse=True)
+        return candidates[0][0]
+
+    def _execute_comment_intent_on_thread(
+        self,
+        intent_dict: dict,
+        thread_post_id: str,
+        seed: str,
+    ) -> None:
+        """Comment on an existing thread post instead of creating a new post."""
+        from vibe_core.protocols.moltbook_content import ContentType
+
+        proposal = self._director_propose(
+            content_type="comment",
+            raw_input=seed,
+            proposal_type=ContentType.COMMENT.value,
+            post_id=thread_post_id,
+            trigger="thread_update",
+            context={
+                "strategic_reasoning": intent_dict.get("reasoning", ""),
+                "engagement_context": intent_dict.get("engagement_context", ""),
+                "content_format": intent_dict.get("content_format", "analysis"),
+                "mission_id": intent_dict.get("mission_id", ""),
+                "priority": intent_dict.get("priority", 5),
+            },
+        )
+        if proposal:
+            self._state.content_queue.enqueue(proposal)
+            logger.info(f"Thread update queued on {thread_post_id}")
+            self._record_manas_outcome(intent_dict, success=True)
+        else:
+            logger.warning(f"Thread update failed for {thread_post_id}")
             self._record_manas_outcome(intent_dict, success=False)
 
     def _execute_amplify_intent(self, intent: object) -> None:
