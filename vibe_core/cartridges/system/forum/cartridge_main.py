@@ -140,7 +140,8 @@ class ForumCartridge(VibeAgent, OathMixin):
     def votes_ledger_path(self):
         """Lazy-load votes ledger path (sandboxed)."""
         if self._votes_ledger_path is None:
-            self._votes_ledger_path = self.system.get_sandbox_path() / "governance" / "votes" / "votes.jsonl"
+            # Route through votes_path to ensure directory exists
+            self._votes_ledger_path = self.votes_path / "votes.jsonl"
         return self._votes_ledger_path
 
     async def process(self, task: Task) -> Dict[str, Any]:
