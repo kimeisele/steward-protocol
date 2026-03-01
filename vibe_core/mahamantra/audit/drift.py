@@ -238,7 +238,7 @@ class Auditor:  # Renamed from DriftAuditor
                 "PanchaTattvaProtocol",
             ),
             (
-                "vibe_core.mahamantra.orchestrator",
+                "vibe_core.mahamantra.substrate.vm.venu_orchestrator",
                 "VenuOrchestrator",
                 "vibe_core.mahamantra.protocols._pancha",
                 "PanchaTattvaProtocol",
