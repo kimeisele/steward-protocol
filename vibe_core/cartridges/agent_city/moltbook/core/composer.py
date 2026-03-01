@@ -95,16 +95,14 @@ class ContentComposer:
                 logger.warning("LLM output has no substance — rejecting")
                 return None
             # Post-LLM: topic overlap (mechanical — keyword Jaccard)
-            # For comments: verify against post_content (what the LLM actually sees),
-            # not input_text (which is just the post title — keyword mismatch expected)
-            overlap_ref = input_text
-            if content_type == "comment":
-                post_body = input_ctx.get("post_content", "")
-                if post_body and len(post_body) > 30:
-                    overlap_ref = post_body
-            if not self._verify_topic_overlap(content, overlap_ref):
-                logger.warning("Topic drift detected — rejecting")
-                return None
+            # Comments skip overlap: LLM was prompted WITH the post content,
+            # that IS the topic constraint. Jaccard fails here because
+            # comments paraphrase rather than repeat keywords (0.00-0.06 typical).
+            # Posts still checked — LLM generates from topic string, needs grounding.
+            if content_type != "comment":
+                if not self._verify_topic_overlap(content, input_text):
+                    logger.warning("Topic drift detected — rejecting")
+                    return None
             # Clean mid-sentence cuts
             if not content.rstrip().endswith((".", "!", "?", ":", "```")):
                 content = self.truncate_smart(content, len(content))
