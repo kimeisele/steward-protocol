@@ -222,6 +222,17 @@ class SankalpaRegistry:
         """Get all missions."""
         return list(self._missions.values())
 
+    def list_missions(self, status: str | None = None) -> List[SankalpaMission]:
+        """List missions, optionally filtered by status value.
+
+        Args:
+            status: Filter by status string (e.g. "active", "completed").
+                    None returns all missions.
+        """
+        if status is None:
+            return list(self._missions.values())
+        return [m for m in self._missions.values() if m.status.value == status]
+
     def update_strategy(self, mission_id: str, strategy: SankalpaStrategy) -> None:
         """Update a strategy within a mission."""
         if mission_id in self._missions:
