@@ -236,6 +236,17 @@ class EngagementTracker:
                 post_id=ack["post_id"],
                 title=ack["title"],
             )
+        if acked_missions:
+            try:
+                from vibe_core.mahamantra.substrate.event_types import EventType
+                from vibe_core.mahamantra.substrate.services.event_bus import get_event_bus
+                bus = get_event_bus()
+                for ack in acked_missions:
+                    bus.emit_sync(EventType.COMPLETED, "moltbook", f"Federation ack: {ack['mission_id']}", {
+                        "source": "federation", "mission_id": ack["mission_id"], "post_id": ack["post_id"],
+                    })
+            except Exception:
+                pass  # EventBus optional
 
         # Feed cached engagement data to strategy planner (no extra API calls)
         if strategy_planner:
