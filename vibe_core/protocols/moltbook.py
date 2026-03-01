@@ -199,6 +199,7 @@ MOLTBOOK_GUNA_MAP: Dict[str, MoltbookGuna] = {
     "get_comments": MoltbookGuna.SATTVA,
     "get_submolts": MoltbookGuna.SATTVA,
     "get_submolt": MoltbookGuna.SATTVA,
+    "get_submolt_feed": MoltbookGuna.SATTVA,
     "get_dm_requests": MoltbookGuna.SATTVA,
     # RAJAS — creation, modification
     "create_post": MoltbookGuna.RAJAS,
@@ -290,6 +291,10 @@ class MoltbookProtocol(ABC):
     @abstractmethod
     def get_submolt(self, name: str) -> SubmoltDetails:
         """GET /submolts/NAME — submolt info."""
+
+    @abstractmethod
+    def get_submolt_feed(self, name: str, sort: str = "new", limit: int = 25) -> List[MoltbookPost]:
+        """GET /submolts/NAME/posts — posts in a specific submolt."""
 
     @abstractmethod
     def verify_credentials(self) -> bool:
