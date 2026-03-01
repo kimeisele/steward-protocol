@@ -179,23 +179,27 @@ class HeartbeatOrchestrator:
     def _get_current_department(self) -> str:
         """Determine current MURALI phase from heartbeat cycle.
 
-        MuraliRouter uses DIW unpack internally, with fallback_tick as safety net.
-        No standalone_mode guard — MuraliRouter handles fallback internally.
+        heartbeat_count is 1-indexed (incremented before this call), so we
+        subtract 1 for 0-indexed department rotation:
+        HB#1→research, HB#2→planning, HB#3→execution, HB#4→learning.
 
         Returns:
             Department name: research, planning, execution, or learning
         """
+        # 1-indexed → 0-indexed: HB#1 should be research (index 0)
+        tick_0 = self._heartbeat_count - 1
+
         try:
             from vibe_core.cartridges.agent_city.moltbook.core.agency_director import (
                 MuraliRouter,
             )
 
-            return MuraliRouter().current_department(fallback_tick=self._heartbeat_count)
+            return MuraliRouter().current_department(fallback_tick=tick_0)
         except Exception as e:
             logger.warning(f"MuraliRouter unavailable, using fallback rotation: {e}")
 
         # Ultimate fallback: heartbeat-based rotation
-        return self._DEPARTMENTS[self._heartbeat_count % len(self._DEPARTMENTS)]
+        return self._DEPARTMENTS[tick_0 % len(self._DEPARTMENTS)]
 
     def _safe_call(self, fn: Callable[[], None], label: str) -> None:
         """Execute callback with error handling and logging.
