@@ -68,10 +68,38 @@ N_FFT = 1024  # FFT window size
 
 # Mahamantra syllable sequence (32 syllables)
 MAHAMANTRA_SYLLABLES = [
-    "ha", "re", "kṛ", "ṣṇa", "ha", "re", "kṛ", "ṣṇa",
-    "kṛ", "ṣṇa", "kṛ", "ṣṇa", "ha", "re", "ha", "re",
-    "ha", "re", "rā", "ma", "ha", "re", "rā", "ma",
-    "rā", "ma", "rā", "ma", "ha", "re", "ha", "re",
+    "ha",
+    "re",
+    "kṛ",
+    "ṣṇa",
+    "ha",
+    "re",
+    "kṛ",
+    "ṣṇa",
+    "kṛ",
+    "ṣṇa",
+    "kṛ",
+    "ṣṇa",
+    "ha",
+    "re",
+    "ha",
+    "re",
+    "ha",
+    "re",
+    "rā",
+    "ma",
+    "ha",
+    "re",
+    "rā",
+    "ma",
+    "rā",
+    "ma",
+    "rā",
+    "ma",
+    "ha",
+    "re",
+    "ha",
+    "re",
 ]
 
 UNIQUE_SYLLABLES = ["ha", "re", "kṛ", "ṣṇa", "rā", "ma"]
@@ -80,6 +108,7 @@ UNIQUE_SYLLABLES = ["ha", "re", "kṛ", "ṣṇa", "rā", "ma"]
 # =============================================================================
 # PACKING (32-bit per frame)
 # =============================================================================
+
 
 def pack_frame(rms: int, varga: int, f0_x10: int, centroid_x10: int) -> int:
     """Pack one frame into a uint32.
@@ -110,6 +139,7 @@ def unpack_frame(packed: int) -> dict:
 # AUDIO READING
 # =============================================================================
 
+
 def read_wav(path: Path) -> tuple:
     """Read WAV, mix to mono, normalize to [-1, 1]."""
     w = wave.open(str(path), "rb")
@@ -133,6 +163,7 @@ def read_wav(path: Path) -> tuple:
 # FEATURE EXTRACTION
 # =============================================================================
 
+
 def centroid_to_varga(centroid_hz: float) -> int:
     """Map spectral centroid to Varga (articulation point).
 
@@ -154,7 +185,7 @@ def centroid_to_varga(centroid_hz: float) -> int:
 def estimate_f0(frame: np.ndarray, sr: int) -> float:
     """F0 via autocorrelation."""
     autocorr = np.correlate(frame, frame, mode="full")
-    autocorr = autocorr[len(autocorr) // 2:]
+    autocorr = autocorr[len(autocorr) // 2 :]
     min_lag = sr // 400
     max_lag = min(sr // 80, len(autocorr) - 1)
     if max_lag <= min_lag:
@@ -169,6 +200,7 @@ def estimate_f0(frame: np.ndarray, sr: int) -> float:
 # =============================================================================
 # SYLLABLE ASSIGNMENT
 # =============================================================================
+
 
 def assign_syllable_per_frame(frame_idx: int, n_frames: int, chant_start_frame: int, chant_end_frame: int) -> str:
     """Map a frame index to its Mahamantra syllable position."""
@@ -186,6 +218,7 @@ def assign_syllable_per_frame(frame_idx: int, n_frames: int, chant_start_frame: 
 # MAIN BAKE
 # =============================================================================
 
+
 def bake():
     print(f"Reading WAV: {WAV_PATH}")
     samples, sr = read_wav(WAV_PATH)
@@ -201,7 +234,7 @@ def bake():
     frame_rms = []
     for i in range(n_frames):
         start = i * hop
-        frame = samples[start:start + N_FFT]
+        frame = samples[start : start + N_FFT]
         rms = np.sqrt(np.mean(frame**2))
         frame_rms.append(rms)
 
@@ -219,8 +252,7 @@ def bake():
             chant_end = i
             break
 
-    print(f"Chant region: frame {chant_start}-{chant_end} "
-          f"({chant_start * HOP_MS}ms - {chant_end * HOP_MS}ms)")
+    print(f"Chant region: frame {chant_start}-{chant_end} ({chant_start * HOP_MS}ms - {chant_end * HOP_MS}ms)")
 
     # 2. Frame-by-frame feature extraction + packing
     print("\nExtracting continuous signature stream...")
@@ -230,14 +262,14 @@ def bake():
 
     for i in range(n_frames):
         start = i * hop
-        frame = samples[start:start + N_FFT]
+        frame = samples[start : start + N_FFT]
 
         # RMS
         rms = int(np.sqrt(np.mean(frame**2)) * 1000)
 
         # Spectral centroid
-        spec = np.abs(fft(frame * np.hanning(N_FFT)))[:N_FFT // 2]
-        xf = fftfreq(N_FFT, 1 / sr)[:N_FFT // 2]
+        spec = np.abs(fft(frame * np.hanning(N_FFT)))[: N_FFT // 2]
+        xf = fftfreq(N_FFT, 1 / sr)[: N_FFT // 2]
         total = np.sum(spec)
         centroid_hz = float(np.sum(xf * spec) / total) if total > 0 else 0.0
         centroid_x10 = int(centroid_hz * 10)
@@ -378,7 +410,7 @@ def bake():
     print(f"  Fits Antaranga (16KB): {len(packed_stream) * 4 <= 16384}")
     print(f"  F0 mean: {mean_f0:.1f} Hz → VibID {frequency_to_vibration_id(mean_f0) if mean_f0 > 0 else 0}")
     print(f"  F0 median: {median_f0:.1f} Hz → VibID {frequency_to_vibration_id(median_f0) if median_f0 > 0 else 0}")
-    syl_summary = ', '.join(f'{s}={d["n_frames"]}' for s, d in syllable_data.items())
+    syl_summary = ", ".join(f"{s}={d['n_frames']}" for s, d in syllable_data.items())
     print(f"  Syllable frames: {syl_summary}")
     print(f"  Harmonics: {harmonic_vib_ids}")
     print(f"  WAV can now be deleted — signature is not reversible.")
