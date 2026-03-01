@@ -83,7 +83,7 @@ class FeedAnalyzer:
                     if hasattr(m, "description") and m.description and not m.id.startswith("moltbook_kg_")
                 ]
             except Exception as e:
-                logger.debug(f"Mission extraction from strategy planner failed: {e}")
+                logger.warning(f"Mission extraction from strategy planner failed: {e}")
 
         try:
             posts = run_async(client.get_personalized_feed(sort="hot", limit=10))
@@ -134,7 +134,7 @@ class FeedAnalyzer:
                     if engage_proposal:
                         content_queue.enqueue(engage_proposal)
                 except Exception as e:
-                    logger.debug(f"Engagement proposal failed for {post_id}: {e}")
+                    logger.warning(f"Engagement proposal failed for {post_id}: {e}")
 
         return feed_topics
 
@@ -177,7 +177,7 @@ class FeedAnalyzer:
                             }
                         )
             except Exception as e:
-                logger.debug(f"Semantic search failed for '{desc[:40]}': {e}")
+                logger.warning(f"Semantic search failed for '{desc[:40]}': {e}")
 
         if additional:
             logger.info(f"Semantic search: {len(additional)} new posts discovered")
@@ -230,7 +230,7 @@ class FeedAnalyzer:
         try:
             submolts = run_async(client.get_submolts())
         except Exception as e:
-            logger.debug(f"Submolt discovery failed: {e}")
+            logger.warning(f"Submolt discovery failed: {e}")
             return
 
         if not submolts:
@@ -258,7 +258,7 @@ class FeedAnalyzer:
                 ranked = resonate(probe, top_n=3)
                 score = sum(w.total_score for w in ranked) / len(ranked) if ranked else 0.0
             except Exception as e:
-                logger.debug(f"Resonance scoring failed for {name}: {e}")
+                logger.warning(f"Resonance scoring failed for {name}: {e}")
                 score = 0.0
 
             if int(score * COSMIC_FRAME) > _SUBMOLT_RESONANCE_CF or cold_start:
@@ -313,7 +313,7 @@ class FeedAnalyzer:
                 if s:
                     recent_submolts[s] = recent_submolts.get(s, 0) + 1
         except Exception as e:
-            logger.debug(f"Engagement/recency history unavailable: {e}")
+            logger.warning(f"Engagement/recency history unavailable: {e}")
 
         # Score each subscribed submolt by keyword Jaccard
         scored: List[tuple] = []  # (submolt_name, weighted_score)

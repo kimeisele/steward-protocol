@@ -115,4 +115,4 @@ class StateRestorer:
             self._state.current_intents = intents
             logger.info(f"Restored {len(intents)} strategic intents from previous run")
         except Exception as e:
-            logger.debug(f"Strategic intent restoration failed: {e}")
+            logger.warning(f"Strategic intent restoration failed: {e}")

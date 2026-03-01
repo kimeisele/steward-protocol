@@ -27,6 +27,14 @@ if TYPE_CHECKING:
 logger = logging.getLogger("MOLTBOOK_ENGAGEMENT")
 
 
+def _safe_int(val: object) -> int:
+    """Convert API value to int, returning 0 on failure."""
+    try:
+        return int(val)
+    except (ValueError, TypeError):
+        return 0
+
+
 class EngagementTracker:
     """Poll own posts/comments for engagement metrics, adjust intervals.
 
@@ -100,7 +108,7 @@ class EngagementTracker:
             try:
                 post = service.get_post(post_id)
             except Exception as e:
-                logger.debug(f"Engagement poll failed for {post_id}: {e}")
+                logger.warning(f"Engagement poll failed for {post_id}: {e}")
                 continue
 
             if not isinstance(post, dict):
@@ -108,9 +116,9 @@ class EngagementTracker:
 
             fetched_posts[post_id] = post
 
-            upvotes = int(post.get("upvotes", 0))
-            downvotes = int(post.get("downvotes", 0))
-            replies = int(post.get("comment_count", 0))
+            upvotes = _safe_int(post.get("upvotes", 0))
+            downvotes = _safe_int(post.get("downvotes", 0))
+            replies = _safe_int(post.get("comment_count", 0))
             submolt = str(meta.get("submolt", ""))
             net_score = upvotes - downvotes
 
@@ -144,14 +152,14 @@ class EngagementTracker:
             try:
                 comments = service.get_comments(post_id, sort="new")
             except Exception as e:
-                logger.debug(f"Comment fetch for engagement tracking failed: {e}")
+                logger.warning(f"Comment fetch for engagement tracking failed: {e}")
                 continue
             for c in comments or []:
                 if not isinstance(c, dict):
                     continue
                 if c.get("id") == comment_id:
-                    upvotes = int(c.get("upvotes", 0))
-                    downvotes = int(c.get("downvotes", 0))
+                    upvotes = _safe_int(c.get("upvotes", 0))
+                    downvotes = _safe_int(c.get("downvotes", 0))
                     net_score = upvotes - downvotes
                     event_log.record_engagement_metric(
                         content_id=comment_id,
@@ -177,13 +185,13 @@ class EngagementTracker:
                         strategy_planner.update_from_engagement(
                             {
                                 "post_id": post_id,
-                                "upvotes": int(post.get("upvotes", 0)),
-                                "reply_count": int(post.get("comment_count", 0)),
+                                "upvotes": _safe_int(post.get("upvotes", 0)),
+                                "reply_count": _safe_int(post.get("comment_count", 0)),
                                 "topic": str(meta.get("title", "")),
                             }
                         )
                     except Exception as e:
-                        logger.debug(f"Strategy planner update failed for {post_id}: {e}")
+                        logger.warning(f"Strategy planner update failed for {post_id}: {e}")
 
         logger.debug(f"Engagement tracked: {len(recent_posts)} posts, {len(comment_ids)} comments")
 

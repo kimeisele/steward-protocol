@@ -94,7 +94,7 @@ class StateSnapshot:
         """
         # Version compatibility check (1-7 supported)
         if snapshot.get("version") not in (1, 2, 3, 4, 5, 6, 7):
-            logger.debug(f"Snapshot version {snapshot.get('version')} not compatible")
+            logger.warning(f"Snapshot version {snapshot.get('version')} not compatible")
             return
 
         heartbeat = self._get_heartbeat()

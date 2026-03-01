@@ -69,7 +69,7 @@ class PostOrchestrator:
                 if title:
                     feed_topics.append(title[:80])
         except Exception as e:
-            logger.debug(f"Feed topic extraction failed: {e}")
+            logger.warning(f"Feed topic extraction failed: {e}")
 
         trigger = "scheduled"
         seed = f"{trigger}: {', '.join(feed_topics[:3])}" if feed_topics else trigger
@@ -142,7 +142,7 @@ class PostOrchestrator:
                 service = self._actions._ensure_service()
                 comments = service.get_comments(post_id, sort="new")
             except Exception as e:
-                logger.debug(f"Comment fetch for {post_id} failed: {e}")
+                logger.warning(f"Comment fetch for {post_id} failed: {e}")
                 continue
 
             if not comments:
@@ -184,7 +184,7 @@ class PostOrchestrator:
                             )
                             logger.info(f"Reply to our comment queued (post={post_id}, from={author})")
                     except Exception as e:
-                        logger.debug(f"Reply proposal failed: {e}")
+                        logger.warning(f"Reply proposal failed: {e}")
 
     def update_profile(self) -> None:
         """Update agent profile with current activity stats.
@@ -206,7 +206,7 @@ class PostOrchestrator:
         try:
             profile = service.get_own_profile()
         except Exception as e:
-            logger.debug(f"Profile fetch failed: {e}")
+            logger.warning(f"Profile fetch failed: {e}")
             return
 
         current_karma = profile.get("karma", 0) if isinstance(profile, dict) else 0

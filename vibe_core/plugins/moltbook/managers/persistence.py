@@ -249,7 +249,7 @@ class PersistenceManager:
                 actor="moltbook_persistence",
             )
         except Exception as e:
-            logger.debug(f"Phase state persist failed: {e}")
+            logger.warning(f"Phase state persist failed: {e}")
 
     def restore_phase_state(self) -> Dict[str, Any]:
         """Restore cross-phase state from previous run.
@@ -274,6 +274,6 @@ class PersistenceManager:
             result["rate_limits"] = data.get("rate_limits", {})
             result["network_intel"] = data.get("network_intel", {})
         except Exception as e:
-            logger.debug(f"Phase state restore failed: {e}")
+            logger.warning(f"Phase state restore failed: {e}")
 
         return result

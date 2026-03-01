@@ -87,7 +87,7 @@ class GunaEnforcer:
             for v in violations:
                 logger.warning(f"MOLTBOOK-KG-CONSTRAINT: {v}")
         except Exception as e:
-            logger.debug(f"KG constraint check unavailable: {e}")
+            logger.warning(f"KG constraint check unavailable: {e}")
 
     def _log_write_operation(self, operation: str, guna: MoltbookGuna) -> None:
         """Log write operation with timestamp and trim log if needed.
