@@ -205,7 +205,7 @@ class MoltbookConstitution:
 
         # Posts need substance — at least 2 sentences
         if content_type == "post":
-            sentences = [s.strip() for s in re.split(r'[.!?]+', content) if len(s.strip()) > 10]
+            sentences = [s.strip() for s in re.split(r"[.!?]+", content) if len(s.strip()) > 10]
             if len(sentences) < 2:
                 violations.append(f"Post too shallow: {len(sentences)} sentence(s) (min 2)")
 

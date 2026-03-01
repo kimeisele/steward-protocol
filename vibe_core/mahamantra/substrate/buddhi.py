@@ -153,27 +153,21 @@ class MahaBuddhi:
         if cognition.mode == output_cognition.mode:
             score += 1.0
         else:
-            observations.append(
-                f"mode drift: {cognition.mode} -> {output_cognition.mode}"
-            )
+            observations.append(f"mode drift: {cognition.mode} -> {output_cognition.mode}")
 
         # Quarter alignment — same approach?
         checks += 1
         if cognition.approach == output_cognition.approach:
             score += 1.0
         else:
-            observations.append(
-                f"approach drift: {cognition.approach} -> {output_cognition.approach}"
-            )
+            observations.append(f"approach drift: {cognition.approach} -> {output_cognition.approach}")
 
         # Trinity alignment — same function?
         checks += 1
         if cognition.function == output_cognition.function:
             score += 1.0
         else:
-            observations.append(
-                f"function drift: {cognition.function} -> {output_cognition.function}"
-            )
+            observations.append(f"function drift: {cognition.function} -> {output_cognition.function}")
 
         # Cell vitality — is output alive?
         checks += 1
@@ -187,9 +181,7 @@ class MahaBuddhi:
         if output_cognition.integrity > 0.3:
             score += 1.0
         else:
-            observations.append(
-                f"low integrity: {output_cognition.integrity:.2f}"
-            )
+            observations.append(f"low integrity: {output_cognition.integrity:.2f}")
 
         alignment = score / checks if checks else 0.0
         self._eval_count += 1

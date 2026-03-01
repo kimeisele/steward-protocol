@@ -77,9 +77,7 @@ class HebbianSynaptic:
             return
 
         try:
-            self._state_file.write_text(
-                json.dumps(self._weights, indent=2), encoding="utf-8"
-            )
+            self._state_file.write_text(json.dumps(self._weights, indent=2), encoding="utf-8")
             self._dirty = False
             logger.debug("Synaptic weights persisted: %d entries", len(self._weights))
         except Exception as e:

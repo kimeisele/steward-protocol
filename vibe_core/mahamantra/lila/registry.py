@@ -46,7 +46,7 @@ if TYPE_CHECKING:
 # SSOT: Constants from seed
 from vibe_core.mahamantra.protocols._seed import (
     JIVA_QUALITIES,  # 50
-    )
+)
 from vibe_core.mahamantra.substrate.seed import (
     COSMIC_FRAME,  # 21600
     NADI_RESONANCE,  # 72

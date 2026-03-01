@@ -9,7 +9,10 @@ But the real decoder uses _frames_to_phoneme_coords() which goes:
 This is a DIFFERENT path. Both audio and dict use ARPABET_TO_RAMA,
 so coords should align. Let's see what the actual decoder produces.
 """
-import sys; sys.path.insert(0, ".")
+
+import sys
+
+sys.path.insert(0, ".")
 import logging
 
 logging.basicConfig(level=logging.INFO)
@@ -37,16 +40,17 @@ print("ACTUAL SHABDA DECODER OUTPUT")
 print("=" * 70)
 for w in transcript.words:
     in_expected = "✓" if w.word.lower() in set(expected_words) else " "
-    print(f"  [{w.start_ms:5d}-{w.end_ms:5d}ms] {w.word:15s} conf={w.confidence:.3f} "
-          f"lang={w.language:8s} {in_expected}  coords={w.rama_coords[:6]}")
+    print(
+        f"  [{w.start_ms:5d}-{w.end_ms:5d}ms] {w.word:15s} conf={w.confidence:.3f} "
+        f"lang={w.language:8s} {in_expected}  coords={w.rama_coords[:6]}"
+    )
 
 print(f"\nDECODER TRANSCRIPT: {transcript.text}")
 print(f"EXPECTED:           {EXPECTED}")
 
 # Count matches
 decoder_words = [w.word.lower() for w in transcript.words]
-exact_position = sum(1 for i, w in enumerate(decoder_words)
-                     if i < len(expected_words) and w == expected_words[i])
+exact_position = sum(1 for i, w in enumerate(decoder_words) if i < len(expected_words) and w == expected_words[i])
 in_vocab = sum(1 for w in decoder_words if w in set(expected_words))
 total = len(decoder_words)
 

@@ -176,4 +176,3 @@ class TestParamparaConnection:
         entropy = get_guru_entropy()
         assert isinstance(entropy, float)
         assert entropy > 0
-

@@ -17,6 +17,7 @@ from typing import Optional
 
 # ── Moltbook API ──────────────────────────────────────────────────────
 
+
 def get_api_key() -> str:
     """Resolve Moltbook API key (env var → credentials file)."""
     key = os.environ.get("MOLTBOOK_API_KEY", "")
@@ -33,10 +34,12 @@ def get_api_key() -> str:
 def create_client():
     """Create MoltbookClient instance."""
     from vibe_core.mahamantra.adapters.moltbook import MoltbookClient
+
     return MoltbookClient(api_key=get_api_key())
 
 
 # ── Agent Discovery ──────────────────────────────────────────────────
+
 
 async def discover_agents_from_feed(client) -> dict[str, dict]:
     """Scan feed for agents. Returns {name: profile_data}."""
@@ -93,7 +96,7 @@ async def discover_agents_from_feed(client) -> dict[str, dict]:
             print(f"  Got {len(items)} results")
             for item in items:
                 item_type = item.get("type", "") if isinstance(item, dict) else ""
-                author = (item.get("author", {}) if isinstance(item, dict) else {})
+                author = item.get("author", {}) if isinstance(item, dict) else {}
                 name = author.get("name", "") if isinstance(author, dict) else ""
                 if name and name not in agents:
                     agents[name] = {
@@ -128,9 +131,11 @@ async def fetch_agent_profiles(client, agent_names: list[str]) -> dict[str, dict
                 "last_active": agent_data.get("last_active", ""),
                 "created_at": agent_data.get("created_at", ""),
             }
-            print(f"  karma={profiles[name]['karma']} "
-                  f"followers={profiles[name]['follower_count']} "
-                  f"active={profiles[name]['is_active']}")
+            print(
+                f"  karma={profiles[name]['karma']} "
+                f"followers={profiles[name]['follower_count']} "
+                f"active={profiles[name]['is_active']}"
+            )
         except Exception as e:
             print(f"  Profile error for {name}: {e}")
             profiles[name] = {"name": name, "error": str(e)}
@@ -138,6 +143,7 @@ async def fetch_agent_profiles(client, agent_names: list[str]) -> dict[str, dict
 
 
 # ── Mahamantra Seed Generation ───────────────────────────────────────
+
 
 def generate_seed(agent_name: str) -> Optional[dict]:
     """Generate Mahamantra RAMA coordinates + seed for an agent name."""
@@ -165,11 +171,11 @@ def generate_seed(agent_name: str) -> Optional[dict]:
 
         # Zone mapping based on element
         zone_map = {
-            "PRITHVI": "engineering",    # Earth → building
-            "JALA": "research",          # Water → flowing knowledge
-            "AGNI": "governance",        # Fire → leadership
-            "VAYU": "general",           # Air → communication
-            "AKASHA": "research",        # Ether → abstract
+            "PRITHVI": "engineering",  # Earth → building
+            "JALA": "research",  # Water → flowing knowledge
+            "AGNI": "governance",  # Fire → leadership
+            "VAYU": "general",  # Air → communication
+            "AKASHA": "research",  # Ether → abstract
         }
 
         return {
@@ -185,11 +191,13 @@ def generate_seed(agent_name: str) -> Optional[dict]:
     except Exception as e:
         print(f"  Seed generation error for {agent_name}: {e}")
         import traceback
+
         traceback.print_exc()
         return None
 
 
 # ── Main ─────────────────────────────────────────────────────────────
+
 
 async def main():
     print("=" * 60)
@@ -260,13 +268,16 @@ async def main():
     for name in agent_names:
         profile = profiles.get(name, {})
         seed = seeds.get(name, {})
-        print(f"{name:<25} "
-              f"{profile.get('karma', '?'):>6} "
-              f"{profile.get('follower_count', '?'):>10} "
-              f"{seed.get('dominant_element', '?'):<10} "
-              f"{seed.get('suggested_zone', '?'):<12}")
+        print(
+            f"{name:<25} "
+            f"{profile.get('karma', '?'):>6} "
+            f"{profile.get('follower_count', '?'):>10} "
+            f"{seed.get('dominant_element', '?'):<10} "
+            f"{seed.get('suggested_zone', '?'):<12}"
+        )
 
 
 if __name__ == "__main__":
     import asyncio
+
     asyncio.run(main())

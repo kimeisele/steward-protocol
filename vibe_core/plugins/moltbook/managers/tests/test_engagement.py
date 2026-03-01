@@ -122,7 +122,9 @@ class TestTrack:
         tracker = _make_tracker()
         service = MagicMock(spec=MoltbookProtocol)
         service.get_post.return_value = {
-            "upvotes": 1, "downvotes": 0, "comment_count": 0,
+            "upvotes": 1,
+            "downvotes": 0,
+            "comment_count": 0,
         }
         service.get_comments.return_value = [
             {"id": "c1", "upvotes": 2, "downvotes": 0},
@@ -164,7 +166,9 @@ class TestTrack:
         tracker = _make_tracker()
         service = MagicMock(spec=MoltbookProtocol)
         service.get_post.return_value = {
-            "upvotes": 5, "downvotes": 0, "comment_count": 3,
+            "upvotes": 5,
+            "downvotes": 0,
+            "comment_count": 3,
         }
         event_log = MagicMock(spec=EventLog)
         planner = MagicMock(spec=MoltbookStrategyPlanner)

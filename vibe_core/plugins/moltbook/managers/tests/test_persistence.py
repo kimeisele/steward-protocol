@@ -130,7 +130,15 @@ class TestGovernedWrite:
         """Governed write calls gate.write() with correct args."""
         mock_gate = MagicMock()
         # IOWriteResult is a TypedDict (dict), not a dataclass
-        mock_gate.write.return_value = {"success": True, "cached": True, "flushed": False, "actor": "test", "file": "test_file.json", "guna_policy": "RAJAS", "reason": ""}
+        mock_gate.write.return_value = {
+            "success": True,
+            "cached": True,
+            "flushed": False,
+            "actor": "test",
+            "file": "test_file.json",
+            "guna_policy": "RAJAS",
+            "reason": "",
+        }
 
         with patch(
             "vibe_core.plugins.moltbook.managers.persistence.get_sync_gate",
@@ -176,7 +184,15 @@ class TestGovernedWrite:
         """When gate blocks the write, fallback to direct write (state > policy)."""
         mock_gate = MagicMock()
         # IOWriteResult is a TypedDict (dict), not a dataclass
-        mock_gate.write.return_value = {"success": False, "cached": False, "flushed": False, "actor": "test", "file": "blocked.json", "guna_policy": "DENIED", "reason": "POLICY_DENIED"}
+        mock_gate.write.return_value = {
+            "success": False,
+            "cached": False,
+            "flushed": False,
+            "actor": "test",
+            "file": "blocked.json",
+            "guna_policy": "DENIED",
+            "reason": "POLICY_DENIED",
+        }
 
         target = tmp_path / "blocked.json"
 

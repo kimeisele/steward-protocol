@@ -382,12 +382,14 @@ class MemoryStore(AkashicProtocol, PrahladaProtocol):
         """
         if value is None:
             return False
-        self.store_entry(MemoryEntry(
-            intent_type=key,
-            intent_description=str(value),
-            outcome="pending",
-            timestamp=datetime.now(timezone.utc).isoformat(),
-        ))
+        self.store_entry(
+            MemoryEntry(
+                intent_type=key,
+                intent_description=str(value),
+                outcome="pending",
+                timestamp=datetime.now(timezone.utc).isoformat(),
+            )
+        )
         return True
 
     def recall(self, key: str) -> Optional[MemoryValue]:

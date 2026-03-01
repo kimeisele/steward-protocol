@@ -42,12 +42,12 @@ class TestPhonemeToVarga:
     def test_varga_enum_values(self):
         from vibe_core.mahamantra.substrate.encoding.phonetic_bridge import VargaIndex
 
-        assert VargaIndex.KANTHYA == 0    # Throat
-        assert VargaIndex.TALAVYA == 1    # Palate
+        assert VargaIndex.KANTHYA == 0  # Throat
+        assert VargaIndex.TALAVYA == 1  # Palate
         assert VargaIndex.MURDHANYA == 2  # Cerebral
-        assert VargaIndex.DANTYA == 3     # Dental
-        assert VargaIndex.OSHTHYA == 4    # Labial
-        assert len(VargaIndex) == 5       # PANCHA
+        assert VargaIndex.DANTYA == 3  # Dental
+        assert VargaIndex.OSHTHYA == 4  # Labial
+        assert len(VargaIndex) == 5  # PANCHA
 
     def test_sanskrit_consonants_mapped(self):
         """Core Sanskrit consonants must be in the mapping."""
@@ -96,12 +96,12 @@ class TestPhonemeToSthana:
     def test_sthana_enum_values(self):
         from vibe_core.mahamantra.substrate.encoding.phonetic_bridge import SthanaIndex
 
-        assert SthanaIndex.SPARSHA == 0     # Contact
-        assert SthanaIndex.MAHAPRANA == 1    # Aspirated
-        assert SthanaIndex.GHOSHAVAT == 2   # Voiced
-        assert SthanaIndex.GHOSHMAHA == 3   # Voiced aspirated
-        assert SthanaIndex.ANUNASIKA == 4   # Nasal
-        assert len(SthanaIndex) == 5        # PANCHA
+        assert SthanaIndex.SPARSHA == 0  # Contact
+        assert SthanaIndex.MAHAPRANA == 1  # Aspirated
+        assert SthanaIndex.GHOSHAVAT == 2  # Voiced
+        assert SthanaIndex.GHOSHMAHA == 3  # Voiced aspirated
+        assert SthanaIndex.ANUNASIKA == 4  # Nasal
+        assert len(SthanaIndex) == 5  # PANCHA
 
     def test_all_five_sthanas_represented(self):
         """All 5 energy levels must appear in the mapping."""
@@ -147,4 +147,3 @@ class TestUniversalPhoneticBridge:
 
         assert isinstance(STHANA_ENERGY, dict)
         assert len(STHANA_ENERGY) > 0
-

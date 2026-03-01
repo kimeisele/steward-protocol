@@ -96,12 +96,14 @@ class TestMahaState:
     def reset_singleton(self):
         """Reset singleton before each test."""
         from vibe_core.mahamantra.substrate.state.maha_state import MahaState
+
         MahaState.reset_instance()
         yield
         MahaState.reset_instance()
 
     def test_singleton(self):
         from vibe_core.mahamantra.substrate.state.maha_state import MahaState
+
         with tempfile.TemporaryDirectory() as tmp:
             a = MahaState.get_instance(Path(tmp))
             b = MahaState.get_instance(Path(tmp))
@@ -109,6 +111,7 @@ class TestMahaState:
 
     def test_set_get(self):
         from vibe_core.mahamantra.substrate.state.maha_state import MahaState
+
         with tempfile.TemporaryDirectory() as tmp:
             state = MahaState.get_instance(Path(tmp))
             state.set("answer", 42)
@@ -116,6 +119,7 @@ class TestMahaState:
 
     def test_has(self):
         from vibe_core.mahamantra.substrate.state.maha_state import MahaState
+
         with tempfile.TemporaryDirectory() as tmp:
             state = MahaState.get_instance(Path(tmp))
             assert state.has("nonexistent") is False
@@ -124,6 +128,7 @@ class TestMahaState:
 
     def test_delete(self):
         from vibe_core.mahamantra.substrate.state.maha_state import MahaState
+
         with tempfile.TemporaryDirectory() as tmp:
             state = MahaState.get_instance(Path(tmp))
             state.set("tmp", "val")
@@ -133,6 +138,7 @@ class TestMahaState:
 
     def test_keys(self):
         from vibe_core.mahamantra.substrate.state.maha_state import MahaState
+
         with tempfile.TemporaryDirectory() as tmp:
             state = MahaState.get_instance(Path(tmp))
             state.set("a", 1)
@@ -144,6 +150,7 @@ class TestMahaState:
 
     def test_pierce(self):
         from vibe_core.mahamantra.substrate.state.maha_state import MahaState
+
         with tempfile.TemporaryDirectory() as tmp:
             state = MahaState.get_instance(Path(tmp))
             state.set("normal", "value")
@@ -156,6 +163,7 @@ class TestMahaState:
     def test_unpierce(self):
         """unpierce() deletes the pierced entry entirely."""
         from vibe_core.mahamantra.substrate.state.maha_state import MahaState
+
         with tempfile.TemporaryDirectory() as tmp:
             state = MahaState.get_instance(Path(tmp))
             state.pierce("key", "val")
@@ -166,6 +174,7 @@ class TestMahaState:
 
     def test_pierced_keys(self):
         from vibe_core.mahamantra.substrate.state.maha_state import MahaState
+
         with tempfile.TemporaryDirectory() as tmp:
             state = MahaState.get_instance(Path(tmp))
             state.pierce("x", 1)
@@ -173,4 +182,3 @@ class TestMahaState:
             pierced = state.pierced_keys()
             assert "x" in pierced
             assert "y" in pierced
-

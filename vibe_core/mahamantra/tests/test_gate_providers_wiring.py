@@ -6,7 +6,6 @@ MahaAttention/MahaLLM (empty routers) are NOT wired.
 """
 
 
-
 class TestWireGateProviders:
     """wire_gate_providers() registers exactly the 5 core observers."""
 

@@ -206,12 +206,14 @@ class IntentExecutor:
             return
 
         # 1. Enqueue upvote
-        self._state.content_queue.enqueue({
-            "content_type": ContentType.VOTE.value,
-            "post_id": target_post_id,
-            "source": "amplify_intent",
-            "priority": 0,
-        })
+        self._state.content_queue.enqueue(
+            {
+                "content_type": ContentType.VOTE.value,
+                "post_id": target_post_id,
+                "source": "amplify_intent",
+                "priority": 0,
+            }
+        )
 
         # 2. Generate substantive comment (not just "great post!")
         if target_post_id in self._state.commented_post_ids:

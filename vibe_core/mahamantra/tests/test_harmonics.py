@@ -37,9 +37,9 @@ class TestResonanceHarmonics:
 
     def test_threshold_values(self):
         """Thresholds are specific fractions of COSMIC_FRAME."""
-        assert CF_AUTO == 14400    # 2/3 × 21600
-        assert CF_REFINE == 9600   # 4/9 × 21600
-        assert CF_SYNC == 28800    # 4/3 × 21600
+        assert CF_AUTO == 14400  # 2/3 × 21600
+        assert CF_REFINE == 9600  # 4/9 × 21600
+        assert CF_SYNC == 28800  # 4/3 × 21600
 
     def test_float_thresholds_match_integer(self):
         """Float aliases must be CF / COSMIC_FRAME."""
@@ -122,8 +122,8 @@ class TestVedicScaleMapping:
         venu = vsm.get_venu_sync_points()
         vamsi = vsm.get_vamsi_sync_points()
         assert len(murali) == 4 - 1  # 4 holes → 3 inner divisions
-        assert len(venu) == 6 - 1    # 6 holes → 5 inner divisions
-        assert len(vamsi) == 9 - 1   # 9 holes → 8 inner divisions
+        assert len(venu) == 6 - 1  # 6 holes → 5 inner divisions
+        assert len(vamsi) == 9 - 1  # 9 holes → 8 inner divisions
 
     def test_harmonic_signature(self):
         vsm = VedicScaleMapping()
@@ -171,4 +171,3 @@ class TestSravanamCheck:
         # Bad: output > input
         fail, msg = sc.can_emit(10, 100, 0.7)
         assert fail is False
-

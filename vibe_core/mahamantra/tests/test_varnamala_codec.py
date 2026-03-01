@@ -7,7 +7,6 @@ Verifies the architectural identities:
   Entire Gita = 54,423 phonemes = (MALA + GITA_CHAPTERS) * JIVA_CYCLE - NAVA
 """
 
-
 from vibe_core.mahamantra.protocols._seed import (
     PANCHA,
     POSITION_SUM_RAMA,

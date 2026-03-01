@@ -31,6 +31,7 @@ _FORMAT_TOKENS = {
 }
 _DEFAULT_TOKENS = 400
 
+
 class ContentComposer:
     """PromptRegistry + BuddhiResult-driven content generation.
 
@@ -49,9 +50,7 @@ class ContentComposer:
         try:
             from vibe_core.runtime.prompt_registry import PromptRegistry
 
-            PromptRegistry.load_from_yaml(
-                Path(__file__).parents[5] / "config" / "prompts" / "moltbook.yaml"
-            )
+            PromptRegistry.load_from_yaml(Path(__file__).parents[5] / "config" / "prompts" / "moltbook.yaml")
         except Exception as e:
             logger.warning(f"Prompt YAML load failed: {e}")
 
@@ -83,7 +82,11 @@ class ContentComposer:
         if content:
             # Post-LLM: echo detection
             task_input = input_text[:200]
-            if task_input and len(task_input) > 20 and content.strip().lower().startswith(task_input.strip().lower()[:50]):
+            if (
+                task_input
+                and len(task_input) > 20
+                and content.strip().lower().startswith(task_input.strip().lower()[:50])
+            ):
                 logger.warning("LLM echoed input — rejecting")
                 return None
             # Post-LLM: substance check
@@ -121,12 +124,8 @@ class ContentComposer:
 
         # Append cognitive signals from BuddhiResult (not in YAML — dynamic)
         cognitive_parts = []
-        cognitive_parts.append(
-            f"Chapter {cognition.chapter}: {cognition.perspective}"
-        )
-        cognitive_parts.append(
-            f"Phase: {cognition.focus} | Function: {cognition.function}"
-        )
+        cognitive_parts.append(f"Chapter {cognition.chapter}: {cognition.perspective}")
+        cognitive_parts.append(f"Phase: {cognition.focus} | Function: {cognition.function}")
         # Verse concepts (English only)
         if cognition.verse_concepts:
             meanings = [vc.get("meaning", "") for vc in cognition.verse_concepts[:3] if vc.get("meaning")]
@@ -173,7 +172,7 @@ class ContentComposer:
         resonant_context = self._build_resonance_context(input_ctx.get("raw_input", ""))
         # Strip "RESONANCE:" header — template already provides context label
         if resonant_context.startswith("RESONANCE:"):
-            resonant_context = resonant_context[len("RESONANCE:"):].strip()
+            resonant_context = resonant_context[len("RESONANCE:") :].strip()
 
         # Dominant resonance mode
         resonance_mode = self._get_dominant_resonance_mode(input_ctx.get("raw_input", ""))
@@ -299,9 +298,7 @@ class ContentComposer:
                 dims = {k: v for k, v in breakdown.items() if k != "total"}
                 top_dim = max(dims, key=dims.get) if dims else ""
                 # English meaning ONLY — no rw.sanskrit
-                lines.append(
-                    f"- {m} — {rw.total_score:.2f} [{top_dim}]"
-                )
+                lines.append(f"- {m} — {rw.total_score:.2f} [{top_dim}]")
             return "\n".join(lines) if len(lines) > 1 else ""
         except Exception as e:
             logger.warning(f"Resonance context failed: {e}")
@@ -311,10 +308,10 @@ class ContentComposer:
     def _compute_temperature(cognition: BuddhiResult) -> float:
         """Integrity-driven temperature — high integrity = precise, low = exploratory."""
         if cognition.integrity > 0.7:
-            return 0.3   # High confidence → precise, focused
+            return 0.3  # High confidence → precise, focused
         if cognition.integrity > 0.4:
             return 0.45  # Medium → balanced
-        return 0.6       # Low → slightly more creative (but not 0.7 wild)
+        return 0.6  # Low → slightly more creative (but not 0.7 wild)
 
     def _route_model(
         self,

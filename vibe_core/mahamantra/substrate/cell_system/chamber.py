@@ -180,12 +180,14 @@ def _get_shabda_salt() -> tuple:
         for p in range(WORDS):
             r0, v0, f0, c0 = unpack_frame(prabhupada_salt(p * 2))
             r1, v1, f1, c1 = unpack_frame(prabhupada_salt(p * 2 + 1))
-            entries.append((
-                (r0 + r1) // 2,      # RMS average
-                (v0 + v1) // 2,      # Varga average (integer)
-                (f0 + f1) // 2,      # F0×10 average
-                (c0 + c1) // 2,      # Centroid/100 average
-            ))
+            entries.append(
+                (
+                    (r0 + r1) // 2,  # RMS average
+                    (v0 + v1) // 2,  # Varga average (integer)
+                    (f0 + f1) // 2,  # F0×10 average
+                    (c0 + c1) // 2,  # Centroid/100 average
+                )
+            )
         _SHABDA_SALT = tuple(entries)
     except Exception:
         _SHABDA_SALT = (_NEUTRAL_SALT,) * WORDS
@@ -617,7 +619,9 @@ class SankirtanChamber(Generic[C]):
         # Centroid → integrity: spectral brightness amplifies integrity effect
         # Median ~120. Normalize: 0→0.5×, 128→1.0×, 511→1.5×
         cent_factor = (128 + min(255, salt_cent)) / 256
-        cell.lifecycle.integrity = max(0, min(COSMIC_FRAME, cell.lifecycle.integrity + int(ic_cf * intensity * cent_factor)))
+        cell.lifecycle.integrity = max(
+            0, min(COSMIC_FRAME, cell.lifecycle.integrity + int(ic_cf * intensity * cent_factor))
+        )
 
         # Varga → cycle: articulation depth modulates progression
         # Varga 0 (throat/deep) adds more, Varga 4 (lips/shallow) adds less

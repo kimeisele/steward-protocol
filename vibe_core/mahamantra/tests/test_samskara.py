@@ -148,4 +148,3 @@ class TestNullSamskara:
         assert Phase.DHARMA in phases_seen
         assert Phase.KARMA in phases_seen
         assert Phase.MOKSHA in phases_seen
-

@@ -38,10 +38,12 @@ def get_client():
         print("ERROR: MOLTBOOK_API_KEY required")
         sys.exit(1)
     from vibe_core.mahamantra.adapters.moltbook import MoltbookClient
+
     return MoltbookClient(api_key=key)
 
 
 # ── 1. m/agent-city Deep Dive ─────────────────────────────────────────
+
 
 async def scan_agent_city_submolt(client) -> dict:
     """What's actually on m/agent-city? Who posts? What about?"""
@@ -79,14 +81,16 @@ async def scan_agent_city_submolt(client) -> dict:
                 content = post.get("content", "")[:200]
                 upvotes = post.get("upvotes", 0)
                 comments = post.get("comment_count", 0)
-                result["posts"].append({
-                    "id": post.get("id", ""),
-                    "author": author_name,
-                    "title": title,
-                    "content_preview": content,
-                    "upvotes": upvotes,
-                    "comments": comments,
-                })
+                result["posts"].append(
+                    {
+                        "id": post.get("id", ""),
+                        "author": author_name,
+                        "title": title,
+                        "content_preview": content,
+                        "upvotes": upvotes,
+                        "comments": comments,
+                    }
+                )
                 result["authors"][author_name] += 1
                 print(f"\n  [{upvotes}↑ {comments}💬] {author_name}: {title}")
     except Exception as e:
@@ -113,6 +117,7 @@ async def scan_agent_city_submolt(client) -> dict:
 
 # ── 2. Feed Analysis — Signal vs Noise ────────────────────────────────
 
+
 async def analyze_feed_quality(client) -> dict:
     """Which submolts have real engineering content vs. chatbot spam?"""
     print("\n" + "=" * 70)
@@ -127,23 +132,62 @@ async def analyze_feed_quality(client) -> dict:
     }
 
     # Engineering signal keywords
-    ENGINEERING_SIGNALS = frozenset({
-        "architecture", "infrastructure", "distributed", "consensus",
-        "memory", "persistence", "latency", "throughput", "pipeline",
-        "tradeoff", "trade-off", "constraint", "bottleneck", "benchmark",
-        "protocol", "specification", "contract", "interface", "schema",
-        "cron", "daemon", "heartbeat", "orchestrator", "scheduler",
-        "cache", "index", "query", "migration", "deployment",
-        "error handling", "retry", "backoff", "circuit breaker",
-        "monitoring", "observability", "telemetry", "logging",
-    })
+    ENGINEERING_SIGNALS = frozenset(
+        {
+            "architecture",
+            "infrastructure",
+            "distributed",
+            "consensus",
+            "memory",
+            "persistence",
+            "latency",
+            "throughput",
+            "pipeline",
+            "tradeoff",
+            "trade-off",
+            "constraint",
+            "bottleneck",
+            "benchmark",
+            "protocol",
+            "specification",
+            "contract",
+            "interface",
+            "schema",
+            "cron",
+            "daemon",
+            "heartbeat",
+            "orchestrator",
+            "scheduler",
+            "cache",
+            "index",
+            "query",
+            "migration",
+            "deployment",
+            "error handling",
+            "retry",
+            "backoff",
+            "circuit breaker",
+            "monitoring",
+            "observability",
+            "telemetry",
+            "logging",
+        }
+    )
 
     # Chatbot noise markers
-    NOISE_MARKERS = frozenset({
-        "as an ai", "let me break this down", "it's important to note",
-        "great question", "absolutely", "fascinating", "in conclusion",
-        "here's what i think", "let me share",
-    })
+    NOISE_MARKERS = frozenset(
+        {
+            "as an ai",
+            "let me break this down",
+            "it's important to note",
+            "great question",
+            "absolutely",
+            "fascinating",
+            "in conclusion",
+            "here's what i think",
+            "let me share",
+        }
+    )
 
     try:
         # Global hot feed — widest view
@@ -188,8 +232,11 @@ async def analyze_feed_quality(client) -> dict:
             # Accumulate per-submolt
             if submolt_name not in result["submolt_quality"]:
                 result["submolt_quality"][submolt_name] = {
-                    "posts": 0, "engineering": 0, "noise": 0,
-                    "total_upvotes": 0, "total_comments": 0,
+                    "posts": 0,
+                    "engineering": 0,
+                    "noise": 0,
+                    "total_upvotes": 0,
+                    "total_comments": 0,
                     "top_authors": Counter(),
                 }
             sq = result["submolt_quality"][submolt_name]
@@ -210,13 +257,16 @@ async def analyze_feed_quality(client) -> dict:
     print(f"\n  {'Submolt':<25} {'Posts':>5} {'Eng':>4} {'Noise':>5} {'Upvotes':>8} {'Comments':>8}")
     print("  " + "-" * 60)
     for name, sq in sorted(result["submolt_quality"].items(), key=lambda x: x[1]["posts"], reverse=True):
-        print(f"  {name:<25} {sq['posts']:>5} {sq['engineering']:>4} {sq['noise']:>5} "
-              f"{sq['total_upvotes']:>8} {sq['total_comments']:>8}")
+        print(
+            f"  {name:<25} {sq['posts']:>5} {sq['engineering']:>4} {sq['noise']:>5} "
+            f"{sq['total_upvotes']:>8} {sq['total_comments']:>8}"
+        )
 
     return result
 
 
 # ── 3. Agent Quality Profiling ────────────────────────────────────────
+
 
 async def profile_substantive_agents(client) -> dict:
     """Which agents produce real engineering content vs. generic AI speak?"""
@@ -228,8 +278,14 @@ async def profile_substantive_agents(client) -> dict:
 
     # Agents we already follow or know about
     known_agents = [
-        "Hazel_OC", "Clawd-Relay", "Ronin", "zode",
-        "JeevisAgent", "QenAI", "allen0796", "xiao_su",
+        "Hazel_OC",
+        "Clawd-Relay",
+        "Ronin",
+        "zode",
+        "JeevisAgent",
+        "QenAI",
+        "allen0796",
+        "xiao_su",
         "steward-protocol",
     ]
 
@@ -245,8 +301,7 @@ async def profile_substantive_agents(client) -> dict:
             agent_data["description"] = (agent.get("description", "") or "")[:200]
             agent_data["active"] = agent.get("is_active", False)
             agent_data["last_active"] = agent.get("last_active", "")
-            print(f"    karma={agent_data['karma']} followers={agent_data['followers']} "
-                  f"active={agent_data['active']}")
+            print(f"    karma={agent_data['karma']} followers={agent_data['followers']} active={agent_data['active']}")
             print(f"    desc: {agent_data['description'][:80]}")
         except Exception as e:
             print(f"    Profile error: {e}")
@@ -258,6 +313,7 @@ async def profile_substantive_agents(client) -> dict:
 
 
 # ── 4. Our Own Output Audit ───────────────────────────────────────────
+
 
 async def audit_own_output(client) -> dict:
     """What does steward-protocol look like from the outside?"""
@@ -300,13 +356,15 @@ async def audit_own_output(client) -> dict:
                 comments = post.get("comment_count", 0)
                 submolt = post.get("submolt", {})
                 submolt_name = submolt.get("name", "") if isinstance(submolt, dict) else ""
-                result["recent_posts"].append({
-                    "title": title,
-                    "content_preview": content,
-                    "upvotes": upvotes,
-                    "comments": comments,
-                    "submolt": submolt_name,
-                })
+                result["recent_posts"].append(
+                    {
+                        "title": title,
+                        "content_preview": content,
+                        "upvotes": upvotes,
+                        "comments": comments,
+                        "submolt": submolt_name,
+                    }
+                )
                 quality = "GOOD" if upvotes > 5 else "MEH" if upvotes > 0 else "ZERO"
                 print(f"\n  [{quality}] [{upvotes}↑ {comments}💬] m/{submolt_name}: {title}")
                 print(f"    {content[:120]}")
@@ -317,6 +375,7 @@ async def audit_own_output(client) -> dict:
 
 
 # ── 5. DM Intelligence ────────────────────────────────────────────────
+
 
 async def scan_dm_landscape(client) -> dict:
     """What DM conversations exist? What do agents want from us?"""
@@ -357,6 +416,7 @@ async def scan_dm_landscape(client) -> dict:
 
 
 # ── 6. Engineering Content Map ────────────────────────────────────────
+
 
 async def map_engineering_content(client) -> dict:
     """Where are the real engineering discussions on Moltbook?"""
@@ -399,6 +459,7 @@ async def map_engineering_content(client) -> dict:
 
 
 # ── Main ──────────────────────────────────────────────────────────────
+
 
 async def main():
     print("=" * 70)
@@ -449,9 +510,12 @@ async def main():
     print(f"  Our posts in feed: {len(sa['recent_posts'])}")
     print(f"  DM conversations: {len(dm['conversations'])}")
     print(f"  DM requests pending: {len(dm['requests'])}")
-    print(f"  Submolts with engineering content: {sum(1 for sq in fq['submolt_quality'].values() if sq['engineering'] > 0)}")
+    print(
+        f"  Submolts with engineering content: {sum(1 for sq in fq['submolt_quality'].values() if sq['engineering'] > 0)}"
+    )
 
 
 if __name__ == "__main__":
     import asyncio
+
     asyncio.run(main())

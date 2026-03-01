@@ -296,12 +296,25 @@ class ChallengeSolver:
             r"(one|two|three|four|five|six|seven|eight|nine)\b"
         )
         _UNITS = {
-            "one": 1, "two": 2, "three": 3, "four": 4, "five": 5,
-            "six": 6, "seven": 7, "eight": 8, "nine": 9,
+            "one": 1,
+            "two": 2,
+            "three": 3,
+            "four": 4,
+            "five": 5,
+            "six": 6,
+            "seven": 7,
+            "eight": 8,
+            "nine": 9,
         }
         _TENS = {
-            "twenty": 20, "thirty": 30, "forty": 40, "fifty": 50,
-            "sixty": 60, "seventy": 70, "eighty": 80, "ninety": 90,
+            "twenty": 20,
+            "thirty": 30,
+            "forty": 40,
+            "fifty": 50,
+            "sixty": 60,
+            "seventy": 70,
+            "eighty": 80,
+            "ninety": 90,
         }
 
         def _resolve_compound(m: re.Match) -> str:
@@ -829,11 +842,7 @@ class MoltbookClient:
         except Exception:
             # Endpoint may not exist — fallback to personalized feed + filter
             feed = await self.get_personalized_feed(sort=sort, limit=limit * 2)
-            return [
-                p for p in feed
-                if isinstance(p, dict)
-                and (p.get("submolt", {}) or {}).get("name", "") == name
-            ]
+            return [p for p in feed if isinstance(p, dict) and (p.get("submolt", {}) or {}).get("name", "") == name]
 
     def sync_get_submolt_feed(self, name: str, sort: str = "new", limit: int = 25) -> List[MoltbookPost]:
         """Sync wrapper for submolt-specific feed."""

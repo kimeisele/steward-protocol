@@ -10,7 +10,6 @@ Verifies:
 5. Backup .bak file is created before overwrite
 """
 
-
 import pytest
 
 from vibe_core.mahamantra.substrate.gate_providers import (

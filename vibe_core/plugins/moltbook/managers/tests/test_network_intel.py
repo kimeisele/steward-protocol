@@ -81,10 +81,7 @@ class TestEnrichFromFeed:
         service = MagicMock()
         service.get_profile.return_value = {"name": "x", "description": "test agent"}
 
-        topics = [
-            {"id": f"p{i}", "title": "X", "author": {"name": f"agent_{i}"}}
-            for i in range(10)
-        ]
+        topics = [{"id": f"p{i}", "title": "X", "author": {"name": f"agent_{i}"}} for i in range(10)]
         ni.enrich_from_feed(service, topics, set())
         assert service.get_profile.call_count == 3  # Budget: max 3
 
@@ -144,9 +141,7 @@ class TestFindComplementaryAgents:
             "bob": {"trading", "markets", "finance"},
             "carol": {"safety", "governance", "alignment"},
         }
-        results = ni.find_complementary_agents(
-            {"safety", "alignment"}, exclude=set()
-        )
+        results = ni.find_complementary_agents({"safety", "alignment"}, exclude=set())
         # carol and alice should match, bob should not
         names = [r[0] for r in results]
         assert "carol" in names or "alice" in names
@@ -158,9 +153,7 @@ class TestFindComplementaryAgents:
             "alice": {"safety", "alignment"},
             "bob": {"safety", "alignment"},
         }
-        results = ni.find_complementary_agents(
-            {"safety", "alignment"}, exclude={"alice"}
-        )
+        results = ni.find_complementary_agents({"safety", "alignment"}, exclude={"alice"})
         names = [r[0] for r in results]
         assert "alice" not in names
         assert "bob" in names
@@ -173,8 +166,16 @@ class TestFindComplementaryAgents:
     def test_low_overlap_filtered_out(self):
         ni = NetworkIntel()
         ni._agent_topics = {
-            "alice": {"safety", "alignment", "research", "governance", "policy",
-                      "ethics", "transparency", "accountability"},
+            "alice": {
+                "safety",
+                "alignment",
+                "research",
+                "governance",
+                "policy",
+                "ethics",
+                "transparency",
+                "accountability",
+            },
         }
         # Only 1 shared word out of many → Jaccard < 0.15
         results = ni.find_complementary_agents({"safety"}, exclude=set())
@@ -186,12 +187,9 @@ class TestFindLonelyPosts:
     def test_finds_lonely_posts(self):
         ni = NetworkIntel()
         posts = [
-            {"id": "p1", "comment_count": 0, "upvotes": 0,
-             "content": "A" * 60, "title": "Lonely post"},
-            {"id": "p2", "comment_count": 5, "upvotes": 10,
-             "content": "Popular", "title": "Popular"},
-            {"id": "p3", "comment_count": 0, "upvotes": 1,
-             "content": "B" * 60, "title": "Also lonely"},
+            {"id": "p1", "comment_count": 0, "upvotes": 0, "content": "A" * 60, "title": "Lonely post"},
+            {"id": "p2", "comment_count": 5, "upvotes": 10, "content": "Popular", "title": "Popular"},
+            {"id": "p3", "comment_count": 0, "upvotes": 1, "content": "B" * 60, "title": "Also lonely"},
         ]
         lonely = ni.find_lonely_posts(posts)
         ids = [p["id"] for p in lonely]
@@ -202,24 +200,21 @@ class TestFindLonelyPosts:
     def test_filters_short_content(self):
         ni = NetworkIntel()
         posts = [
-            {"id": "p1", "comment_count": 0, "upvotes": 0,
-             "content": "Short", "title": "X"},
+            {"id": "p1", "comment_count": 0, "upvotes": 0, "content": "Short", "title": "X"},
         ]
         assert ni.find_lonely_posts(posts) == []
 
     def test_filters_posts_with_comments(self):
         ni = NetworkIntel()
         posts = [
-            {"id": "p1", "comment_count": 1, "upvotes": 0,
-             "content": "A" * 60, "title": "Has reply"},
+            {"id": "p1", "comment_count": 1, "upvotes": 0, "content": "A" * 60, "title": "Has reply"},
         ]
         assert ni.find_lonely_posts(posts) == []
 
     def test_filters_high_upvotes(self):
         ni = NetworkIntel()
         posts = [
-            {"id": "p1", "comment_count": 0, "upvotes": 5,
-             "content": "A" * 60, "title": "Already noticed"},
+            {"id": "p1", "comment_count": 0, "upvotes": 5, "content": "A" * 60, "title": "Already noticed"},
         ]
         assert ni.find_lonely_posts(posts) == []
 

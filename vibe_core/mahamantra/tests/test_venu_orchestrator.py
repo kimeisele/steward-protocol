@@ -151,6 +151,7 @@ class TestStep:
     def test_step_sequence_matches_lut(self, orch: VenuOrchestrator):
         """First WORDS steps must match THE_FLUTE_CYCLE in core 19 bits (mode=0)."""
         from vibe_core.mahamantra.protocols.diw import DIW_MASK
+
         for i in range(WORDS):
             diw = orch.step()
             core = diw & DIW_MASK
@@ -160,6 +161,7 @@ class TestStep:
     def test_step_carries_position_in_condition_bits(self, orch: VenuOrchestrator):
         """step() embeds tick position into CONDITION bits (27-30)."""
         from vibe_core.mahamantra.protocols.diw import CONDITION_MASK, CONDITION_SHIFT
+
         for i in range(WORDS):
             diw = orch.step()
             position = (diw >> CONDITION_SHIFT) & CONDITION_MASK

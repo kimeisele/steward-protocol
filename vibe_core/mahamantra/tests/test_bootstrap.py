@@ -118,4 +118,3 @@ class TestBootstrapGracefulDegradation:
         # This should never raise, regardless of environment
         lotus.bootstrap(silent=True)
         assert lotus._bootstrapped is True
-

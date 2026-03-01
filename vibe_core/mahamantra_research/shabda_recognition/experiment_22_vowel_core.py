@@ -13,22 +13,45 @@ against dict words using only vowel coords.
 
 This sidesteps the consonant classification problem entirely.
 """
-import sys; sys.path.insert(0, ".")
+
+import sys
+
+sys.path.insert(0, ".")
 import numpy as np
 
 from vibe_core.mahamantra.sound.shabda_intake import (
-    ShabdaIntake, unpack_frame, extract_formants,
+    ShabdaIntake,
+    unpack_frame,
+    extract_formants,
 )
 from vibe_core.mahamantra.sound.shabda_decoder import (
-    segment_stream, score_frame, get_pronunciation_dict,
-    _stable_coords, _dedup_coords, _score_candidate,
-    ARPABET_TO_RAMA, PHONEME_TEMPLATES,
+    segment_stream,
+    score_frame,
+    get_pronunciation_dict,
+    _stable_coords,
+    _dedup_coords,
+    _score_candidate,
+    ARPABET_TO_RAMA,
+    PHONEME_TEMPLATES,
 )
 
 # Which ARPAbet phonemes are vowels?
 VOWEL_ARPABETS = {
-    "AA", "AE", "AH", "AO", "AW", "AY", "EH", "EY", "ER",
-    "IH", "IY", "OW", "OY", "UH", "UW",
+    "AA",
+    "AE",
+    "AH",
+    "AO",
+    "AW",
+    "AY",
+    "EH",
+    "EY",
+    "ER",
+    "IH",
+    "IY",
+    "OW",
+    "OY",
+    "UH",
+    "UW",
 }
 
 intake = ShabdaIntake()
@@ -68,9 +91,7 @@ for si, seg in enumerate(segments):
         sample_start = (seg.start + i) * hop
         sample_end = sample_start + n_fft
         if stream.raw_samples is not None and sample_end <= len(stream.raw_samples):
-            f1, f2 = extract_formants(
-                stream.raw_samples[sample_start:sample_end], stream.sample_rate
-            )
+            f1, f2 = extract_formants(stream.raw_samples[sample_start:sample_end], stream.sample_rate)
 
         if f1 == 0 or f2 == 0:
             prev_rms = rms
@@ -93,6 +114,7 @@ for si, seg in enumerate(segments):
 
     # Count vowel phoneme votes
     from collections import Counter
+
     vote_counts = Counter(v[0] for v in vowel_votes)
     top_vowel = vote_counts.most_common(1)[0][0]
     top_coord = ARPABET_TO_RAMA[top_vowel]
@@ -102,7 +124,7 @@ for si, seg in enumerate(segments):
     # Build coord sequence from majority-voted time windows
     window = 3
     for wi in range(0, len(vowel_votes), window):
-        chunk = vowel_votes[wi:wi + window]
+        chunk = vowel_votes[wi : wi + window]
         chunk_counts = Counter(v[0] for v in chunk)
         winner = chunk_counts.most_common(1)[0][0]
         vowel_coords.append(ARPABET_TO_RAMA[winner])
@@ -130,7 +152,7 @@ for si, seg in enumerate(segments):
             expected_ms = len(word) * 80  # rough estimate
             actual_ms = ms_e - ms_s
             dur_ratio = min(expected_ms, actual_ms) / max(expected_ms, actual_ms, 1)
-            score *= (0.7 + 0.3 * dur_ratio)
+            score *= 0.7 + 0.3 * dur_ratio
 
             if score > best_score:
                 best_score = score
@@ -140,14 +162,15 @@ for si, seg in enumerate(segments):
 
     expected = expected_words[si] if si < len(expected_words) else "?"
     match = "✓" if best_word == expected else " "
-    print(f"  [{ms_s:5d}-{ms_e:5d}ms] {best_word:15s} ({best_score:.3f}) {match}  "
-          f"expected={expected:12s}  "
-          f"top_vowel={top_vowel}  vowel_dedup={vowel_dedup[:5]}")
+    print(
+        f"  [{ms_s:5d}-{ms_e:5d}ms] {best_word:15s} ({best_score:.3f}) {match}  "
+        f"expected={expected:12s}  "
+        f"top_vowel={top_vowel}  vowel_dedup={vowel_dedup[:5]}"
+    )
 
 # Summary
 decoded_text = " ".join(w for w, s in decoded_words)
-exact = sum(1 for i, (w, _) in enumerate(decoded_words)
-            if i < len(expected_words) and w == expected_words[i])
+exact = sum(1 for i, (w, _) in enumerate(decoded_words) if i < len(expected_words) and w == expected_words[i])
 in_vocab = sum(1 for w, _ in decoded_words if w in set(expected_words))
 
 print(f"\nDECODED:   {decoded_text}")

@@ -111,7 +111,9 @@ class TestContentQueue:
         """Different content passes dedup check."""
         q = ContentQueue()
         q.enqueue(ContentProposal(content_type=ContentType.POST.value, content="First unique post with substance."))
-        q.enqueue(ContentProposal(content_type=ContentType.POST.value, content="Second unique post with different content."))
+        q.enqueue(
+            ContentProposal(content_type=ContentType.POST.value, content="Second unique post with different content.")
+        )
         assert q.size == 2
         assert q.stats["total_deduped"] == 0
 

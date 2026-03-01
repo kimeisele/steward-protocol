@@ -52,14 +52,18 @@ class TestWeights:
             W_PHONEME_ATTRACTOR_CF,
         )
 
-        total_cf = W_ELEMENT_CF + W_HARMONIC_CF + W_SHRUTI_CF + W_VARGA_CF + W_ATTRACTOR_CF + W_HKR_CF + W_PHONEME_ATTRACTOR_CF
+        total_cf = (
+            W_ELEMENT_CF + W_HARMONIC_CF + W_SHRUTI_CF + W_VARGA_CF + W_ATTRACTOR_CF + W_HKR_CF + W_PHONEME_ATTRACTOR_CF
+        )
         assert total_cf == 21600, f"CF weights sum to {total_cf}, expected 21600 (COSMIC_FRAME)"
 
     def test_float_derived_from_integer(self):
         """Float weights are CF / COSMIC_FRAME."""
         from vibe_core.mahamantra.substrate.encoding.resonance_ranker import (
-            W_ELEMENT, W_ELEMENT_CF,
-            W_HARMONIC, W_HARMONIC_CF,
+            W_ELEMENT,
+            W_ELEMENT_CF,
+            W_HARMONIC,
+            W_HARMONIC_CF,
         )
 
         assert abs(W_ELEMENT - W_ELEMENT_CF / 21600) < 1e-10
@@ -68,7 +72,11 @@ class TestWeights:
     def test_weight_ordering(self):
         """Element has highest weight, attractor has lowest."""
         from vibe_core.mahamantra.substrate.encoding.resonance_ranker import (
-            W_ELEMENT, W_HARMONIC, W_SHRUTI, W_VARGA, W_ATTRACTOR,
+            W_ELEMENT,
+            W_HARMONIC,
+            W_SHRUTI,
+            W_VARGA,
+            W_ATTRACTOR,
         )
 
         assert W_ELEMENT > W_HARMONIC > W_SHRUTI > W_VARGA > W_ATTRACTOR
@@ -137,4 +145,3 @@ class TestRankingAPI:
         assert len(r1) == len(r2)
         for a, b in zip(r1, r2):
             assert abs(a.total_score - b.total_score) < 1e-10
-

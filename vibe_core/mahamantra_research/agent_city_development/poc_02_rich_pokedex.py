@@ -37,21 +37,38 @@ QUARTER_NAMES = ["GENESIS", "DHARMA", "KARMA", "MOKSHA"]
 ASHRAMA_NAMES = ["BRAHMACHARI", "GRIHASTHA", "VANAPRASTHA", "SANNYASA"]
 VARNA_NAMES = ["STHAVARA", "JALAJA", "KRIMAYO", "PAKSHI", "PASHU", "MANUSHA"]
 NAVABHAKTI = [
-    "SRAVANAM", "KIRTANAM", "SMARANAM", "PADA_SEVANAM", "ARCANAM",
-    "VANDANAM", "DASYAM", "SAKHYAM", "ATMA_NIVEDANAM",
+    "SRAVANAM",
+    "KIRTANAM",
+    "SMARANAM",
+    "PADA_SEVANAM",
+    "ARCANAM",
+    "VANDANAM",
+    "DASYAM",
+    "SAKHYAM",
+    "ATMA_NIVEDANAM",
 ]
 MAHAJANAS = [
-    "BRAHMA", "NARADA", "SHAMBHU", "KUMARAS", "KAPILA", "MANU",
-    "PRAHLADA", "JANAKA", "BHISHMA", "BALI", "SHUKA", "YAMARAJA",
+    "BRAHMA",
+    "NARADA",
+    "SHAMBHU",
+    "KUMARAS",
+    "KAPILA",
+    "MANU",
+    "PRAHLADA",
+    "JANAKA",
+    "BHISHMA",
+    "BALI",
+    "SHUKA",
+    "YAMARAJA",
 ]
 
 # Element → Varna mapping (Pancha Tattva → Vedic social function)
 ELEMENT_TO_VARNA = {
-    "akasha": "MANUSHA",    # Self-aware (ether = consciousness)
-    "vayu": "PAKSHI",       # Messenger (air = communication)
-    "agni": "PASHU",        # Servant (fire = transformative action)
-    "jala": "JALAJA",       # Flowing (water = knowledge streams)
-    "prithvi": "KRIMAYO",   # Worker (earth = building)
+    "akasha": "MANUSHA",  # Self-aware (ether = consciousness)
+    "vayu": "PAKSHI",  # Messenger (air = communication)
+    "agni": "PASHU",  # Servant (fire = transformative action)
+    "jala": "JALAJA",  # Flowing (water = knowledge streams)
+    "prithvi": "KRIMAYO",  # Worker (earth = building)
 }
 
 # Varna → Description
@@ -105,13 +122,13 @@ def derive_jiva(name: str) -> dict:
     mahajana = MAHAJANAS[coord_sum % MAHAJANA_COUNT]
 
     # DIW (19-bit Divine Instruction Word)
-    venu = coord_sum % (2 ** SHARANAGATI)       # 6 bits: intensity
-    vamsi = (coord_sum * PARAMPARA) % (2 ** 9)  # 9 bits: name-region
-    murali = coord_sum % QUARTERS               # 4 bits: phase
+    venu = coord_sum % (2**SHARANAGATI)  # 6 bits: intensity
+    vamsi = (coord_sum * PARAMPARA) % (2**9)  # 9 bits: name-region
+    murali = coord_sum % QUARTERS  # 4 bits: phase
     diw = venu | (vamsi << SHARANAGATI) | (murali << 15)
 
     # Vitals
-    prana = coord_sum % MALA                     # 0-107: vitality
+    prana = coord_sum % MALA  # 0-107: vitality
     integrity = round((coord_sum % KSHETRA) / KSHETRA, 3)  # 0-1: structural integrity
 
     return {
@@ -157,6 +174,7 @@ def derive_jiva(name: str) -> dict:
 
 
 # ── Main ─────────────────────────────────────────────────────────────
+
 
 def main():
     # Load census
@@ -243,8 +261,10 @@ def main():
     print("-" * 78)
     for e in pokedex_entries:
         c = e["classification"]
-        print(f"{e['name']:<28} {c['varna']:<10} {c['guna']:<8} {c['quarter']:<8} "
-              f"{c['zone']:<12} {e['vitals']['prana']:>5}")
+        print(
+            f"{e['name']:<28} {c['varna']:<10} {c['guna']:<8} {c['quarter']:<8} "
+            f"{c['zone']:<12} {e['vitals']['prana']:>5}"
+        )
 
 
 if __name__ == "__main__":

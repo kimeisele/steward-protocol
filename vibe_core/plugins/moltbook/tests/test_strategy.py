@@ -292,7 +292,9 @@ class TestSemanticMatch:
 
     def test_empty_missions(self):
         mid, sim = MoltbookStrategyPlanner._semantic_match(
-            frozenset({"test"}), [], {},
+            frozenset({"test"}),
+            [],
+            {},
         )
         assert mid is None
         assert sim == 0.0
@@ -300,7 +302,9 @@ class TestSemanticMatch:
     def test_missing_mission_tokens_skipped(self):
         missions = [FakeMission(id="m1", name="M", description="test", priority=FakePriority.MEDIUM)]
         mid, sim = MoltbookStrategyPlanner._semantic_match(
-            frozenset({"test"}), missions, {},
+            frozenset({"test"}),
+            missions,
+            {},
         )
         assert mid is None
         assert sim == 0.0
@@ -309,7 +313,9 @@ class TestSemanticMatch:
         """Empty post token set → no match."""
         missions = [FakeMission(id="m1", name="M", description="test", priority=FakePriority.MEDIUM)]
         mid, sim = MoltbookStrategyPlanner._semantic_match(
-            frozenset(), missions, {"m1": frozenset({"test"})},
+            frozenset(),
+            missions,
+            {"m1": frozenset({"test"})},
         )
         assert mid is None
         assert sim == 0.0
@@ -370,9 +376,17 @@ class TestVivekaPriority:
     def test_high_prana_high_priority(self, _mock_buddhi):
         """Higher prana → higher Viveka score → higher intent priority."""
         _mock_buddhi.think.side_effect = lambda text: MagicMock(
-            mode="SATTVA", approach="DHARMA", function="VISHNU",
-            chapter=3, prana=21600, integrity=1.0, is_alive=True,
-            verse_concepts=(), resonant_words=(), composed="test", vm_result={},
+            mode="SATTVA",
+            approach="DHARMA",
+            function="VISHNU",
+            chapter=3,
+            prana=21600,
+            integrity=1.0,
+            is_alive=True,
+            verse_concepts=(),
+            resonant_words=(),
+            composed="test",
+            vm_result={},
         )
         planner = _make_planner(missions=_TEST_MISSIONS)
         topics = [
@@ -386,9 +400,17 @@ class TestVivekaPriority:
     def test_low_prana_low_priority(self, _mock_buddhi):
         """Lower prana → lower Viveka score → lower intent priority."""
         _mock_buddhi.think.side_effect = lambda text: MagicMock(
-            mode="SATTVA", approach="DHARMA", function="SHIVA",
-            chapter=3, prana=1000, integrity=0.2, is_alive=True,
-            verse_concepts=(), resonant_words=(), composed="test", vm_result={},
+            mode="SATTVA",
+            approach="DHARMA",
+            function="SHIVA",
+            chapter=3,
+            prana=1000,
+            integrity=0.2,
+            is_alive=True,
+            verse_concepts=(),
+            resonant_words=(),
+            composed="test",
+            vm_result={},
         )
         planner = _make_planner(missions=_TEST_MISSIONS)
         topics = [
@@ -877,9 +899,17 @@ class TestIntentDiversity:
     def test_brahma_function_produces_post(self, _mock_buddhi):
         """BRAHMA function + can_post + novel chapter → post intent."""
         _mock_buddhi.think.side_effect = lambda text: MagicMock(
-            mode="SATTVA", approach="GENESIS", function="BRAHMA",
-            chapter=7, prana=15000, integrity=0.9, is_alive=True,
-            verse_concepts=(), resonant_words=(), composed="creation", vm_result={},
+            mode="SATTVA",
+            approach="GENESIS",
+            function="BRAHMA",
+            chapter=7,
+            prana=15000,
+            integrity=0.9,
+            is_alive=True,
+            verse_concepts=(),
+            resonant_words=(),
+            composed="creation",
+            vm_result={},
         )
         planner = _make_planner(missions=_TEST_MISSIONS)
         topics = [
@@ -903,9 +933,17 @@ class TestIntentDiversity:
     def test_brahma_blocked_by_zero_streak(self, _mock_buddhi):
         """BRAHMA + zero engagement streak → comments only."""
         _mock_buddhi.think.side_effect = lambda text: MagicMock(
-            mode="SATTVA", approach="GENESIS", function="BRAHMA",
-            chapter=7, prana=15000, integrity=0.9, is_alive=True,
-            verse_concepts=(), resonant_words=(), composed="creation", vm_result={},
+            mode="SATTVA",
+            approach="GENESIS",
+            function="BRAHMA",
+            chapter=7,
+            prana=15000,
+            integrity=0.9,
+            is_alive=True,
+            verse_concepts=(),
+            resonant_words=(),
+            composed="creation",
+            vm_result={},
         )
         planner = _make_planner(missions=_TEST_MISSIONS)
         topics = [
@@ -913,8 +951,7 @@ class TestIntentDiversity:
         ]
         # 3 recent posts with 0 engagement
         own_posts = {
-            f"p{i}": {"title": f"Post {i}", "created_at": 1000000.0 + i, "upvotes": 0, "replies": 0}
-            for i in range(5)
+            f"p{i}": {"title": f"Post {i}", "created_at": 1000000.0 + i, "upvotes": 0, "replies": 0} for i in range(5)
         }
         result = planner.plan_cycle(topics, {}, own_post_ids=own_posts)
         posts = [i for i in result if i.action_type == "post"]
@@ -981,7 +1018,11 @@ class TestSemanticDedupWired:
         """Post intent whose topic matches own recent post title is filtered out."""
         planner = _make_planner(missions=_TEST_MISSIONS)
         feed = [
-            {"id": "f1", "title": "AI governance and transparent decision-making", "content": "autonomous systems governance"},
+            {
+                "id": "f1",
+                "title": "AI governance and transparent decision-making",
+                "content": "autonomous systems governance",
+            },
         ]
         own_posts = {"p_old": {"title": "AI governance and transparent decisions", "created_at": 0}}
         intents = planner.plan_cycle(feed, {}, own_post_ids=own_posts)
@@ -1032,9 +1073,17 @@ class TestSravanamCheck:
     def test_sravanam_blocks_post_in_plan_cycle(self, _mock_buddhi):
         """When SravanamCheck fails, BRAHMA is blocked → comments only."""
         _mock_buddhi.think.side_effect = lambda text: MagicMock(
-            mode="SATTVA", approach="GENESIS", function="BRAHMA",
-            chapter=7, prana=15000, integrity=0.9, is_alive=True,
-            verse_concepts=(), resonant_words=(), composed="creation", vm_result={},
+            mode="SATTVA",
+            approach="GENESIS",
+            function="BRAHMA",
+            chapter=7,
+            prana=15000,
+            integrity=0.9,
+            is_alive=True,
+            verse_concepts=(),
+            resonant_words=(),
+            composed="creation",
+            vm_result={},
         )
         planner = _make_planner(missions=_TEST_MISSIONS)
         topics = [
@@ -1090,9 +1139,17 @@ class TestZeroEngagementStreak:
     def test_streak_blocks_post_in_plan_cycle(self, _mock_buddhi):
         """When recent posts have 0 engagement, BRAHMA is blocked → comments only."""
         _mock_buddhi.think.side_effect = lambda text: MagicMock(
-            mode="SATTVA", approach="GENESIS", function="BRAHMA",
-            chapter=7, prana=15000, integrity=0.9, is_alive=True,
-            verse_concepts=(), resonant_words=(), composed="creation", vm_result={},
+            mode="SATTVA",
+            approach="GENESIS",
+            function="BRAHMA",
+            chapter=7,
+            prana=15000,
+            integrity=0.9,
+            is_alive=True,
+            verse_concepts=(),
+            resonant_words=(),
+            composed="creation",
+            vm_result={},
         )
         planner = _make_planner(missions=_TEST_MISSIONS)
         topics = [
@@ -1100,8 +1157,7 @@ class TestZeroEngagementStreak:
         ]
         # 3 recent posts with 0 engagement
         own_posts = {
-            f"p{i}": {"title": f"Post {i}", "created_at": 1000000.0 + i, "upvotes": 0, "replies": 0}
-            for i in range(5)
+            f"p{i}": {"title": f"Post {i}", "created_at": 1000000.0 + i, "upvotes": 0, "replies": 0} for i in range(5)
         }
         result = planner.plan_cycle(topics, {}, own_post_ids=own_posts)
         posts = [i for i in result if i.action_type == "post"]

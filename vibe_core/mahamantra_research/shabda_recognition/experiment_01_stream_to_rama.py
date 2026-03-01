@@ -15,14 +15,21 @@ We compare:
 
 For BOTH paths we use the same dictionary (CMU-based PronunciationDict).
 """
-import sys; sys.path.insert(0, ".")
+
+import sys
+
+sys.path.insert(0, ".")
 import time
 
 from vibe_core.mahamantra.sound.shabda_intake import ShabdaIntake
 from vibe_core.mahamantra.sound.shabda_processor import stream_to_rama
 from vibe_core.mahamantra.sound.shabda_decoder import (
-    ShabdaDecoder, segment_stream, _dedup_coords, _stable_coords,
-    _score_candidate, get_pronunciation_dict,
+    ShabdaDecoder,
+    segment_stream,
+    _dedup_coords,
+    _stable_coords,
+    _score_candidate,
+    get_pronunciation_dict,
 )
 
 intake = ShabdaIntake()
@@ -59,13 +66,9 @@ for seg in segments:
 
     for fc in (first_coord, first_coord - 1, first_coord + 1):
         if 0 <= fc < 49:
-            candidates.extend(
-                pdict.candidates_for_segment(fc, coord_len, length_tolerance=3)
-            )
+            candidates.extend(pdict.candidates_for_segment(fc, coord_len, length_tolerance=3))
     if len(candidates) < 10:
-        candidates.extend(
-            pdict.all_candidates_for_length(coord_len, length_tolerance=2)
-        )
+        candidates.extend(pdict.all_candidates_for_length(coord_len, length_tolerance=2))
 
     best_word = ""
     best_score = 0.0
@@ -91,4 +94,4 @@ print(f"\nEXPECTED: {EXPECTED}")
 # Count correct words
 expected_words = set(EXPECTED.lower().split())
 correct_a = sum(1 for w in words_a if w.lower() in expected_words)
-print(f"\nCorrect words (path A): {correct_a}/{len(words_a)} ({correct_a/max(1,len(words_a))*100:.0f}%)")
+print(f"\nCorrect words (path A): {correct_a}/{len(words_a)} ({correct_a / max(1, len(words_a)) * 100:.0f}%)")

@@ -17,15 +17,21 @@ We can get attractors from the synth.
 
 This experiment: use the PRODUCTION pipeline on audio segments.
 """
-import sys; sys.path.insert(0, ".")
+
+import sys
+
+sys.path.insert(0, ".")
 
 from vibe_core.mahamantra.sound.shabda_intake import ShabdaIntake
 from vibe_core.mahamantra.sound.shabda_processor import stream_to_rama
 from vibe_core.mahamantra.sound.shabda_vibration import (
-    stream_to_vibrations, vibrations_to_coords,
+    stream_to_vibrations,
+    vibrations_to_coords,
 )
 from vibe_core.mahamantra.sound.shabda_decoder import (
-    segment_stream, _dedup_coords, _stable_coords,
+    segment_stream,
+    _dedup_coords,
+    _stable_coords,
 )
 from vibe_core.mahamantra.substrate.algorithm.maha import MahaModularSynth
 from vibe_core.mahamantra.substrate.encoding.phonetic_encoder import encode_text
@@ -33,6 +39,7 @@ from vibe_core.mahamantra.substrate.encoding.phonetic_encoder import encode_text
 # Try to use the real smaranam pipeline
 try:
     from vibe_core.mahamantra.substrate.lotus_core import get_mahamantra
+
     lotus = get_mahamantra()
     HAS_LOTUS = True
     print("LOTUS VM loaded successfully")
@@ -64,22 +71,22 @@ words_out = []
 for si, seg in enumerate(segments):
     ms_s = seg.start * 10
     ms_e = seg.end * 10
-    
+
     # Get RAMA coords from audio
     raw_coords = stream_to_rama(seg.frames)
     if not raw_coords:
         continue
-    
+
     coords = _stable_coords(raw_coords, min_run=2)
     if not coords or len(coords) < 1:
         coords = _dedup_coords(raw_coords)
     if not coords:
         continue
-    
+
     # Get attractor from first coord's seed through synth
     seed = sum(coords) * 7 + len(coords)  # simple deterministic seed from coord pattern
     attractor = synth.transform(seed)
-    
+
     # Use smaranam (7D ResonanceRanker)
     if HAS_LOTUS:
         ranked = lotus.smaranam(coords, attractor)
@@ -89,15 +96,14 @@ for si, seg in enumerate(segments):
             input_attractor=attractor,
             top_n=5,
         )
-    
+
     if ranked:
         best = ranked[0]
-        word = best.sanskrit if hasattr(best, 'sanskrit') else str(best)
-        score = best.total_score if hasattr(best, 'total_score') else 0.0
-        meanings = best.first_meaning if hasattr(best, 'first_meaning') else ""
-        
-        print(f"  [{ms_s:5d}-{ms_e:5d}ms] {word:20s} score={score:.3f}  "
-              f"meaning='{meanings}' coords={coords[:5]}")
+        word = best.sanskrit if hasattr(best, "sanskrit") else str(best)
+        score = best.total_score if hasattr(best, "total_score") else 0.0
+        meanings = best.first_meaning if hasattr(best, "first_meaning") else ""
+
+        print(f"  [{ms_s:5d}-{ms_e:5d}ms] {word:20s} score={score:.3f}  meaning='{meanings}' coords={coords[:5]}")
         words_out.append(word)
 
 print(f"\nSMARANAM TRANSCRIPT: {' '.join(words_out)}")
@@ -120,24 +126,24 @@ words_out2 = []
 for si, seg in enumerate(segments):
     ms_s = seg.start * 10
     ms_e = seg.end * 10
-    
+
     vibs = stream_to_vibrations(seg.frames)
     if not vibs:
         continue
-    
+
     # Use signature_ids to derive attractor
     sig_sum = sum(v.signature_id for v in vibs)
     attractor = synth.transform(sig_sum)
-    
+
     # Also get coords from vibration path
     vib_coords = vibrations_to_coords(vibs)
     if not vib_coords:
         continue
-    
+
     deduped = _dedup_coords(vib_coords)
     if not deduped:
         continue
-    
+
     # Use smaranam
     if HAS_LOTUS:
         ranked = lotus.smaranam(deduped, attractor)
@@ -147,15 +153,14 @@ for si, seg in enumerate(segments):
             input_attractor=attractor,
             top_n=5,
         )
-    
+
     if ranked:
         best = ranked[0]
-        word = best.sanskrit if hasattr(best, 'sanskrit') else str(best)
-        score = best.total_score if hasattr(best, 'total_score') else 0.0
-        meanings = best.first_meaning if hasattr(best, 'first_meaning') else ""
-        
-        print(f"  [{ms_s:5d}-{ms_e:5d}ms] {word:20s} score={score:.3f}  "
-              f"meaning='{meanings}' coords={deduped[:5]}")
+        word = best.sanskrit if hasattr(best, "sanskrit") else str(best)
+        score = best.total_score if hasattr(best, "total_score") else 0.0
+        meanings = best.first_meaning if hasattr(best, "first_meaning") else ""
+
+        print(f"  [{ms_s:5d}-{ms_e:5d}ms] {word:20s} score={score:.3f}  meaning='{meanings}' coords={deduped[:5]}")
         words_out2.append(word)
 
 print(f"\nVIBRATION TRANSCRIPT: {' '.join(words_out2)}")
@@ -168,31 +173,33 @@ print("=" * 70)
 
 # For each segment, convert vibrations to phoneme text, then feed to Lotus
 from vibe_core.mahamantra.substrate.phonetics.shabda import (
-    vibration_to_sanskrit, SANSKRIT_PHONEME_MAP, VibrationSignature,
+    vibration_to_sanskrit,
+    SANSKRIT_PHONEME_MAP,
+    VibrationSignature,
 )
 
 words_out3 = []
 for si, seg in enumerate(segments[:10]):  # first 10 only for speed
     ms_s = seg.start * 10
     ms_e = seg.end * 10
-    
+
     vibs = stream_to_vibrations(seg.frames)
     if not vibs:
         continue
-    
+
     # Convert audio vibrations → nearest Sanskrit phonemes → text
     shabda_text = vibration_to_sanskrit(list(vibs))
-    
+
     if HAS_LOTUS:
         # Feed the phoneme text through the FULL pipeline
         result = lotus(shabda_text)
-        
+
         # Extract ranked words from smaranam
         smaranam = result.get("smaranam", [])
         if smaranam:
             best = smaranam[0]
-            word = best.sanskrit if hasattr(best, 'sanskrit') else str(best)
-            score = best.total_score if hasattr(best, 'total_score') else 0.0
+            word = best.sanskrit if hasattr(best, "sanskrit") else str(best)
+            score = best.total_score if hasattr(best, "total_score") else 0.0
             print(f"  [{ms_s:5d}-{ms_e:5d}ms] shabda='{shabda_text[:20]}' → {word:20s} score={score:.3f}")
             words_out3.append(word)
         else:
@@ -206,7 +213,9 @@ for si, seg in enumerate(segments[:10]):  # first 10 only for speed
             if ranked:
                 best = ranked[0]
                 word = best.sanskrit
-                print(f"  [{ms_s:5d}-{ms_e:5d}ms] shabda='{shabda_text[:20]}' → {word:20s} score={best.total_score:.3f}")
+                print(
+                    f"  [{ms_s:5d}-{ms_e:5d}ms] shabda='{shabda_text[:20]}' → {word:20s} score={best.total_score:.3f}"
+                )
                 words_out3.append(word)
 
 if words_out3:

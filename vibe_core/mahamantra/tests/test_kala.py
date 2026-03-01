@@ -133,4 +133,3 @@ class TestTimeKeeper:
         for _ in range(100):
             time = tk.advance()
             assert 0 <= time.lila_position < LILA_TICKS
-

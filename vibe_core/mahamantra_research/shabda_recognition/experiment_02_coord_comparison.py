@@ -12,20 +12,27 @@ PATH 3: Text  → CMU dict → ARPAbet → ARPABET_TO_RAMA → RAMA coords
 For a known word, all three should produce SIMILAR coord sequences.
 If they don't, we found the bug.
 """
-import sys; sys.path.insert(0, ".")
+
+import sys
+
+sys.path.insert(0, ".")
 
 from vibe_core.mahamantra.substrate.encoding.phonetic_encoder import encode_text
 from vibe_core.mahamantra.substrate.encoding.phonetic_bridge import ARPABET_TO_RAMA
 from vibe_core.mahamantra.substrate.encoding.pancha_walk import (
-    COORD_ELEMENT, COORD_VARGA, COORD_SUB,
+    COORD_ELEMENT,
+    COORD_VARGA,
+    COORD_SUB,
 )
 
 # Load CMU dict
 try:
     import nltk
+
     cmu = nltk.corpus.cmudict.dict()
 except Exception:
     cmu = {}
+
 
 def cmu_to_rama(word):
     """CMU dict → ARPAbet → ARPABET_TO_RAMA."""
@@ -35,7 +42,7 @@ def cmu_to_rama(word):
     # Strip stress digits
     phonemes = []
     for p in prons[0]:
-        clean = ''.join(c for c in p if not c.isdigit())
+        clean = "".join(c for c in p if not c.isdigit())
         phonemes.append(clean)
     coords = []
     for p in phonemes:
@@ -45,8 +52,7 @@ def cmu_to_rama(word):
     return tuple(coords) if coords else None
 
 
-words = ["not", "exactly", "but", "came", "preach", "gospel",
-         "consciousness", "boys", "girls", "the", "of", "eh"]
+words = ["not", "exactly", "but", "came", "preach", "gospel", "consciousness", "boys", "girls", "the", "of", "eh"]
 
 print(f"{'WORD':15s} {'encode_text':30s} {'CMU→RAMA':30s}")
 print("-" * 75)
@@ -54,18 +60,18 @@ print("-" * 75)
 for w in words:
     et = encode_text(w)
     cr = cmu_to_rama(w)
-    
+
     def fmt(coords):
         if coords is None:
             return "None"
         return str(coords)
-    
+
     print(f"{w:15s} {fmt(et):30s} {fmt(cr):30s}")
 
 print()
 print("LEGEND: Each int is a RAMA coordinate (0-48)")
 print("  0-15  = SVARA (vowels)")
-print("  16-40 = SPARSHA (consonants)")  
+print("  16-40 = SPARSHA (consonants)")
 print("  41-48 = SHESHA (semivowels/sibilants)")
 print()
 

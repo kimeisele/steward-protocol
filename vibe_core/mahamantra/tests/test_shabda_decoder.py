@@ -64,8 +64,7 @@ class TestArpabetToRama:
 
     def test_vowels_in_svara_range(self):
         """Vowel phonemes map to coords 0-15 (SVARA)."""
-        vowels = ["AA", "AE", "AH", "AO", "AW", "AY", "EH", "EY",
-                   "ER", "IH", "IY", "OW", "OY", "UH", "UW"]
+        vowels = ["AA", "AE", "AH", "AO", "AW", "AY", "EH", "EY", "ER", "IH", "IY", "OW", "OY", "UH", "UW"]
         for v in vowels:
             assert ARPABET_TO_RAMA[v] < WORDS, f"{v} should be SVARA (<{WORDS}), got {ARPABET_TO_RAMA[v]}"
 
@@ -93,9 +92,7 @@ class TestArpabetToRama:
         """Voiced/unvoiced pairs map to same varga row."""
         pairs = [("K", "G"), ("T", "D"), ("P", "B"), ("CH", "JH")]
         for unvoiced, voiced in pairs:
-            assert ARPABET_TO_VARGA[unvoiced] == ARPABET_TO_VARGA[voiced], (
-                f"{unvoiced}/{voiced} should share varga"
-            )
+            assert ARPABET_TO_VARGA[unvoiced] == ARPABET_TO_VARGA[voiced], f"{unvoiced}/{voiced} should share varga"
 
     def test_all_varga_covered(self):
         """All 5 varga positions have at least one consonant."""
@@ -114,16 +111,12 @@ class TestArpabetToRama:
     def test_nasals_are_anunasika(self):
         """M, N, NG should have ANUNASIKA sthana."""
         for nasal in ["M", "N", "NG"]:
-            assert ARPABET_TO_STHANA[nasal] == SthanaIndex.ANUNASIKA, (
-                f"{nasal} should be ANUNASIKA"
-            )
+            assert ARPABET_TO_STHANA[nasal] == SthanaIndex.ANUNASIKA, f"{nasal} should be ANUNASIKA"
 
     def test_unvoiced_stops_are_sparsha(self):
         """K, P, T should have SPARSHA sthana (unvoiced)."""
         for stop in ["K", "P", "T"]:
-            assert ARPABET_TO_STHANA[stop] == SthanaIndex.SPARSHA, (
-                f"{stop} should be SPARSHA"
-            )
+            assert ARPABET_TO_STHANA[stop] == SthanaIndex.SPARSHA, f"{stop} should be SPARSHA"
 
 
 # =============================================================================
@@ -186,17 +179,20 @@ class TestSegmentation:
     def test_empty_stream(self):
         """Empty input → no segments."""
         from vibe_core.mahamantra.sound.shabda_decoder import segment_stream
+
         assert segment_stream([]) == []
 
     def test_all_silence(self):
         """All-silence stream → no segments."""
         from vibe_core.mahamantra.sound.shabda_decoder import segment_stream
+
         frames = _silence_frames(100)
         assert segment_stream(frames) == []
 
     def test_continuous_voiced_is_one_segment(self):
         """Continuous voiced audio → single segment."""
         from vibe_core.mahamantra.sound.shabda_decoder import segment_stream
+
         frames = _voiced_frames(30)
         segments = segment_stream(frames)
         assert len(segments) == 1
@@ -205,6 +201,7 @@ class TestSegmentation:
     def test_silence_splits_segments(self):
         """Silence gap splits into two segments."""
         from vibe_core.mahamantra.sound.shabda_decoder import segment_stream
+
         frames = _voiced_frames(20) + _silence_frames(5) + _voiced_frames(20)
         segments = segment_stream(frames)
         assert len(segments) == 2
@@ -212,6 +209,7 @@ class TestSegmentation:
     def test_min_segment_length(self):
         """Segments shorter than 5 frames (50ms) are discarded."""
         from vibe_core.mahamantra.sound.shabda_decoder import segment_stream
+
         # 3 voiced frames + silence + 20 voiced frames
         frames = _voiced_frames(3) + _silence_frames(5) + _voiced_frames(20)
         segments = segment_stream(frames)
@@ -222,6 +220,7 @@ class TestSegmentation:
     def test_max_segment_length(self):
         """Segments longer than max frames are force-split."""
         from vibe_core.mahamantra.sound.shabda_decoder import segment_stream
+
         frames = _voiced_frames(60)  # > 40 frame max
         segments = segment_stream(frames)
         assert len(segments) >= 2
@@ -229,6 +228,7 @@ class TestSegmentation:
     def test_segment_timing(self):
         """Segment start/end correspond to frame indices."""
         from vibe_core.mahamantra.sound.shabda_decoder import segment_stream
+
         frames = _silence_frames(10) + _voiced_frames(30) + _silence_frames(10)
         segments = segment_stream(frames)
         assert len(segments) == 1
@@ -238,6 +238,7 @@ class TestSegmentation:
     def test_energy_dip_boundary(self):
         """Energy dip (5+ low-energy frames) creates word boundary."""
         from vibe_core.mahamantra.sound.shabda_decoder import segment_stream
+
         # High energy → 7 frames of low energy (RMS=30) → high energy
         high = _voiced_frames(20, rms=150)
         low = _low_energy_frames(7, rms=30)
@@ -256,32 +257,38 @@ class TestDedup:
 
     def test_empty(self):
         from vibe_core.mahamantra.sound.shabda_decoder import _dedup_coords
+
         assert _dedup_coords(()) == ()
 
     def test_single(self):
         from vibe_core.mahamantra.sound.shabda_decoder import _dedup_coords
+
         assert _dedup_coords((5,)) == (5,)
 
     def test_all_same(self):
         from vibe_core.mahamantra.sound.shabda_decoder import _dedup_coords
+
         assert _dedup_coords((12, 12, 12, 12, 12)) == (12,)
 
     def test_alternating(self):
         from vibe_core.mahamantra.sound.shabda_decoder import _dedup_coords
+
         assert _dedup_coords((5, 12, 5, 12)) == (5, 12, 5, 12)
 
     def test_realistic_speech(self):
         """Simulated frame-level output: each phoneme repeated ~5-10 frames."""
         from vibe_core.mahamantra.sound.shabda_decoder import _dedup_coords
+
         # "dha-r-ma" → coords 34, 42, 40, each held for multiple frames
-        raw = (34,)*8 + (42,)*5 + (40,)*7
+        raw = (34,) * 8 + (42,) * 5 + (40,) * 7
         assert _dedup_coords(raw) == (34, 42, 40)
 
     def test_preserves_repeated_phonemes(self):
         """Same coord appearing non-consecutively must be preserved."""
         from vibe_core.mahamantra.sound.shabda_decoder import _dedup_coords
+
         # "a-ka-a" → 0, 16, 0 (a appears twice, not consecutive)
-        raw = (0,)*5 + (16,)*3 + (0,)*5
+        raw = (0,) * 5 + (16,) * 3 + (0,) * 5
         assert _dedup_coords(raw) == (0, 16, 0)
 
 
@@ -296,31 +303,33 @@ class TestScoring:
     def test_identical_is_perfect(self):
         """Identical coord sequences → score 1.0."""
         from vibe_core.mahamantra.sound.shabda_decoder import _score_candidate
+
         coords = (34, 42, 40)  # dharma-like
         assert _score_candidate(coords, coords) == 1.0
 
     def test_empty_is_zero(self):
         """Empty input → 0.0."""
         from vibe_core.mahamantra.sound.shabda_decoder import _score_candidate
+
         assert _score_candidate((), (34, 42, 40)) == 0.0
         assert _score_candidate((34, 42, 40), ()) == 0.0
 
     def test_same_element_better_than_different(self):
         """Coords sharing an element score higher than totally different."""
         from vibe_core.mahamantra.sound.shabda_decoder import _score_candidate
+
         observed = (16,)  # ka — element=AKASHA
         same_elem = (17,)  # kha — element=AKASHA
         diff_elem = (36,)  # pa — element=PRITHVI
 
         score_same = _score_candidate(observed, same_elem)
         score_diff = _score_candidate(observed, diff_elem)
-        assert score_same > score_diff, (
-            f"Same element ({score_same}) should beat different ({score_diff})"
-        )
+        assert score_same > score_diff, f"Same element ({score_same}) should beat different ({score_diff})"
 
     def test_same_varga_better_than_different_class(self):
         """Coords sharing varga class score higher than different class."""
         from vibe_core.mahamantra.sound.shabda_decoder import _score_candidate
+
         # Use coords from DIFFERENT elements to isolate varga effect
         observed = (16,)  # ka — element=AKASHA, varga=sparsha
         same_varga = (31,)  # ta — element=JALA, varga=sparsha (same varga, diff element)
@@ -333,6 +342,7 @@ class TestScoring:
     def test_length_penalty(self):
         """Longer candidates against short observed get penalized."""
         from vibe_core.mahamantra.sound.shabda_decoder import _score_candidate
+
         short = (34, 42)
         long = (34, 42, 40, 5)
         # short vs short = perfect, short vs long = penalized
@@ -341,6 +351,7 @@ class TestScoring:
     def test_score_symmetric_tendency(self):
         """Score should be similar (not necessarily identical) in both directions."""
         from vibe_core.mahamantra.sound.shabda_decoder import _score_candidate
+
         a = (34, 42, 40)
         b = (34, 42, 38)
         score_ab = _score_candidate(a, b)
@@ -350,6 +361,7 @@ class TestScoring:
     def test_score_range(self):
         """All scores are in [0, 1]."""
         from vibe_core.mahamantra.sound.shabda_decoder import _score_candidate
+
         test_cases = [
             ((0,), (48,)),
             ((0, 1, 2), (46, 47, 48)),
@@ -372,14 +384,13 @@ class TestPronunciationDict:
     @pytest.fixture(scope="class")
     def pdict(self):
         from vibe_core.mahamantra.sound.shabda_decoder import PronunciationDict
+
         d = PronunciationDict()
         return d
 
     def test_sanskrit_entries_count(self, pdict):
         """Should have ~4000+ Sanskrit entries from lexicon."""
-        assert pdict.sanskrit_count >= 3000, (
-            f"Expected >=3000 Sanskrit entries, got {pdict.sanskrit_count}"
-        )
+        assert pdict.sanskrit_count >= 3000, f"Expected >=3000 Sanskrit entries, got {pdict.sanskrit_count}"
 
     def test_english_entries_exist(self, pdict):
         """Should have English entries derived from meanings."""
@@ -423,12 +434,14 @@ class TestFrameScoring:
     def test_silence_returns_empty(self):
         """Silent frame → no candidates."""
         from vibe_core.mahamantra.sound.shabda_decoder import score_frame
+
         frame = pack_frame(0, 0, 0, 0)
         assert score_frame(frame) == []
 
     def test_voiced_frame_returns_candidates(self):
         """Voiced frame → at least one candidate."""
         from vibe_core.mahamantra.sound.shabda_decoder import score_frame
+
         frame = pack_frame(150, 0, 1200, 15000)  # voiced, KANTHYA varga
         result = score_frame(frame)
         assert len(result) > 0
@@ -436,6 +449,7 @@ class TestFrameScoring:
     def test_candidates_are_sorted(self):
         """Candidates should be sorted by score descending."""
         from vibe_core.mahamantra.sound.shabda_decoder import score_frame
+
         frame = pack_frame(150, 0, 1200, 15000)
         result = score_frame(frame)
         if len(result) >= 2:
@@ -444,6 +458,7 @@ class TestFrameScoring:
     def test_max_three_candidates(self):
         """At most 3 candidates returned."""
         from vibe_core.mahamantra.sound.shabda_decoder import score_frame
+
         frame = pack_frame(150, 2, 1200, 20000)
         result = score_frame(frame)
         assert len(result) <= 3
@@ -451,6 +466,7 @@ class TestFrameScoring:
     def test_scores_in_range(self):
         """All scores in [0, 1]."""
         from vibe_core.mahamantra.sound.shabda_decoder import score_frame
+
         frame = pack_frame(150, 1, 1500, 18000)
         for _, score in score_frame(frame):
             assert 0.0 <= score <= 1.0
@@ -467,14 +483,15 @@ class TestPhonemeTemplates:
     def test_all_templates_built(self):
         """Should have a template for each ARPAbet phoneme."""
         from vibe_core.mahamantra.sound.shabda_decoder import PHONEME_TEMPLATES
+
         arpabets = {t.arpabet for t in PHONEME_TEMPLATES}
         assert arpabets == set(ARPABET_TO_RAMA.keys())
 
     def test_vowel_templates_have_formants(self):
         """Vowel templates should have F1/F2 centers."""
         from vibe_core.mahamantra.sound.shabda_decoder import PHONEME_TEMPLATES
-        vowels = {"AA", "AE", "AH", "AO", "AW", "AY", "EH", "EY",
-                   "ER", "IH", "IY", "OW", "OY", "UH", "UW"}
+
+        vowels = {"AA", "AE", "AH", "AO", "AW", "AY", "EH", "EY", "ER", "IH", "IY", "OW", "OY", "UH", "UW"}
         for t in PHONEME_TEMPLATES:
             if t.arpabet in vowels:
                 assert t.f1_center > 0, f"{t.arpabet} should have F1"
@@ -483,6 +500,7 @@ class TestPhonemeTemplates:
     def test_consonant_templates_no_formants(self):
         """Consonant templates should have F1=F2=0."""
         from vibe_core.mahamantra.sound.shabda_decoder import PHONEME_TEMPLATES
+
         for t in PHONEME_TEMPLATES:
             if t.sound_class != 0:  # not a vowel
                 assert t.f1_center == 0, f"{t.arpabet} consonant shouldn't have F1"
@@ -491,6 +509,7 @@ class TestPhonemeTemplates:
     def test_sound_classes_correct(self):
         """Sound class matches RAMA coordinate range."""
         from vibe_core.mahamantra.sound.shabda_decoder import PHONEME_TEMPLATES
+
         for t in PHONEME_TEMPLATES:
             if t.rama_coord < WORDS:
                 assert t.sound_class == 0, f"{t.arpabet} coord {t.rama_coord} should be svara"
@@ -511,6 +530,7 @@ class TestEndToEnd:
     def test_silence_stream_gives_empty_transcript(self):
         """All-silence stream → empty transcript."""
         from vibe_core.mahamantra.sound.shabda_decoder import ShabdaDecoder
+
         decoder = ShabdaDecoder()
         stream = ShabdaStream(
             frames=tuple(_silence_frames(100)),
@@ -524,6 +544,7 @@ class TestEndToEnd:
     def test_transcript_text_property(self):
         """Transcript.text joins word strings."""
         from vibe_core.mahamantra.sound.shabda_decoder import Transcript, TranscriptWord
+
         words = (
             TranscriptWord("dharma", 0.9, "sanskrit", (34, 42, 40, 5), 0, 100),
             TranscriptWord("yoga", 0.8, "sanskrit", (41, 12, 18, 5), 100, 200),
@@ -534,12 +555,14 @@ class TestEndToEnd:
     def test_transcript_duration(self):
         """Transcript.duration_ms reflects stream length."""
         from vibe_core.mahamantra.sound.shabda_decoder import Transcript
+
         t = Transcript(words=(), duration_ms=5000, source="test")
         assert t.duration_ms == 5000
 
     def test_decoder_with_stream(self):
         """ShabdaDecoder.transcribe() on voiced audio returns a Transcript."""
         from vibe_core.mahamantra.sound.shabda_decoder import ShabdaDecoder
+
         # Build a stream with voiced content (may or may not match dictionary)
         frames = _voiced_frames(50, rms=150, varga=0, f0_x10=1200, centroid_x10=15000)
         stream = ShabdaStream(
@@ -557,6 +580,7 @@ class TestEndToEnd:
     def test_transcribe_segment_api(self):
         """transcribe_segment() returns list of TranscriptWord."""
         from vibe_core.mahamantra.sound.shabda_decoder import ShabdaDecoder
+
         frames = _voiced_frames(30)
         decoder = ShabdaDecoder(min_confidence=0.0)
         words = decoder.transcribe_segment(frames)
@@ -565,6 +589,7 @@ class TestEndToEnd:
     def test_min_confidence_filters(self):
         """Words below min_confidence threshold are excluded."""
         from vibe_core.mahamantra.sound.shabda_decoder import ShabdaDecoder
+
         frames = _voiced_frames(20)
         # Very high threshold — should filter everything
         decoder_strict = ShabdaDecoder(min_confidence=0.99)
@@ -575,13 +600,12 @@ class TestEndToEnd:
         )
         transcript = decoder_strict.transcribe(stream)
         # High threshold should return fewer/no words
-        assert len(transcript.words) == 0 or all(
-            w.confidence >= 0.99 for w in transcript.words
-        )
+        assert len(transcript.words) == 0 or all(w.confidence >= 0.99 for w in transcript.words)
 
     def test_transcript_word_fields(self):
         """TranscriptWord has all required fields."""
         from vibe_core.mahamantra.sound.shabda_decoder import TranscriptWord
+
         w = TranscriptWord(
             word="test",
             confidence=0.85,
@@ -653,20 +677,20 @@ class TestMFCCTemplates:
     def test_all_templates_have_mfcc(self):
         """All 39 phoneme templates should have 13-element mfcc_center."""
         from vibe_core.mahamantra.sound.shabda_decoder import PHONEME_TEMPLATES
+
         for t in PHONEME_TEMPLATES:
-            assert len(t.mfcc_center) == 13, (
-                f"{t.arpabet} should have 13 MFCC coefficients, got {len(t.mfcc_center)}"
-            )
+            assert len(t.mfcc_center) == 13, f"{t.arpabet} should have 13 MFCC coefficients, got {len(t.mfcc_center)}"
 
     def test_vowels_differ_from_consonants(self):
         """Vowel and consonant MFCC templates should be distinguishable."""
         from vibe_core.mahamantra.sound.shabda_decoder import PHONEME_TEMPLATES, _mfcc_similarity
+
         vowels = [t for t in PHONEME_TEMPLATES if t.sound_class == 0]
         consonants = [t for t in PHONEME_TEMPLATES if t.sound_class != 0]
         # Average intra-vowel similarity should exceed average vowel-consonant similarity
         intra = []
         for i, v1 in enumerate(vowels):
-            for v2 in vowels[i + 1:]:
+            for v2 in vowels[i + 1 :]:
                 intra.append(_mfcc_similarity(v1.mfcc_center, v2.mfcc_center))
         cross = []
         for v in vowels[:5]:
@@ -675,18 +699,16 @@ class TestMFCCTemplates:
         avg_intra = sum(intra) / len(intra) if intra else 0
         avg_cross = sum(cross) / len(cross) if cross else 0
         assert avg_intra > avg_cross, (
-            f"Intra-vowel similarity ({avg_intra:.3f}) should exceed "
-            f"vowel-consonant similarity ({avg_cross:.3f})"
+            f"Intra-vowel similarity ({avg_intra:.3f}) should exceed vowel-consonant similarity ({avg_cross:.3f})"
         )
 
     def test_self_similarity_is_one(self):
         """Cosine similarity of a template with itself should be 1.0."""
         from vibe_core.mahamantra.sound.shabda_decoder import PHONEME_TEMPLATES, _mfcc_similarity
+
         for t in PHONEME_TEMPLATES:
             sim = _mfcc_similarity(t.mfcc_center, t.mfcc_center)
-            assert abs(sim - 1.0) < 0.001, (
-                f"{t.arpabet} self-similarity should be 1.0, got {sim}"
-            )
+            assert abs(sim - 1.0) < 0.001, f"{t.arpabet} self-similarity should be 1.0, got {sim}"
 
 
 # =============================================================================
@@ -700,6 +722,7 @@ class TestMFCCFrameScoring:
     def test_mfcc_path_produces_candidates(self):
         """score_frame with MFCC vector should return candidates."""
         from vibe_core.mahamantra.sound.shabda_decoder import score_frame, _MFCC_PROTOTYPES
+
         frame = pack_frame(150, 0, 1200, 15000)
         mfcc = _MFCC_PROTOTYPES["AA"]
         result = score_frame(frame, mfcc=mfcc)
@@ -708,6 +731,7 @@ class TestMFCCFrameScoring:
     def test_matching_mfcc_scores_higher(self):
         """Frame with matching MFCC should score higher than mismatched."""
         from vibe_core.mahamantra.sound.shabda_decoder import score_frame, _MFCC_PROTOTYPES
+
         frame = pack_frame(150, 0, 1200, 15000)  # voiced, KANTHYA
         # Score with AA-matching MFCC vs S-matching MFCC
         aa_result = score_frame(frame, mfcc=_MFCC_PROTOTYPES["AA"])
@@ -723,6 +747,7 @@ class TestMFCCFrameScoring:
     def test_backward_compat_no_mfcc(self):
         """score_frame without MFCC should still work (legacy path)."""
         from vibe_core.mahamantra.sound.shabda_decoder import score_frame
+
         frame = pack_frame(150, 0, 1200, 15000)
         result = score_frame(frame)
         assert len(result) > 0

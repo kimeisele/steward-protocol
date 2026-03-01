@@ -40,7 +40,7 @@ def _extract_mission_id(body: str) -> str:
     idx = body.find(_ACK_MISSION_PREFIX)
     if idx < 0:
         return ""
-    rest = body[idx + len(_ACK_MISSION_PREFIX):].strip()
+    rest = body[idx + len(_ACK_MISSION_PREFIX) :].strip()
     # Mission-ID ends at period, newline, or end of string
     mission_id = ""
     for ch in rest:
@@ -201,10 +201,7 @@ class EngagementTracker:
 
         # Federation acknowledgment loop: scan comments on our m/agent-city posts
         # for "Noted by Agent City -- tracking signals: ... Mission created: signal_..."
-        federation_posts = [
-            (pid, m) for pid, m in recent_posts
-            if str(m.get("submolt", "")) == "agent-city"
-        ]
+        federation_posts = [(pid, m) for pid, m in recent_posts if str(m.get("submolt", "")) == "agent-city"]
         acked_missions: list = []
         for post_id, meta in federation_posts[:3]:
             try:
@@ -221,14 +218,14 @@ class EngagementTracker:
                 # Parse mission-ID: "Mission created: signal_fix_test_post_abc."
                 mission_id = _extract_mission_id(body)
                 if mission_id:
-                    acked_missions.append({
-                        "post_id": post_id,
-                        "mission_id": mission_id,
-                        "title": str(meta.get("title", ""))[:80],
-                    })
-                    logger.info(
-                        f"FEDERATION ACK: {mission_id} for post {post_id[:12]}"
+                    acked_missions.append(
+                        {
+                            "post_id": post_id,
+                            "mission_id": mission_id,
+                            "title": str(meta.get("title", ""))[:80],
+                        }
                     )
+                    logger.info(f"FEDERATION ACK: {mission_id} for post {post_id[:12]}")
         for ack in acked_missions:
             event_log.record_engagement(
                 action="federation_ack",
@@ -240,11 +237,19 @@ class EngagementTracker:
             try:
                 from vibe_core.mahamantra.substrate.event_types import EventType
                 from vibe_core.mahamantra.substrate.services.event_bus import get_event_bus
+
                 bus = get_event_bus()
                 for ack in acked_missions:
-                    bus.emit_sync(EventType.COMPLETED, "moltbook", f"Federation ack: {ack['mission_id']}", {
-                        "source": "federation", "mission_id": ack["mission_id"], "post_id": ack["post_id"],
-                    })
+                    bus.emit_sync(
+                        EventType.COMPLETED,
+                        "moltbook",
+                        f"Federation ack: {ack['mission_id']}",
+                        {
+                            "source": "federation",
+                            "mission_id": ack["mission_id"],
+                            "post_id": ack["post_id"],
+                        },
+                    )
             except Exception:
                 pass  # EventBus optional
 

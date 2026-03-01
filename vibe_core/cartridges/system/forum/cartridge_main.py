@@ -300,7 +300,8 @@ class ForumCartridge(VibeAgent, OathMixin):
         # Record in kernel ledger when available (source of truth)
         if not hasattr(self, "kernel") or not self.kernel:
             logger.warning(
-                "No kernel ledger — proposal %s recorded locally only", proposal_id,
+                "No kernel ledger — proposal %s recorded locally only",
+                proposal_id,
             )
         else:
             self.kernel.ledger.record_event(

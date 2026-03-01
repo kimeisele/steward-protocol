@@ -88,9 +88,7 @@ class MahaManas:
         if isinstance(self._synaptic, HebbianSynaptic):
             self._synaptic.set_state_dir(path)
 
-    def perceive(
-        self, entries: Sequence[PerceptionEntry]
-    ) -> Sequence[PerceptionEntry]:
+    def perceive(self, entries: Sequence[PerceptionEntry]) -> Sequence[PerceptionEntry]:
         """Receive perceptions through Chitta — dedup and clean.
 
         Also tracks known sources for should_act() meditation gate.
@@ -174,20 +172,20 @@ class MahaManas:
 
             # Step 5: Approve if viable and dharma-ok
             approved = viable and dharma_ok
-            reason = "approved" if approved else (
-                "not viable" if not viable else dharma_reason
-            )
+            reason = "approved" if approved else ("not viable" if not viable else dharma_reason)
 
-            verdicts.append(ManaVerdict(
-                perception=p,
-                approved=approved,
-                priority_score=priority,
-                confidence=confidence,
-                dharma_ok=dharma_ok,
-                dharma_reason=dharma_reason,
-                reason=reason,
-                buddhi=cognition,
-            ))
+            verdicts.append(
+                ManaVerdict(
+                    perception=p,
+                    approved=approved,
+                    priority_score=priority,
+                    confidence=confidence,
+                    dharma_ok=dharma_ok,
+                    dharma_reason=dharma_reason,
+                    reason=reason,
+                    buddhi=cognition,
+                )
+            )
 
         # Sort by priority (descending), filter approved, limit
         approved_verdicts = [v for v in verdicts if v.approved]
@@ -293,9 +291,7 @@ class MahaManas:
             return True
 
         # All sources in cooldown?
-        if self._known_sources and all(
-            self.is_in_cooldown(s) for s in self._known_sources
-        ):
+        if self._known_sources and all(self.is_in_cooldown(s) for s in self._known_sources):
             logger.info(
                 "MEDITATION: all %d sources in cooldown",
                 len(self._known_sources),
@@ -334,9 +330,5 @@ class MahaManas:
             "cooldowns": {s: t for s, t in self._cooldowns.items()},
             "failure_counts": dict(self._failure_counts),
             "known_sources": list(self._known_sources),
-            "synaptic_weights": (
-                self._synaptic.snapshot()
-                if isinstance(self._synaptic, HebbianSynaptic)
-                else {}
-            ),
+            "synaptic_weights": (self._synaptic.snapshot() if isinstance(self._synaptic, HebbianSynaptic) else {}),
         }

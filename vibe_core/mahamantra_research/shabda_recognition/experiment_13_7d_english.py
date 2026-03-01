@@ -10,12 +10,18 @@ The breakthrough chain:
 
 This replaces the weak edit-distance _score_candidate() with production-grade resonance scoring.
 """
-import sys; sys.path.insert(0, ".")
+
+import sys
+
+sys.path.insert(0, ".")
 
 from vibe_core.mahamantra.sound.shabda_intake import ShabdaIntake
 from vibe_core.mahamantra.sound.shabda_processor import stream_to_rama
 from vibe_core.mahamantra.sound.shabda_decoder import (
-    segment_stream, _dedup_coords, _stable_coords, get_pronunciation_dict,
+    segment_stream,
+    _dedup_coords,
+    _stable_coords,
+    get_pronunciation_dict,
 )
 from vibe_core.mahamantra.substrate.encoding.resonance_ranker import rank_words
 from vibe_core.mahamantra.substrate.encoding.semantic_index import LexiconWord
@@ -122,8 +128,7 @@ for si, seg in enumerate(segments):
         score = best.total_score
 
         in_expected = "✓" if word.lower() in expected_words else " "
-        print(f"  [{ms_s:5d}-{ms_e:5d}ms] {word:20s} score={score:.4f} {in_expected}  "
-              f"coords={coords[:5]}")
+        print(f"  [{ms_s:5d}-{ms_e:5d}ms] {word:20s} score={score:.4f} {in_expected}  coords={coords[:5]}")
         if len(ranked) > 1:
             r2 = ranked[1]
             print(f"  {'':21s}  2nd: {r2.sanskrit:15s} score={r2.total_score:.4f}")
@@ -134,4 +139,4 @@ correct = sum(1 for w in words_out if w.lower() in expected_words)
 total = len(words_out)
 print(f"\n7D TRANSCRIPT: {' '.join(words_out)}")
 print(f"EXPECTED:      {EXPECTED}")
-print(f"\nCorrect: {correct}/{total} ({correct/max(1,total)*100:.0f}%)")
+print(f"\nCorrect: {correct}/{total} ({correct / max(1, total) * 100:.0f}%)")

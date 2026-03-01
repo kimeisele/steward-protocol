@@ -419,8 +419,7 @@ class TestIntakeProcessFile:
         assert min_len > 0
         # Varga (articulation point) should match — coarse classification
         varga_matches = sum(
-            1 for i in range(min_len)
-            if unpack_frame(from_file[i])[1] == unpack_frame(from_samples[i])[1]
+            1 for i in range(min_len) if unpack_frame(from_file[i])[1] == unpack_frame(from_samples[i])[1]
         )
         assert varga_matches > min_len * 0.9, f"Varga mismatch: {varga_matches}/{min_len}"
         # RMS should be within 20% of each other
@@ -448,9 +447,7 @@ class TestBridgeCompatibility:
                 packed = pack_frame(rms, varga, 1500, 20000)
                 intake_result = unpack_frame(packed)
                 bridge_result = bridge_unpack(packed)
-                assert intake_result == bridge_result, (
-                    f"Format mismatch: intake={intake_result} bridge={bridge_result}"
-                )
+                assert intake_result == bridge_result, f"Format mismatch: intake={intake_result} bridge={bridge_result}"
 
     def test_intake_no_heavy_deps_in_bridge(self):
         """shabda_bridge.py must not import numpy/scipy (runtime module)."""

@@ -92,7 +92,9 @@ def unpack_frame(packed: int) -> Tuple[int, int, int, int]:
 
 
 def extract_formants(
-    frame: np.ndarray, sr: int, order: int = 0,
+    frame: np.ndarray,
+    sr: int,
+    order: int = 0,
 ) -> Tuple[int, int]:
     """Extract F1 and F2 formant frequencies via LPC analysis.
 
@@ -117,14 +119,14 @@ def extract_formants(
 
     # Autocorrelation
     autocorr = np.correlate(emphasized, emphasized, mode="full")
-    autocorr = autocorr[len(autocorr) // 2:]
+    autocorr = autocorr[len(autocorr) // 2 :]
 
     if autocorr[0] < 1e-10:
         return (0, 0)
 
     # Levinson-Durbin via Toeplitz solver
     try:
-        lpc_coeffs = solve_toeplitz(autocorr[:order], autocorr[1:order + 1])
+        lpc_coeffs = solve_toeplitz(autocorr[:order], autocorr[1 : order + 1])
     except (np.linalg.LinAlgError, ValueError):
         return (0, 0)
 
@@ -190,8 +192,11 @@ def _mel_filterbank(sr: int, n_fft: int, n_mels: int = 26) -> np.ndarray:
 
 
 def extract_mfcc(
-    frame: np.ndarray, sr: int, n_fft: int = N_FFT,
-    n_mels: int = 26, n_mfcc: int = 13,
+    frame: np.ndarray,
+    sr: int,
+    n_fft: int = N_FFT,
+    n_mels: int = 26,
+    n_mfcc: int = 13,
 ) -> Tuple[int, ...]:
     """Extract 13 MFCC coefficients from one audio frame.
 
@@ -210,8 +215,8 @@ def extract_mfcc(
 
     # Power spectrum
     windowed = emphasized[:n_fft] * np.hanning(n_fft)
-    spec = np.abs(fft(windowed))[:n_fft // 2]
-    power = (spec ** 2) / n_fft
+    spec = np.abs(fft(windowed))[: n_fft // 2]
+    power = (spec**2) / n_fft
 
     if np.sum(power) < 1e-10:
         return zeros
@@ -255,7 +260,7 @@ def _centroid_to_varga(centroid_hz: float) -> int:
 def _estimate_f0(frame: np.ndarray, sr: int) -> float:
     """F0 via autocorrelation."""
     autocorr = np.correlate(frame, frame, mode="full")
-    autocorr = autocorr[len(autocorr) // 2:]
+    autocorr = autocorr[len(autocorr) // 2 :]
     min_lag = sr // 400
     max_lag = min(sr // 80, len(autocorr) - 1)
     if max_lag <= min_lag:
@@ -267,16 +272,14 @@ def _estimate_f0(frame: np.ndarray, sr: int) -> float:
     return sr / peak if peak > 0 else 0.0
 
 
-def _extract_frame_features(
-    frame: np.ndarray, sr: int, n_fft: int
-) -> Tuple[int, int, int, int]:
+def _extract_frame_features(frame: np.ndarray, sr: int, n_fft: int) -> Tuple[int, int, int, int]:
     """Extract (rms, varga, f0_x10, centroid_x10) from one audio frame."""
     # RMS energy
     rms = int(np.sqrt(np.mean(frame**2)) * 1000)
 
     # Spectral centroid
-    spec = np.abs(fft(frame * np.hanning(n_fft)))[:n_fft // 2]
-    xf = fftfreq(n_fft, 1 / sr)[:n_fft // 2]
+    spec = np.abs(fft(frame * np.hanning(n_fft)))[: n_fft // 2]
+    xf = fftfreq(n_fft, 1 / sr)[: n_fft // 2]
     total = np.sum(spec)
     centroid_hz = float(np.sum(xf * spec) / total) if total > 0 else 0.0
     centroid_x10 = int(centroid_hz * 10)
@@ -330,9 +333,17 @@ class ShabdaStream:
     (energy, articulation, pitch, timbre) at 10ms resolution.
     """
 
-    __slots__ = ("frames", "sample_rate", "hop_ms", "n_fft",
-                 "chant_start", "chant_end", "source", "raw_samples",
-                 "mfcc_frames")
+    __slots__ = (
+        "frames",
+        "sample_rate",
+        "hop_ms",
+        "n_fft",
+        "chant_start",
+        "chant_end",
+        "source",
+        "raw_samples",
+        "mfcc_frames",
+    )
 
     def __init__(
         self,
@@ -441,9 +452,7 @@ class ShabdaIntake:
             mfcc_frames=mfcc_data,
         )
 
-    def process_samples(
-        self, samples: np.ndarray, sample_rate: int, source: str = "live"
-    ) -> ShabdaStream:
+    def process_samples(self, samples: np.ndarray, sample_rate: int, source: str = "live") -> ShabdaStream:
         """Process raw samples (mono, float64 [-1,1]) → ShabdaStream."""
         frames, mfcc_data = self._extract_stream(samples, sample_rate)
         return ShabdaStream(
@@ -488,15 +497,11 @@ class ShabdaIntake:
         # Decode PCM16 → float64
         raw = b"".join(raw_chunks)
         n_samples = len(raw) // 2
-        samples = np.array(
-            struct.unpack(f"<{n_samples}h", raw), dtype=np.float64
-        ) / 32768.0
+        samples = np.array(struct.unpack(f"<{n_samples}h", raw), dtype=np.float64) / 32768.0
 
         return self.process_samples(samples, sample_rate, source="microphone")
 
-    def stream_live(
-        self, sample_rate: int = DEFAULT_SAMPLE_RATE
-    ) -> Generator[int, None, None]:
+    def stream_live(self, sample_rate: int = DEFAULT_SAMPLE_RATE) -> Generator[int, None, None]:
         """Stream from microphone — yields one packed uint32 per hop.
 
         Requires pyaudio. Runs until the generator is closed or .stop() is called.
@@ -532,17 +537,13 @@ class ShabdaIntake:
         try:
             while not self._stop_event.is_set():
                 raw = mic.read(hop, exception_on_overflow=False)
-                new_samples = np.array(
-                    struct.unpack(f"<{hop}h", raw), dtype=np.float64
-                ) / 32768.0
+                new_samples = np.array(struct.unpack(f"<{hop}h", raw), dtype=np.float64) / 32768.0
                 buf = np.concatenate([buf, new_samples])
 
                 # Emit all complete frames
                 while len(buf) >= self.n_fft:
-                    frame = buf[:self.n_fft]
-                    rms, varga, f0_x10, centroid_x10 = _extract_frame_features(
-                        frame, sample_rate, self.n_fft
-                    )
+                    frame = buf[: self.n_fft]
+                    rms, varga, f0_x10, centroid_x10 = _extract_frame_features(frame, sample_rate, self.n_fft)
                     yield pack_frame(rms, varga, f0_x10, centroid_x10)
                     buf = buf[hop:]  # Slide by hop, not n_fft (overlapping windows)
         finally:
@@ -551,9 +552,7 @@ class ShabdaIntake:
             pa.terminate()
             self._stop_event.clear()
 
-    def stream_samples(
-        self, samples: np.ndarray, sample_rate: int
-    ) -> Generator[int, None, None]:
+    def stream_samples(self, samples: np.ndarray, sample_rate: int) -> Generator[int, None, None]:
         """Stream from pre-loaded samples — yields one packed uint32 per hop.
 
         Same frame-by-frame output as process_samples(), but as a generator.
@@ -563,10 +562,8 @@ class ShabdaIntake:
         n_frames = (len(samples) - self.n_fft) // hop
         for i in range(n_frames):
             pos = i * hop
-            frame = samples[pos:pos + self.n_fft]
-            rms, varga, f0_x10, centroid_x10 = _extract_frame_features(
-                frame, sample_rate, self.n_fft
-            )
+            frame = samples[pos : pos + self.n_fft]
+            rms, varga, f0_x10, centroid_x10 = _extract_frame_features(frame, sample_rate, self.n_fft)
             yield pack_frame(rms, varga, f0_x10, centroid_x10)
 
     def stop(self) -> None:
@@ -575,7 +572,9 @@ class ShabdaIntake:
             self._stop_event.set()
 
     def _extract_stream(
-        self, samples: np.ndarray, sr: int,
+        self,
+        samples: np.ndarray,
+        sr: int,
     ) -> Tuple[List[int], Tuple[Tuple[int, ...], ...]]:
         """Core extraction: samples → (packed uint32 frames, MFCC tuples)."""
         hop = int(sr * self.hop_ms / 1000)
@@ -585,10 +584,8 @@ class ShabdaIntake:
         mfcc_list: List[Tuple[int, ...]] = []
         for i in range(n_frames):
             start = i * hop
-            frame = samples[start:start + self.n_fft]
-            rms, varga, f0_x10, centroid_x10 = _extract_frame_features(
-                frame, sr, self.n_fft
-            )
+            frame = samples[start : start + self.n_fft]
+            rms, varga, f0_x10, centroid_x10 = _extract_frame_features(frame, sr, self.n_fft)
             packed.append(pack_frame(rms, varga, f0_x10, centroid_x10))
             mfcc_list.append(extract_mfcc(frame, sr, self.n_fft))
 

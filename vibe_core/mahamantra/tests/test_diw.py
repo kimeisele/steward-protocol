@@ -39,9 +39,9 @@ class TestDIWConstants:
         assert MURALI_SHIFT == 15
 
     def test_masks(self):
-        assert VENU_MASK == 0x3F      # 6 bits
-        assert VAMSI_MASK == 0x1FF    # 9 bits
-        assert MURALI_MASK == 0xF     # 4 bits
+        assert VENU_MASK == 0x3F  # 6 bits
+        assert VAMSI_MASK == 0x1FF  # 9 bits
+        assert MURALI_MASK == 0xF  # 4 bits
 
     def test_diw_mask(self):
         """Total DIW = 19 bits."""
@@ -67,7 +67,7 @@ class TestPackUnpack:
         """Maximum values for each field."""
         word = pack(VENU_MASK, VAMSI_MASK, MURALI_MASK)
         result = unpack(word)
-        assert result.venu == VENU_MASK    # 63
+        assert result.venu == VENU_MASK  # 63
         assert result.vamsi == VAMSI_MASK  # 511
         assert result.murali == MURALI_MASK  # 15
 
@@ -106,14 +106,21 @@ class TestPackUnpack:
     def test_diw_is_namedtuple(self):
         result = unpack(pack(1, 2, 3))
         assert isinstance(result, DIW)
-        assert hasattr(result, 'venu')
-        assert hasattr(result, 'vamsi')
-        assert hasattr(result, 'murali')
+        assert hasattr(result, "venu")
+        assert hasattr(result, "vamsi")
+        assert hasattr(result, "murali")
 
-    @pytest.mark.parametrize("venu,vamsi,murali", [
-        (0, 0, 0), (1, 1, 1), (32, 256, 8),
-        (63, 511, 15), (42, 170, 3), (7, 340, 11),
-    ])
+    @pytest.mark.parametrize(
+        "venu,vamsi,murali",
+        [
+            (0, 0, 0),
+            (1, 1, 1),
+            (32, 256, 8),
+            (63, 511, 15),
+            (42, 170, 3),
+            (7, 340, 11),
+        ],
+    )
     def test_roundtrip_parametric(self, venu, vamsi, murali):
         word = pack(venu, vamsi, murali)
         r = unpack(word)
@@ -134,7 +141,6 @@ class TestPackFull:
         core = pack(5, 170, 3)
         full = pack_full(5, 170, 3)
         assert extract_core(full) == core
-
 
 
 # ============================================================================
@@ -218,6 +224,7 @@ class TestVenuOrchestrator:
         restored = VenuOrchestrator()
         restored.from_bytes(data)
         assert orch.step() == restored.step()
+
     def test_sunya_flag(self):
         word = pack_full(0, 0, 0, sunya=True)
         assert is_sunya(word) is True
@@ -232,4 +239,3 @@ class TestVenuOrchestrator:
         assert r.venu == 5
         assert r.vamsi == 170
         assert r.murali == 3
-

@@ -44,14 +44,15 @@ CONFIDENCE_THRESHOLD: Final[float] = 2.25  # Out of max 6.0 (37.5%)
 # CANDIDATE
 # =============================================================================
 
+
 @dataclass
 class CaptchaCandidate:
     """One candidate answer from one strategy."""
 
-    answer: str                                   # "27"
-    expression: str                               # "23 + 4"
-    decoded_text: str                             # "twenty three plus four"
-    strategy: str                                 # "collapse"
+    answer: str  # "27"
+    expression: str  # "23 + 4"
+    decoded_text: str  # "twenty three plus four"
+    strategy: str  # "collapse"
     scores: Dict[str, float] = field(default_factory=dict)
     total_score: float = 0.0
 
@@ -61,24 +62,59 @@ class CaptchaCandidate:
 # =============================================================================
 
 _NUMBER_WORDS: Final[Dict[str, int]] = {
-    "zero": 0, "one": 1, "two": 2, "three": 3, "four": 4,
-    "five": 5, "six": 6, "seven": 7, "eight": 8, "nine": 9,
-    "ten": 10, "eleven": 11, "twelve": 12, "thirteen": 13,
-    "fourteen": 14, "fifteen": 15, "sixteen": 16, "seventeen": 17,
-    "eighteen": 18, "nineteen": 19, "twenty": 20, "thirty": 30,
-    "forty": 40, "fifty": 50, "sixty": 60, "seventy": 70,
-    "eighty": 80, "ninety": 90, "hundred": 100, "thousand": 1000,
+    "zero": 0,
+    "one": 1,
+    "two": 2,
+    "three": 3,
+    "four": 4,
+    "five": 5,
+    "six": 6,
+    "seven": 7,
+    "eight": 8,
+    "nine": 9,
+    "ten": 10,
+    "eleven": 11,
+    "twelve": 12,
+    "thirteen": 13,
+    "fourteen": 14,
+    "fifteen": 15,
+    "sixteen": 16,
+    "seventeen": 17,
+    "eighteen": 18,
+    "nineteen": 19,
+    "twenty": 20,
+    "thirty": 30,
+    "forty": 40,
+    "fifty": 50,
+    "sixty": 60,
+    "seventy": 70,
+    "eighty": 80,
+    "ninety": 90,
+    "hundred": 100,
+    "thousand": 1000,
 }
 
 _OPERATOR_WORDS: Final[Dict[str, str]] = {
-    "plus": "+", "add": "+", "sum": "+", "minus": "-",
-    "subtract": "-", "difference": "-", "times": "*",
-    "multiply": "*", "divided": "/", "divide": "/",
-    "modulo": "%", "mod": "%", "remainder": "%",
+    "plus": "+",
+    "add": "+",
+    "sum": "+",
+    "minus": "-",
+    "subtract": "-",
+    "difference": "-",
+    "times": "*",
+    "multiply": "*",
+    "divided": "/",
+    "divide": "/",
+    "modulo": "%",
+    "mod": "%",
+    "remainder": "%",
 }
 
 _CONTEXT_WORDS: Final[Tuple[str, ...]] = (
-    "total", "combined", "altogether", "together",
+    "total",
+    "combined",
+    "altogether",
+    "together",
 )
 
 
@@ -96,11 +132,7 @@ def _ensure_vocab() -> None:
     global _vocab_initialized
     if _vocab_initialized:
         return
-    all_words = (
-        list(_NUMBER_WORDS.keys())
-        + list(_OPERATOR_WORDS.keys())
-        + list(_CONTEXT_WORDS)
-    )
+    all_words = list(_NUMBER_WORDS.keys()) + list(_OPERATOR_WORDS.keys()) + list(_CONTEXT_WORDS)
     for word in all_words:
         _VOCAB_COORDS[word] = encode_text(word)
         collapsed = _collapse_all(word)
@@ -112,6 +144,7 @@ def _ensure_vocab() -> None:
 # =============================================================================
 # SHARED PIPELINE STAGES (used by all strategies)
 # =============================================================================
+
 
 def _varna_filter(text: str) -> str:
     """RAMA phonemic noise strip. Alpha → lowercase, digits survive, rest → space."""
@@ -160,6 +193,7 @@ def _collapse_all(s: str) -> str:
 # =============================================================================
 # PADA REASSEMBLY VARIANTS (differentiate strategies)
 # =============================================================================
+
 
 def _pada_exact(tokens: List[str], max_window: int = 6) -> List[str]:
     """Reassemble fragments using exact vocabulary match only."""
@@ -352,12 +386,31 @@ def _pada_aggressive(tokens: List[str], max_window: int = 10) -> List[str]:
 # COMPOUND NUMBER MERGE
 # =============================================================================
 
-_TENS_WORDS: Final[frozenset[str]] = frozenset({
-    "twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety",
-})
-_ONES_WORDS: Final[frozenset[str]] = frozenset({
-    "one", "two", "three", "four", "five", "six", "seven", "eight", "nine",
-})
+_TENS_WORDS: Final[frozenset[str]] = frozenset(
+    {
+        "twenty",
+        "thirty",
+        "forty",
+        "fifty",
+        "sixty",
+        "seventy",
+        "eighty",
+        "ninety",
+    }
+)
+_ONES_WORDS: Final[frozenset[str]] = frozenset(
+    {
+        "one",
+        "two",
+        "three",
+        "four",
+        "five",
+        "six",
+        "seven",
+        "eight",
+        "nine",
+    }
+)
 
 
 def _merge_compounds(words: List[str]) -> List[str]:
@@ -370,11 +423,7 @@ def _merge_compounds(words: List[str]) -> List[str]:
     result: list[str] = []
     i = 0
     while i < len(words):
-        if (
-            i + 1 < len(words)
-            and words[i] in _TENS_WORDS
-            and words[i + 1] in _ONES_WORDS
-        ):
+        if i + 1 < len(words) and words[i] in _TENS_WORDS and words[i + 1] in _ONES_WORDS:
             result.append(f"{words[i]}-{words[i + 1]}")
             i += 2
         else:
@@ -386,6 +435,7 @@ def _merge_compounds(words: List[str]) -> List[str]:
 # =============================================================================
 # MATH EXTRACTION (shared)
 # =============================================================================
+
 
 def _extract_math(decoded_text: str) -> Optional[str]:
     """Extract math expression from decoded text.
@@ -461,6 +511,7 @@ def _safe_eval(expr: str) -> Optional[str]:
 # STRATEGIES
 # =============================================================================
 
+
 def _strategy_exact(challenge: str) -> List[CaptchaCandidate]:
     """Conservative: exact vocab match only. Windows: 4, 6, 8."""
     clean = _varna_filter(challenge)
@@ -478,10 +529,14 @@ def _strategy_exact(challenge: str) -> List[CaptchaCandidate]:
         if answer is None or answer in seen_answers:
             continue
         seen_answers.add(answer)
-        results.append(CaptchaCandidate(
-            answer=answer, expression=expr,
-            decoded_text=decoded, strategy=f"exact_w{w}",
-        ))
+        results.append(
+            CaptchaCandidate(
+                answer=answer,
+                expression=expr,
+                decoded_text=decoded,
+                strategy=f"exact_w{w}",
+            )
+        )
     return results
 
 
@@ -502,10 +557,14 @@ def _strategy_collapse(challenge: str) -> List[CaptchaCandidate]:
         if answer is None or answer in seen_answers:
             continue
         seen_answers.add(answer)
-        results.append(CaptchaCandidate(
-            answer=answer, expression=expr,
-            decoded_text=decoded, strategy=f"collapse_w{w}",
-        ))
+        results.append(
+            CaptchaCandidate(
+                answer=answer,
+                expression=expr,
+                decoded_text=decoded,
+                strategy=f"collapse_w{w}",
+            )
+        )
     return results
 
 
@@ -526,10 +585,14 @@ def _strategy_aggressive(challenge: str) -> List[CaptchaCandidate]:
         if answer is None or answer in seen_answers:
             continue
         seen_answers.add(answer)
-        results.append(CaptchaCandidate(
-            answer=answer, expression=expr,
-            decoded_text=decoded, strategy=f"aggressive_w{w}",
-        ))
+        results.append(
+            CaptchaCandidate(
+                answer=answer,
+                expression=expr,
+                decoded_text=decoded,
+                strategy=f"aggressive_w{w}",
+            )
+        )
     return results
 
 
@@ -540,10 +603,14 @@ def _strategy_direct(challenge: str) -> List[CaptchaCandidate]:
     result = ChallengeSolver.solve(challenge)
     if result == "0":
         return []
-    return [CaptchaCandidate(
-        answer=result, expression="(direct)",
-        decoded_text=challenge, strategy="direct",
-    )]
+    return [
+        CaptchaCandidate(
+            answer=result,
+            expression="(direct)",
+            decoded_text=challenge,
+            strategy="direct",
+        )
+    ]
 
 
 _STRATEGIES = (_strategy_exact, _strategy_collapse, _strategy_aggressive, _strategy_direct)
@@ -552,6 +619,7 @@ _STRATEGIES = (_strategy_exact, _strategy_collapse, _strategy_aggressive, _strat
 # =============================================================================
 # SCORERS
 # =============================================================================
+
 
 def _score_expression(candidate: CaptchaCandidate, _challenge: str) -> float:
     """Valid math expression with 2+ numbers and operator → high score."""
@@ -567,8 +635,9 @@ def _score_expression(candidate: CaptchaCandidate, _challenge: str) -> float:
     return 0.0
 
 
-def _score_consensus(candidate: CaptchaCandidate, _challenge: str,
-                     all_candidates: Sequence[CaptchaCandidate] = ()) -> float:
+def _score_consensus(
+    candidate: CaptchaCandidate, _challenge: str, all_candidates: Sequence[CaptchaCandidate] = ()
+) -> float:
     """How many strategies agree on this answer?
 
     Single candidate = 0.25 (consensus of 1 is meaningless).
@@ -720,7 +789,9 @@ class CaptchaChamber:
         for candidate in candidates:
             candidate.scores["expression"] = _score_expression(candidate, challenge_text)
             candidate.scores["consensus"] = _score_consensus(
-                candidate, challenge_text, all_candidates=candidates,
+                candidate,
+                challenge_text,
+                all_candidates=candidates,
             )
             candidate.scores["range"] = _score_range(candidate, challenge_text)
             candidate.scores["completeness"] = _score_completeness(candidate, challenge_text)
@@ -734,16 +805,19 @@ class CaptchaChamber:
 
         logger.debug(
             "CaptchaChamber: best=%s score=%.2f scores=%s strategies=%d",
-            best.answer, best.total_score, best.scores,
+            best.answer,
+            best.total_score,
+            best.scores,
             len(candidates),
         )
 
         if best.total_score < CONFIDENCE_THRESHOLD:
             logger.warning(
-                "CaptchaChamber: low confidence (%.2f < %.2f), skipping. "
-                "Best candidate: answer=%s strategy=%s",
-                best.total_score, CONFIDENCE_THRESHOLD,
-                best.answer, best.strategy,
+                "CaptchaChamber: low confidence (%.2f < %.2f), skipping. Best candidate: answer=%s strategy=%s",
+                best.total_score,
+                CONFIDENCE_THRESHOLD,
+                best.answer,
+                best.strategy,
             )
             return None
 

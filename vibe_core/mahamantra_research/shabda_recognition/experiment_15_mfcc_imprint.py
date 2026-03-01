@@ -22,16 +22,23 @@ This is the simplest possible "hear first" approach:
 The MFCC vector IS the imprint. Each coefficient captures a different
 aspect of the spectral shape (like different resonance bands).
 """
-import sys; sys.path.insert(0, ".")
+
+import sys
+
+sys.path.insert(0, ".")
 import math
 import numpy as np
 from typing import Dict, List, Tuple, Sequence
 
 from vibe_core.mahamantra.sound.shabda_intake import (
-    ShabdaIntake, unpack_frame, extract_mfcc,
+    ShabdaIntake,
+    unpack_frame,
+    extract_mfcc,
 )
 from vibe_core.mahamantra.sound.shabda_decoder import (
-    segment_stream, get_pronunciation_dict, _MFCC_PROTOTYPES,
+    segment_stream,
+    get_pronunciation_dict,
+    _MFCC_PROTOTYPES,
     ARPABET_TO_RAMA,
 )
 
@@ -50,20 +57,21 @@ print("=" * 70)
 print("PART 1: Audio segment MFCC imprints (averaged over frames)")
 print("=" * 70)
 
+
 def segment_mfcc_imprint(seg_start: int, seg_end: int, all_mfcc) -> Tuple[float, ...]:
     """Average MFCC across all frames in segment → 13-dim vector."""
     if not all_mfcc:
         return (0.0,) * 13
-    
+
     vectors = []
     for i in range(seg_start, min(seg_end, len(all_mfcc))):
         mfcc = all_mfcc[i]
         if any(c != 0 for c in mfcc):
             vectors.append(mfcc)
-    
+
     if not vectors:
         return (0.0,) * 13
-    
+
     # Average each coefficient
     n = len(vectors)
     avg = tuple(sum(v[j] for v in vectors) / n for j in range(13))
@@ -89,8 +97,9 @@ for si, seg in enumerate(segments[:8]):
     ms_e = seg.end * 10
     imprint = segment_mfcc_imprint(seg.start, seg.end, stream.mfcc_frames)
     # Show c1-c4 (most discriminative coefficients)
-    print(f"  [{ms_s:5d}-{ms_e:5d}ms] c1-c4: ({imprint[1]:7.1f}, {imprint[2]:7.1f}, "
-          f"{imprint[3]:7.1f}, {imprint[4]:7.1f})")
+    print(
+        f"  [{ms_s:5d}-{ms_e:5d}ms] c1-c4: ({imprint[1]:7.1f}, {imprint[2]:7.1f}, {imprint[3]:7.1f}, {imprint[4]:7.1f})"
+    )
 
 
 # === Part 2: Reference MFCC imprints from phoneme templates ===
@@ -117,34 +126,52 @@ def word_mfcc_imprint(word: str) -> Tuple[float, ...]:
     coords = pdict.lookup(word)
     if not coords:
         return (0.0,) * 13
-    
+
     mfccs = []
     for c in coords:
         arpabet = RAMA_TO_ARPABET.get(c)
         if arpabet and arpabet in _MFCC_PROTOTYPES:
             mfccs.append(_MFCC_PROTOTYPES[arpabet])
-    
+
     if not mfccs:
         return (0.0,) * 13
-    
+
     n = len(mfccs)
     avg = tuple(sum(m[j] for m in mfccs) / n for j in range(13))
     return avg
 
 
 # Build reference imprints for expected vocabulary
-VOCAB = ["eh", "not", "exactly", "but", "i", "came", "to", "preach",
-         "the", "gospel", "of", "krishna", "consciousness", "and",
-         "fortunately", "met", "some", "enthusiastic", "young", 
-         "boys", "girls"]
+VOCAB = [
+    "eh",
+    "not",
+    "exactly",
+    "but",
+    "i",
+    "came",
+    "to",
+    "preach",
+    "the",
+    "gospel",
+    "of",
+    "krishna",
+    "consciousness",
+    "and",
+    "fortunately",
+    "met",
+    "some",
+    "enthusiastic",
+    "young",
+    "boys",
+    "girls",
+]
 
 word_imprints: Dict[str, Tuple[float, ...]] = {}
 for word in VOCAB:
     imp = word_mfcc_imprint(word)
     if any(c != 0 for c in imp):
         word_imprints[word] = imp
-        print(f"  '{word:15s}' c1-c4: ({imp[1]:7.1f}, {imp[2]:7.1f}, "
-              f"{imp[3]:7.1f}, {imp[4]:7.1f})")
+        print(f"  '{word:15s}' c1-c4: ({imp[1]:7.1f}, {imp[2]:7.1f}, {imp[3]:7.1f}, {imp[4]:7.1f})")
 
 print(f"\n  Reference imprints built: {len(word_imprints)}/{len(VOCAB)}")
 
@@ -175,21 +202,40 @@ print("PART 4: Audio → MFCC imprint → match against word imprints")
 print("=" * 70)
 
 EXPECTED_WORDS = [
-    "eh", "not", "exactly", "but", "i", "came", "to", "preach",
-    "the", "gospel", "of", "krishna", "consciousness", "and",
-    "fortunately", "i", "met", "some", "enthusiastic", "young",
-    "boys", "and", "girls",
+    "eh",
+    "not",
+    "exactly",
+    "but",
+    "i",
+    "came",
+    "to",
+    "preach",
+    "the",
+    "gospel",
+    "of",
+    "krishna",
+    "consciousness",
+    "and",
+    "fortunately",
+    "i",
+    "met",
+    "some",
+    "enthusiastic",
+    "young",
+    "boys",
+    "and",
+    "girls",
 ]
 
 words_out = []
 for si, seg in enumerate(segments):
     ms_s = seg.start * 10
     ms_e = seg.end * 10
-    
+
     audio_imp = segment_mfcc_imprint(seg.start, seg.end, stream.mfcc_frames)
     if not any(c != 0 for c in audio_imp):
         continue
-    
+
     best_word = ""
     best_sim = -1.0
     for word, ref_imp in word_imprints.items():
@@ -197,20 +243,18 @@ for si, seg in enumerate(segments):
         if sim > best_sim:
             best_sim = sim
             best_word = word
-    
+
     expected = EXPECTED_WORDS[si] if si < len(EXPECTED_WORDS) else "?"
     match = "✓" if best_word == expected else " "
     in_vocab = "▪" if best_word in set(EXPECTED_WORDS) else " "
-    
-    print(f"  [{ms_s:5d}-{ms_e:5d}ms] {best_word:15s} sim={best_sim:.4f} {match}{in_vocab}  "
-          f"(expected: {expected})")
+
+    print(f"  [{ms_s:5d}-{ms_e:5d}ms] {best_word:15s} sim={best_sim:.4f} {match}{in_vocab}  (expected: {expected})")
     words_out.append(best_word)
 
-correct = sum(1 for i, w in enumerate(words_out) 
-              if i < len(EXPECTED_WORDS) and w == EXPECTED_WORDS[i])
+correct = sum(1 for i, w in enumerate(words_out) if i < len(EXPECTED_WORDS) and w == EXPECTED_WORDS[i])
 in_vocab = sum(1 for w in words_out if w in set(EXPECTED_WORDS))
 total = len(words_out)
 
 print(f"\nMFCC TRANSCRIPT: {' '.join(words_out)}")
-print(f"Exact position match: {correct}/{total} ({correct/max(1,total)*100:.0f}%)")
-print(f"In expected vocab:    {in_vocab}/{total} ({in_vocab/max(1,total)*100:.0f}%)")
+print(f"Exact position match: {correct}/{total} ({correct / max(1, total) * 100:.0f}%)")
+print(f"In expected vocab:    {in_vocab}/{total} ({in_vocab / max(1, total) * 100:.0f}%)")

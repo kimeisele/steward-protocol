@@ -9,15 +9,24 @@ with f1/f2 formants (NOT mfcc). The formant path in score_frame() uses:
 Let's trace: for each frame in a segment, what phoneme wins and WHY?
 Also: are formants actually being extracted?
 """
-import sys; sys.path.insert(0, ".")
+
+import sys
+
+sys.path.insert(0, ".")
 import numpy as np
 
 from vibe_core.mahamantra.sound.shabda_intake import (
-    ShabdaIntake, unpack_frame, extract_formants,
+    ShabdaIntake,
+    unpack_frame,
+    extract_formants,
 )
 from vibe_core.mahamantra.sound.shabda_decoder import (
-    segment_stream, score_frame, _frames_to_phoneme_coords,
-    _stable_coords, _dedup_coords, get_pronunciation_dict,
+    segment_stream,
+    score_frame,
+    _frames_to_phoneme_coords,
+    _stable_coords,
+    _dedup_coords,
+    get_pronunciation_dict,
     ARPABET_TO_RAMA,
 )
 
@@ -59,9 +68,11 @@ for si in range(min(8, len(segments))):
                 f2_ok += 1
 
     expected = EXPECTED[si] if si < len(EXPECTED) else "?"
-    print(f"  [{ms_s:5d}-{ms_e:5d}ms] ({expected:10s}) "
-          f"voiced={total:3d}  f1_ok={f1_ok:3d}({f1_ok*100//max(1,total):2d}%)  "
-          f"f2_ok={f2_ok:3d}({f2_ok*100//max(1,total):2d}%)")
+    print(
+        f"  [{ms_s:5d}-{ms_e:5d}ms] ({expected:10s}) "
+        f"voiced={total:3d}  f1_ok={f1_ok:3d}({f1_ok * 100 // max(1, total):2d}%)  "
+        f"f2_ok={f2_ok:3d}({f2_ok * 100 // max(1, total):2d}%)"
+    )
 
 # Part 2: Frame-by-frame score_frame trace for segment 3 ("but")
 print()
@@ -85,8 +96,7 @@ for i, frame in enumerate(seg.frames[:15]):
     top3 = candidates[:3] if candidates else []
     top3_str = ", ".join(f"{p}:{s:.3f}" for p, s in top3)
 
-    print(f"  f{i:2d}: rms={rms:3d} vg={varga} f0={f0_x10:4d} cent={cent:3d} "
-          f"f1={f1:4d} f2={f2:4d} → {top3_str}")
+    print(f"  f{i:2d}: rms={rms:3d} vg={varga} f0={f0_x10:4d} cent={cent:3d} f1={f1:4d} f2={f2:4d} → {top3_str}")
 
 # Part 3: Full _frames_to_phoneme_coords output for first 8 segments
 print()
@@ -110,7 +120,11 @@ for si in range(min(8, len(segments))):
             seg_raw = stream.raw_samples[start_sample:end_sample]
 
     raw_coords = _frames_to_phoneme_coords(
-        seg.frames, seg_raw, stream.sample_rate, 10, n_fft,
+        seg.frames,
+        seg_raw,
+        stream.sample_rate,
+        10,
+        n_fft,
     )
     stable = _stable_coords(raw_coords, min_run=3)
 

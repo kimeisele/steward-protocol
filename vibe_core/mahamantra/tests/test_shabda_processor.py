@@ -101,9 +101,14 @@ class TestAudioToSthana:
 
     def test_voiced_aspirated_high_all(self):
         """F0 + high RMS + high centroid → GHOSHMAHA (3)."""
-        assert _audio_to_sthana(
-            _GHOSHMAHA_RMS_FLOOR + 10, 1200, _ASPIRATION_CENTROID_FLOOR + 10,
-        ) == 3
+        assert (
+            _audio_to_sthana(
+                _GHOSHMAHA_RMS_FLOOR + 10,
+                1200,
+                _ASPIRATION_CENTROID_FLOOR + 10,
+            )
+            == 3
+        )
 
     def test_aspirated_high_centroid_low_rms(self):
         """F0 + high centroid but moderate RMS → MAHAPRANA (1)."""
@@ -160,9 +165,16 @@ class TestRefineSubIndex:
 
     def test_sparsha_voiced_aspirated(self):
         """F0 + high RMS + high centroid → GHOSHMAHA (3)."""
-        assert _refine_sub_index(
-            1, _GHOSHMAHA_RMS_FLOOR + 10, 1200, _ASPIRATION_CENTROID_FLOOR + 10, 0,
-        ) == 3
+        assert (
+            _refine_sub_index(
+                1,
+                _GHOSHMAHA_RMS_FLOOR + 10,
+                1200,
+                _ASPIRATION_CENTROID_FLOOR + 10,
+                0,
+            )
+            == 3
+        )
 
     def test_sparsha_nasal(self):
         """F0 + low centroid → ANUNASIKA (4)."""
@@ -196,9 +208,7 @@ class TestFrameToRama:
         for varga in range(PANCHA):
             frame = _make_frame(150, varga, 1200, 10000)
             coord = frame_to_rama(frame)
-            assert COORD_ELEMENT[coord] == varga, (
-                f"varga={varga} → coord={coord} has element={COORD_ELEMENT[coord]}"
-            )
+            assert COORD_ELEMENT[coord] == varga, f"varga={varga} → coord={coord} has element={COORD_ELEMENT[coord]}"
 
     def test_all_five_elements_reachable(self):
         """Each varga (0-4) should map to a coordinate in that element."""
@@ -255,9 +265,9 @@ class TestStreamToRama:
 
     def test_mixed_silence_and_voiced(self):
         frames = [
-            _make_frame(0, 0, 0, 0),      # silence
+            _make_frame(0, 0, 0, 0),  # silence
             _make_frame(150, 0, 1200, 10000),  # voiced
-            _make_frame(0, 0, 0, 0),      # silence
+            _make_frame(0, 0, 0, 0),  # silence
             _make_frame(120, 2, 1500, 12000),  # voiced
         ]
         coords = stream_to_rama(frames)
@@ -270,6 +280,7 @@ class TestStreamToRama:
             stream_frame,
             stream_length,
         )
+
         _ensure_loaded()
         frames = [stream_frame(i) for i in range(stream_length())]
         coords = stream_to_rama(frames)
@@ -340,11 +351,11 @@ class TestSthanaProfile:
         So centroid_100=130 needs centroid_x10=13000 in pack_frame.
         """
         seen = set()
-        seen.add(frame_to_sthana(_make_frame(50, 0, 0, 10000)))      # SPARSHA(0): no F0
-        seen.add(frame_to_sthana(_make_frame(80, 0, 1200, 13000)))    # MAHAPRANA(1): F0+high cent
-        seen.add(frame_to_sthana(_make_frame(80, 0, 1200, 10000)))    # GHOSHAVAT(2): F0+mod cent
-        seen.add(frame_to_sthana(_make_frame(150, 0, 1200, 13000)))   # GHOSHMAHA(3): F0+high all
-        seen.add(frame_to_sthana(_make_frame(60, 0, 1000, 5000)))     # ANUNASIKA(4): F0+low cent
+        seen.add(frame_to_sthana(_make_frame(50, 0, 0, 10000)))  # SPARSHA(0): no F0
+        seen.add(frame_to_sthana(_make_frame(80, 0, 1200, 13000)))  # MAHAPRANA(1): F0+high cent
+        seen.add(frame_to_sthana(_make_frame(80, 0, 1200, 10000)))  # GHOSHAVAT(2): F0+mod cent
+        seen.add(frame_to_sthana(_make_frame(150, 0, 1200, 13000)))  # GHOSHMAHA(3): F0+high all
+        seen.add(frame_to_sthana(_make_frame(60, 0, 1000, 5000)))  # ANUNASIKA(4): F0+low cent
         assert seen == {0, 1, 2, 3, 4}
 
     def test_profile_empty(self):
@@ -384,8 +395,8 @@ class TestSthanaProfile:
     def test_sthana_energy_tuple(self):
         """STHANA_ENERGY maps index → float correctly."""
         assert len(STHANA_ENERGY) == PANCHA
-        assert STHANA_ENERGY[0] == 0.2   # SPARSHA
-        assert STHANA_ENERGY[3] == 1.0   # GHOSHMAHA (max)
+        assert STHANA_ENERGY[0] == 0.2  # SPARSHA
+        assert STHANA_ENERGY[3] == 1.0  # GHOSHMAHA (max)
         assert all(0.0 < e <= 1.0 for e in STHANA_ENERGY)
 
     def test_prabhupada_sthana_profile(self):
@@ -395,6 +406,7 @@ class TestSthanaProfile:
             stream_frame,
             stream_length,
         )
+
         _ensure_loaded()
         frames = [stream_frame(i) for i in range(stream_length())]
         profile = stream_to_sthana_profile(frames)
@@ -409,6 +421,7 @@ class TestSthanaProfile:
             stream_frame,
             stream_length,
         )
+
         _ensure_loaded()
         frames = [stream_frame(i) for i in range(stream_length())]
         contour = stream_to_energy_contour(frames)
@@ -452,6 +465,7 @@ class TestCompareStreams:
             stream_frame,
             stream_length,
         )
+
         _ensure_loaded()
         frames = [stream_frame(i) for i in range(stream_length())]
         # First half vs second half should be somewhat similar
@@ -488,6 +502,7 @@ class TestFullPipeline:
         from vibe_core.mahamantra.substrate.encoding.pancha_walk import (
             walk_signature as ws,
         )
+
         hist = eh(coords)
         sig = ws(coords)
         assert len(hist) == 5
@@ -503,6 +518,7 @@ class TestFullPipeline:
 
         # Text-derived coords (same coordinate space)
         from vibe_core.mahamantra.substrate.encoding.pancha_walk import walk_distance as wd
+
         text_coords = (16, 42, 40)  # "karma" = ka + ra + ma
         dist = wd(audio_coords, text_coords)
         assert 0.0 <= dist <= 1.0

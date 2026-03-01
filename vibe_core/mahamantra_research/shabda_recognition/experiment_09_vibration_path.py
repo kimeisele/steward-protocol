@@ -10,7 +10,10 @@ The NEW pipeline:
 Compare: How do vibration-derived coords compare to stream_to_rama coords?
 Do they give better word matching?
 """
-import sys; sys.path.insert(0, ".")
+
+import sys
+
+sys.path.insert(0, ".")
 
 from vibe_core.mahamantra.sound.shabda_intake import ShabdaIntake
 from vibe_core.mahamantra.sound.shabda_vibration import (
@@ -20,7 +23,10 @@ from vibe_core.mahamantra.sound.shabda_vibration import (
 )
 from vibe_core.mahamantra.sound.shabda_processor import stream_to_rama
 from vibe_core.mahamantra.sound.shabda_decoder import (
-    segment_stream, _dedup_coords, _score_candidate, get_pronunciation_dict,
+    segment_stream,
+    _dedup_coords,
+    _score_candidate,
+    get_pronunciation_dict,
 )
 from vibe_core.mahamantra.substrate.encoding.phonetic_encoder import encode_text
 from vibe_core.mahamantra.substrate.pancha_walk import COORD_ELEMENT, COORD_VARGA
@@ -50,9 +56,11 @@ for si, seg in enumerate(segments[:5]):
     print(f"\n[{si}] {ms_s}-{ms_e}ms ({len(seg.frames)} frames)")
     print(f"  VibSignatures: {len(vibs)} phonemes")
     for v in vibs[:6]:
-        print(f"    art={v.articulation.name:8s} voicing={v.voicing.name:20s} "
-              f"freq={v.base_frequency:4d} dur={v.duration_ratio:2d} "
-              f"sig_id={v.signature_id}")
+        print(
+            f"    art={v.articulation.name:8s} voicing={v.voicing.name:20s} "
+            f"freq={v.base_frequency:4d} dur={v.duration_ratio:2d} "
+            f"sig_id={v.signature_id}"
+        )
     print(f"  Vibration coords ({len(vib_coords)}): {vib_coords[:8]}")
     print(f"  stream_to_rama  ({len(old_deduped)}): {old_deduped[:8]}")
 
@@ -78,13 +86,9 @@ for si, seg in enumerate(segments):
     candidates = []
 
     for fc in range(max(0, first_coord - 2), min(49, first_coord + 3)):
-        candidates.extend(
-            pdict.candidates_for_segment(fc, coord_len, length_tolerance=3)
-        )
+        candidates.extend(pdict.candidates_for_segment(fc, coord_len, length_tolerance=3))
     if len(candidates) < 20:
-        candidates.extend(
-            pdict.all_candidates_for_length(coord_len, length_tolerance=2)
-        )
+        candidates.extend(pdict.all_candidates_for_length(coord_len, length_tolerance=2))
 
     best_word = ""
     best_score = 0.0
@@ -103,8 +107,7 @@ for si, seg in enumerate(segments):
 
     if best_score >= 0.25:
         elems = [ELEM_NAMES[COORD_ELEMENT[c]] for c in deduped[:5]]
-        print(f"  [{ms_s:5d}-{ms_e:5d}ms] {best_word:20s} conf={best_score:.3f}  "
-              f"coords={deduped[:5]} elems={elems}")
+        print(f"  [{ms_s:5d}-{ms_e:5d}ms] {best_word:20s} conf={best_score:.3f}  coords={deduped[:5]} elems={elems}")
         words_out.append(best_word)
 
 EXPECTED = "Eh not exactly But I came to preach the gospel of Krishna consciousness and fortunately I met some enthusiastic young boys and girls"
@@ -114,7 +117,7 @@ print(f"\nVIBRATION TRANSCRIPT: {' '.join(words_out)}")
 print(f"\nEXPECTED: {EXPECTED}")
 
 correct = sum(1 for w in words_out if w.lower() in expected_words)
-print(f"\nCorrect: {correct}/{len(words_out)} ({correct/max(1,len(words_out))*100:.0f}%)")
+print(f"\nCorrect: {correct}/{len(words_out)} ({correct / max(1, len(words_out)) * 100:.0f}%)")
 
 # === Part 3: Compare vibration coords vs encode_text for known words ===
 print()
@@ -123,6 +126,7 @@ print("PART 3: Vibration signature_id distribution")
 print("=" * 70)
 for word in ["the", "and", "krishna", "consciousness", "boys", "girls", "gospel"]:
     from vibe_core.mahamantra.substrate.phonetics.shabda import text_to_vibration
+
     text_vibs = text_to_vibration(word)
     text_sig_ids = [v.signature_id % 49 for v in text_vibs]
     text_coords = encode_text(word)

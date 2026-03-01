@@ -190,10 +190,18 @@ def evaluate_strategy(state: Any, strategy_planner: Any) -> None:
             if signal_parts:
                 parts.append(f"Signals: {'; '.join(signal_parts)}")
             city_context = " | ".join(parts) if parts else ""
-            logger.info(f"FEDERATION: {len(city_posts)} city posts ({len(report_parts)} reports, {len(signal_parts)} signals)")
-            emit_event("PRAYER_RECEIVED", f"CityReport received: {len(report_parts)} reports, {len(signal_parts)} signals", {
-                "source": "federation", "reports": len(report_parts), "signals": len(signal_parts),
-            })
+            logger.info(
+                f"FEDERATION: {len(city_posts)} city posts ({len(report_parts)} reports, {len(signal_parts)} signals)"
+            )
+            emit_event(
+                "PRAYER_RECEIVED",
+                f"CityReport received: {len(report_parts)} reports, {len(signal_parts)} signals",
+                {
+                    "source": "federation",
+                    "reports": len(report_parts),
+                    "signals": len(signal_parts),
+                },
+            )
     except Exception as e:
         logger.warning(f"Federation feed extraction failed: {e}")
 
@@ -257,9 +265,7 @@ def _parse_city_report(title: str, content: str) -> str:
         elif "ACK:" in line and "DIR-" in line:
             parts.append(line.strip("- "))
         # Mission results
-        elif line.startswith(("-",)) and any(
-            s in line for s in ("completed", "active", "failed")
-        ):
+        elif line.startswith(("-",)) and any(s in line for s in ("completed", "active", "failed")):
             parts.append(line.lstrip("- "))
         # PR results
         elif line.startswith(("-",)) and ("PR" in line or "pr_url" in line.lower()):
@@ -285,8 +291,7 @@ def _format_signal_title(topic: str, code_signals: frozenset) -> str:
         return f"[Signal] {topic}"
     # Check if keywords appear as substrings (e.g., "fixing" contains "fix")
     # but aren't exact words — prepend the base keyword
-    for signal in ("fix", "feature", "refactor", "test", "deploy",
-                    "implement", "bug", "api", "security", "merge"):
+    for signal in ("fix", "feature", "refactor", "test", "deploy", "implement", "bug", "api", "security", "merge"):
         if signal in topic.lower():
             return f"[Signal] {signal} — {topic}"
     # No code signal in topic at all — shouldn't happen since caller
@@ -310,12 +315,26 @@ def _dispatch_federation_intents(
 
     # Aligned with agent-city's MoltbookBridge.CODE_SIGNALS — both repos
     # must use the same vocabulary for word-split signal detection.
-    _CODE_SIGNALS = frozenset({
-        "bug", "fix", "feature", "implement", "refactor",
-        "test", "pr", "merge", "patch", "regression",
-        "deploy", "infrastructure", "api", "security",
-        "performance", "migration",
-    })
+    _CODE_SIGNALS = frozenset(
+        {
+            "bug",
+            "fix",
+            "feature",
+            "implement",
+            "refactor",
+            "test",
+            "pr",
+            "merge",
+            "patch",
+            "regression",
+            "deploy",
+            "infrastructure",
+            "api",
+            "security",
+            "performance",
+            "migration",
+        }
+    )
 
     for intent in intents[:3]:
         topic_lower = intent.topic.lower() if hasattr(intent, "topic") else ""
@@ -329,16 +348,21 @@ def _dispatch_federation_intents(
             intent.topic = _format_signal_title(intent.topic, _CODE_SIGNALS)
             if city_context:
                 intent.engagement_context = (
-                    f"{intent.engagement_context}. {city_context}"
-                    if intent.engagement_context else city_context
+                    f"{intent.engagement_context}. {city_context}" if intent.engagement_context else city_context
                 )
             logger.info(
                 f"FEDERATION: intent → m/agent-city: {intent.topic[:80]} "
                 f"(signals: {', '.join(sorted(matched_signals))})"
             )
-            emit_event("ACTION", f"Federation signal dispatched: {intent.topic[:80]}", {
-                "source": "federation", "signals": sorted(matched_signals), "target": "agent-city",
-            })
+            emit_event(
+                "ACTION",
+                f"Federation signal dispatched: {intent.topic[:80]}",
+                {
+                    "source": "federation",
+                    "signals": sorted(matched_signals),
+                    "target": "agent-city",
+                },
+            )
             return  # Max 1 per cycle
 
 

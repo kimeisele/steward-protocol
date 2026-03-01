@@ -247,8 +247,9 @@ assert _shruti_count == 22, f"SHRUTIS must be 22, got {_shruti_count}"
 assert _nakshatra_count == 27, f"NAKSHATRAS must be 27, got {_nakshatra_count}"
 
 # Verify: 4D + shruti is a BIJECTION (Pancha Tattva = 5 aspects of Absolute Truth)
-_5d_keys = {(COORD_ELEMENT[c], COORD_VARGA[c], COORD_SUB[c], COORD_HARMONIC[c], IS_SHRUTI[c])
-            for c in range(VARNAMALA_TOTAL)}
+_5d_keys = {
+    (COORD_ELEMENT[c], COORD_VARGA[c], COORD_SUB[c], COORD_HARMONIC[c], IS_SHRUTI[c]) for c in range(VARNAMALA_TOTAL)
+}
 assert len(_5d_keys) == VARNAMALA_TOTAL, "5D must be bijective on VARNAMALA"
 
 
