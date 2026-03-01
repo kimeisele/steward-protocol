@@ -1,6 +1,6 @@
 {
   "version": 3,
-  "timestamp": "2026-02-28T14:09:26.814287",
+  "timestamp": "2026-03-01T08:12:50.143208",
   "parampara": 37,
   "entries": {
     "balarama_test.json": {
@@ -23,25 +23,25 @@
       "key": "exists",
       "value": true,
       "source": "sovereign",
-      "timestamp": "2026-02-28T14:09:26.694856",
+      "timestamp": "2026-03-01T08:12:50.029560",
       "pierced": false,
-      "hash": "d997a59e284a3236"
+      "hash": "92353389911a8da5"
     },
     "a": {
       "key": "a",
       "value": 1,
       "source": "sovereign",
-      "timestamp": "2026-02-28T14:09:26.753352",
+      "timestamp": "2026-03-01T08:12:50.086130",
       "pierced": false,
-      "hash": "a6b03e78e9d04efb"
+      "hash": "fc8e55b3945504f8"
     },
     "b": {
       "key": "b",
       "value": 2,
       "source": "sovereign",
-      "timestamp": "2026-02-28T14:09:26.753391",
+      "timestamp": "2026-03-01T08:12:50.086162",
       "pierced": false,
-      "hash": "2010a1182cc9429d"
+      "hash": "bc38409189d1acae"
     },
     "test": {
       "key": "test",
@@ -111,9 +111,9 @@
       "key": "normal",
       "value": "overridden",
       "source": "sovereign",
-      "timestamp": "2026-02-28T14:09:26.782535",
+      "timestamp": "2026-03-01T08:12:50.114247",
       "pierced": true,
-      "hash": "9dea48449755f08c"
+      "hash": "c29308c96e7572e6"
     },
     "pierced1": {
       "key": "pierced1",
@@ -175,28 +175,28 @@
       "key": "answer",
       "value": 42,
       "source": "sovereign",
-      "timestamp": "2026-02-28T14:09:26.665008",
+      "timestamp": "2026-03-01T08:12:50.003166",
       "pierced": false,
-      "hash": "45f74472ba604ac6"
+      "hash": "0f5bf2eccaaff15e"
     },
     "x": {
       "key": "x",
       "value": 1,
       "source": "sovereign",
-      "timestamp": "2026-02-27T21:29:06.772888",
+      "timestamp": "2026-02-28T15:38:29.887178",
       "pierced": true,
-      "hash": "91cbb5784e38c6ec"
+      "hash": "c75b7b755db2bd9d"
     },
     "y": {
       "key": "y",
       "value": 2,
       "source": "sovereign",
-      "timestamp": "2026-02-27T21:29:06.772926",
+      "timestamp": "2026-02-28T15:38:29.887227",
       "pierced": true,
-      "hash": "8d8c9d4e1b7003fc"
+      "hash": "7251e1a7afb4645d"
     }
   },
-  "boot_count": 1377,
+  "boot_count": 1405,
   "thresholds": {
     "max_entries": 72,
     "kernel_reserve": 16,
