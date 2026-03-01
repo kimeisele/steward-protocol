@@ -6,16 +6,16 @@ DRIFT AUDITOR - Implements AuditProtocol (GADADHARA)
 "On the field of dharma, the field of Kuru, gathered to fight..."
 — Bhagavad Gita 1.1
 
-The DriftAuditor is the KSETRAJNA (knower) observing the KSETRA (field).
+The Auditor is the KSETRAJNA (knower) observing the KSETRA (field).
 It implements AuditProtocol and is GAD-000 compliant.
 
 GAD-000: ✓D ✓O ✓P ✓C ✓I ✓R
 Mayavad: CLEAR (signed by yamaraja via parampara)
 
 Usage:
-    from vibe_core.mahamantra.audit.drift import DriftAuditor
+    from vibe_core.mahamantra.audit.drift import Auditor
 
-    auditor = DriftAuditor()
+    auditor = Auditor()
     report = auditor.audit()  # Full AuditReport
 
     # Or atomic:
