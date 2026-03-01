@@ -211,7 +211,7 @@ These are factual line counts. Whether they should be decomposed is a separate d
 - `CellLifecycleState.integrity` is `int` (0–21600), NOT float.
 - `state_bridge.py` / `StateVector` are wrapper garbage, not the root.
 - `guardian_router.maha_respond()` is deprecated (0 callers).
-- `chat.py` is legacy.
+- `chat.py` is NOT legacy — `gateway/api.py` imports it (`flooded_routed_chat`, `get_guardian_for_message`). Do NOT delete. (Claim "legacy" was AI slop, corrected 2026-03-01.)
 - 30+ files write to disk uncontrolled. `StateService` exists, barely used.
 - Private keys: No `.key` files found in repo (checked 2026-02-22). Claim was stale.
 - Tests with blocking loops hang: `test_singularity`, `test_daemon*`, `test_gad`, `test_graph`, `test_entry`.

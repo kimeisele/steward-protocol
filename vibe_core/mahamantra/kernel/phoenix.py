@@ -12,6 +12,14 @@ Code assumes it can be killed ANYTIME.
 On restart: Read state → Continue where stopped.
 
 WATERTIGHT: All constants from SSOT (seed.py). NO MAGIC NUMBERS.
+
+STATUS: PREPARED INFRASTRUCTURE — 0 PRODUCTION CALLERS (verified 2026-03-01)
+=============================================================================
+maha_state.py reimplemented its own persistence independently.
+phoenix.py and maha_state.py are NOT wired together — do NOT wire them
+without understanding why they diverged. Double-wiring = double-writes.
+To use: explicitly call save_state(tick, lila_tick) after state mutations,
+and call init_phoenix() before the first tick. Neither is done in production.
 """
 
 from __future__ import annotations

@@ -9,6 +9,13 @@ degrees (Maya) and integer-based Lipta (Sat/Truth).
 
 Base: 1 Degree = 60 Lipta
 COSMIC_FRAME = 21600 Lipta (360 Degrees)
+
+STATUS: PREPARED INFRASTRUCTURE — 0 PRODUCTION IMPORTS (verified 2026-03-01)
+=============================================================================
+Only used in tests (test_lipta.py, test_resolution.py).
+clock.py already handles tick-level time for production use.
+If sub-degree resolution is needed: import from here — but check first
+whether clock.py already provides what you need.
 """
 
 from vibe_core.mahamantra.protocols._seed import QUARTERS
