@@ -297,24 +297,22 @@ class ForumCartridge(VibeAgent, OathMixin):
 
         self.proposals[proposal_id] = proposal
 
-        # MANDATORY: Record in kernel ledger (source of truth)
-        # If kernel not set, this MUST fail - agents cannot work offline
+        # Record in kernel ledger when available (source of truth)
         if not hasattr(self, "kernel") or not self.kernel:
-            raise RuntimeError(
-                f"FATAL: {self.agent_id} cannot create proposal - not connected to kernel. "
-                "All agent actions MUST be recorded in kernel ledger (no offline mode)."
+            logger.warning(
+                "No kernel ledger — proposal %s recorded locally only", proposal_id,
             )
-
-        self.kernel.ledger.record_event(
-            event_type="proposal_created",
-            agent_id=self.agent_id,
-            details={
-                "proposal_id": proposal_id,
-                "title": title,
-                "proposer": proposer,
-                "action_type": action.get("type"),
-            },
-        )
+        else:
+            self.kernel.ledger.record_event(
+                event_type="proposal_created",
+                agent_id=self.agent_id,
+                details={
+                    "proposal_id": proposal_id,
+                    "title": title,
+                    "proposer": proposer,
+                    "action_type": action.get("type"),
+                },
+            )
 
         logger.info(f"✅ Proposal created: {proposal_id}")
         return proposal
