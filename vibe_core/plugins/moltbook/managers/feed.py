@@ -97,7 +97,19 @@ class FeedAnalyzer:
         # ALL posts become topics for strategy (DHARMA needs context, not just new posts)
         feed_topics = posts if isinstance(posts, list) else []
 
-        # Source 2: Semantic search — discover content beyond the hot feed
+        # Source 2: Federation feed — direct m/agent-city submolt posts (no algorithm dependency)
+        try:
+            city_posts = run_async(client.get_submolt_feed("agent-city", sort="new", limit=10))
+            if city_posts:
+                existing_ids = {p.get("id") for p in feed_topics if isinstance(p, dict)}
+                new_city = [p for p in city_posts if isinstance(p, dict) and p.get("id") not in existing_ids]
+                feed_topics = feed_topics + new_city
+                if new_city:
+                    logger.info(f"Federation feed: {len(new_city)} m/agent-city posts added")
+        except Exception as e:
+            logger.debug(f"Federation feed fetch skipped: {e}")
+
+        # Source 3: Semantic search — discover content beyond the hot feed
         if service and mission_descriptions:
             semantic_results = self._search_related_content(
                 service,

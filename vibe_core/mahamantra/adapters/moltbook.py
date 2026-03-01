@@ -806,6 +806,35 @@ class MoltbookClient:
 
         return await self._request("GET", f"/submolts/{quote(name, safe='')}")
 
+    async def get_submolt_feed(self, name: str, sort: str = "new", limit: int = 25) -> List[MoltbookPost]:
+        """GET /submolts/NAME/posts — posts in a specific submolt.
+
+        Direct endpoint (no algorithm dependency). Falls back to
+        personalized feed + client-side filter if endpoint doesn't exist.
+        """
+        from urllib.parse import quote
+
+        try:
+            res = await self._request(
+                "GET",
+                f"/submolts/{quote(name, safe='')}/posts?sort={quote(sort, safe='')}&limit={limit}",
+            )
+            if isinstance(res, dict):
+                return res.get("posts", res.get("items", []))
+            return res if isinstance(res, list) else []
+        except Exception:
+            # Endpoint may not exist — fallback to personalized feed + filter
+            feed = await self.get_personalized_feed(sort=sort, limit=limit * 2)
+            return [
+                p for p in feed
+                if isinstance(p, dict)
+                and (p.get("submolt", {}) or {}).get("name", "") == name
+            ]
+
+    def sync_get_submolt_feed(self, name: str, sort: str = "new", limit: int = 25) -> List[MoltbookPost]:
+        """Sync wrapper for submolt-specific feed."""
+        return run_async(self.get_submolt_feed(name, sort, limit))
+
     # =========================================================================
     # RAJAS — Write/create endpoints
     # =========================================================================
