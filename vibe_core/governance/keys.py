@@ -24,7 +24,7 @@ __genesis__ = "0x8bc4596e"  # GenesisByte: parampara % 37 == 0
 from typing import Dict, Final
 
 # The Source of Truth (SHA-256 Hashes)
-# Updated: 2026-01-09
+# Updated: 2026-03-01
 # Status: GAD-000_ACTIVE
 VAJRA_KEYS: Final[Dict[str, str]] = {
     # -------------------------------------------------------------------------
@@ -35,37 +35,36 @@ VAJRA_KEYS: Final[Dict[str, str]] = {
     # -------------------------------------------------------------------------
     # Ring 0: The Kernel Core
     # -------------------------------------------------------------------------
-    "vibe_core/kernel_impl.py": "6f1121c28fdbef4cc463b76ed5cef2f53b20f8b30275a4e0284205aaa1a393dd",
-    "vibe_core/kernel_ops.py": "51ddee7fb5e0b4f01a9e5620768dac5b53cd315022ef92afe155de66dab7c83f",
-    "vibe_core/ledger.py": "33d222ea5fc0914a14c40aec230046f56e532372cb20df77c01d44b89b7923a0",
+    "vibe_core/kernel_impl.py": "1b13aaf8922803117366936ffdf11a1c7f29672ff78bec00f7cc45f5ee85d790",
+    "vibe_core/kernel_ops.py": "6a534cf9d2223afbb1e45a81b047305074389eea0bf80dc86c4d92aab641680a",
+    "vibe_core/ledger.py": "29d9851fc657105b51a0803fce424bf2f0f5f2c97375d7335689e8fd3f9dfe95",
     # -------------------------------------------------------------------------
     # Ring 0: Protocols & Security
     # -------------------------------------------------------------------------
-    "vibe_core/security.py": "52df4028c883f95c92a469f1e9bd496e31c003ce858791a4a69778f933770c9f",  # Updated for GAD-000
-    "vibe_core/protocols/integrity.py": "5e31909db28c991a7f3312021334a2c00c32e8372f5848ee259c2ee5189da071",  # Updated for Keys Registry
-    "vibe_core/protocols/substrate.py": "b544708985646609ba912a186ee08fde7266f46ee4f1bc0e51613742310c6788",
-    "vibe_core/narasimha.py": "2c9ce88ba49216c97020d2741f65015ab86748d0becfa6e065261ab8adbb8fdf",
-    "vibe_core/capability_registry.py": "bac393afde8744a51afbb8e7cd7368da306d6a6f44660f88354f583facfc04bb",
-    "vibe_core/bridge.py": "a79b06711964e1a5ef932e18280076e69e6922eaf3ddeae3a59b7a20847843a5",
+    "vibe_core/security.py": "75079fb4d3da06e7fdf229205c6daec65b1a6b8d5e3e6afa961782927cefe29f",
+    "vibe_core/protocols/integrity.py": "f93068c27ffc903e914f02c8a9e0cb8fa9af4fb7da572a5a23b25976df9d1317",
+    "vibe_core/narasimha.py": "83cf86e74e4e41ddb56da01fd8714ce6143328e05446f2e05edac6b3896828c0",
+    "vibe_core/capability_registry.py": "90554ad9e8be887a57b46e56ca34fff3e41def58421ec011e0e633645cd4b62d",
+    "vibe_core/bridge.py": "7fd3b58c5b23d2b25328f1537434f4a5a44e4d1a8f7fd5b89c9442fd16edff7a",
     # -------------------------------------------------------------------------
     # Ring 0: Plugin System
     # -------------------------------------------------------------------------
-    "vibe_core/plugin_protocol.py": "5d9e469d7b2096fcf5fb8af66ce45e58cd07dbf901bd4e9ed17209d42032d6eb",
-    "vibe_core/plugin_loader.py": "042b8f96bae10c8782cdfc6fcfc49651f25e20601d67c8f2d4f15ec79da04181",
+    "vibe_core/plugin_protocol.py": "79f392b81a5225db48b0043252826fcad807151172baf7e04e8d70c763d0ea61",
+    "vibe_core/plugin_loader.py": "9c128fcedd4b79fd1bd3b5ba1dbf1692866d41b51d96d56bd83e46add0ee8d0c",
     # -------------------------------------------------------------------------
     # Ring 0: Infrastructure & Workflows
     # -------------------------------------------------------------------------
-    ".github/workflows/attest.yml": "a546c5cf343917b31ede30c68ffe7cf2ea97fae41b0ea9ffcbf20f719f9b668c",
+    ".github/workflows/attest.yml": "f3ba967ba00dbb13a1bea80710113d24096c2118f71b580b6c2f9d1777dbf476",
     ".github/workflows/container-build.yml": "d303af901e0d3d9031436c40cbda9b5b7d8b5f8e125ab1c81762ffa9d9103805",
-    ".github/workflows/deploy.yml": "5b86104b01fe4fc2f6371b1ad56dce89795c161ef868dc88e081581beab34ed1",
+    ".github/workflows/deploy.yml": "f5588380fd8485dfa6f49d79533f9c284768332dc09b846298ea5d3fc6e98ba8",
     ".github/workflows/factory.yml": "8a313882e7e9e969b6e8b036753a71a6a248c37f3b5cdce304172bda3967c3ae",
-    ".github/workflows/heartbeat.yml": "6be13990888a0b38104a89cf4c6e985cacca08c2921833dc74502718ec154d0b",
+    ".github/workflows/heartbeat.yml": "76f6233d98fa9c5a950d3348b8144b5406cf67b7d6c0a233e67179bdea12a9f3",
     ".github/workflows/integration-tests.yml": "06c4ae417af9190095fd198e812598828ca5abc28cfd33fcd5864d8355e912a6",
-    ".github/workflows/scheduled-agents.yml": "a2e678ec15ba0ebd7bf7c6ed96605fbdb47a77e732d1b5af880f9616405cc082",
+    ".github/workflows/scheduled-agents.yml": "2d0171d56ad9d6a43e2466dfa4a0cf4f4cca35075dbfbcf6ec7ae1d2a4d02673",
     ".github/workflows/scribe-docs.yml": "05761742e35a98505a8c662b190e2a675745e49fdb1efbde7c372cbe3d4b0076",
     ".github/workflows/steward-ci.yml": "a29bdc460b439cb441c60076d95b1d8210cf18a3fda9b55febbb124b3497322e",
     ".github/workflows/system-cycle.yml": "a3fb672d1797e4a541f5aea81472c5b3c6e0a8020fc483ce82842342ba67da85",
-    ".pre-commit-config.yaml": "f510af9dbfc4ae191c95d1d05ba12b38f1471b12d8aa72f14e088ef49f055dc4",
-    ".gitignore": "2787351a91ba738b66b45f3e19da8304410ef91175ef541850c33bab183e7320",
-    "scripts/governance/vishnu_guard.py": "ad997b101704806ec414b712a51db4a79e2a897b4e1077df540d1c587df09171",
+    ".pre-commit-config.yaml": "ba9dc60e931e3991977f4af6992c7ecc2389dd70a333ba6cf42080a9105a33f3",
+    ".gitignore": "25dfceb236f249bb7ab6ebd2290a539a435bae099f1af7b44dcd62ed882c6a8d",
+    "scripts/governance/vishnu_guard.py": "035679d169c5a5d4cc3a2813c0c254b467b922abfd631f5f2647be2eb336d600",
 }
