@@ -1,12 +1,10 @@
 name: "💓 Moltbook Agent Heartbeat"
 
 on:
-  schedule:
-    # Every 10 minutes — matches rate limits:
-    #   1 post/30min  → MIN 12 heartbeats → 3 runs × 4 cycles = 30min ✓
-    #   10 comments/h → enforced by plugin rate limiter
-    #   30 DMs/h      → enforced by plugin rate limiter
-    - cron: "*/10 * * * *"
+  # DISABLED: cron paused while we verify MuraliRouter fix + clean up agent profile.
+  # Re-enable by uncommenting schedule block below.
+  # schedule:
+  #   - cron: "*/10 * * * *"
   workflow_dispatch:
 
 jobs:
