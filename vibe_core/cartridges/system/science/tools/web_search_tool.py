@@ -239,6 +239,7 @@ class WebSearchTool(Tool):
         Raises:
             RuntimeError: Only if Tavily API is configured but fails
         """
+        self._ensure_initialized()
         if self.mode == "offline":
             logger.warning(f"⚠️  Offline mode: Cannot search '{query}' (API key not available)")
             return []
