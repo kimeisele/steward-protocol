@@ -96,6 +96,9 @@ class CivicBank:
             logger.error(f"❌ Vault init failed unexpectedly: {e}")
             self.vault = None
 
+        import threading
+        self._lock = threading.Lock()
+
         logger.info(f"🏦 CivicBank initialized at {self.DB_PATH}")
 
     def _init_db(self):
@@ -221,80 +224,103 @@ class CivicBank:
         if amount <= 0:
             raise ValueError("Amount must be positive")
 
-        with self.conn:  # Atomic transaction block
-            cur = self.conn.cursor()
+        with self._lock:
+            with self.conn:  # Atomic transaction block
+                cur = self.conn.cursor()
 
-            # 1. CHECK FUNDS (unless sender is MINT)
-            if sender != "MINT":
-                sender_balance = self.get_balance(sender)
-                if sender_balance < amount:
-                    raise InsufficientFundsError(f"{sender} has {sender_balance}, needs {amount}")
+                # 1. CHECK FUNDS & FROZEN STATUS ATOMICALLY
+                if sender != "MINT":
+                    # We do the balance check and frozen check IN THE UPDATE statement
+                    # to guarantee atomic operation even under high concurrency.
+                    # If rowcount == 0, either they don't exist, lack funds, or are frozen.
+                    
+                    # First check exactly why it might fail to give a good error message
+                    cur.execute("SELECT balance, is_frozen FROM accounts WHERE agent_id = ?", (sender,))
+                    row = cur.fetchone()
+                    
+                    if not row:
+                        raise InsufficientFundsError(f"Account {sender} does not exist")
+                        
+                    if row["is_frozen"]:
+                        # Ensure we have a specific exception type for frozen accounts, 
+                        # but for now raise ValueError or InsufficientFundsError
+                        raise ValueError(f"Account {sender} is frozen and cannot transfer funds")
+                        
+                    if row["balance"] < amount:
+                        raise InsufficientFundsError(f"{sender} has {row['balance']}, needs {amount}")
 
-            # 2. PREPARE DATA
-            timestamp = datetime.utcnow().isoformat()
-            prev_hash = self.get_last_hash()
+                    # NOW the atomic UPDATE that prevents double-spend race conditions
+                    timestamp = datetime.utcnow().isoformat()
+                    cur.execute(
+                        "UPDATE accounts SET balance = balance - ?, updated_at = ? "
+                        "WHERE agent_id = ? AND balance >= ? AND is_frozen = 0",
+                        (amount, timestamp, sender, amount),
+                    )
+                    
+                    if cur.rowcount == 0:
+                        # Race condition caught! State changed between SELECT and UPDATE.
+                        raise InsufficientFundsError(f"Atomic transfer failed: {sender} lacks funds or was frozen during transaction")
+                else:
+                    timestamp = datetime.utcnow().isoformat()
 
-            # Generate Transaction ID & Hash
-            raw_data = f"{timestamp}{sender}{receiver}{amount}{reason}{prev_hash}"
-            tx_hash = hashlib.sha256(raw_data.encode()).hexdigest()
-            tx_id = f"TX-{tx_hash[:8]}"
+                # 2. PREPARE DATA
+                prev_hash = self.get_last_hash()
 
-            # 3. RECORD TRANSACTION (Master Record - Immutable)
-            cur.execute(
-                """
-                INSERT INTO transactions
-                (tx_id, timestamp, sender_id, receiver_id, amount, reason, service_type, previous_hash, tx_hash)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """,
-                (
-                    tx_id,
-                    timestamp,
-                    sender,
-                    receiver,
-                    amount,
-                    reason,
-                    service_type,
-                    prev_hash,
-                    tx_hash,
-                ),
-            )
+                # Generate Transaction ID & Hash
+                raw_data = f"{timestamp}{sender}{receiver}{amount}{reason}{prev_hash}"
+                tx_hash = hashlib.sha256(raw_data.encode()).hexdigest()
+                tx_id = f"TX-{tx_hash[:8]}"
 
-            # 4. RECORD ENTRIES (Double-Entry Detail)
-            # Entry 1: Sender loses money (DEBIT)
-            cur.execute(
-                "INSERT INTO entries (tx_id, agent_id, side, amount) VALUES (?, ?, 'DEBIT', ?)",
-                (tx_id, sender, amount),
-            )
-
-            # Entry 2: Receiver gains money (CREDIT)
-            cur.execute(
-                "INSERT INTO entries (tx_id, agent_id, side, amount) VALUES (?, ?, 'CREDIT', ?)",
-                (tx_id, receiver, amount),
-            )
-
-            # 5. UPDATE BALANCES (Denormalized State Cache)
-            # Update Sender
-            if sender != "MINT":
+                # 3. RECORD TRANSACTION (Master Record - Immutable)
                 cur.execute(
-                    "UPDATE accounts SET balance = balance - ?, updated_at = ? WHERE agent_id = ?",
-                    (amount, timestamp, sender),
+                    """
+                    INSERT INTO transactions
+                    (tx_id, timestamp, sender_id, receiver_id, amount, reason, service_type, previous_hash, tx_hash)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                    (
+                        tx_id,
+                        timestamp,
+                        sender,
+                        receiver,
+                        amount,
+                        reason,
+                        service_type,
+                        prev_hash,
+                        tx_hash,
+                    ),
                 )
 
-            # Ensure Receiver exists and update
-            cur.execute(
-                "INSERT OR IGNORE INTO accounts (agent_id, balance) VALUES (?, 0)",
-                (receiver,),
-            )
-            cur.execute(
-                "UPDATE accounts SET balance = balance + ?, updated_at = ? WHERE agent_id = ?",
-                (amount, timestamp, receiver),
-            )
+                # 4. RECORD ENTRIES (Double-Entry Detail)
+                # Entry 1: Sender loses money (DEBIT)
+                cur.execute(
+                    "INSERT INTO entries (tx_id, agent_id, side, amount) VALUES (?, ?, 'DEBIT', ?)",
+                    (tx_id, sender, amount),
+                )
 
-            logger.info(f"💸 Transfer: {sender} → {receiver} ({amount} credits)")
-            logger.info(f"   Reason: {reason}")
-            logger.info(f"   TX: {tx_id}")
+                # Entry 2: Receiver gains money (CREDIT)
+                cur.execute(
+                    "INSERT INTO entries (tx_id, agent_id, side, amount) VALUES (?, ?, 'CREDIT', ?)",
+                    (tx_id, receiver, amount),
+                )
 
-            return tx_id
+                # 5. UPDATE RECEIVER BALANCE
+                # Sender was already updated atomically at step 1.
+                # Ensure Receiver exists and update
+                cur.execute(
+                    "INSERT OR IGNORE INTO accounts (agent_id, balance) VALUES (?, 0)",
+                    (receiver,),
+                )
+                cur.execute(
+                    "UPDATE accounts SET balance = balance + ?, updated_at = ? WHERE agent_id = ?",
+                    (amount, timestamp, receiver),
+                )
+
+                logger.info(f"💸 Transfer: {sender} → {receiver} ({amount} credits)")
+                logger.info(f"   Reason: {reason}")
+                logger.info(f"   TX: {tx_id}")
+
+                return tx_id
 
     def freeze_account(self, agent_id: str, reason: str = "violation") -> None:
         """
@@ -306,10 +332,11 @@ class CivicBank:
             agent_id: Agent to freeze
             reason: Reason for freezing
         """
-        with self.conn:
-            cur = self.conn.cursor()
-            cur.execute("UPDATE accounts SET is_frozen = 1 WHERE agent_id = ?", (agent_id,))
-            logger.warning(f"🔒 Account frozen: {agent_id} ({reason})")
+        with self._lock:
+            with self.conn:
+                cur = self.conn.cursor()
+                cur.execute("UPDATE accounts SET is_frozen = 1 WHERE agent_id = ?", (agent_id,))
+                logger.warning(f"🔒 Account frozen: {agent_id} ({reason})")
 
     def unfreeze_account(self, agent_id: str, reason: str = "manual_override") -> None:
         """
@@ -319,9 +346,10 @@ class CivicBank:
             agent_id: Agent to unfreeze
             reason: Reason for unfreezing (e.g., "Compliance Restored")
         """
-        with self.conn:
-            cur = self.conn.cursor()
-            timestamp = datetime.utcnow().isoformat()
+        with self._lock:
+            with self.conn:
+                cur = self.conn.cursor()
+                timestamp = datetime.utcnow().isoformat()
 
             # Update account
             cur.execute(

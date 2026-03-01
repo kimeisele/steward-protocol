@@ -95,6 +95,7 @@ class StrategicIntent:
     buddhi_chapter: int = 0  # BG chapter 1-18
     buddhi_prana: int = 0  # energy 0-21600
     buddhi_integrity: float = 0.0  # membrane 0.0-1.0
+    target_submolt: str = ""  # Override submolt selection (e.g., "agent-city" for federation)
 
 
 @dataclass

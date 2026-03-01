@@ -221,6 +221,52 @@ class FeedAnalyzer:
         )
         logger.info(f"Own submolt '{self._OWN_SUBMOLT}' ensured + subscription queued")
 
+    # Federation channel — m/agent-city submolt for cross-repo communication
+    _FEDERATION_SUBMOLT = "agent-city"
+
+    def ensure_federation_submolt(self, client: MoltbookProtocol, content_queue: ContentQueue) -> None:
+        """Ensure subscribed to m/agent-city for federation channel.
+
+        Does NOT create the submolt (it already exists). Just subscribes.
+        """
+        if self._FEDERATION_SUBMOLT in self._subscribed_submolts:
+            return  # Already subscribed
+
+        self._subscribed_submolts.add(self._FEDERATION_SUBMOLT)
+        proposal: ContentProposal = {
+            "content_type": ContentType.SUBSCRIBE.value,
+            "submolt": self._FEDERATION_SUBMOLT,
+            "source": "federation_init",
+            "priority": 0,
+        }
+        content_queue.enqueue(proposal)
+        logger.info(f"FEDERATION: subscription queued for m/{self._FEDERATION_SUBMOLT}")
+
+    @staticmethod
+    def extract_city_feed(
+        feed_topics: List[Dict[str, object]],
+        own_agent: str = "steward-protocol",
+    ) -> List[Dict[str, object]]:
+        """Extract m/agent-city posts from feed — federation inbound channel.
+
+        Returns posts from other agents posted to m/agent-city.
+        These represent agent-city status updates, requests, and reports.
+        """
+        city_posts: List[Dict[str, object]] = []
+        for post in feed_topics:
+            if not isinstance(post, dict):
+                continue
+            submolt = post.get("submolt", {})
+            submolt_name = submolt.get("name", "") if isinstance(submolt, dict) else str(submolt)
+            if submolt_name != "agent-city":
+                continue
+            author = post.get("author", {})
+            author_name = author.get("name", "") if isinstance(author, dict) else ""
+            if author_name == own_agent:
+                continue  # Skip own posts
+            city_posts.append(post)
+        return city_posts
+
     def discover_submolts(self, client: MoltbookProtocol, content_queue: ContentQueue) -> None:
         """Discover and subscribe to relevant submolts via resonance scoring.
 

@@ -140,8 +140,9 @@ class IntentExecutor:
         intent_dict = intent.__dict__ if hasattr(intent, "__dict__") else intent
         seed = intent_dict.get("topic", "")
 
-        # Select best submolt via resonance cross-scoring
-        selected_submolt = self._select_submolt(seed)
+        # Select submolt: explicit target (federation) or resonance cross-scoring
+        target = intent_dict.get("target_submolt", "")
+        selected_submolt = target if target else self._select_submolt(seed)
 
         # Build meaningful context: name + description (not bare name)
         submolt_ctx = intent_dict.get("submolt_context", "")

@@ -760,6 +760,7 @@ class MoltbookPlugin(KernelPlugin):
 
     def _discover_submolts(self) -> None:
         self._feed.ensure_own_submolt(self._s.client, self._s.content_queue)
+        self._feed.ensure_federation_submolt(self._s.client, self._s.content_queue)
         self._feed.discover_submolts(self._s.client, self._s.content_queue)
 
     def _select_submolt(self, seed_text: str) -> Optional[str]:

@@ -835,10 +835,10 @@ class TestSubmoltDiscovery:
             {"name": "governance", "display_name": "Governance"},
         ]
         plugin._discover_submolts()
-        assert plugin._content_queue.size == 2
+        assert plugin._content_queue.size == 3  # 2 discovered + 1 federation (agent-city)
         proposals = plugin._content_queue.drain(5)
         names = {p["submolt"] for p in proposals}
-        assert names == {"ai_agents", "governance"}
+        assert names == {"ai_agents", "governance", "agent-city"}
         for p in proposals:
             assert p["content_type"] == ContentType.SUBSCRIBE.value
 
@@ -851,14 +851,14 @@ class TestSubmoltDiscovery:
             {"name": "governance", "display_name": "Governance"},
         ]
         plugin._discover_submolts()
-        assert plugin._content_queue.size == 1  # Only governance
+        assert plugin._content_queue.size == 2  # governance + agent-city (federation)
 
     def test_discover_handles_empty(self, plugin):
         """No crash when no submolts exist."""
         plugin._subscribed_submolts.add("steward-protocol")  # Skip ensure_own_submolt
         plugin._client._mock_db["submolts"] = []
         plugin._discover_submolts()
-        assert plugin._content_queue.size == 0
+        assert plugin._content_queue.size == 1  # agent-city federation subscription
 
     def test_subscribed_tracked(self, plugin):
         """_subscribed_submolts set is populated after discovery."""

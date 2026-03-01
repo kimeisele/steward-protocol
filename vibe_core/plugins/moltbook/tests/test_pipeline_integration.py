@@ -352,8 +352,8 @@ class TestPromptConstruction:
 
     def test_prompt_has_cognitive_frame(self):
         prompt = self._build_prompt(MOLTBOOK_POSTS[0])
-        # Must contain computed cognitive signals (Mode, Chapter, Phase)
-        assert "Mode:" in prompt, f"No cognitive mode in prompt: {prompt[:200]}"
+        # Must contain template identity (Style) and cognitive signals (Chapter, Phase)
+        assert "Style:" in prompt, f"No style in prompt: {prompt[:200]}"
         assert "Chapter" in prompt, f"No chapter in prompt: {prompt[:200]}"
 
     def test_prompt_has_verse_concepts(self):
