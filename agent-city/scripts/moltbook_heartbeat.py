@@ -45,6 +45,16 @@ class MinimalKernel:
         return None
 
 
+def _get_kernel():
+    """Get StandaloneKernel (full VibeKernel interface) or fallback to MinimalKernel."""
+    try:
+        from vibe_core.standalone_kernel import get_standalone_kernel
+        return get_standalone_kernel()
+    except Exception as e:
+        logger.warning(f"StandaloneKernel unavailable, using MinimalKernel: {e}")
+        return MinimalKernel()
+
+
 def _resolve_api_key() -> str:
     """Resolve API key: env → credentials file."""
     api_key = os.environ.get("MOLTBOOK_API_KEY", "")
@@ -91,7 +101,7 @@ def main() -> int:
         return 1
 
     plugin = MoltbookPlugin()
-    kernel = MinimalKernel()
+    kernel = _get_kernel()
 
     # Boot with config
     config = {

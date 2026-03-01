@@ -5,6 +5,10 @@ on:
     - cron: "*/10 * * * *"
   workflow_dispatch:
 
+concurrency:
+  group: moltbook-heartbeat
+  cancel-in-progress: false
+
 jobs:
   moltbook-heartbeat:
     name: "💓 Moltbook Agent"
@@ -41,4 +45,8 @@ jobs:
           git config user.name "steward-protocol[bot]"
           git config user.email "steward-protocol[bot]@users.noreply.github.com"
           git add -f .vibe/state/*.json .vibe/state/mahamantra/*.json .vibe/state/moltbook_activity_log 2>/dev/null || true
-          git diff --cached --quiet || git commit -m "state: persist moltbook agent state (heartbeat)" && git push || true
+          if ! git diff --cached --quiet; then
+            git commit -m "state: persist moltbook agent state (heartbeat)"
+            git pull --rebase origin main || true
+            git push || true
+          fi
