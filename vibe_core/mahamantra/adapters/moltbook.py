@@ -274,17 +274,70 @@ class ChallengeSolver:
         return None
 
     @staticmethod
+    def _deobfuscate(text: str) -> str:
+        """Strip Moltbook's obfuscation layer from challenge text.
+
+        Challenges use mixed case, inserted punctuation, repeated chars,
+        and spaces mid-word: "ThReEe" → "three", "tW/eN tY" → "twenty".
+
+        Steps:
+        1. Lowercase
+        2. Remove non-alpha/space chars (keeps digits too)
+        3. Collapse repeated consecutive chars (threee→three, striiikes→strikes)
+        4. Rejoin split words by trying merges against known vocabulary
+        """
+        text = text.lower()
+        # Remove non-alphanumeric (keep spaces and digits)
+        text = re.sub(r"[^a-z0-9\s]", "", text)
+        # Collapse repeated consecutive letters (threee → three, looobsssster → lobster)
+        text = re.sub(r"(.)\1{2,}", r"\1", text)  # 3+ repeats → 1
+        text = re.sub(r"([a-z])\1", r"\1", text)  # 2 repeats → 1 (conservative)
+        # Collapse multiple spaces
+        text = re.sub(r"\s+", " ", text).strip()
+
+        # Rejoin split words: "twen ty" → "twenty", "se ven" → "seven"
+        # Try merging adjacent word fragments against known number/operator words
+        known_words = {
+            "zero", "one", "two", "three", "four", "five", "six", "seven",
+            "eight", "nine", "ten", "eleven", "twelve", "thirteen", "fourteen",
+            "fifteen", "sixteen", "seventeen", "eighteen", "nineteen", "twenty",
+            "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety",
+            "hundred", "thousand", "million",
+            "plus", "minus", "times", "multiply", "divide", "divided",
+            "add", "subtract", "total", "force", "speed", "velocity",
+            "strikes", "swims", "applies", "exerts", "slows", "new", "what",
+            "lobster", "claw", "newtons", "meters", "second", "per",
+        }
+        words = text.split()
+        merged: list = []
+        i = 0
+        while i < len(words):
+            # Try merging current + next
+            if i + 1 < len(words):
+                combo = words[i] + words[i + 1]
+                if combo in known_words or any(combo.startswith(k) for k in known_words if len(k) >= 4):
+                    # Check if the combo IS a known word
+                    if combo in known_words:
+                        merged.append(combo)
+                        i += 2
+                        continue
+            merged.append(words[i])
+            i += 1
+        return " ".join(merged)
+
+    @staticmethod
     def _normalize_text(challenge_text: str) -> str:
         """Convert challenge text to evaluable math expression.
 
         Order matters:
+        0. Deobfuscate (strip Moltbook's obfuscation layer)
         1. Resolve hyphenated compounds (twenty-three → twentythree)
         2. Replace word-numbers with digits
         3. Join adjacent tens+units (20 3 → 23)
         4. Replace operator words with symbols
         5. Clean up non-math characters
         """
-        text = challenge_text.lower()
+        text = ChallengeSolver._deobfuscate(challenge_text)
 
         # Step 1: Resolve hyphenated number compounds BEFORE splitting hyphens.
         # "twenty-three" → "twentythree" (fused, so word-sub gives "203")
@@ -1016,6 +1069,14 @@ class MoltbookClient:
     def sync_get_dm_messages(self, conversation_id: str) -> List[DMMessage]:
         """Sync wrapper for DM reading."""
         return run_async(self.get_dm_messages(conversation_id))  # type: ignore
+
+    def sync_get_dm_requests(self) -> List[Dict[str, Any]]:
+        """Sync wrapper for DM requests listing."""
+        return run_async(self.get_dm_requests())
+
+    def sync_approve_dm_request(self, request_id: str) -> Dict[str, Any]:
+        """Sync wrapper for DM request approval."""
+        return run_async(self.approve_dm_request(request_id))
 
 
 def run_async(coro):
