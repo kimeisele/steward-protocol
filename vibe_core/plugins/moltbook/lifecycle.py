@@ -186,6 +186,9 @@ def evaluate_strategy(state: Any, strategy_planner: Any) -> None:
                 parts.append(f"Signals: {'; '.join(signal_parts)}")
             city_context = " | ".join(parts) if parts else ""
             logger.info(f"FEDERATION: {len(city_posts)} city posts ({len(report_parts)} reports, {len(signal_parts)} signals)")
+            emit_event("PRAYER_RECEIVED", f"CityReport received: {len(report_parts)} reports, {len(signal_parts)} signals", {
+                "source": "federation", "reports": len(report_parts), "signals": len(signal_parts),
+            })
     except Exception as e:
         logger.warning(f"Federation feed extraction failed: {e}")
 
@@ -314,6 +317,9 @@ def _dispatch_federation_intents(
                 f"FEDERATION: intent → m/agent-city: {intent.topic[:80]} "
                 f"(signals: {', '.join(sorted(matched_signals))})"
             )
+            emit_event("ACTION", f"Federation signal dispatched: {intent.topic[:80]}", {
+                "source": "federation", "signals": sorted(matched_signals), "target": "agent-city",
+            })
             return  # Max 1 per cycle
 
 
