@@ -7,6 +7,7 @@ import json
 import logging
 import os
 import sys
+from datetime import datetime
 from pathlib import Path
 from typing import Optional, Set
 
@@ -923,6 +924,228 @@ def serve_markdown(filepath: str):
 
     # Serve with UTF-8
     return PlainTextResponse(content=doc_path.read_text(encoding="utf-8"), media_type="text/markdown; charset=utf-8")
+
+
+# --- FEDERATION NADI ENDPOINTS (agent-city ↔ steward-protocol bridge) ---
+
+_federation_nadi = None  # Lazy-loaded
+
+
+def _get_federation_nadi():
+    """Lazy-load FederationNadi instance."""
+    global _federation_nadi
+    if _federation_nadi is None:
+        try:
+            from vibe_core.mahamantra.federation import FederationNadi
+
+            _federation_nadi = FederationNadi(federation_dir="data/federation")
+        except Exception as e:
+            logger.error(f"Failed to initialize FederationNadi: {e}")
+            return None
+    return _federation_nadi
+
+
+@app.get("/api/federation/outbox")
+def get_federation_outbox(skip_expired: bool = Query(True)):
+    """
+    Read messages from agent-city's outbox.
+
+    Returns all pending FederationMessages from agent-city,
+    sorted by priority (highest first).
+
+    Query Parameters:
+        skip_expired: Skip TTL-expired messages (default: True)
+    """
+    try:
+        nadi = _get_federation_nadi()
+        if not nadi:
+            raise HTTPException(status_code=503, detail="Federation Nadi not available")
+
+        messages = nadi.receive()
+
+        return {
+            "status": "success",
+            "count": len(messages),
+            "messages": [msg.to_dict() for msg in messages],
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Federation outbox fetch failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/federation/inbox")
+async def write_federation_inbox(request: Request):
+    """
+    Write a message to agent-city's inbox.
+
+    Request body should be a JSON object with:
+        source: str (e.g., "steward-protocol")
+        target: str (e.g., "agent-city")
+        operation: str (e.g., "federation_sync")
+        payload: dict (message data)
+        priority: int (0-3, optional, default=1)
+        correlation_id: str (optional)
+        ttl_s: float (optional, default=900)
+    """
+    try:
+        nadi = _get_federation_nadi()
+        if not nadi:
+            raise HTTPException(status_code=503, detail="Federation Nadi not available")
+
+        body = await request.json()
+
+        # Extract and validate required fields
+        source = body.get("source", "steward-protocol")
+        target = body.get("target", "")
+        operation = body.get("operation", "")
+
+        if not target or not operation:
+            raise HTTPException(
+                status_code=400,
+                detail="Missing required fields: target, operation",
+            )
+
+        payload = body.get("payload", {})
+        priority = body.get("priority", 1)
+        correlation_id = body.get("correlation_id", "")
+        ttl_s = body.get("ttl_s", 900.0)
+
+        # Send message
+        success = nadi.emit(
+            source=source,
+            target=target,
+            operation=operation,
+            payload=payload,
+            priority=priority,
+            correlation_id=correlation_id,
+            ttl_s=ttl_s,
+        )
+
+        if not success:
+            raise HTTPException(status_code=500, detail="Failed to send message")
+
+        logger.info(f"📨 Message sent to agent-city inbox: {source}:{operation}")
+
+        return {
+            "status": "success",
+            "message": "Message written to agent-city inbox",
+            "source": source,
+            "operation": operation,
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Federation inbox write failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/federation/stats")
+def get_federation_stats():
+    """
+    Get Federation Nadi channel statistics.
+
+    Returns:
+        outbox_pending: Messages in agent-city's outbox (ready to consume)
+        inbox_pending: Messages in steward-protocol's inbox (waiting to send)
+        reports_archived: Number of stored city reports
+    """
+    try:
+        nadi = _get_federation_nadi()
+        if not nadi:
+            raise HTTPException(status_code=503, detail="Federation Nadi not available")
+
+        stats = nadi.stats()
+
+        return {
+            "status": "success",
+            "stats": stats,
+            "timestamp": datetime.now().isoformat(),
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Federation stats fetch failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/federation/reports")
+def get_city_reports(limit: int = Query(10, ge=1, le=100)):
+    """
+    Get archived city reports from agent-city.
+
+    Returns the most recent N city reports.
+
+    Query Parameters:
+        limit: Number of reports to return (default: 10, max: 100)
+    """
+    try:
+        nadi = _get_federation_nadi()
+        if not nadi:
+            raise HTTPException(status_code=503, detail="Federation Nadi not available")
+
+        reports_dir = nadi.federation_dir / "reports"
+        if not reports_dir.exists():
+            return {
+                "status": "success",
+                "count": 0,
+                "reports": [],
+            }
+
+        # Get most recent N reports
+        report_files = sorted(reports_dir.glob("report_*.json"), reverse=True)[:limit]
+        reports = []
+
+        for report_file in report_files:
+            try:
+                with open(report_file) as f:
+                    data = json.load(f)
+                    reports.append(data)
+            except Exception as e:
+                logger.warning(f"Failed to read report {report_file}: {e}")
+                continue
+
+        return {
+            "status": "success",
+            "count": len(reports),
+            "reports": reports,
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Federation reports fetch failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.delete("/api/federation/outbox")
+def clear_federation_outbox():
+    """
+    Clear processed messages from agent-city's outbox.
+
+    Use after consuming all pending messages.
+    """
+    try:
+        nadi = _get_federation_nadi()
+        if not nadi:
+            raise HTTPException(status_code=503, detail="Federation Nadi not available")
+
+        success = nadi.clear_outbox()
+
+        if not success:
+            raise HTTPException(status_code=500, detail="Failed to clear outbox")
+
+        logger.info("🗑️  Federation outbox cleared")
+
+        return {
+            "status": "success",
+            "message": "Outbox cleared",
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Federation outbox clear failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 # --- MOUNT FRONTEND (LAST STEP!) ---
