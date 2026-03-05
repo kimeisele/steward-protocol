@@ -28,23 +28,49 @@ from .base import LLMProvider, NoOpProvider, ProviderNotAvailableError
 logger = logging.getLogger(__name__)
 
 
+_FALLBACK_MODELS: dict[str, str] = {
+    "openrouter": "deepseek/deepseek-v3.2",
+    "google": "gemini-2.0-flash",
+    "anthropic": "claude-sonnet-4-20250514",
+    "openai": "gpt-4-turbo",
+}
+
+
 def _get_default_model_from_config(provider_name: str) -> str:
-    """Load default model from config/llm.yaml - FAILS if not configured!"""
-    from vibe_core.phoenix import get_config
+    """Load default model from config/llm.yaml with graceful fallback.
 
-    config = get_config()
-    llm_cfg = config.llm  # LLMConfig object
+    If PhoenixConfig has no 'llm' section (e.g. running in a downstream
+    project like agent-city without config/llm.yaml), falls back to
+    sensible hardcoded defaults. A missing config must NEVER cause the
+    entire provider to crash to NoOp.
+    """
+    try:
+        from vibe_core.phoenix import get_config
 
-    # Access providers dict and get ProviderEntry
-    provider_entry = llm_cfg.providers.get(provider_name)
+        config = get_config()
+        llm_cfg = config.llm  # LLMConfig object
 
-    if not provider_entry or not provider_entry.default_model:
-        raise ValueError(
-            f"❌ FATAL: No model configured for '{provider_name}'! "
-            f"Set 'providers.{provider_name}.default_model' in config/llm.yaml"
+        # Access providers dict and get ProviderEntry
+        provider_entry = llm_cfg.providers.get(provider_name)
+
+        if provider_entry and provider_entry.default_model:
+            return provider_entry.default_model
+    except Exception as e:
+        logger.warning(
+            "Could not load model from config for '%s': %s — using fallback",
+            provider_name, e,
         )
 
-    return provider_entry.default_model
+    # Graceful fallback — never crash to NoOp just because config is missing
+    fallback = _FALLBACK_MODELS.get(provider_name)
+    if fallback:
+        logger.info("Using fallback model for %s: %s", provider_name, fallback)
+        return fallback
+
+    raise ValueError(
+        f"No model configured for '{provider_name}' and no fallback available. "
+        f"Set 'providers.{provider_name}.default_model' in config/llm.yaml"
+    )
 
 
 def create_provider(
