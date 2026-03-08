@@ -366,6 +366,7 @@ def _bridge_verified_intent(body: SignedIntentRequest, *, verified_fingerprint: 
     if body.requested_by_handle:
         labels.setdefault("requested_by_handle", body.requested_by_handle)
     payload["labels"] = labels
+    payload["requested_by_subject_id"] = f"verified_agent:{body.agent_id}"
 
     request = UrlRequest(
         url=f"{base_url}/v1/lotus/intents",
