@@ -184,6 +184,15 @@ class PublicIntentRequest(BaseModel):
     labels: dict[str, str] = Field(default_factory=dict)
 
 
+class SignedIntentRequest(PublicIntentRequest):
+    """Explicit typed intent submission for verified/signed edge callers."""
+
+    agent_id: str = Field(..., max_length=64, pattern=r"^[a-zA-Z0-9_-]+$", description="Agent ID")
+    signature: str = Field(..., max_length=512, description="Base64 ECDSA signature")
+    public_key: str = Field(..., max_length=2048, description="PEM public key")
+    timestamp: int = Field(..., description="Unix timestamp (seconds)")
+
+
 # --- RATE LIMITING (simple in-memory) ---
 _rate_limit_cache: dict = {}  # IP -> (count, window_start)
 RATE_LIMIT_WINDOW = 60  # seconds
@@ -208,6 +217,75 @@ def _check_rate_limit(client_ip: str) -> bool:
     return True
 
 
+def _canonical_intent_payload(body: PublicIntentRequest) -> dict:
+    return {
+        "intent_type": body.intent_type,
+        "title": body.title,
+        "description": body.description,
+        "repo": body.repo,
+        "city_id": body.city_id,
+        "space_id": body.space_id,
+        "slot_id": body.slot_id,
+        "lineage_id": body.lineage_id,
+        "discussion_id": body.discussion_id,
+        "requested_by_handle": body.requested_by_handle,
+        "linked_issue_url": body.linked_issue_url,
+        "linked_pr_url": body.linked_pr_url,
+        "labels": {str(key): str(value) for key, value in body.labels.items()},
+    }
+
+
+def _verify_signed_edge_request(
+    *,
+    message: str,
+    agent_id: str,
+    signature: str,
+    public_key: str,
+    timestamp: int,
+    x_api_key: Optional[str],
+    record_violation: bool = False,
+):
+    api_key = os.getenv("VIBE_API_KEY")
+    if not api_key:
+        logger.error("VIBE_API_KEY environment variable not set!")
+        raise HTTPException(status_code=503, detail="Service misconfigured: API key not set")
+    if x_api_key != api_key:
+        raise HTTPException(status_code=401, detail="Invalid API Key")
+
+    takshaka = get_takshaka()
+    verify_result = takshaka.verify_request(
+        message=message,
+        agent_id=agent_id,
+        signature=signature,
+        public_key=public_key,
+        timestamp=timestamp,
+    )
+    if not verify_result.is_valid:
+        logger.warning(f"TAKSHAKA BITE: {verify_result.status.value} from {agent_id}")
+        if record_violation and kernel:
+            try:
+                kernel.ledger.record_event(
+                    event_type="VAJRA_VIOLATION",
+                    agent_id="TAKSHAKA",
+                    details=verify_result.to_dict(),
+                    result="BLOCKED",
+                )
+            except Exception as e:
+                logger.error(f"Failed to record violation: {e}")
+        status_map = {
+            VerifyStatus.INVALID_SIGNATURE: (401, "Invalid signature"),
+            VerifyStatus.INVALID_KEY: (401, "Invalid key"),
+            VerifyStatus.EXPIRED: (400, "Request expired"),
+            VerifyStatus.UNTRUSTED: (403, "Untrusted key"),
+            VerifyStatus.RATE_LIMITED: (429, "Rate limit exceeded"),
+            VerifyStatus.SIZE_EXCEEDED: (413, "Request too large"),
+            VerifyStatus.TOXIC: (400, f"Toxic content detected: {verify_result.toxic_patterns}"),
+        }
+        code, msg = status_map.get(verify_result.status, (400, verify_result.reason))
+        raise HTTPException(status_code=code, detail=msg)
+    return verify_result
+
+
 def _bridge_public_intent(body: PublicIntentRequest, *, client_ip: str) -> dict:
     base_url = os.getenv("AGENT_INTERNET_LOTUS_BASE_URL", "").rstrip("/")
     bearer_token = os.getenv("AGENT_INTERNET_LOTUS_TOKEN", "")
@@ -222,20 +300,8 @@ def _bridge_public_intent(body: PublicIntentRequest, *, client_ip: str) -> dict:
     if client_ip and client_ip != "unknown":
         labels.setdefault("submitted_from", client_ip)
 
-    payload = {
-        "intent_type": body.intent_type,
-        "title": body.title,
-        "description": body.description,
-        "repo": body.repo,
-        "city_id": body.city_id,
-        "space_id": body.space_id,
-        "slot_id": body.slot_id,
-        "lineage_id": body.lineage_id,
-        "discussion_id": body.discussion_id,
-        "linked_issue_url": body.linked_issue_url,
-        "linked_pr_url": body.linked_pr_url,
-        "labels": labels,
-    }
+    payload = _canonical_intent_payload(body)
+    payload["labels"] = labels
     request = UrlRequest(
         url=f"{base_url}/v1/lotus/intents",
         data=json.dumps(payload).encode("utf-8"),
@@ -266,6 +332,59 @@ def _bridge_public_intent(body: PublicIntentRequest, *, client_ip: str) -> dict:
         "data": {
             "intent": response_body.get("intent", {}),
             "forwarded_to": "agent-internet",
+        },
+    }
+
+
+def _bridge_verified_intent(body: SignedIntentRequest, *, verified_fingerprint: str | None) -> dict:
+    base_url = os.getenv("AGENT_INTERNET_LOTUS_BASE_URL", "").rstrip("/")
+    bearer_token = os.getenv("AGENT_INTERNET_VERIFIED_LOTUS_TOKEN", "") or os.getenv("AGENT_INTERNET_LOTUS_TOKEN", "")
+    timeout_s = float(os.getenv("AGENT_INTERNET_LOTUS_TIMEOUT_S", "5.0"))
+    if not base_url or not bearer_token:
+        raise HTTPException(status_code=503, detail="Verified intent bridge is not configured")
+
+    payload = _canonical_intent_payload(body)
+    labels = dict(payload["labels"])
+    labels.setdefault("channel", "verified_edge")
+    labels.setdefault("verified_agent_id", body.agent_id)
+    if verified_fingerprint:
+        labels.setdefault("verified_fingerprint", verified_fingerprint)
+    if body.requested_by_handle:
+        labels.setdefault("requested_by_handle", body.requested_by_handle)
+    payload["labels"] = labels
+
+    request = UrlRequest(
+        url=f"{base_url}/v1/lotus/intents",
+        data=json.dumps(payload).encode("utf-8"),
+        headers={
+            "Authorization": f"Bearer {bearer_token}",
+            "Content-Type": "application/json",
+        },
+        method="POST",
+    )
+    try:
+        with urlopen(request, timeout=timeout_s) as response:
+            response_body = json.loads(response.read().decode("utf-8"))
+    except HTTPError as exc:
+        detail = exc.read().decode("utf-8", errors="ignore")
+        logger.error(f"Verified intent bridge upstream error: {exc.code} {detail}")
+        try:
+            error_payload = json.loads(detail) if detail else {}
+        except ValueError:
+            error_payload = {}
+        if exc.code in {400, 401, 403, 404}:
+            raise HTTPException(status_code=exc.code, detail=error_payload.get("error", "Verified intent bridge upstream error")) from exc
+        raise HTTPException(status_code=502, detail="Verified intent bridge upstream error") from exc
+    except (URLError, TimeoutError, ValueError) as exc:
+        logger.error(f"Verified intent bridge unavailable: {exc}")
+        raise HTTPException(status_code=503, detail="Verified intent bridge unavailable") from exc
+    return {
+        "status": "success",
+        "data": {
+            "intent": response_body.get("intent", {}),
+            "forwarded_to": "agent-internet",
+            "verified_agent_id": body.agent_id,
+            "verified_fingerprint": verified_fingerprint,
         },
     }
 
@@ -376,6 +495,21 @@ async def public_intent_status(intent_id: str, request: Request):
     return await asyncio.to_thread(_bridge_public_intent_status, intent_id=intent_id)
 
 
+@app.post("/v1/intents")
+async def verified_intents(request: SignedIntentRequest, x_api_key: Optional[str] = Header(None)):
+    """Verified typed-intent bridge using the signed edge path."""
+    canonical_message = json.dumps(_canonical_intent_payload(request), sort_keys=True, separators=(",", ":"))
+    verify_result = _verify_signed_edge_request(
+        message=canonical_message,
+        agent_id=request.agent_id,
+        signature=request.signature,
+        public_key=request.public_key,
+        timestamp=request.timestamp,
+        x_api_key=x_api_key,
+    )
+    return await asyncio.to_thread(_bridge_verified_intent, request, verified_fingerprint=verify_result.fingerprint)
+
+
 # --- SIGNED CHAT ENDPOINT ---
 @app.post("/v1/chat")
 async def chat(request: SignedChatRequest, x_api_key: Optional[str] = Header(None)):
@@ -388,50 +522,16 @@ async def chat(request: SignedChatRequest, x_api_key: Optional[str] = Header(Non
 
     PROMPT.md: "Identität kommt VOR dem Parsing"
     """
-    # --- 0. API KEY CHECK ---
-    api_key = os.getenv("VIBE_API_KEY")
-    if not api_key:
-        logger.error("VIBE_API_KEY environment variable not set!")
-        raise HTTPException(status_code=503, detail="Service misconfigured: API key not set")
-    if x_api_key != api_key:
-        raise HTTPException(status_code=401, detail="Invalid API Key")
-
-    # --- 1. TAKSHAKA VERIFICATION (P0-1: Signature + P0-2: Toxicity) ---
-    takshaka = get_takshaka()
-    verify_result = takshaka.verify_request(
+    # --- 0. API KEY CHECK + 1. TAKSHAKA VERIFICATION ---
+    verify_result = _verify_signed_edge_request(
         message=request.message,
         agent_id=request.agent_id,
         signature=request.signature,
         public_key=request.public_key,
         timestamp=request.timestamp,
+        x_api_key=x_api_key,
+        record_violation=True,
     )
-
-    if not verify_result.is_valid:
-        logger.warning(f"TAKSHAKA BITE: {verify_result.status.value} from {request.agent_id}")
-        # Record violation in ledger if kernel is available
-        if kernel:
-            try:
-                kernel.ledger.record_event(
-                    event_type="VAJRA_VIOLATION",
-                    agent_id="TAKSHAKA",
-                    details=verify_result.to_dict(),
-                    result="BLOCKED",
-                )
-            except Exception as e:
-                logger.error(f"Failed to record violation: {e}")
-
-        # Return appropriate error
-        status_map = {
-            VerifyStatus.INVALID_SIGNATURE: (401, "Invalid signature"),
-            VerifyStatus.INVALID_KEY: (401, "Invalid key"),
-            VerifyStatus.EXPIRED: (400, "Request expired"),
-            VerifyStatus.UNTRUSTED: (403, "Untrusted key"),
-            VerifyStatus.RATE_LIMITED: (429, "Rate limit exceeded"),
-            VerifyStatus.SIZE_EXCEEDED: (413, "Request too large"),
-            VerifyStatus.TOXIC: (400, f"Toxic content detected: {verify_result.toxic_patterns}"),
-        }
-        code, msg = status_map.get(verify_result.status, (400, verify_result.reason))
-        raise HTTPException(status_code=code, detail=msg)
 
     logger.info(f"TAKSHAKA OK: {request.agent_id} ({verify_result.fingerprint})")
 
