@@ -9,7 +9,9 @@ import os
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Optional, Set
+from typing import Literal, Optional, Set
+from urllib.error import HTTPError, URLError
+from urllib.request import Request as UrlRequest, urlopen
 
 from fastapi import (
     FastAPI,
@@ -156,6 +158,31 @@ class PublicChatRequest(BaseModel):
     message: str = Field(..., min_length=1, max_length=2000, description="Message (1-2000 chars)")
 
 
+class PublicIntentRequest(BaseModel):
+    """Explicit typed intent submission for the public edge."""
+
+    intent_type: Literal[
+        "request_space_claim",
+        "request_slot",
+        "request_fork",
+        "request_issue",
+        "request_pr_draft",
+        "request_operator_review",
+    ]
+    title: str = Field(..., min_length=1, max_length=200, description="Short intent title")
+    description: str = Field("", max_length=4000, description="Optional intent description")
+    repo: str = Field("", max_length=256)
+    city_id: str = Field("", max_length=128)
+    space_id: str = Field("", max_length=256)
+    slot_id: str = Field("", max_length=256)
+    lineage_id: str = Field("", max_length=256)
+    discussion_id: str = Field("", max_length=256)
+    requested_by_handle: str = Field("", max_length=128)
+    linked_issue_url: str = Field("", max_length=1024)
+    linked_pr_url: str = Field("", max_length=1024)
+    labels: dict[str, str] = Field(default_factory=dict)
+
+
 # --- RATE LIMITING (simple in-memory) ---
 _rate_limit_cache: dict = {}  # IP -> (count, window_start)
 RATE_LIMIT_WINDOW = 60  # seconds
@@ -178,6 +205,62 @@ def _check_rate_limit(client_ip: str) -> bool:
         return True
     _rate_limit_cache[client_ip] = (1, now)
     return True
+
+
+def _bridge_public_intent(body: PublicIntentRequest, *, client_ip: str) -> dict:
+    base_url = os.getenv("AGENT_INTERNET_LOTUS_BASE_URL", "").rstrip("/")
+    bearer_token = os.getenv("AGENT_INTERNET_LOTUS_TOKEN", "")
+    timeout_s = float(os.getenv("AGENT_INTERNET_LOTUS_TIMEOUT_S", "5.0"))
+    if not base_url or not bearer_token:
+        raise HTTPException(status_code=503, detail="Public intent bridge is not configured")
+
+    labels = {str(key): str(value) for key, value in body.labels.items()}
+    labels.setdefault("channel", "public_edge")
+    if body.requested_by_handle:
+        labels.setdefault("requested_by_handle", body.requested_by_handle)
+    if client_ip and client_ip != "unknown":
+        labels.setdefault("submitted_from", client_ip)
+
+    payload = {
+        "intent_type": body.intent_type,
+        "title": body.title,
+        "description": body.description,
+        "repo": body.repo,
+        "city_id": body.city_id,
+        "space_id": body.space_id,
+        "slot_id": body.slot_id,
+        "lineage_id": body.lineage_id,
+        "discussion_id": body.discussion_id,
+        "linked_issue_url": body.linked_issue_url,
+        "linked_pr_url": body.linked_pr_url,
+        "labels": labels,
+    }
+    request = UrlRequest(
+        url=f"{base_url}/v1/lotus/intents",
+        data=json.dumps(payload).encode("utf-8"),
+        headers={
+            "Authorization": f"Bearer {bearer_token}",
+            "Content-Type": "application/json",
+        },
+        method="POST",
+    )
+    try:
+        with urlopen(request, timeout=timeout_s) as response:
+            response_body = json.loads(response.read().decode("utf-8"))
+    except HTTPError as exc:
+        detail = exc.read().decode("utf-8", errors="ignore")
+        logger.error(f"Public intent bridge upstream error: {exc.code} {detail}")
+        raise HTTPException(status_code=502, detail="Public intent bridge upstream error") from exc
+    except (URLError, TimeoutError, ValueError) as exc:
+        logger.error(f"Public intent bridge unavailable: {exc}")
+        raise HTTPException(status_code=503, detail="Public intent bridge unavailable") from exc
+    return {
+        "status": "success",
+        "data": {
+            "intent": response_body.get("intent", {}),
+            "forwarded_to": "agent-internet",
+        },
+    }
 
 
 # --- PUBLIC CHAT ENDPOINT ---
@@ -225,6 +308,17 @@ async def public_chat(request: Request, body: PublicChatRequest):
     except Exception as e:
         logger.error(f"Public chat error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/v1/public-intents")
+async def public_intents(request: Request, body: PublicIntentRequest):
+    """Public explicit typed-intent bridge into agent-internet."""
+    client_ip = request.client.host if request.client else "unknown"
+
+    if not _check_rate_limit(client_ip):
+        raise HTTPException(status_code=429, detail="Rate limit exceeded. Try again later.")
+
+    return await asyncio.to_thread(_bridge_public_intent, body, client_ip=client_ip)
 
 
 # --- SIGNED CHAT ENDPOINT ---
