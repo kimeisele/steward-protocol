@@ -47,7 +47,7 @@ gcloud run deploy steward-gateway \
   --platform managed \
   --region us-central1 \
   --allow-unauthenticated \
-  --set-env-vars API_KEY=your-secret-key
+  --set-env-vars VIBE_API_KEY=your-secret-key
 ```
 
 ### 3. Cost Optimization
@@ -78,7 +78,7 @@ provider:
   name: aws
   runtime: python3.9
   environment:
-    API_KEY: ${env:API_KEY}
+    VIBE_API_KEY: ${env:VIBE_API_KEY}
 
 functions:
   api:

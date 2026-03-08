@@ -50,7 +50,7 @@ jobs:
           image: gcr.io/${{ env.PROJECT_ID }}/${{ env.SERVICE_NAME }}:${{ github.sha }}
           region: ${{ env.REGION }}
           env_vars: |
-            API_KEY=${{ secrets.API_KEY }}
+            VIBE_API_KEY=${{ secrets.API_KEY }}
             GOVERNANCE_MODE=SERVERLESS_BYPASS
             ENV=production
             LEDGER_PATH=/tmp/vibe_ledger.db
