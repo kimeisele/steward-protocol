@@ -11,7 +11,7 @@ pip install fastapi uvicorn pydantic httpx
 ```bash
 export GOVERNANCE_MODE=SERVERLESS_BYPASS
 export ENV=development
-export API_KEY=test-key-local
+export VIBE_API_KEY=test-key-local
 ```
 
 ### Run the Server
