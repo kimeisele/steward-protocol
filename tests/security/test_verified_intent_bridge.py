@@ -114,6 +114,7 @@ class TestVerifiedIntentBridge:
         assert '"channel": "verified_edge"' in payload
         assert '"verified_agent_id": "agent_ss"' in payload
         assert '"verified_fingerprint": "fp-verified"' in payload
+        assert '"requested_by_subject_id": "verified_agent:agent_ss"' in payload
 
     @pytest.mark.asyncio
     async def test_verified_intent_status_bridge_reads_single_intent(self):
