@@ -51,6 +51,10 @@ jobs:
           region: ${{ env.REGION }}
           env_vars: |
             VIBE_API_KEY=${{ secrets.API_KEY }}
+            AGENT_INTERNET_LOTUS_BASE_URL=${{ secrets.AGENT_INTERNET_LOTUS_BASE_URL }}
+            AGENT_INTERNET_LOTUS_TOKEN=${{ secrets.AGENT_INTERNET_LOTUS_TOKEN }}
+            AGENT_INTERNET_VERIFIED_LOTUS_TOKEN=${{ secrets.AGENT_INTERNET_VERIFIED_LOTUS_TOKEN }}
+            AGENT_INTERNET_LOTUS_TIMEOUT_S=5.0
             GOVERNANCE_MODE=SERVERLESS_BYPASS
             ENV=production
             LEDGER_PATH=/tmp/vibe_ledger.db
