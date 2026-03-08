@@ -193,6 +193,16 @@ class SignedIntentRequest(PublicIntentRequest):
     timestamp: int = Field(..., description="Unix timestamp (seconds)")
 
 
+class SignedIntentStatusRequest(BaseModel):
+    """Verified status readback for a single typed intent."""
+
+    intent_id: str = Field(..., min_length=1, max_length=256)
+    agent_id: str = Field(..., max_length=64, pattern=r"^[a-zA-Z0-9_-]+$", description="Agent ID")
+    signature: str = Field(..., max_length=512, description="Base64 ECDSA signature")
+    public_key: str = Field(..., max_length=2048, description="PEM public key")
+    timestamp: int = Field(..., description="Unix timestamp (seconds)")
+
+
 # --- RATE LIMITING (simple in-memory) ---
 _rate_limit_cache: dict = {}  # IP -> (count, window_start)
 RATE_LIMIT_WINDOW = 60  # seconds
@@ -233,6 +243,10 @@ def _canonical_intent_payload(body: PublicIntentRequest) -> dict:
         "linked_pr_url": body.linked_pr_url,
         "labels": {str(key): str(value) for key, value in body.labels.items()},
     }
+
+
+def _canonical_intent_status_payload(body: SignedIntentStatusRequest) -> dict:
+    return {"intent_id": body.intent_id}
 
 
 def _verify_signed_edge_request(
@@ -426,6 +440,45 @@ def _bridge_public_intent_status(*, intent_id: str) -> dict:
     }
 
 
+def _bridge_verified_intent_status(*, intent_id: str, verified_agent_id: str, verified_fingerprint: str | None) -> dict:
+    base_url = os.getenv("AGENT_INTERNET_LOTUS_BASE_URL", "").rstrip("/")
+    bearer_token = os.getenv("AGENT_INTERNET_VERIFIED_LOTUS_TOKEN", "") or os.getenv("AGENT_INTERNET_LOTUS_TOKEN", "")
+    timeout_s = float(os.getenv("AGENT_INTERNET_LOTUS_TIMEOUT_S", "5.0"))
+    if not base_url or not bearer_token:
+        raise HTTPException(status_code=503, detail="Verified intent bridge is not configured")
+
+    request = UrlRequest(
+        url=f"{base_url}/v1/lotus/intents/{quote(intent_id, safe='')}",
+        headers={"Authorization": f"Bearer {bearer_token}"},
+        method="GET",
+    )
+    try:
+        with urlopen(request, timeout=timeout_s) as response:
+            response_body = json.loads(response.read().decode("utf-8"))
+    except HTTPError as exc:
+        detail = exc.read().decode("utf-8", errors="ignore")
+        logger.error(f"Verified intent status bridge upstream error: {exc.code} {detail}")
+        try:
+            error_payload = json.loads(detail) if detail else {}
+        except ValueError:
+            error_payload = {}
+        if exc.code in {400, 401, 403, 404}:
+            raise HTTPException(status_code=exc.code, detail=error_payload.get("error", "Verified intent status bridge upstream error")) from exc
+        raise HTTPException(status_code=502, detail="Verified intent status bridge upstream error") from exc
+    except (URLError, TimeoutError, ValueError) as exc:
+        logger.error(f"Verified intent status bridge unavailable: {exc}")
+        raise HTTPException(status_code=503, detail="Verified intent status bridge unavailable") from exc
+    return {
+        "status": "success",
+        "data": {
+            "intent": response_body.get("intent", {}),
+            "forwarded_to": "agent-internet",
+            "verified_agent_id": verified_agent_id,
+            "verified_fingerprint": verified_fingerprint,
+        },
+    }
+
+
 # --- PUBLIC CHAT ENDPOINT ---
 @app.post("/v1/public-chat")
 async def public_chat(request: Request, body: PublicChatRequest):
@@ -508,6 +561,26 @@ async def verified_intents(request: SignedIntentRequest, x_api_key: Optional[str
         x_api_key=x_api_key,
     )
     return await asyncio.to_thread(_bridge_verified_intent, request, verified_fingerprint=verify_result.fingerprint)
+
+
+@app.post("/v1/intents/status")
+async def verified_intent_status(request: SignedIntentStatusRequest, x_api_key: Optional[str] = Header(None)):
+    """Verified status readback for a single typed intent."""
+    canonical_message = json.dumps(_canonical_intent_status_payload(request), sort_keys=True, separators=(",", ":"))
+    verify_result = _verify_signed_edge_request(
+        message=canonical_message,
+        agent_id=request.agent_id,
+        signature=request.signature,
+        public_key=request.public_key,
+        timestamp=request.timestamp,
+        x_api_key=x_api_key,
+    )
+    return await asyncio.to_thread(
+        _bridge_verified_intent_status,
+        intent_id=request.intent_id,
+        verified_agent_id=request.agent_id,
+        verified_fingerprint=verify_result.fingerprint,
+    )
 
 
 # --- SIGNED CHAT ENDPOINT ---
