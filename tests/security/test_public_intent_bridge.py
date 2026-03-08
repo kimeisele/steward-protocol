@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from fastapi import HTTPException
 
-from gateway.api import PublicIntentRequest, _rate_limit_cache, public_intents
+from gateway.api import PublicIntentRequest, _rate_limit_cache, public_intent_status, public_intents
 
 
 class TestPublicIntentBridge:
@@ -80,3 +80,33 @@ class TestPublicIntentBridge:
             await public_intents(request, body)
 
         assert excinfo.value.status_code == 429
+
+    @pytest.mark.asyncio
+    async def test_public_intent_status_bridge_reads_single_intent(self):
+        request = MagicMock()
+        request.client.host = "10.0.0.13"
+
+        class _FakeResponse:
+            def __enter__(self):
+                return self
+
+            def __exit__(self, exc_type, exc, tb):
+                return False
+
+            def read(self):
+                return b'{"intent":{"intent_id":"intent:slot-1","status":"accepted"}}'
+
+        getenv_values = {
+            "AGENT_INTERNET_LOTUS_BASE_URL": "http://agent-internet.local",
+            "AGENT_INTERNET_LOTUS_TOKEN": "bridge-token",
+            "AGENT_INTERNET_LOTUS_TIMEOUT_S": "5.0",
+        }
+
+        with patch("gateway.api.os.getenv", side_effect=lambda key, default=None: getenv_values.get(key, default)):
+            with patch("gateway.api.urlopen", return_value=_FakeResponse()) as mocked_urlopen:
+                result = await public_intent_status("intent:slot-1", request)
+
+        assert result["status"] == "success"
+        assert result["data"]["intent"]["status"] == "accepted"
+        forwarded_request = mocked_urlopen.call_args.args[0]
+        assert forwarded_request.full_url == "http://agent-internet.local/v1/lotus/intents/intent%3Aslot-1"

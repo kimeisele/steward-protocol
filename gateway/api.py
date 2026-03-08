@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Literal, Optional, Set
 from urllib.error import HTTPError, URLError
 from urllib.request import Request as UrlRequest, urlopen
+from urllib.parse import quote
 
 from fastapi import (
     FastAPI,
@@ -250,10 +251,53 @@ def _bridge_public_intent(body: PublicIntentRequest, *, client_ip: str) -> dict:
     except HTTPError as exc:
         detail = exc.read().decode("utf-8", errors="ignore")
         logger.error(f"Public intent bridge upstream error: {exc.code} {detail}")
+        try:
+            error_payload = json.loads(detail) if detail else {}
+        except ValueError:
+            error_payload = {}
+        if exc.code in {400, 401, 403, 404}:
+            raise HTTPException(status_code=exc.code, detail=error_payload.get("error", "Public intent bridge upstream error")) from exc
         raise HTTPException(status_code=502, detail="Public intent bridge upstream error") from exc
     except (URLError, TimeoutError, ValueError) as exc:
         logger.error(f"Public intent bridge unavailable: {exc}")
         raise HTTPException(status_code=503, detail="Public intent bridge unavailable") from exc
+    return {
+        "status": "success",
+        "data": {
+            "intent": response_body.get("intent", {}),
+            "forwarded_to": "agent-internet",
+        },
+    }
+
+
+def _bridge_public_intent_status(*, intent_id: str) -> dict:
+    base_url = os.getenv("AGENT_INTERNET_LOTUS_BASE_URL", "").rstrip("/")
+    bearer_token = os.getenv("AGENT_INTERNET_LOTUS_TOKEN", "")
+    timeout_s = float(os.getenv("AGENT_INTERNET_LOTUS_TIMEOUT_S", "5.0"))
+    if not base_url or not bearer_token:
+        raise HTTPException(status_code=503, detail="Public intent bridge is not configured")
+
+    request = UrlRequest(
+        url=f"{base_url}/v1/lotus/intents/{quote(intent_id, safe='')}",
+        headers={"Authorization": f"Bearer {bearer_token}"},
+        method="GET",
+    )
+    try:
+        with urlopen(request, timeout=timeout_s) as response:
+            response_body = json.loads(response.read().decode("utf-8"))
+    except HTTPError as exc:
+        detail = exc.read().decode("utf-8", errors="ignore")
+        logger.error(f"Public intent status bridge upstream error: {exc.code} {detail}")
+        try:
+            error_payload = json.loads(detail) if detail else {}
+        except ValueError:
+            error_payload = {}
+        if exc.code in {400, 401, 403, 404}:
+            raise HTTPException(status_code=exc.code, detail=error_payload.get("error", "Public intent status bridge upstream error")) from exc
+        raise HTTPException(status_code=502, detail="Public intent status bridge upstream error") from exc
+    except (URLError, TimeoutError, ValueError) as exc:
+        logger.error(f"Public intent status bridge unavailable: {exc}")
+        raise HTTPException(status_code=503, detail="Public intent status bridge unavailable") from exc
     return {
         "status": "success",
         "data": {
@@ -319,6 +363,17 @@ async def public_intents(request: Request, body: PublicIntentRequest):
         raise HTTPException(status_code=429, detail="Rate limit exceeded. Try again later.")
 
     return await asyncio.to_thread(_bridge_public_intent, body, client_ip=client_ip)
+
+
+@app.get("/v1/public-intents/{intent_id}")
+async def public_intent_status(intent_id: str, request: Request):
+    """Public explicit intent status readback."""
+    client_ip = request.client.host if request.client else "unknown"
+
+    if not _check_rate_limit(client_ip):
+        raise HTTPException(status_code=429, detail="Rate limit exceeded. Try again later.")
+
+    return await asyncio.to_thread(_bridge_public_intent_status, intent_id=intent_id)
 
 
 # --- SIGNED CHAT ENDPOINT ---
