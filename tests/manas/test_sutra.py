@@ -17,7 +17,48 @@ from pathlib import Path
 import tempfile
 from pathlib import Path
 from typing import List, Optional, Union
+import pytest
 from vibe_core.protocols.system_shell import ShellProtocol, ShellResult
+
+
+@pytest.fixture(autouse=True)
+def _fast_sutra_context(monkeypatch):
+    """Keep SUTRA tests deterministic and fast by stubbing heavyweight scanners."""
+    from vibe_core.plugins.opus_assistant.manas.cortex.sutra import SutraWeaver
+
+    def fake_gather_mandala(self, ctx):
+        if not self._workspace.exists():
+            return
+        ctx.agents.extend(
+            [
+                {"id": "analyst", "name": "Analyst", "domain": "RESEARCH", "version": "1.0.0", "capabilities": ["git_analysis"], "tier": "system"},
+                {"id": "builder", "name": "Builder", "domain": "OPERATIONS", "version": "1.0.0", "capabilities": ["delivery", "verification"], "tier": "system"},
+            ]
+        )
+        ctx.domains.update({"RESEARCH": ["analyst"], "OPERATIONS": ["builder"]})
+        ctx.capabilities.update({"analyst": ["git_analysis"], "builder": ["delivery", "verification"]})
+
+    def fake_gather_akasha(self, ctx):
+        if not self._workspace.exists():
+            return
+        ctx.node_count = 12
+        ctx.edge_count = 21
+        ctx.constraint_count = 3
+        ctx.knowledge_summary = "RESEARCH -> OPERATIONS -> DELIVERY"
+
+    def fake_gather_module(self, ctx):
+        if not self._workspace.exists():
+            return
+        ctx.modules.extend(
+            [
+                {"name": "governance", "files": 4, "path": "vibe_core/governance"},
+                {"name": "protocols", "files": 7, "path": "vibe_core/protocols"},
+            ]
+        )
+
+    monkeypatch.setattr(SutraWeaver, "_gather_mandala_context", fake_gather_mandala)
+    monkeypatch.setattr(SutraWeaver, "_gather_akasha_context", fake_gather_akasha)
+    monkeypatch.setattr(SutraWeaver, "_gather_module_context", fake_gather_module)
 
 # =============================================================================
 # SECTION 1: DATA MODEL TESTS
@@ -33,12 +74,19 @@ class TestWikiPageType:
 
         assert WikiPageType.HOME.value == "Home"
         assert WikiPageType.START_HERE.value == "Start-Here"
+        assert WikiPageType.INDEX.value == "Index"
         assert WikiPageType.CONSTITUTION.value == "Constitution"
         assert WikiPageType.GOVERNANCE_INDEX.value == "Governance-Index"
+        assert WikiPageType.GOVERNANCE_ATLAS.value == "Governance-Atlas"
         assert WikiPageType.AGI_MANIFESTO.value == "AGI-Manifesto"
+        assert WikiPageType.STEWARDSHIP.value == "Stewardship"
         assert WikiPageType.PROTOCOLS.value == "Protocols"
         assert WikiPageType.ARCHITECTURE.value == "Architecture"
-        assert WikiPageType.PANTHEON.value == "Pantheon"
+        assert WikiPageType.KERNEL.value == "Kernel"
+        assert WikiPageType.CANONICAL_ATLAS.value == "Canonical-Atlas"
+        assert WikiPageType.PROTOCOL_ATLAS.value == "Protocol-Atlas"
+        assert WikiPageType.FEDERATION_REGISTRY.value == "Federation-Registry"
+        assert WikiPageType.PANTHEON == WikiPageType.FEDERATION_REGISTRY
         assert WikiPageType.LAW == WikiPageType.CONSTITUTION
         assert WikiPageType.MAP.value == "Map"
         assert WikiPageType.SIDEBAR.value == "_Sidebar"
@@ -78,12 +126,12 @@ class TestWikiPage:
         from vibe_core.plugins.opus_assistant.manas.cortex.sutra import WikiPage, WikiPageType
 
         page = WikiPage(
-            page_type=WikiPageType.PANTHEON,
+            page_type=WikiPageType.FEDERATION_REGISTRY,
             title="Test",
             content="content",
         )
 
-        assert page.filename == "Pantheon.md"
+        assert page.filename == "Federation-Registry.md"
 
     def test_filename_for_sidebar(self):
         """Test sidebar has underscore prefix."""
@@ -242,8 +290,8 @@ class TestSutraWeaver:
         assert "2.0.0" in page.content
         assert "Home" in page.title
 
-    def test_weave_pantheon_page(self):
-        """Test weaving Pantheon (agent registry) page."""
+    def test_weave_federation_registry_page(self):
+        """Test weaving federation registry page."""
         from vibe_core.plugins.opus_assistant.manas.cortex.sutra import SutraWeaver, WikiContext, WikiPageType
 
         weaver = SutraWeaver()
@@ -255,10 +303,10 @@ class TestSutraWeaver:
             capabilities={"analyst": ["git_analysis"]},
         )
 
-        page = weaver.weave_page(WikiPageType.PANTHEON, ctx)
+        page = weaver.weave_page(WikiPageType.FEDERATION_REGISTRY, ctx)
 
-        assert page.page_type == WikiPageType.PANTHEON
-        assert "Pantheon" in page.content
+        assert page.page_type == WikiPageType.FEDERATION_REGISTRY
+        assert "Federation Registry" in page.content
         assert "agent" in page.content.lower() or "Agent" in page.content
 
     def test_weave_constitution_page(self):
@@ -271,8 +319,32 @@ class TestSutraWeaver:
         page = weaver.weave_page(WikiPageType.CONSTITUTION, ctx)
 
         assert page.page_type == WikiPageType.CONSTITUTION
-        assert "Canonical source: `CONSTITUTION.md`" in page.content
+        assert "Source: `CONSTITUTION.md`" in page.content
         assert "CONSTITUTION" in page.content or "Constitution" in page.content
+
+    def test_weave_index_page_rewrites_bound_links(self):
+        """Test bound markdown rewrites links to the declared surface when possible."""
+        from vibe_core.plugins.opus_assistant.manas.cortex.sutra import SutraWeaver, WikiContext, WikiPageType
+
+        weaver = SutraWeaver()
+        page = weaver.weave_page(WikiPageType.INDEX, WikiContext())
+
+        assert page.page_type == WikiPageType.INDEX
+        assert "[README.md](Start-Here)" in page.content
+        assert "[CONSTITUTION.md](Constitution)" in page.content
+        assert "[docs/architecture/ARCHITECTURE.md](Architecture)" in page.content
+
+    def test_weave_canonical_atlas_page(self):
+        """Test weaving an automated atlas page from registry metadata."""
+        from vibe_core.plugins.opus_assistant.manas.cortex.sutra import SutraWeaver, WikiContext, WikiPageType
+
+        weaver = SutraWeaver()
+        page = weaver.weave_page(WikiPageType.CANONICAL_ATLAS, WikiContext())
+
+        assert page.page_type == WikiPageType.CANONICAL_ATLAS
+        assert "Published Surface Coverage" in page.content
+        assert "[[Stewardship]]" in page.content or "[[Stewardship|Stewardship]]" in page.content
+        assert "docs/steward" in page.content
 
     def test_weave_governance_index_page(self):
         """Test weaving governance index page."""
@@ -317,6 +389,7 @@ class TestSutraWeaver:
         assert "[[Home]]" in page.content
         assert "[[Constitution]]" in page.content
         assert "[[Governance-Index|Governance Index]]" in page.content
+        assert "[[Federation-Registry|Federation Registry]]" in page.content
 
     def test_weave_footer(self):
         """Test weaving footer."""
@@ -458,7 +531,7 @@ class TestWikiSync:
             sync = WikiSync(shell_executor=stub)
             pages = [
                 WikiPage(page_type=WikiPageType.HOME, title="Home", content="Home content"),
-                WikiPage(page_type=WikiPageType.PANTHEON, title="Pantheon", content="Pantheon content"),
+                WikiPage(page_type=WikiPageType.FEDERATION_REGISTRY, title="Registry", content="Registry content"),
                 WikiPage(page_type=WikiPageType.SIDEBAR, title="Sidebar", content="Sidebar"),
             ]
 
@@ -466,7 +539,7 @@ class TestWikiSync:
 
             assert written == 3
             assert (Path(tmpdir) / "Home.md").exists()
-            assert (Path(tmpdir) / "Pantheon.md").exists()
+            assert (Path(tmpdir) / "Federation-Registry.md").exists()
             assert (Path(tmpdir) / "_Sidebar.md").exists()
 
 
@@ -618,12 +691,12 @@ class TestJnanaSutraIntegration:
         assert "Preview" in result or "Home" in result
 
     def test_handle_sutra_query_pantheon_preview(self):
-        """Test handling pantheon preview request."""
+        """Test handling legacy pantheon preview request."""
         from vibe_core.plugins.opus_assistant.manas.cortex.sutra import handle_sutra_query
 
         result = handle_sutra_query("preview pantheon")
 
-        assert "Pantheon" in result
+        assert "Federation Registry" in result
 
     def test_handle_sutra_query_generate_dry_run(self):
         """Test handling generate (dry run) request."""
@@ -679,11 +752,22 @@ class TestWikiTemplates:
         """Test Pantheon template has correct structure."""
         from vibe_core.plugins.opus_assistant.manas.cortex.sutra import TEMPLATE_PANTHEON
 
+        assert "{title}" in TEMPLATE_PANTHEON
+        assert "{intro}" in TEMPLATE_PANTHEON
         assert "{agent_count}" in TEMPLATE_PANTHEON
         assert "{domain_count}" in TEMPLATE_PANTHEON
         assert "{capability_count}" in TEMPLATE_PANTHEON
         assert "{domain_sections}" in TEMPLATE_PANTHEON
         assert "{capability_matrix}" in TEMPLATE_PANTHEON
+
+    def test_atlas_template_structure(self):
+        """Test Atlas template has correct structure."""
+        from vibe_core.plugins.opus_assistant.manas.cortex.sutra import TEMPLATE_ATLAS
+
+        assert "{title}" in TEMPLATE_ATLAS
+        assert "{intro}" in TEMPLATE_ATLAS
+        assert "{surface_rows}" in TEMPLATE_ATLAS
+        assert "{source_section}" in TEMPLATE_ATLAS
 
     def test_governance_index_template_structure(self):
         """Test governance index template has correct structure."""
@@ -814,7 +898,9 @@ class TestSutraWorkflow:
         pages = orch.generate()
 
         # Should generate the full declared surface
-        assert len(pages) == 11
+        from vibe_core.plugins.opus_assistant.manas.cortex.sutra import WikiPageType
+
+        assert len(pages) == len(WikiPageType)
 
         # Each page should have content
         for page in pages:
@@ -828,7 +914,15 @@ class TestSutraWorkflow:
 
         orch = SutraOrchestrator()
 
-        for page_type in [WikiPageType.HOME, WikiPageType.START_HERE, WikiPageType.CONSTITUTION, WikiPageType.PANTHEON, WikiPageType.MAP]:
+        for page_type in [
+            WikiPageType.HOME,
+            WikiPageType.START_HERE,
+            WikiPageType.INDEX,
+            WikiPageType.CONSTITUTION,
+            WikiPageType.FEDERATION_REGISTRY,
+            WikiPageType.CANONICAL_ATLAS,
+            WikiPageType.MAP,
+        ]:
             content = orch.preview(page_type)
             assert isinstance(content, str)
             assert len(content) > 0
