@@ -663,6 +663,8 @@ class SutraWeaver:
 
             weaver = ConfigWeaver(workspace=self._workspace)
             weaver.weave()
+            cartridges_root = self._workspace / "vibe_core" / "cartridges"
+            runtime_families: Counter[str] = Counter()
 
             # Extract agents
             for agent_id, manifest in weaver.manifests.items():
@@ -676,6 +678,17 @@ class SutraWeaver:
                 }
                 ctx.agents.append(agent_info)
 
+                family = str(getattr(manifest, "tier", "agent") or "agent").lower()
+                source_path = getattr(manifest, "source_path", None)
+                if isinstance(source_path, Path):
+                    try:
+                        rel = source_path.relative_to(cartridges_root)
+                        if rel.parts:
+                            family = rel.parts[0]
+                    except ValueError:
+                        pass
+                runtime_families[family] += 1
+
                 # Group by domain
                 if manifest.domain not in ctx.domains:
                     ctx.domains[manifest.domain] = []
@@ -683,6 +696,9 @@ class SutraWeaver:
 
                 # Group capabilities by agent
                 ctx.capabilities[agent_id] = list(manifest.capabilities.keys())
+
+            ctx.node_manifest_count = len(weaver.manifests)
+            ctx.cartridge_families = [{"name": name, "agents": count} for name, count in runtime_families.most_common(10)]
 
             logger.debug(f"SUTRA: Gathered {len(ctx.agents)} agents from MANDALA")
 
@@ -751,21 +767,9 @@ class SutraWeaver:
 
                 ctx.repo_python_files = len(list(vibe_core.rglob("*.py")))
                 ctx.repo_markdown_files = len(list(self._workspace.rglob("*.md")))
-                cartridges_root = vibe_core / "cartridges"
-                node_manifests = list(cartridges_root.rglob("node.json")) if cartridges_root.exists() else []
-                ctx.node_manifest_count = len(node_manifests)
                 ctx.repo_areas = [
                     {"name": name, "python_files": count}
                     for name, count in repo_areas.most_common(10)
-                ]
-                cartridge_families: Counter[str] = Counter()
-                for manifest_path in node_manifests:
-                    rel = manifest_path.relative_to(cartridges_root)
-                    family = rel.parts[0] if rel.parts else "root"
-                    cartridge_families[family] += 1
-                ctx.cartridge_families = [
-                    {"name": name, "agents": count}
-                    for name, count in cartridge_families.most_common(10)
                 ]
 
             logger.debug(f"SUTRA: Gathered {len(ctx.modules)} modules")
