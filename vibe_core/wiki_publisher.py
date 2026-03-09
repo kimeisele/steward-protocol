@@ -7,17 +7,24 @@ from pathlib import Path
 from vibe_core.plugins.opus_assistant.manas.cortex.sutra import SutraOrchestrator
 
 WIKI_GENERATED_INVENTORY = ".wiki-generated-inventory.json"
+WIKI_SURFACE_REGISTRY = ".wiki-surface-registry.json"
 
 
 def build_wiki(*, root: Path, output_dir: Path) -> list[Path]:
     output_dir.mkdir(parents=True, exist_ok=True)
-    pages = SutraOrchestrator(workspace=root).generate()
+    orchestrator = SutraOrchestrator(workspace=root)
+    pages = orchestrator.generate()
     built: list[Path] = []
     for page in pages:
         path = output_dir / page.filename
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(page.content)
         built.append(path)
+    registry_export = getattr(orchestrator, "export_surface_metadata", None)
+    if callable(registry_export):
+        registry_path = output_dir / WIKI_SURFACE_REGISTRY
+        registry_path.write_text(json.dumps(registry_export(), indent=2, sort_keys=True) + "\n")
+        built.append(registry_path)
     return built
 
 

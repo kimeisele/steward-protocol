@@ -5,7 +5,7 @@ import subprocess
 from pathlib import Path
 from types import SimpleNamespace
 
-from vibe_core.wiki_publisher import build_wiki, ensure_wiki_checkout, publish_wiki
+from vibe_core.wiki_publisher import WIKI_SURFACE_REGISTRY, build_wiki, ensure_wiki_checkout, publish_wiki
 
 
 def test_build_wiki_materializes_sutra_pages(tmp_path, monkeypatch):
@@ -16,10 +16,14 @@ def test_build_wiki_materializes_sutra_pages(tmp_path, monkeypatch):
         def generate(self):
             return [SimpleNamespace(filename="Home.md", content="# Home\n"), SimpleNamespace(filename="_Sidebar.md", content="* nav\n")]
 
+        def export_surface_metadata(self):
+            return {"kind": "wiki_surface_registry", "pages": [{"wiki_name": "Home"}]}
+
     monkeypatch.setattr("vibe_core.wiki_publisher.SutraOrchestrator", FakeOrchestrator)
     built = build_wiki(root=tmp_path, output_dir=tmp_path / "out")
-    assert [path.name for path in built] == ["Home.md", "_Sidebar.md"]
+    assert [path.name for path in built] == ["Home.md", "_Sidebar.md", WIKI_SURFACE_REGISTRY]
     assert (tmp_path / "out" / "Home.md").exists()
+    assert json.loads((tmp_path / "out" / WIKI_SURFACE_REGISTRY).read_text())["kind"] == "wiki_surface_registry"
 
 
 def test_ensure_wiki_checkout_clones_when_missing(tmp_path, monkeypatch):
