@@ -343,7 +343,7 @@ class TestSutraWeaver:
 
         assert page.page_type == WikiPageType.CANONICAL_ATLAS
         assert "Published Surface Coverage" in page.content
-        assert "[[Stewardship]]" in page.content or "[[Stewardship|Stewardship]]" in page.content
+        assert "[Stewardship](Stewardship)" in page.content
         assert "docs/steward" in page.content
 
     def test_weave_governance_index_page(self):

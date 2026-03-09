@@ -480,6 +480,12 @@ def _format_surface_link(spec: WikiSurfacePageSpec) -> str:
     return f"[[{spec.wiki_name}|{label}]]"
 
 
+def _format_surface_markdown_link(spec: WikiSurfacePageSpec) -> str:
+    """Render a standard markdown link for contexts where wiki links are poorly supported."""
+    label = spec.nav_label or spec.title
+    return f"[{label}]({spec.wiki_name})"
+
+
 def _render_repo_source_reference(path: str, repo_web_url: str) -> str:
     """Render a repository source reference as a markdown link when possible."""
     if repo_web_url:
@@ -916,7 +922,7 @@ class SutraWeaver:
         matching_specs = [page_spec for page_spec in self._ordered_surface_specs() if _match_registry_filters(page_spec, config)]
         if matching_specs:
             surface_rows = "\n".join(
-                f"| {_format_surface_link(page_spec)} | `{page_spec.page_class}` | `{page_spec.authority}` | `{page_spec.domain}` | `{page_spec.source_path or page_spec.renderer}` |"
+                f"| {_format_surface_markdown_link(page_spec)} | `{page_spec.page_class}` | `{page_spec.authority}` | `{page_spec.domain}` | `{page_spec.source_path or page_spec.renderer}` |"
                 for page_spec in matching_specs
             )
         else:
