@@ -36,6 +36,7 @@ __position__ = 9
 __genesis__ = "0xb98e092c"  # GenesisByte: parampara % 37 == 0
 
 import logging
+import hashlib
 import json
 import os
 import re
@@ -206,6 +207,15 @@ class SutraResult:
 # This avoids external file dependencies while maintaining flexibility
 
 WIKI_SURFACE_MANIFEST = Path("wiki-src/manifest.yaml")
+STEWARD_REPO_ID = "steward-protocol"
+AUTHORITY_EXPORT_CONTRACT_VERSION = 1
+AUTHORITY_EXPORT_ARTIFACTS = {
+    "canonical_surface": ".authority-exports/canonical-surface.json",
+    "public_summary_registry": ".authority-exports/public-summary-registry.json",
+    "source_surface_registry": ".authority-exports/source-surface-registry.json",
+    "repo_graph": ".authority-exports/repo-graph.json",
+    "surface_metadata": ".authority-exports/surface-metadata.json",
+}
 
 
 TEMPLATE_HOME = """# {system_name}
@@ -514,6 +524,60 @@ def _build_surface_spec(workspace: Path, payload: dict[str, Any], *, defaults: O
 def _surface_public_summary(spec: WikiSurfacePageSpec, fallback: str = "") -> str:
     """Return the public-safe summary for a surface page."""
     return str(spec.public_summary or spec.description or fallback).strip()
+
+
+def _surface_spec_payload(spec: WikiSurfacePageSpec) -> dict[str, Any]:
+    """Serialize a surface page spec for machine-readable export."""
+    return {
+        "id": spec.page_type.name,
+        "title": spec.title,
+        "wiki_name": spec.wiki_name,
+        "filename": f"{spec.wiki_name}.md",
+        "page_class": spec.page_class,
+        "authority": spec.authority,
+        "domain": spec.domain,
+        "section": spec.section,
+        "description": spec.description,
+        "public_summary": spec.public_summary,
+        "renderer": spec.renderer,
+        "source_path": spec.source_path,
+        "featured": spec.featured,
+        "include_in_sidebar": spec.include_in_sidebar,
+        "query_aliases": list(spec.query_aliases),
+    }
+
+
+def _artifact_sha256(payload: dict[str, Any]) -> str:
+    """Compute a stable sha256 for a JSON payload."""
+    serialized = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    return hashlib.sha256(serialized).hexdigest()
+
+
+def _canonical_source_payload(workspace: Path, source_specs: dict[str, WikiSurfacePageSpec], repo_web_url: str, spec: WikiSurfacePageSpec) -> dict[str, Any]:
+    """Serialize a canonical bound source document."""
+    source_path = workspace / str(spec.source_path or "")
+    if source_path.exists():
+        content = _normalize_bound_markdown(
+            source_path.read_text(),
+            source_path=str(spec.source_path or ""),
+            workspace=workspace,
+            source_page_specs=source_specs,
+            repo_web_url=repo_web_url,
+        )
+    else:
+        content = f"# {spec.title}\n\n_Source document not found: `{spec.source_path}`_\n"
+    return {
+        "id": spec.page_type.name,
+        "document_id": spec.page_type.name.lower(),
+        "title": spec.title,
+        "wiki_name": spec.wiki_name,
+        "source_path": spec.source_path,
+        "authority": spec.authority,
+        "domain": spec.domain,
+        "section": spec.section,
+        "public_summary": _surface_public_summary(spec, spec.title),
+        "content": content,
+    }
 
 
 def _resolve_agent_internet_projection_config(workspace: Path) -> dict[str, Any]:
@@ -1635,26 +1699,7 @@ class SutraOrchestrator:
             "repo_web_url": self._weaver._repo_web_url,
             "sections": self._weaver._surface_sections,
             "page_count": len(non_navigation_specs),
-            "pages": [
-                {
-                    "id": spec.page_type.name,
-                    "title": spec.title,
-                    "wiki_name": spec.wiki_name,
-                    "filename": f"{spec.wiki_name}.md",
-                    "page_class": spec.page_class,
-                    "authority": spec.authority,
-                    "domain": spec.domain,
-                    "section": spec.section,
-                    "description": spec.description,
-                    "public_summary": spec.public_summary,
-                    "renderer": spec.renderer,
-                    "source_path": spec.source_path,
-                    "featured": spec.featured,
-                    "include_in_sidebar": spec.include_in_sidebar,
-                    "query_aliases": list(spec.query_aliases),
-                }
-                for spec in surface_specs
-            ],
+            "pages": [_surface_spec_payload(spec) for spec in surface_specs],
             "system_metrics": {
                 "agent_count": len(ctx.agents),
                 "domain_count": len(ctx.domains),
@@ -1678,6 +1723,149 @@ class SutraOrchestrator:
                 "repo_graph": ctx.projection_repo_graph,
                 "search_index": ctx.projection_search_index,
             },
+        }
+
+    def export_source_surface_registry(self) -> dict[str, Any]:
+        """Export the declared source-side surface registry without projection state."""
+        ctx = self._get_context()
+        non_navigation_specs = [spec for spec in self.declared_surface_specs() if spec.page_class != "navigation"]
+        return {
+            "kind": "source_surface_registry",
+            "version": 1,
+            "repo_id": STEWARD_REPO_ID,
+            "generated_at": ctx.timestamp,
+            "section_count": len(self._weaver._surface_sections),
+            "page_count": len(non_navigation_specs),
+            "sections": self._weaver._surface_sections,
+            "pages": [_surface_spec_payload(spec) for spec in non_navigation_specs],
+        }
+
+    def export_public_summary_registry(self) -> dict[str, Any]:
+        """Export public summaries for all declared non-navigation pages."""
+        ctx = self._get_context()
+        non_navigation_specs = [spec for spec in self.declared_surface_specs() if spec.page_class != "navigation"]
+        return {
+            "kind": "public_summary_registry",
+            "version": 1,
+            "repo_id": STEWARD_REPO_ID,
+            "generated_at": ctx.timestamp,
+            "record_count": len(non_navigation_specs),
+            "records": [
+                {
+                    "id": spec.page_type.name,
+                    "wiki_name": spec.wiki_name,
+                    "title": spec.title,
+                    "page_class": spec.page_class,
+                    "authority": spec.authority,
+                    "domain": spec.domain,
+                    "section": spec.section,
+                    "source_path": spec.source_path,
+                    "public_summary": _surface_public_summary(spec, spec.title),
+                }
+                for spec in non_navigation_specs
+            ],
+        }
+
+    def export_canonical_surface(self) -> dict[str, Any]:
+        """Export canonical bound documents as source-authoritative artifacts."""
+        ctx = self._get_context()
+        canonical_specs = [
+            spec
+            for spec in self.declared_surface_specs()
+            if spec.page_class == "canonical" and spec.source_path
+        ]
+        return {
+            "kind": "canonical_surface",
+            "version": 1,
+            "repo_id": STEWARD_REPO_ID,
+            "generated_at": ctx.timestamp,
+            "document_count": len(canonical_specs),
+            "documents": [
+                _canonical_source_payload(self._workspace, self._weaver._source_specs, self._weaver._repo_web_url, spec)
+                for spec in canonical_specs
+            ],
+        }
+
+    def export_repo_graph_snapshot(self) -> dict[str, Any]:
+        """Export source-side repository and graph summary for projection operators."""
+        ctx = self._get_context()
+        return {
+            "kind": "repo_graph",
+            "version": 1,
+            "repo_id": STEWARD_REPO_ID,
+            "generated_at": ctx.timestamp,
+            "summary": {
+                "agent_count": len(ctx.agents),
+                "domain_count": len(ctx.domains),
+                "capability_count": sum(len(capabilities) for capabilities in ctx.capabilities.values()),
+                "node_count": ctx.node_count,
+                "edge_count": ctx.edge_count,
+                "constraint_count": ctx.constraint_count,
+                "module_count": len(ctx.modules),
+                "repo_python_files": ctx.repo_python_files,
+                "repo_markdown_files": ctx.repo_markdown_files,
+                "node_manifest_count": ctx.node_manifest_count,
+            },
+            "repo_areas": ctx.repo_areas,
+            "cartridge_families": ctx.cartridge_families,
+            "knowledge_summary": ctx.knowledge_summary,
+        }
+
+    def export_authority_surface_metadata(self, *, source_sha: str = "") -> dict[str, Any]:
+        """Wrap the richer surface metadata export as an authority artifact."""
+        return {
+            "kind": "surface_metadata",
+            "version": 1,
+            "repo_id": STEWARD_REPO_ID,
+            "source_sha": source_sha,
+            "surface_registry": self.export_surface_metadata(),
+        }
+
+    def export_authority_bundle(self, *, source_sha: str = "") -> dict[str, Any]:
+        """Export authority records plus the concrete artifacts they describe."""
+        generated_at = datetime.now(timezone.utc).timestamp()
+        version = source_sha or datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        artifacts_by_kind = {
+            "canonical_surface": self.export_canonical_surface(),
+            "public_summary_registry": self.export_public_summary_registry(),
+            "source_surface_registry": self.export_source_surface_registry(),
+            "repo_graph": self.export_repo_graph_snapshot(),
+            "surface_metadata": self.export_authority_surface_metadata(source_sha=source_sha),
+        }
+        artifact_payloads = {
+            AUTHORITY_EXPORT_ARTIFACTS[export_kind]: payload for export_kind, payload in artifacts_by_kind.items()
+        }
+        authority_exports = [
+            {
+                "export_id": f"{STEWARD_REPO_ID}/{export_kind}",
+                "repo_id": STEWARD_REPO_ID,
+                "export_kind": export_kind,
+                "version": version,
+                "artifact_uri": AUTHORITY_EXPORT_ARTIFACTS[export_kind],
+                "generated_at": generated_at,
+                "contract_version": AUTHORITY_EXPORT_CONTRACT_VERSION,
+                "content_sha256": _artifact_sha256(payload),
+                "labels": {"source_sha": source_sha} if source_sha else {},
+            }
+            for export_kind, payload in artifacts_by_kind.items()
+        ]
+        return {
+            "kind": "source_authority_bundle",
+            "contract_version": AUTHORITY_EXPORT_CONTRACT_VERSION,
+            "generated_at": generated_at,
+            "source_sha": source_sha,
+            "repo_role": {
+                "repo_id": STEWARD_REPO_ID,
+                "role": "normative_source",
+                "owner_boundary": "normative_protocol_surface",
+                "exports": [record["export_kind"] for record in authority_exports],
+                "consumes": [],
+                "publication_targets": ["steward-public-wiki"],
+                "labels": {"public_surface_owner": "agent-internet"},
+            },
+            "authority_exports": authority_exports,
+            "artifact_paths": {export_kind: AUTHORITY_EXPORT_ARTIFACTS[export_kind] for export_kind in artifacts_by_kind},
+            "artifacts": artifact_payloads,
         }
 
     def generate(self, page_types: Optional[List[WikiPageType]] = None) -> List[WikiPage]:

@@ -9,7 +9,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from vibe_core.wiki_publisher import WIKI_SURFACE_REGISTRY, build_wiki
+from vibe_core.wiki_publisher import build_wiki
 
 
 def main() -> int:
@@ -17,7 +17,7 @@ def main() -> int:
     parser.add_argument("--output-dir", default=".vibe/wiki-build", help="Where to materialize wiki markdown files")
     args = parser.parse_args()
     built = build_wiki(root=ROOT, output_dir=ROOT / args.output_dir)
-    page_count = len([path for path in built if path.name != WIKI_SURFACE_REGISTRY])
+    page_count = len([path for path in built if path.suffix.lower() == ".md"])
     metadata_count = len(built) - page_count
     print(f"built {page_count} wiki pages and {metadata_count} metadata artifacts into {args.output_dir}")
     return 0

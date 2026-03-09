@@ -631,6 +631,28 @@ class TestSutraOrchestrator:
         assert payload["projection"]["mode"] == "agent_internet"
         assert payload["system_metrics"]["repo_python_files"] == 11
 
+    def test_export_authority_bundle(self):
+        """Test authoritative source export bundle for agent-internet projection."""
+        from vibe_core.plugins.opus_assistant.manas.cortex.sutra import SutraOrchestrator
+
+        orch = SutraOrchestrator()
+        payload = orch.export_authority_bundle(source_sha="abc123")
+
+        assert payload["kind"] == "source_authority_bundle"
+        assert payload["repo_role"]["role"] == "normative_source"
+        assert payload["source_sha"] == "abc123"
+        export_kinds = {record["export_kind"] for record in payload["authority_exports"]}
+        assert export_kinds == {
+            "canonical_surface",
+            "public_summary_registry",
+            "source_surface_registry",
+            "repo_graph",
+            "surface_metadata",
+        }
+        assert ".authority-exports/canonical-surface.json" in payload["artifacts"]
+        assert payload["artifacts"][".authority-exports/canonical-surface.json"]["kind"] == "canonical_surface"
+        assert payload["artifacts"][".authority-exports/surface-metadata.json"]["surface_registry"]["kind"] == "wiki_surface_registry"
+
     def test_generate_specific_pages(self):
         """Test generating specific page types."""
         from vibe_core.plugins.opus_assistant.manas.cortex.sutra import SutraOrchestrator, WikiPageType

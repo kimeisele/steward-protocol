@@ -5,7 +5,7 @@ import subprocess
 from pathlib import Path
 from types import SimpleNamespace
 
-from vibe_core.wiki_publisher import WIKI_SURFACE_REGISTRY, build_wiki, ensure_wiki_checkout, publish_wiki
+from vibe_core.wiki_publisher import WIKI_AUTHORITY_EXPORT_BUNDLE, WIKI_SURFACE_REGISTRY, build_wiki, ensure_wiki_checkout, publish_wiki
 
 
 def test_build_wiki_materializes_sutra_pages(tmp_path, monkeypatch):
@@ -19,11 +19,27 @@ def test_build_wiki_materializes_sutra_pages(tmp_path, monkeypatch):
         def export_surface_metadata(self):
             return {"kind": "wiki_surface_registry", "pages": [{"wiki_name": "Home"}]}
 
+        def export_authority_bundle(self, *, source_sha=""):
+            return {
+                "kind": "source_authority_bundle",
+                "source_sha": source_sha,
+                "authority_exports": [
+                    {"export_id": "steward-protocol/canonical_surface", "export_kind": "canonical_surface", "artifact_uri": ".authority-exports/canonical-surface.json"}
+                ],
+                "artifact_paths": {"canonical_surface": ".authority-exports/canonical-surface.json"},
+                "artifacts": {
+                    ".authority-exports/canonical-surface.json": {"kind": "canonical_surface", "documents": [{"title": "Home"}]}
+                },
+            }
+
     monkeypatch.setattr("vibe_core.wiki_publisher.SutraOrchestrator", FakeOrchestrator)
+    monkeypatch.setattr("vibe_core.wiki_publisher._git_output", lambda args, cwd: "abc123\n")
     built = build_wiki(root=tmp_path, output_dir=tmp_path / "out")
-    assert [path.name for path in built] == ["Home.md", "_Sidebar.md", WIKI_SURFACE_REGISTRY]
+    assert [path.name for path in built] == ["Home.md", "_Sidebar.md", WIKI_SURFACE_REGISTRY, "canonical-surface.json", WIKI_AUTHORITY_EXPORT_BUNDLE]
     assert (tmp_path / "out" / "Home.md").exists()
     assert json.loads((tmp_path / "out" / WIKI_SURFACE_REGISTRY).read_text())["kind"] == "wiki_surface_registry"
+    assert json.loads((tmp_path / "out" / WIKI_AUTHORITY_EXPORT_BUNDLE).read_text())["source_sha"] == "abc123"
+    assert json.loads((tmp_path / "out" / ".authority-exports" / "canonical-surface.json").read_text())["kind"] == "canonical_surface"
 
 
 def test_ensure_wiki_checkout_clones_when_missing(tmp_path, monkeypatch):
