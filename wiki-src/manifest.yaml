@@ -35,6 +35,7 @@ canonical_discovery:
       title: Start Here
       wiki_name: Start-Here
       nav_label: Start Here
+      public_summary: Public entry point for installation, quick start, and repository orientation.
       domain: entrypoint
       section: start-here
       featured: true
@@ -44,12 +45,14 @@ canonical_discovery:
       title: Index
       wiki_name: Index
       nav_label: Index
+      public_summary: Structured index of the authored documentation set and supporting references.
       featured: false
       query_aliases: [index, documentation index]
     - id: CONSTITUTION
       match_path: CONSTITUTION.md
       title: Constitution
       wiki_name: Constitution
+      public_summary: Supreme governance document defining identity, audit, boundary, and transparency requirements.
       authority: binding
       domain: governance
       section: governance
@@ -59,6 +62,7 @@ canonical_discovery:
       match_path: AGI_MANIFESTO.md
       title: AGI Manifesto
       wiki_name: AGI-Manifesto
+      public_summary: Doctrinal statement describing the governed-intelligence philosophy behind the system.
       authority: doctrine
       domain: governance
       section: governance
@@ -69,6 +73,7 @@ canonical_discovery:
       title: Steward Operating Model
       wiki_name: Stewardship
       nav_label: Steward Model
+      public_summary: Operating-model reference for stewardship roles, responsibilities, and coordination.
       authority: operative
       domain: governance
       section: governance
@@ -78,6 +83,7 @@ canonical_discovery:
       match_path: PROTOCOLS.md
       title: Protocols
       wiki_name: Protocols
+      public_summary: Registry of protocol domains, lifecycle semantics, and implementation-facing coordination rules.
       authority: binding
       domain: protocol
       section: protocol-stack
@@ -87,6 +93,7 @@ canonical_discovery:
       match_path: ARCHITECTURE.md
       title: Architecture
       wiki_name: Architecture
+      public_summary: High-level architecture overview of core modules, plugins, and system composition.
       authority: reference
       domain: protocol
       section: protocol-stack
@@ -96,6 +103,7 @@ canonical_discovery:
       match_path: KERNEL.md
       title: Kernel
       wiki_name: Kernel
+      public_summary: Detailed kernel planning and refactor reference for the core runtime foundation.
       authority: informative
       domain: protocol
       section: protocol-stack
@@ -115,6 +123,7 @@ derived_pages:
     featured: true
     query_aliases: [wiki, home]
     description: Public documentation entry point derived from repository and runtime state.
+    public_summary: Public documentation entry point derived from repository and runtime state.
 
   - id: GOVERNANCE_INDEX
     title: Governance Overview
@@ -128,6 +137,7 @@ derived_pages:
     featured: true
     query_aliases: [governance, governance overview, governance index]
     description: Constitutional landing page with governance sources and structure.
+    public_summary: Governance landing page summarizing the constitution, related documents, and enforcement sources.
 
   - id: GOVERNANCE_ATLAS
     title: Governance Atlas
@@ -141,6 +151,7 @@ derived_pages:
     featured: false
     query_aliases: [governance atlas, governance references]
     description: Automatically discovered governance-adjacent references and enforcement sources.
+    public_summary: Derived atlas of governance-facing documents and source modules.
     render_config:
       intro: Derived atlas of constitutional, doctrinal, and governance-adjacent sources.
       include_domains: [governance]
@@ -161,6 +172,7 @@ derived_pages:
     featured: true
     query_aliases: [federation registry, agent registry, agents, pantheon]
     description: Runtime-facing registry of declared agents, domains, and capabilities.
+    public_summary: Registry of declared agents, domains, and advertised capabilities.
 
   - id: MAP
     title: System Map
@@ -174,6 +186,7 @@ derived_pages:
     featured: true
     query_aliases: [system map, map, topology, architecture map]
     description: Data-driven topology built from repository structure, manifests, and graph state.
+    public_summary: Repository and runtime topology synthesized from structure, manifests, and graph metadata.
 
   - id: CANONICAL_ATLAS
     title: Document Atlas
@@ -187,6 +200,7 @@ derived_pages:
     featured: true
     query_aliases: [document atlas, canonical atlas, canonical docs]
     description: Machine-readable atlas of bound source documents and nearby reference material.
+    public_summary: Atlas of public documents and nearby source trees included in the wiki surface.
     render_config:
       intro: Machine-derived atlas of the public canon and neighboring source trees.
       include_page_classes: [canonical]
@@ -207,6 +221,7 @@ derived_pages:
     featured: false
     query_aliases: [system atlas, protocol atlas, architecture atlas]
     description: Protocol, architecture, and operating-model references discovered from the repo.
+    public_summary: Atlas of protocol, architecture, and operating-model references discovered from the repository.
     render_config:
       intro: Machine-derived atlas of the protocol stack and architecture reference corpus.
       include_domains: [protocol]

@@ -302,6 +302,7 @@ class TestSutraWeaver:
         assert "Test System" in page.content
         assert "2.0.0" in page.content
         assert "Home" in page.title
+        assert "Public entry point for installation, quick start, and repository orientation." in page.content
 
     def test_weave_federation_registry_page(self):
         """Test weaving federation registry page."""
@@ -332,6 +333,8 @@ class TestSutraWeaver:
         page = weaver.weave_page(WikiPageType.CONSTITUTION, ctx)
 
         assert page.page_type == WikiPageType.CONSTITUTION
+        assert "Public abstract" in page.content
+        assert "Supreme governance document defining identity, audit, boundary, and transparency requirements." in page.content
         assert "Source: `CONSTITUTION.md`" in page.content
         assert "CONSTITUTION" in page.content or "Constitution" in page.content
 
@@ -356,7 +359,9 @@ class TestSutraWeaver:
 
         assert page.page_type == WikiPageType.CANONICAL_ATLAS
         assert "Published Surface Coverage" in page.content
+        assert "Public Summary" in page.content
         assert "[Steward Model](Stewardship)" in page.content
+        assert "Operating-model reference for stewardship roles, responsibilities, and coordination." in page.content
         assert "docs/steward" in page.content
 
     def test_weave_governance_index_page(self):
@@ -369,6 +374,7 @@ class TestSutraWeaver:
         assert page.page_type == WikiPageType.GOVERNANCE_INDEX
         assert "[[Constitution]]" in page.content
         assert "Governance Overview" in page.content
+        assert "Doctrinal statement describing the governed-intelligence philosophy behind the system." in page.content
         assert "contracts.py" in page.content
         assert "__init__.py" not in page.content
 
@@ -599,6 +605,7 @@ class TestSutraOrchestrator:
         assert payload["kind"] == "wiki_surface_registry"
         assert payload["page_count"] >= 1
         assert any(page["wiki_name"] == "Home" for page in payload["pages"])
+        assert any(page.get("public_summary") for page in payload["pages"])
         assert payload["system_metrics"]["repo_python_files"] == 11
 
     def test_generate_specific_pages(self):
@@ -801,6 +808,7 @@ class TestWikiTemplates:
         assert "{intro}" in TEMPLATE_ATLAS
         assert "{surface_rows}" in TEMPLATE_ATLAS
         assert "{source_section}" in TEMPLATE_ATLAS
+        assert "Public Summary" in TEMPLATE_ATLAS
 
     def test_governance_index_template_structure(self):
         """Test governance index template has correct structure."""
