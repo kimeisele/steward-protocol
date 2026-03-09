@@ -55,6 +55,11 @@ def _fast_sutra_context(monkeypatch):
                 {"name": "protocols", "files": 7, "path": "vibe_core/protocols"},
             ]
         )
+        ctx.repo_python_files = 11
+        ctx.repo_markdown_files = 8
+        ctx.node_manifest_count = 2
+        ctx.repo_areas = [{"name": "governance", "python_files": 4}, {"name": "protocols", "python_files": 7}]
+        ctx.cartridge_families = [{"name": "system", "agents": 2}]
 
     monkeypatch.setattr(SutraWeaver, "_gather_mandala_context", fake_gather_mandala)
     monkeypatch.setattr(SutraWeaver, "_gather_akasha_context", fake_gather_akasha)
@@ -132,6 +137,14 @@ class TestWikiPage:
         )
 
         assert page.filename == "Federation-Registry.md"
+
+    def test_filename_uses_declared_wiki_name_when_present(self):
+        """Test filename honors a declared wiki_name override."""
+        from vibe_core.plugins.opus_assistant.manas.cortex.sutra import WikiPage, WikiPageType
+
+        page = WikiPage(page_type=WikiPageType.MAP, title="System Map", wiki_name="System-Map", content="content")
+
+        assert page.filename == "System-Map.md"
 
     def test_filename_for_sidebar(self):
         """Test sidebar has underscore prefix."""
@@ -306,7 +319,7 @@ class TestSutraWeaver:
         page = weaver.weave_page(WikiPageType.FEDERATION_REGISTRY, ctx)
 
         assert page.page_type == WikiPageType.FEDERATION_REGISTRY
-        assert "Federation Registry" in page.content
+        assert "Agent Registry" in page.content
         assert "agent" in page.content.lower() or "Agent" in page.content
 
     def test_weave_constitution_page(self):
@@ -343,7 +356,7 @@ class TestSutraWeaver:
 
         assert page.page_type == WikiPageType.CANONICAL_ATLAS
         assert "Published Surface Coverage" in page.content
-        assert "[Stewardship](Stewardship)" in page.content
+        assert "[Steward Model](Stewardship)" in page.content
         assert "docs/steward" in page.content
 
     def test_weave_governance_index_page(self):
@@ -355,6 +368,7 @@ class TestSutraWeaver:
 
         assert page.page_type == WikiPageType.GOVERNANCE_INDEX
         assert "[[Constitution]]" in page.content
+        assert "Governance Overview" in page.content
         assert "contracts.py" in page.content
         assert "__init__.py" not in page.content
 
@@ -368,13 +382,19 @@ class TestSutraWeaver:
             edge_count=100,
             constraint_count=10,
             modules=[{"name": "core", "files": 5, "path": "vibe_core/core"}],
+            repo_python_files=25,
+            repo_markdown_files=9,
+            node_manifest_count=3,
+            repo_areas=[{"name": "core", "python_files": 25}],
+            cartridge_families=[{"name": "system", "agents": 3}],
         )
 
         page = weaver.weave_page(WikiPageType.MAP, ctx)
 
         assert page.page_type == WikiPageType.MAP
         assert "50" in page.content  # node_count
-        assert "Architecture" in page.content or "Map" in page.content
+        assert "System Map" in page.content
+        assert "Repository Snapshot" in page.content
 
     def test_weave_sidebar(self):
         """Test weaving sidebar."""
@@ -388,8 +408,9 @@ class TestSutraWeaver:
         assert page.page_type == WikiPageType.SIDEBAR
         assert "[[Home]]" in page.content
         assert "[[Constitution]]" in page.content
-        assert "[[Governance-Index|Governance Index]]" in page.content
-        assert "[[Federation-Registry|Federation Registry]]" in page.content
+        assert "[[Governance-Index|Governance Overview]]" in page.content
+        assert "[[Federation-Registry|Agent Registry]]" in page.content
+        assert "### Runtime Surface" in page.content
 
     def test_weave_footer(self):
         """Test weaving footer."""
@@ -568,6 +589,18 @@ class TestSutraOrchestrator:
 
         assert len(pages) == len(WikiPageType)
 
+    def test_export_surface_metadata(self):
+        """Test machine-readable surface metadata export."""
+        from vibe_core.plugins.opus_assistant.manas.cortex.sutra import SutraOrchestrator
+
+        orch = SutraOrchestrator()
+        payload = orch.export_surface_metadata()
+
+        assert payload["kind"] == "wiki_surface_registry"
+        assert payload["page_count"] >= 1
+        assert any(page["wiki_name"] == "Home" for page in payload["pages"])
+        assert payload["system_metrics"]["repo_python_files"] == 11
+
     def test_generate_specific_pages(self):
         """Test generating specific page types."""
         from vibe_core.plugins.opus_assistant.manas.cortex.sutra import SutraOrchestrator, WikiPageType
@@ -696,7 +729,7 @@ class TestJnanaSutraIntegration:
 
         result = handle_sutra_query("preview pantheon")
 
-        assert "Federation Registry" in result
+        assert "Agent Registry" in result
 
     def test_handle_sutra_query_generate_dry_run(self):
         """Test handling generate (dry run) request."""
@@ -776,8 +809,8 @@ class TestWikiTemplates:
         assert "{canonical_pages}" in TEMPLATE_GOVERNANCE_INDEX
         assert "{constitution_section}" in TEMPLATE_GOVERNANCE_INDEX
         assert "{governance_section}" in TEMPLATE_GOVERNANCE_INDEX
-        assert "NARASIMHA" in TEMPLATE_GOVERNANCE_INDEX
-        assert "Platinum" in TEMPLATE_GOVERNANCE_INDEX
+        assert "{title}" in TEMPLATE_GOVERNANCE_INDEX
+        assert "Change policy" in TEMPLATE_GOVERNANCE_INDEX
 
     def test_map_template_structure(self):
         """Test Map template has correct structure."""
@@ -786,8 +819,10 @@ class TestWikiTemplates:
         assert "{node_count}" in TEMPLATE_MAP
         assert "{edge_count}" in TEMPLATE_MAP
         assert "{constraint_count}" in TEMPLATE_MAP
+        assert "{repo_python_files}" in TEMPLATE_MAP
+        assert "{runtime_section}" in TEMPLATE_MAP
         assert "{module_section}" in TEMPLATE_MAP
-        assert "MANAS" in TEMPLATE_MAP
+        assert "Repository Snapshot" in TEMPLATE_MAP
 
     def test_sidebar_template_structure(self):
         """Test Sidebar template has correct structure."""
