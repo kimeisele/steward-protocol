@@ -8,11 +8,13 @@ from vibe_core.plugins.opus_assistant.manas.cortex.sutra import SutraOrchestrato
 
 WIKI_GENERATED_INVENTORY = ".wiki-generated-inventory.json"
 WIKI_SURFACE_REGISTRY = ".wiki-surface-registry.json"
+WIKI_AUTHORITY_EXPORT_BUNDLE = ".authority-export-bundle.json"
 
 
 def build_wiki(*, root: Path, output_dir: Path) -> list[Path]:
     output_dir.mkdir(parents=True, exist_ok=True)
     orchestrator = SutraOrchestrator(workspace=root)
+    source_sha = _git_output(["rev-parse", "HEAD"], cwd=root).strip() or "unknown"
     pages = orchestrator.generate()
     built: list[Path] = []
     for page in pages:
@@ -25,6 +27,18 @@ def build_wiki(*, root: Path, output_dir: Path) -> list[Path]:
         registry_path = output_dir / WIKI_SURFACE_REGISTRY
         registry_path.write_text(json.dumps(registry_export(), indent=2, sort_keys=True) + "\n")
         built.append(registry_path)
+    authority_bundle_export = getattr(orchestrator, "export_authority_bundle", None)
+    if callable(authority_bundle_export):
+        bundle_payload = dict(authority_bundle_export(source_sha=source_sha))
+        artifact_payloads = dict(bundle_payload.pop("artifacts", {}))
+        for relative_path, payload in artifact_payloads.items():
+            artifact_path = output_dir / relative_path
+            artifact_path.parent.mkdir(parents=True, exist_ok=True)
+            artifact_path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n")
+            built.append(artifact_path)
+        bundle_path = output_dir / WIKI_AUTHORITY_EXPORT_BUNDLE
+        bundle_path.write_text(json.dumps(bundle_payload, indent=2, sort_keys=True) + "\n")
+        built.append(bundle_path)
     return built
 
 
