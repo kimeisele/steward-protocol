@@ -32,8 +32,14 @@ class TestWikiPageType:
         from vibe_core.plugins.opus_assistant.manas.cortex.sutra import WikiPageType
 
         assert WikiPageType.HOME.value == "Home"
+        assert WikiPageType.START_HERE.value == "Start-Here"
+        assert WikiPageType.CONSTITUTION.value == "Constitution"
+        assert WikiPageType.GOVERNANCE_INDEX.value == "Governance-Index"
+        assert WikiPageType.AGI_MANIFESTO.value == "AGI-Manifesto"
+        assert WikiPageType.PROTOCOLS.value == "Protocols"
+        assert WikiPageType.ARCHITECTURE.value == "Architecture"
         assert WikiPageType.PANTHEON.value == "Pantheon"
-        assert WikiPageType.LAW.value == "Law"
+        assert WikiPageType.LAW == WikiPageType.CONSTITUTION
         assert WikiPageType.MAP.value == "Map"
         assert WikiPageType.SIDEBAR.value == "_Sidebar"
         assert WikiPageType.FOOTER.value == "_Footer"
@@ -255,20 +261,30 @@ class TestSutraWeaver:
         assert "Pantheon" in page.content
         assert "agent" in page.content.lower() or "Agent" in page.content
 
-    def test_weave_law_page(self):
-        """Test weaving Law (constitution) page."""
+    def test_weave_constitution_page(self):
+        """Test weaving canonical Constitution page."""
         from vibe_core.plugins.opus_assistant.manas.cortex.sutra import SutraWeaver, WikiContext, WikiPageType
 
         weaver = SutraWeaver()
-        ctx = WikiContext(
-            constitution_articles=["Article 1: Test"],
-            governance_rules=["rule1", "rule2"],
-        )
+        ctx = WikiContext()
 
-        page = weaver.weave_page(WikiPageType.LAW, ctx)
+        page = weaver.weave_page(WikiPageType.CONSTITUTION, ctx)
 
-        assert page.page_type == WikiPageType.LAW
-        assert "Law" in page.content or "Constitution" in page.content
+        assert page.page_type == WikiPageType.CONSTITUTION
+        assert "Canonical source: `CONSTITUTION.md`" in page.content
+        assert "CONSTITUTION" in page.content or "Constitution" in page.content
+
+    def test_weave_governance_index_page(self):
+        """Test weaving governance index page."""
+        from vibe_core.plugins.opus_assistant.manas.cortex.sutra import SutraWeaver, WikiContext, WikiPageType
+
+        weaver = SutraWeaver()
+        page = weaver.weave_page(WikiPageType.GOVERNANCE_INDEX, WikiContext())
+
+        assert page.page_type == WikiPageType.GOVERNANCE_INDEX
+        assert "[[Constitution]]" in page.content
+        assert "contracts.py" in page.content
+        assert "__init__.py" not in page.content
 
     def test_weave_map_page(self):
         """Test weaving Map (architecture) page."""
@@ -299,6 +315,8 @@ class TestSutraWeaver:
 
         assert page.page_type == WikiPageType.SIDEBAR
         assert "[[Home]]" in page.content
+        assert "[[Constitution]]" in page.content
+        assert "[[Governance-Index|Governance Index]]" in page.content
 
     def test_weave_footer(self):
         """Test weaving footer."""
@@ -356,7 +374,9 @@ class StubShell:
 
         # Simple matching for tests
         cmd_str = " ".join(command)
-        if cmd_str in self.responses:
+        if command[:3] == ["git", "remote", "get-url"] and "git remote get-url" in self.responses:
+            res = self.responses["git remote get-url"]
+        elif cmd_str in self.responses:
             res = self.responses[cmd_str]
         elif command[0] in self.responses:  # match by executable/verb logic?
             # Specific logic for git remote get-url
@@ -653,9 +673,7 @@ class TestWikiTemplates:
         assert "{version}" in TEMPLATE_HOME
         assert "{agent_count}" in TEMPLATE_HOME
         assert "{node_count}" in TEMPLATE_HOME
-        assert "[[Pantheon]]" in TEMPLATE_HOME
-        assert "[[Law]]" in TEMPLATE_HOME
-        assert "[[Map]]" in TEMPLATE_HOME
+        assert "{quick_links}" in TEMPLATE_HOME
 
     def test_pantheon_template_structure(self):
         """Test Pantheon template has correct structure."""
@@ -667,14 +685,15 @@ class TestWikiTemplates:
         assert "{domain_sections}" in TEMPLATE_PANTHEON
         assert "{capability_matrix}" in TEMPLATE_PANTHEON
 
-    def test_law_template_structure(self):
-        """Test Law template has correct structure."""
-        from vibe_core.plugins.opus_assistant.manas.cortex.sutra import TEMPLATE_LAW
+    def test_governance_index_template_structure(self):
+        """Test governance index template has correct structure."""
+        from vibe_core.plugins.opus_assistant.manas.cortex.sutra import TEMPLATE_GOVERNANCE_INDEX
 
-        assert "{constitution_section}" in TEMPLATE_LAW
-        assert "{governance_section}" in TEMPLATE_LAW
-        assert "NARASIMHA" in TEMPLATE_LAW
-        assert "Platinum" in TEMPLATE_LAW
+        assert "{canonical_pages}" in TEMPLATE_GOVERNANCE_INDEX
+        assert "{constitution_section}" in TEMPLATE_GOVERNANCE_INDEX
+        assert "{governance_section}" in TEMPLATE_GOVERNANCE_INDEX
+        assert "NARASIMHA" in TEMPLATE_GOVERNANCE_INDEX
+        assert "Platinum" in TEMPLATE_GOVERNANCE_INDEX
 
     def test_map_template_structure(self):
         """Test Map template has correct structure."""
@@ -690,10 +709,8 @@ class TestWikiTemplates:
         """Test Sidebar template has correct structure."""
         from vibe_core.plugins.opus_assistant.manas.cortex.sutra import TEMPLATE_SIDEBAR
 
-        assert "[[Home]]" in TEMPLATE_SIDEBAR
-        assert "[[Pantheon" in TEMPLATE_SIDEBAR
-        assert "[[Law" in TEMPLATE_SIDEBAR
-        assert "[[Map" in TEMPLATE_SIDEBAR
+        assert "{navigation_sections}" in TEMPLATE_SIDEBAR
+        assert "{version}" in TEMPLATE_SIDEBAR
 
     def test_footer_template_structure(self):
         """Test Footer template has correct structure."""
@@ -796,8 +813,8 @@ class TestSutraWorkflow:
         orch = SutraOrchestrator()
         pages = orch.generate()
 
-        # Should generate all page types
-        assert len(pages) >= 4  # At minimum: Home, Pantheon, Law, Map
+        # Should generate the full declared surface
+        assert len(pages) == 11
 
         # Each page should have content
         for page in pages:
@@ -811,7 +828,7 @@ class TestSutraWorkflow:
 
         orch = SutraOrchestrator()
 
-        for page_type in [WikiPageType.HOME, WikiPageType.PANTHEON, WikiPageType.LAW, WikiPageType.MAP]:
+        for page_type in [WikiPageType.HOME, WikiPageType.START_HERE, WikiPageType.CONSTITUTION, WikiPageType.PANTHEON, WikiPageType.MAP]:
             content = orch.preview(page_type)
             assert isinstance(content, str)
             assert len(content) > 0
