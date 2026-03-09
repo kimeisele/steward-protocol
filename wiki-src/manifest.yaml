@@ -1,4 +1,4 @@
-version: 1
+version: 2
 
 sections:
   - id: start-here
@@ -9,107 +9,240 @@ sections:
     title: Protocol Stack
   - id: federation-surface
     title: Federation Surface
+  - id: reference
+    title: Reference Atlases
 
 pages:
   - id: HOME
     title: Home
     wiki_name: Home
     page_class: hybrid
+    authority: generated
+    domain: entrypoint
     section: start-here
     renderer: home
     nav_label: Home
     featured: true
+    query_aliases: [wiki, home]
     description: Federation front door and publication overview.
 
   - id: START_HERE
     title: Start Here
     wiki_name: Start-Here
     page_class: canonical
+    authority: informative
+    domain: entrypoint
     section: start-here
     renderer: canonical_doc
     source_path: README.md
     nav_label: Start Here
     featured: true
+    query_aliases: [start here, readme, quickstart]
     description: Operating-system overview and quick start.
+
+  - id: INDEX
+    title: Index
+    wiki_name: Index
+    page_class: canonical
+    authority: informative
+    domain: reference
+    section: start-here
+    renderer: canonical_doc
+    source_path: INDEX.md
+    nav_label: Index
+    featured: false
+    query_aliases: [index, documentation index]
+    description: Canonical documentation index bound from the repository.
 
   - id: CONSTITUTION
     title: Constitution
     wiki_name: Constitution
     page_class: canonical
+    authority: binding
+    domain: governance
     section: governance
     renderer: canonical_doc
     source_path: CONSTITUTION.md
     nav_label: Constitution
     featured: true
+    query_aliases: [constitution, law]
     description: Supreme law and federation root of trust.
 
   - id: GOVERNANCE_INDEX
     title: Governance Index
     wiki_name: Governance-Index
     page_class: derived
+    authority: derived
+    domain: governance
     section: governance
     renderer: governance_index
     nav_label: Governance Index
     featured: true
-    description: Canonical governance neighbors and source modules.
+    query_aliases: [governance, governance index]
+    description: Canonical governance landing and constitutional structure map.
+
+  - id: GOVERNANCE_ATLAS
+    title: Governance Atlas
+    wiki_name: Governance-Atlas
+    page_class: derived
+    authority: derived
+    domain: governance
+    section: governance
+    renderer: atlas
+    nav_label: Governance Atlas
+    featured: false
+    query_aliases: [governance atlas, governance references]
+    description: Automated deeper governance references and enforcement sources.
+    render_config:
+      intro: Derived atlas of constitutional, doctrinal, and governance-adjacent sources.
+      include_domains: [governance]
+      exclude_page_types: [GOVERNANCE_ATLAS]
+      source_paths: [CONSTITUTION.md, AGI_MANIFESTO.md, STEWARD.md]
+      source_roots: [docs/governance, docs/philosophy, vibe_core/governance]
+      source_suffixes: [.md, .py]
 
   - id: AGI_MANIFESTO
     title: AGI Manifesto
     wiki_name: AGI-Manifesto
     page_class: canonical
+    authority: doctrine
+    domain: governance
     section: governance
     renderer: canonical_doc
     source_path: AGI_MANIFESTO.md
     nav_label: AGI Manifesto
     featured: true
+    query_aliases: [manifesto, agi manifesto]
     description: Artificial Governed Intelligence doctrine.
+
+  - id: STEWARDSHIP
+    title: Stewardship
+    wiki_name: Stewardship
+    page_class: canonical
+    authority: operative
+    domain: governance
+    section: governance
+    renderer: canonical_doc
+    source_path: STEWARD.md
+    nav_label: Stewardship
+    featured: true
+    query_aliases: [steward, stewardship]
+    description: Steward protocol operating-system governance and federation charter.
 
   - id: PROTOCOLS
     title: Protocols
     wiki_name: Protocols
     page_class: canonical
+    authority: binding
+    domain: protocol
     section: protocol-stack
     renderer: canonical_doc
     source_path: PROTOCOLS.md
     nav_label: Protocols
     featured: true
+    query_aliases: [protocols, protocol]
     description: Living registry of operative protocols.
 
   - id: ARCHITECTURE
     title: Architecture
     wiki_name: Architecture
     page_class: canonical
+    authority: reference
+    domain: protocol
     section: protocol-stack
     renderer: canonical_doc
     source_path: ARCHITECTURE.md
     nav_label: Architecture
     featured: true
+    query_aliases: [architecture]
     description: Core architecture and systems overview.
 
-  - id: PANTHEON
-    title: Pantheon - Agent Registry
-    wiki_name: Pantheon
+  - id: KERNEL
+    title: Kernel
+    wiki_name: Kernel
+    page_class: canonical
+    authority: informative
+    domain: protocol
+    section: protocol-stack
+    renderer: canonical_doc
+    source_path: KERNEL.md
+    nav_label: Kernel
+    featured: false
+    query_aliases: [kernel]
+    description: Kernel battle-plan, extraction status, and systems analysis.
+
+  - id: FEDERATION_REGISTRY
+    title: Federation Registry - Agent Surface
+    wiki_name: Federation-Registry
     page_class: derived
+    authority: derived
+    domain: federation
     section: federation-surface
     renderer: pantheon
-    nav_label: Pantheon
+    nav_label: Federation Registry
     featured: true
-    description: Registered agents, domains, and capability spread.
+    query_aliases: [federation registry, pantheon, agent registry, agents]
+    description: Declared agents, domains, and capability spread.
 
   - id: MAP
     title: Map - Architecture Overview
     wiki_name: Map
     page_class: derived
+    authority: derived
+    domain: federation
     section: federation-surface
     renderer: map
     nav_label: Map
     featured: true
+    query_aliases: [map, topology, architecture map]
     description: Derived topology and module-level structural map.
+
+  - id: CANONICAL_ATLAS
+    title: Canonical Atlas
+    wiki_name: Canonical-Atlas
+    page_class: derived
+    authority: derived
+    domain: reference
+    section: reference
+    renderer: atlas
+    nav_label: Canonical Atlas
+    featured: true
+    query_aliases: [canonical atlas, canonical docs]
+    description: Automated registry of bound source documents and neighboring canonical material.
+    render_config:
+      intro: Machine-derived atlas of the public canon and its neighboring source trees.
+      include_page_classes: [canonical]
+      exclude_page_types: [CANONICAL_ATLAS]
+      source_paths: [README.md, INDEX.md, CONSTITUTION.md, AGI_MANIFESTO.md, STEWARD.md, PROTOCOLS.md, ARCHITECTURE.md, KERNEL.md]
+      source_roots: [docs/steward, docs/governance]
+      source_suffixes: [.md]
+
+  - id: PROTOCOL_ATLAS
+    title: Protocol Atlas
+    wiki_name: Protocol-Atlas
+    page_class: derived
+    authority: derived
+    domain: reference
+    section: reference
+    renderer: atlas
+    nav_label: Protocol Atlas
+    featured: false
+    query_aliases: [protocol atlas, architecture atlas]
+    description: Automated protocol, architecture, and steward reference map.
+    render_config:
+      intro: Machine-derived atlas of the protocol stack and architecture reference corpus.
+      include_domains: [protocol]
+      exclude_page_types: [PROTOCOL_ATLAS]
+      source_paths: [PROTOCOLS.md, ARCHITECTURE.md, KERNEL.md]
+      source_roots: [docs/architecture, docs/steward]
+      source_suffixes: [.md]
 
   - id: SIDEBAR
     title: Sidebar
     wiki_name: _Sidebar
     page_class: navigation
+    authority: navigation
+    domain: navigation
     section: navigation
     renderer: sidebar
     include_in_sidebar: false
@@ -118,6 +251,8 @@ pages:
     title: Footer
     wiki_name: _Footer
     page_class: navigation
+    authority: navigation
+    domain: navigation
     section: navigation
     renderer: footer
     include_in_sidebar: false
