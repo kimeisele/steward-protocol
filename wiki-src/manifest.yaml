@@ -1,0 +1,123 @@
+version: 1
+
+sections:
+  - id: start-here
+    title: Start Here
+  - id: governance
+    title: Governance
+  - id: protocol-stack
+    title: Protocol Stack
+  - id: federation-surface
+    title: Federation Surface
+
+pages:
+  - id: HOME
+    title: Home
+    wiki_name: Home
+    page_class: hybrid
+    section: start-here
+    renderer: home
+    nav_label: Home
+    featured: true
+    description: Federation front door and publication overview.
+
+  - id: START_HERE
+    title: Start Here
+    wiki_name: Start-Here
+    page_class: canonical
+    section: start-here
+    renderer: canonical_doc
+    source_path: README.md
+    nav_label: Start Here
+    featured: true
+    description: Operating-system overview and quick start.
+
+  - id: CONSTITUTION
+    title: Constitution
+    wiki_name: Constitution
+    page_class: canonical
+    section: governance
+    renderer: canonical_doc
+    source_path: CONSTITUTION.md
+    nav_label: Constitution
+    featured: true
+    description: Supreme law and federation root of trust.
+
+  - id: GOVERNANCE_INDEX
+    title: Governance Index
+    wiki_name: Governance-Index
+    page_class: derived
+    section: governance
+    renderer: governance_index
+    nav_label: Governance Index
+    featured: true
+    description: Canonical governance neighbors and source modules.
+
+  - id: AGI_MANIFESTO
+    title: AGI Manifesto
+    wiki_name: AGI-Manifesto
+    page_class: canonical
+    section: governance
+    renderer: canonical_doc
+    source_path: AGI_MANIFESTO.md
+    nav_label: AGI Manifesto
+    featured: true
+    description: Artificial Governed Intelligence doctrine.
+
+  - id: PROTOCOLS
+    title: Protocols
+    wiki_name: Protocols
+    page_class: canonical
+    section: protocol-stack
+    renderer: canonical_doc
+    source_path: PROTOCOLS.md
+    nav_label: Protocols
+    featured: true
+    description: Living registry of operative protocols.
+
+  - id: ARCHITECTURE
+    title: Architecture
+    wiki_name: Architecture
+    page_class: canonical
+    section: protocol-stack
+    renderer: canonical_doc
+    source_path: ARCHITECTURE.md
+    nav_label: Architecture
+    featured: true
+    description: Core architecture and systems overview.
+
+  - id: PANTHEON
+    title: Pantheon - Agent Registry
+    wiki_name: Pantheon
+    page_class: derived
+    section: federation-surface
+    renderer: pantheon
+    nav_label: Pantheon
+    featured: true
+    description: Registered agents, domains, and capability spread.
+
+  - id: MAP
+    title: Map - Architecture Overview
+    wiki_name: Map
+    page_class: derived
+    section: federation-surface
+    renderer: map
+    nav_label: Map
+    featured: true
+    description: Derived topology and module-level structural map.
+
+  - id: SIDEBAR
+    title: Sidebar
+    wiki_name: _Sidebar
+    page_class: navigation
+    section: navigation
+    renderer: sidebar
+    include_in_sidebar: false
+
+  - id: FOOTER
+    title: Footer
+    wiki_name: _Footer
+    page_class: navigation
+    section: navigation
+    renderer: footer
+    include_in_sidebar: false
