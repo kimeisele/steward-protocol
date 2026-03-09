@@ -111,6 +111,7 @@ class WikiSurfacePageSpec:
     section: str
     nav_label: str = ""
     description: str = ""
+    public_summary: str = ""
     renderer: str = ""
     source_path: Optional[str] = None
     featured: bool = False
@@ -319,8 +320,8 @@ TEMPLATE_ATLAS = """# {title}
 
 ## Published Surface Coverage
 
-| Page | Class | Authority | Domain | Source |
-|------|-------|-----------|--------|--------|
+| Page | Class | Authority | Domain | Public Summary | Source |
+|------|-------|-----------|--------|----------------|--------|
 {surface_rows}
 
 ## Related Repository Sources
@@ -467,6 +468,7 @@ def _build_surface_spec(workspace: Path, payload: dict[str, Any], *, defaults: O
     wiki_name = str(merged.get("wiki_name") or _slugify_wiki_name(title))
     nav_label = str(merged.get("nav_label") or title)
     description = str(merged.get("description") or (source_summary if str(merged.get("page_class") or "derived") != "canonical" else ""))
+    public_summary = str(merged.get("public_summary") or merged.get("summary") or description)
     aliases = [str(value).lower() for value in merged.get("query_aliases", [])]
     if source_path:
         aliases.append(Path(source_path).stem.lower().replace("_", " "))
@@ -480,6 +482,7 @@ def _build_surface_spec(workspace: Path, payload: dict[str, Any], *, defaults: O
         section=str(merged.get("section") or "reference"),
         nav_label=nav_label,
         description=description,
+        public_summary=public_summary,
         renderer=str(merged.get("renderer") or ""),
         source_path=source_path,
         featured=bool(merged.get("featured", False)),
@@ -487,6 +490,11 @@ def _build_surface_spec(workspace: Path, payload: dict[str, Any], *, defaults: O
         query_aliases=tuple(dict.fromkeys(alias for alias in aliases if alias)),
         render_config=dict(merged.get("render_config") or {}),
     )
+
+
+def _surface_public_summary(spec: WikiSurfacePageSpec, fallback: str = "") -> str:
+    """Return the public-safe summary for a surface page."""
+    return str(spec.public_summary or spec.description or fallback).strip()
 
 
 def _match_discovery_rule(path: str, rules: list[dict[str, Any]]) -> dict[str, Any]:
@@ -847,8 +855,9 @@ class SutraWeaver:
         for spec in self._ordered_surface_specs():
             if not spec.featured or spec.page_type == WikiPageType.HOME:
                 continue
-            description = f" - {spec.description}" if spec.description else ""
-            lines.append(f"- {_format_surface_link(spec)}{description}")
+            public_summary = _surface_public_summary(spec)
+            summary_suffix = f" - {public_summary}" if public_summary else ""
+            lines.append(f"- {_format_surface_link(spec)}{summary_suffix}")
         return "\n".join(lines) or "- [[Start-Here|Start Here]]"
 
     def _build_sidebar_navigation(self) -> str:
@@ -932,7 +941,7 @@ class SutraWeaver:
 
         content = TEMPLATE_PANTHEON.format(
             title=spec.title,
-            intro=spec.description or "The declared federation registry derived from MANDALA.",
+            intro=_surface_public_summary(spec, "The declared federation registry derived from MANDALA."),
             agent_count=len(ctx.agents),
             domain_count=len(ctx.domains),
             capability_count=len(all_caps),
@@ -951,6 +960,15 @@ class SutraWeaver:
     def _weave_canonical_page(self, spec: WikiSurfacePageSpec) -> WikiPage:
         """Bind a canonical authored markdown document directly into the wiki surface."""
         source_path = self._workspace / str(spec.source_path or "")
+        public_summary = _surface_public_summary(spec)
+        canonical_intro_lines: list[str] = []
+        if public_summary:
+            canonical_intro_lines.append(f"> **Public abstract:** {public_summary}")
+        if spec.source_path:
+            canonical_intro_lines.append(
+                f"> **Bound source:** {_render_repo_source_reference(str(spec.source_path), self._repo_web_url)}"
+            )
+        canonical_intro = "\n".join(canonical_intro_lines).strip()
         if source_path.exists():
             content = _normalize_bound_markdown(
                 source_path.read_text(),
@@ -961,6 +979,8 @@ class SutraWeaver:
             )
         else:
             content = f"# {spec.title}\n\n_Source document not found: `{spec.source_path}`_\n"
+        if canonical_intro:
+            content = canonical_intro + "\n\n" + content.lstrip()
         content = (
             content.rstrip()
             + "\n\n---\n\n"
@@ -1004,7 +1024,7 @@ class SutraWeaver:
             page_spec for page_spec in self._ordered_surface_specs() if page_spec.domain == "governance" and page_spec.page_type != spec.page_type
         ]
         canonical_links = [
-            f"- {_format_surface_link(page_spec)} - {page_spec.description}"
+            f"- {_format_surface_link(page_spec)} - {_surface_public_summary(page_spec)}"
             for page_spec in governance_surface_pages
         ]
         content = TEMPLATE_GOVERNANCE_INDEX.format(
@@ -1027,11 +1047,11 @@ class SutraWeaver:
         matching_specs = [page_spec for page_spec in self._ordered_surface_specs() if _match_registry_filters(page_spec, config)]
         if matching_specs:
             surface_rows = "\n".join(
-                f"| {_format_surface_markdown_link(page_spec)} | `{page_spec.page_class}` | `{page_spec.authority}` | `{page_spec.domain}` | `{page_spec.source_path or page_spec.renderer}` |"
+                f"| {_format_surface_markdown_link(page_spec)} | `{page_spec.page_class}` | `{page_spec.authority}` | `{page_spec.domain}` | {_surface_public_summary(page_spec) or '-'} | `{page_spec.source_path or page_spec.renderer}` |"
                 for page_spec in matching_specs
             )
         else:
-            surface_rows = "| _None_ | - | - | - | - |"
+            surface_rows = "| _None_ | - | - | - | - | - |"
 
         discovered_sources = _discover_source_paths(self._workspace, config)
         bound_source_paths = {str(page_spec.source_path) for page_spec in matching_specs if page_spec.source_path}
@@ -1044,7 +1064,7 @@ class SutraWeaver:
 
         content = TEMPLATE_ATLAS.format(
             title=spec.title,
-            intro=str(config.get("intro") or spec.description or "Registry-derived reference atlas."),
+            intro=str(config.get("intro") or _surface_public_summary(spec, "Registry-derived reference atlas.")),
             surface_rows=surface_rows,
             source_section=source_section,
             surface_count=len(matching_specs),
@@ -1090,7 +1110,7 @@ class SutraWeaver:
 
         content = TEMPLATE_MAP.format(
             title=spec.title,
-            intro=spec.description or "System topology derived from repository structure, manifests, and graph metadata.",
+            intro=_surface_public_summary(spec, "System topology derived from repository structure, manifests, and graph metadata."),
             node_count=ctx.node_count,
             edge_count=ctx.edge_count,
             constraint_count=ctx.constraint_count,
@@ -1494,6 +1514,8 @@ class SutraOrchestrator:
                     "authority": spec.authority,
                     "domain": spec.domain,
                     "section": spec.section,
+                    "description": spec.description,
+                    "public_summary": spec.public_summary,
                     "renderer": spec.renderer,
                     "source_path": spec.source_path,
                     "featured": spec.featured,
@@ -1636,12 +1658,12 @@ def get_sutra_for_chat(workspace: Optional[Path] = None) -> str:
     )
 
     preview_commands = [
-        f'- "preview {((spec.query_aliases[0] if spec.query_aliases else spec.nav_label or spec.title).lower())}" - {spec.description}'
+        f'- "preview {((spec.query_aliases[0] if spec.query_aliases else spec.nav_label or spec.title).lower())}" - {_surface_public_summary(spec)}'
         for spec in surface_specs
         if spec.featured and spec.page_class != "navigation"
     ]
     page_lines = [
-        f"- {spec.wiki_name}.md - {spec.description or spec.title}"
+        f"- {spec.wiki_name}.md - {_surface_public_summary(spec, spec.title)}"
         for spec in surface_specs
         if spec.page_class != "navigation"
     ]
