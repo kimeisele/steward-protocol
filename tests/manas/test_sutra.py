@@ -61,9 +61,28 @@ def _fast_sutra_context(monkeypatch):
         ctx.repo_areas = [{"name": "governance", "python_files": 4}, {"name": "protocols", "python_files": 7}]
         ctx.cartridge_families = [{"name": "system", "agents": 2}]
 
+    def fake_gather_projection(self, ctx):
+        if not self._workspace.exists():
+            return
+        ctx.projection_mode = "agent_internet"
+        ctx.projection_base_url = "https://lotus.example.test"
+        ctx.projection_root = "/srv/steward-protocol"
+        ctx.projection_manifest = {
+            "documents": [{"document_id": "home"}, {"document_id": "public_graph"}],
+            "entrypoints": {"default": "Home.md", "public_graph": "Public-Graph.md"},
+            "stats": {"service_count": 3, "route_count": 5},
+        }
+        ctx.projection_public_graph = {"stats": {"node_count": 9, "edge_count": 12}}
+        ctx.projection_repo_graph = {"summary": {"node_count": 14, "edge_count": 22, "constraint_count": 4}}
+        ctx.projection_search_index = {"stats": {"record_count": 17, "kind_counts": {"document": 8}}}
+        ctx.node_count = 14
+        ctx.edge_count = 22
+        ctx.constraint_count = 4
+
     monkeypatch.setattr(SutraWeaver, "_gather_mandala_context", fake_gather_mandala)
     monkeypatch.setattr(SutraWeaver, "_gather_akasha_context", fake_gather_akasha)
     monkeypatch.setattr(SutraWeaver, "_gather_module_context", fake_gather_module)
+    monkeypatch.setattr(SutraWeaver, "_gather_projection_context", fake_gather_projection)
 
 # =============================================================================
 # SECTION 1: DATA MODEL TESTS
@@ -303,6 +322,7 @@ class TestSutraWeaver:
         assert "2.0.0" in page.content
         assert "Home" in page.title
         assert "Public entry point for installation, quick start, and repository orientation." in page.content
+        assert "Projection Membrane" in page.content
 
     def test_weave_federation_registry_page(self):
         """Test weaving federation registry page."""
@@ -401,6 +421,7 @@ class TestSutraWeaver:
         assert "50" in page.content  # node_count
         assert "System Map" in page.content
         assert "Repository Snapshot" in page.content
+        assert "Agent-Web Projection" in page.content
 
     def test_weave_sidebar(self):
         """Test weaving sidebar."""
@@ -606,6 +627,8 @@ class TestSutraOrchestrator:
         assert payload["page_count"] >= 1
         assert any(page["wiki_name"] == "Home" for page in payload["pages"])
         assert any(page.get("public_summary") for page in payload["pages"])
+        assert payload["version"] == 2
+        assert payload["projection"]["mode"] == "agent_internet"
         assert payload["system_metrics"]["repo_python_files"] == 11
 
     def test_generate_specific_pages(self):
@@ -754,6 +777,7 @@ class TestJnanaSutraIntegration:
         result = get_sutra_for_chat()
 
         assert "SUTRA" in result
+        assert "Projection" in result
         assert "Wiki" in result or "wiki" in result
         assert "Commands" in result or "preview" in result.lower()
 
@@ -787,6 +811,7 @@ class TestWikiTemplates:
         assert "{agent_count}" in TEMPLATE_HOME
         assert "{node_count}" in TEMPLATE_HOME
         assert "{quick_links}" in TEMPLATE_HOME
+        assert "{projection_section}" in TEMPLATE_HOME
 
     def test_pantheon_template_structure(self):
         """Test Pantheon template has correct structure."""
@@ -829,6 +854,7 @@ class TestWikiTemplates:
         assert "{constraint_count}" in TEMPLATE_MAP
         assert "{repo_python_files}" in TEMPLATE_MAP
         assert "{runtime_section}" in TEMPLATE_MAP
+        assert "{projection_section}" in TEMPLATE_MAP
         assert "{module_section}" in TEMPLATE_MAP
         assert "Repository Snapshot" in TEMPLATE_MAP
 

@@ -36,6 +36,8 @@ __position__ = 9
 __genesis__ = "0xb98e092c"  # GenesisByte: parampara % 37 == 0
 
 import logging
+import json
+import os
 import re
 import yaml
 
@@ -47,6 +49,8 @@ from datetime import datetime, timezone
 from enum import Enum
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set
+from urllib.parse import urlencode
+from urllib.request import Request, urlopen
 from vibe_core.protocols.system_shell import ShellProtocol, SystemShell, ShellResult
 
 logger = logging.getLogger("MANAS.Cortex.Sutra")
@@ -152,6 +156,13 @@ class WikiContext:
     node_manifest_count: int = 0
     repo_areas: List[Dict[str, Any]] = field(default_factory=list)
     cartridge_families: List[Dict[str, Any]] = field(default_factory=list)
+    projection_mode: str = "local"
+    projection_base_url: str = ""
+    projection_root: str = ""
+    projection_manifest: Dict[str, Any] = field(default_factory=dict)
+    projection_public_graph: Dict[str, Any] = field(default_factory=dict)
+    projection_repo_graph: Dict[str, Any] = field(default_factory=dict)
+    projection_search_index: Dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -217,6 +228,10 @@ TEMPLATE_HOME = """# {system_name}
 ## Status
 
 {status_section}
+
+## Projection Membrane
+
+{projection_section}
 
 ---
 
@@ -300,6 +315,10 @@ TEMPLATE_MAP = """# {title}
 ## Runtime Surface
 
 {runtime_section}
+
+## Agent-Web Projection
+
+{projection_section}
 
 ## Module Structure
 
@@ -497,6 +516,73 @@ def _surface_public_summary(spec: WikiSurfacePageSpec, fallback: str = "") -> st
     return str(spec.public_summary or spec.description or fallback).strip()
 
 
+def _resolve_agent_internet_projection_config(workspace: Path) -> dict[str, Any]:
+    """Resolve read-only agent-internet projection config from the environment."""
+    base_url = str(os.environ.get("AGENT_INTERNET_LOTUS_BASE_URL", "")).rstrip("/")
+    bearer_token = str(os.environ.get("AGENT_INTERNET_LOTUS_TOKEN", ""))
+    timeout_s = int(str(os.environ.get("AGENT_INTERNET_LOTUS_TIMEOUT_S", "20") or "20"))
+    root = str(os.environ.get("SUTRA_AGENT_INTERNET_ROOT", "") or workspace.resolve())
+    if not base_url or not bearer_token:
+        return {}
+    return {
+        "base_url": base_url,
+        "bearer_token": bearer_token,
+        "timeout_s": timeout_s,
+        "root": root,
+    }
+
+
+def _fetch_agent_internet_json(config: dict[str, Any], path: str, *, query: Optional[dict[str, Any]] = None) -> dict[str, Any]:
+    """Fetch JSON from an agent-internet lotus endpoint."""
+    encoded = urlencode({str(key): str(value) for key, value in dict(query or {}).items() if value not in (None, "")}, doseq=True)
+    suffix = f"?{encoded}" if encoded else ""
+    request = Request(f"{config['base_url']}{path}{suffix}", method="GET")
+    request.add_header("Authorization", f"Bearer {config['bearer_token']}")
+    request.add_header("Content-Type", "application/json")
+    with urlopen(request, timeout=int(config["timeout_s"])) as response:
+        return json.loads(response.read().decode("utf-8"))
+
+
+def _projection_stats(payload: dict[str, Any], key: str) -> dict[str, Any]:
+    """Extract stats from a projection payload body."""
+    return dict(dict(payload).get(key, {}).get("stats", {}))
+
+
+def _projection_summary(payload: dict[str, Any], key: str) -> dict[str, Any]:
+    """Extract summary from a projection payload body."""
+    return dict(dict(payload).get(key, {}).get("summary", {}))
+
+
+def _render_projection_section(ctx: WikiContext) -> str:
+    """Render agent-internet projection status for public pages."""
+    if ctx.projection_mode != "agent_internet":
+        return "- Local fallback active - agent-internet projection surfaces not configured."
+
+    manifest = dict(ctx.projection_manifest)
+    public_graph = dict(ctx.projection_public_graph)
+    repo_graph = dict(ctx.projection_repo_graph)
+    search_index = dict(ctx.projection_search_index)
+    manifest_stats = _projection_stats({"agent_web_manifest": manifest}, "agent_web_manifest")
+    graph_stats = _projection_stats({"agent_web_graph": public_graph}, "agent_web_graph")
+    repo_summary = _projection_summary({"agent_web_repo_graph": repo_graph}, "agent_web_repo_graph")
+    index_stats = _projection_stats({"agent_web_index": search_index}, "agent_web_index")
+    entrypoints = sorted(str(name) for name in dict(manifest.get("entrypoints", {})).keys())
+    return "\n".join(
+        [
+            "| Projection Surface | Snapshot |",
+            "|--------------------|----------|",
+            f"| `agent-web-manifest` | {len(manifest.get('documents', []))} docs / {len(entrypoints)} entrypoints / {manifest_stats.get('service_count', 0)} services / {manifest_stats.get('route_count', 0)} routes |",
+            f"| `agent-web-graph` | {graph_stats.get('node_count', 0)} public nodes / {graph_stats.get('edge_count', 0)} public edges |",
+            f"| `agent-web-repo-graph` | {repo_summary.get('node_count', 0)} repo nodes / {repo_summary.get('edge_count', 0)} repo edges / {repo_summary.get('constraint_count', 0)} constraints |",
+            f"| `agent-web-index` | {index_stats.get('record_count', 0)} searchable records |",
+            "",
+            f"Projection source: `{ctx.projection_base_url}`",
+            f"Projection root: `{ctx.projection_root}`",
+            f"Entrypoints: {', '.join(f'`{name}`' for name in entrypoints[:8]) if entrypoints else '_none published_'}",
+        ]
+    )
+
+
 def _match_discovery_rule(path: str, rules: list[dict[str, Any]]) -> dict[str, Any]:
     """Find the first discovery rule matching a source path."""
     for rule in rules:
@@ -662,6 +748,9 @@ class SutraWeaver:
         # Gather module structure
         self._gather_module_context(ctx)
 
+        # Prefer an external/public projection membrane when available
+        self._gather_projection_context(ctx)
+
         return ctx
 
     def _gather_mandala_context(self, ctx: WikiContext) -> None:
@@ -785,6 +874,41 @@ class SutraWeaver:
         except Exception as e:
             logger.warning(f"SUTRA: Could not gather module context: {e}")
 
+    def _gather_projection_context(self, ctx: WikiContext) -> None:
+        """Gather agent-internet projection surfaces when a lotus endpoint is configured."""
+        config = _resolve_agent_internet_projection_config(self._workspace)
+        if not config:
+            return
+
+        try:
+            query = {"root": config["root"]}
+            manifest_payload = _fetch_agent_internet_json(config, "/v1/lotus/agent-web-manifest", query=query)
+            public_graph_payload = _fetch_agent_internet_json(config, "/v1/lotus/agent-web-graph", query=query)
+            repo_graph_payload = _fetch_agent_internet_json(
+                config,
+                "/v1/lotus/agent-web-repo-graph",
+                query={**query, "limit": 25},
+            )
+            search_index_payload = _fetch_agent_internet_json(config, "/v1/lotus/agent-web-index", query=query)
+
+            ctx.projection_mode = "agent_internet"
+            ctx.projection_base_url = str(config["base_url"])
+            ctx.projection_root = str(config["root"])
+            ctx.projection_manifest = dict(manifest_payload.get("agent_web_manifest", {}))
+            ctx.projection_public_graph = dict(public_graph_payload.get("agent_web_graph", {}))
+            ctx.projection_repo_graph = dict(repo_graph_payload.get("agent_web_repo_graph", {}))
+            ctx.projection_search_index = dict(search_index_payload.get("agent_web_index", {}))
+
+            repo_summary = dict(ctx.projection_repo_graph.get("summary", {}))
+            if repo_summary:
+                ctx.node_count = int(repo_summary.get("node_count", ctx.node_count) or ctx.node_count)
+                ctx.edge_count = int(repo_summary.get("edge_count", ctx.edge_count) or ctx.edge_count)
+                ctx.constraint_count = int(repo_summary.get("constraint_count", ctx.constraint_count) or ctx.constraint_count)
+
+            logger.debug("SUTRA: Gathered agent-internet projection surfaces")
+        except Exception as e:
+            logger.warning(f"SUTRA: Could not gather agent-internet projection surfaces: {e}")
+
     def weave_page(self, page_type: WikiPageType, ctx: WikiContext) -> WikiPage:
         """
         Weave a single wiki page.
@@ -879,6 +1003,11 @@ class SutraWeaver:
         """Generate Home wiki page."""
         # Status section
         status_lines = []
+        if ctx.projection_mode == "agent_internet":
+            index_stats = _projection_stats({"agent_web_index": ctx.projection_search_index}, "agent_web_index")
+            status_lines.append(
+                f"✅ **agent-internet projection connected** via `{ctx.projection_base_url}` ({index_stats.get('record_count', 0)} indexed public records)"
+            )
         if ctx.agents:
             status_lines.append(f"✅ **{len(ctx.agents)} agents** registered in MANDALA")
         if ctx.node_count:
@@ -902,6 +1031,7 @@ class SutraWeaver:
             timestamp=ctx.timestamp,
             quick_links=self._build_home_quick_links(),
             status_section=status_section,
+            projection_section=_render_projection_section(ctx),
         )
 
         return WikiPage(
@@ -1119,6 +1249,7 @@ class SutraWeaver:
             node_manifest_count=ctx.node_manifest_count,
             subsystem_section=subsystem_section,
             runtime_section=runtime_section,
+            projection_section=_render_projection_section(ctx),
             module_section=module_section,
             dependency_section=dependency_section,
         )
@@ -1499,7 +1630,7 @@ class SutraOrchestrator:
         non_navigation_specs = [spec for spec in surface_specs if spec.page_class != "navigation"]
         return {
             "kind": "wiki_surface_registry",
-            "version": 1,
+            "version": 2,
             "generated_at": ctx.timestamp,
             "repo_web_url": self._weaver._repo_web_url,
             "sections": self._weaver._surface_sections,
@@ -1537,6 +1668,15 @@ class SutraOrchestrator:
                 "node_manifest_count": ctx.node_manifest_count,
                 "repo_areas": ctx.repo_areas,
                 "cartridge_families": ctx.cartridge_families,
+            },
+            "projection": {
+                "mode": ctx.projection_mode,
+                "base_url": ctx.projection_base_url,
+                "root": ctx.projection_root,
+                "manifest": ctx.projection_manifest,
+                "public_graph": ctx.projection_public_graph,
+                "repo_graph": ctx.projection_repo_graph,
+                "search_index": ctx.projection_search_index,
             },
         }
 
@@ -1667,9 +1807,15 @@ def get_sutra_for_chat(workspace: Optional[Path] = None) -> str:
         for spec in surface_specs
         if spec.page_class != "navigation"
     ]
+    projection_line = (
+        f"├─ Projection: agent-internet via {ctx.projection_base_url}"
+        if ctx.projection_mode == "agent_internet"
+        else "├─ Projection: local fallback"
+    )
 
     return f"""📜 **SUTRA** (Wiki Documentation)
 ├─ Wiki URL: {wiki_url_display}
+{projection_line}
 ├─ Agents: {len(ctx.agents)}
 ├─ Knowledge Nodes: {ctx.node_count}
 ├─ Modules: {len(ctx.modules)}
