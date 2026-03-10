@@ -105,6 +105,14 @@ class HebbianSynaptic:
         """Return copy of current weights."""
         return dict(self._weights)
 
+    def restore(self, weights: Dict[str, float]) -> None:
+        """Restore weights from a dict (counterpart to snapshot()).
+
+        Replaces all current weights. Values are clamped to [0, 1].
+        """
+        self._weights = {k: max(0.0, min(1.0, float(v))) for k, v in weights.items()}
+        self._dirty = True
+
     def decay(self, factor: float = 0.01) -> int:
         """Apply temporal decay: all weights regress toward 0.5 (default).
 
