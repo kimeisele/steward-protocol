@@ -79,6 +79,71 @@ class ThreatIndicator:
     timestamp: float
 
 
+import re as _re
+
+# Shell command threat patterns — destructive commands that bypass Python AST.
+# Each tuple: (compiled_regex, description, severity).
+# Patterns are anchored to word boundaries to reduce false positives.
+_SHELL_THREATS: list[tuple["_re.Pattern[str]", str, "ThreatLevel"]] = []
+
+
+def _init_shell_threats() -> None:
+    """Lazy-init shell threat patterns (avoids module-level ThreatLevel reference)."""
+    if _SHELL_THREATS:
+        return
+    patterns = [
+        # Filesystem destruction
+        (r"\brm\s+-(rf|fr|r)\b", "Recursive file deletion (rm -r)", ThreatLevel.RED),
+        (r"\brm\s+--no-preserve-root\b", "Root filesystem deletion", ThreatLevel.APOCALYPSE),
+        (r"\bmkfs\b", "Filesystem formatting (mkfs)", ThreatLevel.APOCALYPSE),
+        (r"\bdd\s+.*\bif=/dev/(zero|urandom)\b", "Disk overwrite (dd)", ThreatLevel.RED),
+        (r"\b(shred|wipefs)\b", "Disk/file wiping", ThreatLevel.RED),
+        # Permission escalation
+        (r"\bchmod\s+(-R\s+)?[0-7]*7[0-7]*\s+/", "World-writable root permissions", ThreatLevel.RED),
+        (r"\bchown\s+-R\b.*\s+/", "Recursive ownership change on /", ThreatLevel.RED),
+        # Remote code execution
+        (r"\bcurl\b.*\|\s*\b(bash|sh|zsh)\b", "Pipe remote content to shell", ThreatLevel.RED),
+        (r"\bwget\b.*\|\s*\b(bash|sh|zsh)\b", "Pipe remote content to shell", ThreatLevel.RED),
+        (r"\bcurl\b.*-o\s+/", "Download to root filesystem", ThreatLevel.ORANGE),
+        # System manipulation
+        (r"\b(shutdown|reboot|poweroff|halt|init\s+[06])\b", "System shutdown/reboot", ThreatLevel.RED),
+        (r"\bkill\s+-9\s+-1\b", "Kill all processes", ThreatLevel.RED),
+        (r"\bkillall\b", "Kill processes by name", ThreatLevel.ORANGE),
+        # Exfiltration / network
+        (r"\bnc\s+-[elp]", "Netcat listener (potential reverse shell)", ThreatLevel.RED),
+        (r"\b/dev/tcp/", "Bash network device (reverse shell)", ThreatLevel.RED),
+        # Dangerous redirects
+        (r">\s*/dev/sd[a-z]", "Direct write to block device", ThreatLevel.APOCALYPSE),
+        (r">\s*/etc/(passwd|shadow|sudoers)", "Overwrite auth files", ThreatLevel.APOCALYPSE),
+        # Fork bomb
+        (r":\(\)\s*\{\s*:\|:&\s*\}\s*;", "Fork bomb", ThreatLevel.RED),
+    ]
+    for pat, desc, sev in patterns:
+        _SHELL_THREATS.append((_re.compile(pat, _re.IGNORECASE), desc, sev))
+
+
+def _detect_shell_threats(command: str) -> dict | None:
+    """Detect destructive shell command patterns. Returns threat dict or None."""
+    _init_shell_threats()
+    worst: dict | None = None
+    worst_rank = -1
+    severity_rank = {
+        ThreatLevel.GREEN: 0, ThreatLevel.YELLOW: 1, ThreatLevel.ORANGE: 2,
+        ThreatLevel.RED: 3, ThreatLevel.APOCALYPSE: 4,
+    }
+    for pattern, description, severity in _SHELL_THREATS:
+        if pattern.search(command):
+            rank = severity_rank.get(severity, 0)
+            if rank > worst_rank:
+                worst_rank = rank
+                worst = {
+                    "type": "shell_threat",
+                    "severity": severity,
+                    "description": f"Destructive shell command: {description}",
+                }
+    return worst
+
+
 class NarasimhaProtocol:
     """
     The Hypervisor-Level Emergency Response System.
@@ -283,6 +348,12 @@ class NarasimhaProtocol:
                         "description": "Content contains kernel destruction reference",
                     }
                 )
+
+            # Shell command threat detection — catches destructive bash commands
+            # that bypass Python AST analysis (the real gap in Narasimha's armor)
+            shell_threat = _detect_shell_threats(agent_code)
+            if shell_threat:
+                threats.append(shell_threat)
 
         # Check 4: Consciousness claims (string check is OK for natural language)
         dangerous_phrases = [
