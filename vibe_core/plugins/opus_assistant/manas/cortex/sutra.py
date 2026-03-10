@@ -53,6 +53,11 @@ from typing import Any, Dict, List, Optional, Set
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 from vibe_core.protocols.system_shell import ShellProtocol, SystemShell, ShellResult
+from vibe_core.source_authority_registry import (
+    SourceAuthorityDocumentRecord,
+    SourceAuthorityRegistryRecord,
+    load_source_authority_registry,
+)
 
 logger = logging.getLogger("MANAS.Cortex.Sutra")
 
@@ -578,6 +583,30 @@ def _canonical_source_payload(workspace: Path, source_specs: dict[str, WikiSurfa
         "public_summary": _surface_public_summary(spec, spec.title),
         "content": content,
     }
+
+
+def _canonical_source_document_payload(
+    workspace: Path,
+    source_specs: dict[str, WikiSurfacePageSpec],
+    repo_web_url: str,
+    document: SourceAuthorityDocumentRecord,
+) -> dict[str, Any]:
+    """Serialize a canonical source-authority document without page-render metadata."""
+    source_path = workspace / document.source_path
+    if source_path.exists():
+        content = _normalize_bound_markdown(
+            source_path.read_text(),
+            source_path=document.source_path,
+            workspace=workspace,
+            source_page_specs=source_specs,
+            repo_web_url=repo_web_url,
+        )
+    else:
+        content = f"# {document.title}\n\n_Source document not found: `{document.source_path}`_\n"
+    payload = document.to_payload()
+    payload["public_summary"] = payload.pop("public_abstract")
+    payload["content"] = content
+    return payload
 
 
 def _resolve_agent_internet_projection_config(workspace: Path) -> dict[str, Any]:
@@ -1655,7 +1684,7 @@ class WikiSync:
 
 class SutraOrchestrator:
     """
-    Orchestrates the full wiki generation and sync workflow.
+    Orchestrates source-authority export workflow.
 
     "The orchestrator conducts the symphony of threads."
     """
@@ -1670,7 +1699,7 @@ class SutraOrchestrator:
         """
         self._workspace = workspace or Path.cwd()
         self._weaver = SutraWeaver(workspace=self._workspace)
-        self._sync = WikiSync(workspace=self._workspace, shell_executor=shell_executor)
+        self._source_authority_registry = load_source_authority_registry(workspace=self._workspace)
         self._cached_context: Optional[WikiContext] = None
 
     def _get_context(self) -> WikiContext:
@@ -1686,6 +1715,10 @@ class SutraOrchestrator:
     def declared_surface_specs(self) -> list[WikiSurfacePageSpec]:
         """Expose the declared public surface for chat/status helpers."""
         return self._weaver._ordered_surface_specs()
+
+    def source_authority_registry(self) -> SourceAuthorityRegistryRecord:
+        """Expose the neutral source-authority registry used for exports."""
+        return self._source_authority_registry
 
     def export_surface_metadata(self) -> dict[str, Any]:
         """Export machine-readable surface metadata for federation consumers."""
@@ -1728,62 +1761,59 @@ class SutraOrchestrator:
     def export_source_surface_registry(self) -> dict[str, Any]:
         """Export the declared source-side surface registry without projection state."""
         ctx = self._get_context()
-        non_navigation_specs = [spec for spec in self.declared_surface_specs() if spec.page_class != "navigation"]
+        documents = [record.to_payload() for record in self.source_authority_registry().documents]
         return {
             "kind": "source_surface_registry",
             "version": 1,
-            "repo_id": STEWARD_REPO_ID,
+            "repo_id": self.source_authority_registry().repo_id,
             "generated_at": ctx.timestamp,
-            "section_count": len(self._weaver._surface_sections),
-            "page_count": len(non_navigation_specs),
-            "sections": self._weaver._surface_sections,
-            "pages": [_surface_spec_payload(spec) for spec in non_navigation_specs],
+            "document_count": len(documents),
+            "documents": documents,
         }
 
     def export_public_summary_registry(self) -> dict[str, Any]:
         """Export public summaries for all declared non-navigation pages."""
         ctx = self._get_context()
-        non_navigation_specs = [spec for spec in self.declared_surface_specs() if spec.page_class != "navigation"]
+        records = [
+            {
+                "document_id": record.document_id,
+                "title": record.title,
+                "authority": record.authority,
+                "domain": record.domain,
+                "source_path": record.source_path,
+                "public_summary": record.public_abstract,
+                "labels": dict(record.labels),
+            }
+            for record in self.source_authority_registry().documents
+        ]
         return {
             "kind": "public_summary_registry",
             "version": 1,
-            "repo_id": STEWARD_REPO_ID,
+            "repo_id": self.source_authority_registry().repo_id,
             "generated_at": ctx.timestamp,
-            "record_count": len(non_navigation_specs),
-            "records": [
-                {
-                    "id": spec.page_type.name,
-                    "wiki_name": spec.wiki_name,
-                    "title": spec.title,
-                    "page_class": spec.page_class,
-                    "authority": spec.authority,
-                    "domain": spec.domain,
-                    "section": spec.section,
-                    "source_path": spec.source_path,
-                    "public_summary": _surface_public_summary(spec, spec.title),
-                }
-                for spec in non_navigation_specs
-            ],
+            "record_count": len(records),
+            "records": records,
         }
 
     def export_canonical_surface(self) -> dict[str, Any]:
         """Export canonical bound documents as source-authoritative artifacts."""
         ctx = self._get_context()
-        canonical_specs = [
-            spec
-            for spec in self.declared_surface_specs()
-            if spec.page_class == "canonical" and spec.source_path
+        documents = [
+            _canonical_source_document_payload(
+                self._workspace,
+                self._weaver._source_specs,
+                self._weaver._repo_web_url,
+                record,
+            )
+            for record in self.source_authority_registry().documents
         ]
         return {
             "kind": "canonical_surface",
             "version": 1,
-            "repo_id": STEWARD_REPO_ID,
+            "repo_id": self.source_authority_registry().repo_id,
             "generated_at": ctx.timestamp,
-            "document_count": len(canonical_specs),
-            "documents": [
-                _canonical_source_payload(self._workspace, self._weaver._source_specs, self._weaver._repo_web_url, spec)
-                for spec in canonical_specs
-            ],
+            "document_count": len(documents),
+            "documents": documents,
         }
 
     def export_repo_graph_snapshot(self) -> dict[str, Any]:
@@ -1818,6 +1848,26 @@ class SutraOrchestrator:
             "version": 1,
             "repo_id": STEWARD_REPO_ID,
             "source_sha": source_sha,
+            "public_surface": {
+                "repo_label": "Steward",
+                "document_prefix": "steward",
+                "overview_page": {
+                    "document_id": "steward_authority",
+                    "rel": "steward_authority",
+                    "kind": "steward_authority",
+                    "title": "Steward Authority",
+                    "wiki_name": "Steward-Authority",
+                    "entrypoint": True,
+                },
+                "canonical_index_page": {
+                    "document_id": "steward_canonical_surface",
+                    "rel": "steward_canonical_surface",
+                    "kind": "steward_canonical_surface",
+                    "title": "Steward Canonical Surface",
+                    "wiki_name": "Steward-Canonical-Surface",
+                    "entrypoint": False,
+                },
+            },
             "surface_registry": self.export_surface_metadata(),
         }
 
@@ -1868,54 +1918,6 @@ class SutraOrchestrator:
             "artifacts": artifact_payloads,
         }
 
-    def generate(self, page_types: Optional[List[WikiPageType]] = None) -> List[WikiPage]:
-        """
-        Generate wiki pages without syncing.
-
-        Args:
-            page_types: Specific pages to generate (all if None)
-
-        Returns:
-            List of generated pages
-        """
-        ctx = self._get_context()
-        if page_types is None:
-            return self._weaver.weave_all(ctx)
-
-        return [self._weaver.weave_page(pt, ctx) for pt in page_types]
-
-    def generate_and_sync(self, page_types: Optional[List[WikiPageType]] = None) -> SutraResult:
-        """
-        Generate and sync wiki pages.
-
-        Args:
-            page_types: Specific pages to generate (all if None)
-
-        Returns:
-            SutraResult with full status
-        """
-        pages = self.generate(page_types)
-
-        if not pages:
-            return SutraResult(success=False, errors=["No pages generated"])
-
-        return self._sync.sync(pages)
-
-    def preview(self, page_type: WikiPageType = WikiPageType.HOME) -> str:
-        """
-        Preview a wiki page without syncing.
-
-        Args:
-            page_type: Type of page to preview
-
-        Returns:
-            Generated markdown content
-        """
-        ctx = self._get_context()
-        page = self._weaver.weave_page(page_type, ctx)
-        return page.content
-
-
 # =============================================================================
 # SECTION 6: JNANA INTEGRATION - Chat Interface
 # =============================================================================
@@ -1923,7 +1925,7 @@ class SutraOrchestrator:
 
 def handle_sutra_query(content: str, workspace: Optional[Path] = None) -> str:
     """
-    Handle wiki-related queries from JNANA chat.
+    Handle source-authority export queries from JNANA chat.
 
     Args:
         content: User's query content
@@ -1934,33 +1936,29 @@ def handle_sutra_query(content: str, workspace: Optional[Path] = None) -> str:
     """
     content_lower = content.lower()
     orchestrator = SutraOrchestrator(workspace=workspace)
+    bundle = orchestrator.export_authority_bundle()
+    registry = orchestrator.source_authority_registry()
+    export_lines = [
+        f"- `{record['export_kind']}` → `{record['artifact_uri']}`"
+        for record in bundle["authority_exports"]
+    ]
 
-    # Preview a specific page
-    if any(word in content_lower for word in ["preview", "show", "display"]):
-        page_type = orchestrator.resolve_page_type(content)
+    if any(word in content_lower for word in ["authority", "bundle", "registry", "summary", "canonical", "export"]):
+        return (
+            "📜 **SUTRA** (Source Authority Export)\n\n"
+            f"Repo: `{registry.repo_id}`\n"
+            f"Document count: {bundle['artifacts']['.authority-exports/source-surface-registry.json']['document_count']}\n\n"
+            "**Available exports**\n"
+            f"{chr(10).join(export_lines)}"
+        )
 
-        content_preview = orchestrator.preview(page_type)
-        # Truncate for chat
-        if len(content_preview) > 1500:
-            content_preview = content_preview[:1500] + "\n\n... (truncated)"
+    if any(word in content_lower for word in ["preview", "show", "display", "generate", "create", "build", "update", "sync", "push", "deploy", "publish"]):
+        return (
+            "📜 **SUTRA** no longer publishes local wiki pages.\n\n"
+            "Public membrane rendering and publication now belong to `agent-internet`.\n"
+            "Use SUTRA here only for source-authority exports such as the authority bundle, source surface registry, public summary registry, and canonical surface."
+        )
 
-        return f"📜 **Wiki Preview: {page_type.value}**\n\n{content_preview}"
-
-    # Generate (dry run)
-    if any(word in content_lower for word in ["generate", "create", "build"]):
-        pages = orchestrator.generate()
-        lines = ["📜 **SUTRA** - Wiki Generation (Dry Run)", ""]
-        for page in pages:
-            lines.append(f"  ✅ {page.filename} ({len(page.content)} chars)")
-        lines.append("\n_Use 'update wiki' or 'sync wiki' to push to GitHub_")
-        return "\n".join(lines)
-
-    # Full sync
-    if any(word in content_lower for word in ["update", "sync", "push", "deploy"]):
-        result = orchestrator.generate_and_sync()
-        return result.to_chat_response()
-
-    # Status/info
     return get_sutra_for_chat(workspace)
 
 
@@ -1976,48 +1974,26 @@ def get_sutra_for_chat(workspace: Optional[Path] = None) -> str:
     """
     orchestrator = SutraOrchestrator(workspace=workspace)
     ctx = orchestrator._get_context()
-    surface_specs = orchestrator.declared_surface_specs()
+    registry = orchestrator.source_authority_registry()
+    bundle = orchestrator.export_authority_bundle()
+    export_kinds = [record["export_kind"] for record in bundle["authority_exports"]]
 
-    wiki_url = orchestrator._sync.get_wiki_url()
-    wiki_url_display = (
-        wiki_url.replace(".wiki.git", "/wiki").replace("git@github.com:", "https://github.com/")
-        if wiki_url
-        else "Not configured"
-    )
-
-    preview_commands = [
-        f'- "preview {((spec.query_aliases[0] if spec.query_aliases else spec.nav_label or spec.title).lower())}" - {_surface_public_summary(spec)}'
-        for spec in surface_specs
-        if spec.featured and spec.page_class != "navigation"
-    ]
-    page_lines = [
-        f"- {spec.wiki_name}.md - {_surface_public_summary(spec, spec.title)}"
-        for spec in surface_specs
-        if spec.page_class != "navigation"
-    ]
-    projection_line = (
-        f"├─ Projection: agent-internet via {ctx.projection_base_url}"
-        if ctx.projection_mode == "agent_internet"
-        else "├─ Projection: local fallback"
-    )
-
-    return f"""📜 **SUTRA** (Wiki Documentation)
-├─ Wiki URL: {wiki_url_display}
-{projection_line}
+    return f"""📜 **SUTRA** (Source Authority Export)
+├─ Repo: {registry.repo_id}
+├─ Documents: {len(registry.documents)}
 ├─ Agents: {len(ctx.agents)}
 ├─ Knowledge Nodes: {ctx.node_count}
 ├─ Modules: {len(ctx.modules)}
-└─ Declared Pages: {len([spec for spec in surface_specs if spec.page_class != 'navigation'])}
+└─ Export Kinds: {', '.join(export_kinds)}
 
 **Commands:**
-- "preview wiki" - Show Home page preview
-- "preview constitution" - Show canonical constitution page
-- "generate wiki" - Dry run (no push)
-- "update wiki" - Generate and push to GitHub
-{chr(10).join(preview_commands)}
+- "show authority bundle" - Describe exported authority artifacts
+- "show source registry" - Review canonical source-document coverage
+- "sync wiki" - explains that publication moved to agent-internet
 
-**Pages Generated:**
-{chr(10).join(page_lines)}
+**Boundary:**
+- Local wiki preview/generation/publish has been removed from steward-protocol.
+- Public membrane rendering and publication belong to `agent-internet`.
 """
 
 

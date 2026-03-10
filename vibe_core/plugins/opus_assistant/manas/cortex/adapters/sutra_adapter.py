@@ -7,8 +7,8 @@ Wraps the existing SutraWeaver/SutraOrchestrator in BaseCortex interface
 for VEDA-4 auto-discovery via CortexLoader.
 
 CAPABILITIES:
-    - generate_docs: Generate documentation from code
-    - wiki_sync: Sync docs to GitHub Wiki
+    - generate_docs: Inspect/export source documentation coverage
+    - authority_export: Prepare source-authority export status
     - update_readme: Update README files
     - document_manas: Generate MANAS documentation
 
@@ -55,7 +55,7 @@ class SutraCortexAdapter(BaseCortex):
     name = "sutra"
     capabilities = [
         "generate_docs",
-        "wiki_sync",
+        "authority_export",
         "update_readme",
         "document_manas",
         "fix_documentation_drift",
@@ -110,12 +110,12 @@ class SutraCortexAdapter(BaseCortex):
         logger.info(f"📜 SutraCortexAdapter executing: {intent_type}")
 
         try:
-            # Check for wiki sync keywords
+            # Legacy wiki-sync requests now redirect to the projection boundary.
             sync_keywords = {"sync", "push", "update wiki", "publish"}
             is_sync_request = any(kw in intent.title.lower() for kw in sync_keywords)
 
             if is_sync_request:
-                return self._execute_wiki_sync()
+                return self._execute_projection_redirect()
 
             # Generate documentation
             if intent_type in ["update_readme", "update_opus_documentation"]:
@@ -129,7 +129,6 @@ class SutraCortexAdapter(BaseCortex):
             if intent_type == "fix_documentation_drift":
                 return self._execute_drift_fix(intent)
 
-            # Default: acknowledge
             return cortex_success(
                 handler=self.name,
                 message=f"Sutra intent acknowledged: {intent_type}",
@@ -140,49 +139,29 @@ class SutraCortexAdapter(BaseCortex):
             logger.error(f"SutraCortexAdapter error: {e}")
             return cortex_error(handler=self.name, error=str(e))
 
-    def _execute_wiki_sync(self) -> Dict[str, Any]:
-        """Execute full wiki sync."""
-        from vibe_core.plugins.opus_assistant.manas.cortex.sutra import WikiSync
-
-        wiki_sync = WikiSync(workspace=self._workspace)
-
-        if not wiki_sync.has_credentials():
-            return cortex_error(
-                handler=self.name,
-                error="Set GITHUB_TOKEN to enable wiki sync",
-            )
-
+    def _execute_projection_redirect(self) -> Dict[str, Any]:
+        """Explain that public publication moved to agent-internet."""
         orchestrator = self._get_orchestrator()
-        result = orchestrator.generate_and_sync()
-
-        if result.success:
-            return cortex_success(
-                handler=self.name,
-                message=f"Synced {len(result.pages_synced)} pages to wiki",
-                pages_synced=result.pages_synced,
-                wiki_url=result.wiki_url,
-            )
-        else:
-            return cortex_error(
-                handler=self.name,
-                error=", ".join(result.errors),
-            )
+        registry = orchestrator.export_source_surface_registry()
+        return cortex_error(
+            handler=self.name,
+            error="Local SUTRA wiki publication was removed; publish the public membrane via agent-internet instead.",
+            action="public_wiki_removed",
+            document_count=registry["document_count"],
+        )
 
     def _execute_doc_generation(self, intent: "Intent") -> Dict[str, Any]:
-        """Generate documentation."""
-        weaver = self._get_weaver()
-
-        # Get target from intent params
-        target = intent.params.get("target", "README.md")
-
-        # Generate
-        pages = weaver.weave_all()
+        """Report source-authority export coverage."""
+        orchestrator = self._get_orchestrator()
+        registry = orchestrator.export_source_surface_registry()
+        bundle = orchestrator.export_authority_bundle()
 
         return cortex_success(
             handler=self.name,
-            message=f"Generated {len(pages)} documentation pages",
-            pages=[p.title for p in pages],
-            action="generated",
+            message=f"Prepared source-authority export coverage for {registry['document_count']} documents",
+            action="source_authority_ready",
+            document_count=registry["document_count"],
+            export_kinds=[record["export_kind"] for record in bundle["authority_exports"]],
         )
 
     def _execute_manas_docs(self, intent: "Intent") -> Dict[str, Any]:
