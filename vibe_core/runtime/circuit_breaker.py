@@ -262,6 +262,18 @@ class CircuitBreaker:
 
         logger.info(f"Circuit Breaker state transition: {old_state} → {new_state.value}")
 
+    def record_success(self) -> None:
+        """Public API: record a successful request."""
+        self._record_success()
+
+    def record_failure(self, error: Exception) -> None:
+        """Public API: record a failed request.
+
+        Args:
+            error: The exception that was raised
+        """
+        self._record_failure(error)
+
     def get_status(self) -> dict[str, Any]:
         """
         Get current circuit breaker status.
