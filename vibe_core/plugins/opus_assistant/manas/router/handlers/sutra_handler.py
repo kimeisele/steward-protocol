@@ -3,8 +3,6 @@ Sutra Handler - Documentation intent processing.
 
 OPUS-171 Phase 5: First extracted handler from IntentRouter.
 
-OPUS-071: Supports full wiki sync with GITHUB_TOKEN.
-
 Handles:
 - update_readme
 - update_opus_documentation
@@ -33,8 +31,6 @@ class SutraHandler(BaseHandler):
     """
     Handle documentation-related intents.
 
-    OPUS-071: Supports full wiki sync with GITHUB_TOKEN.
-
     Agent-First: This handler belongs to the DOCUMENTATION domain.
     Future routing: Intent → DocAgent → SutraHandler
     """
@@ -56,7 +52,6 @@ class SutraHandler(BaseHandler):
         """
         Route to SUTRA for documentation tasks via CortexLoader (VEDA-4).
 
-        OPUS-071: Now supports full wiki sync with GITHUB_TOKEN!
         OPUS-171 Phase 5.3: Uses CortexLoader for VEDA-4 pattern.
         """
         from vibe_core.loaders import get_cortex
@@ -85,67 +80,31 @@ class SutraHandler(BaseHandler):
 
     def _handle_legacy(self, intent: "Intent") -> Dict[str, Any]:
         """Legacy SUTRA handling (fallback if CortexLoader unavailable)."""
-        from vibe_core.plugins.opus_assistant.manas.cortex.sutra import (
-            SutraOrchestrator,
-            SutraWeaver,
-            WikiSync,
-        )
+        from vibe_core.plugins.opus_assistant.manas.cortex.sutra import SutraOrchestrator, SutraWeaver
 
-        # Check if this is a sync request
         sync_keywords = {"sync", "push", "update wiki", "publish"}
         is_sync_request = any(kw in intent.title.lower() for kw in sync_keywords)
+        orchestrator = SutraOrchestrator(workspace=self._workspace)
+        registry = orchestrator.export_source_surface_registry()
 
-        # Check for credentials
-        wiki_sync = WikiSync(workspace=self._workspace)
-        has_creds = wiki_sync.has_credentials()
-
-        if is_sync_request and has_creds:
-            # OPUS-071: Full wiki sync!
-            logger.info("📜 SUTRA: Executing full wiki sync...")
-            orchestrator = SutraOrchestrator(workspace=self._workspace)
-            result = orchestrator.generate_and_sync()
-
-            if result.success:
-                return {
-                    "success": True,
-                    "handler": self.name,
-                    "action": "wiki_synced",
-                    "pages_synced": result.pages_synced,
-                    "wiki_url": result.wiki_url,
-                    "message": f"📜 SUTRA synced {len(result.pages_synced)} pages to GitHub Wiki!",
-                }
-            else:
-                return {
-                    "success": False,
-                    "handler": self.name,
-                    "action": "sync_failed",
-                    "errors": result.errors,
-                    "message": f"SUTRA sync failed: {', '.join(result.errors)}",
-                }
-
-        elif is_sync_request and not has_creds:
-            # Want to sync but no credentials
+        if is_sync_request:
             return {
                 "success": False,
                 "handler": self.name,
-                "action": "no_credentials",
-                "message": "📜 SUTRA: Set GITHUB_TOKEN environment variable to enable wiki sync",
+                "action": "public_wiki_removed",
+                "document_count": registry["document_count"],
+                "message": "📜 SUTRA no longer publishes a local wiki. Export authority artifacts here and publish the public membrane via agent-internet.",
             }
 
-        else:
-            # Just gather context (preview mode)
-            weaver = SutraWeaver(workspace=self._workspace)
-            ctx = weaver.gather_context()
+        weaver = SutraWeaver(workspace=self._workspace)
+        ctx = weaver.gather_context()
 
-            return {
-                "success": True,
-                "handler": self.name,
-                "action": "context_gathered",
-                "agents_found": len(ctx.agents),
-                "modules_found": len(ctx.modules),
-                "has_credentials": has_creds,
-                "message": (
-                    f"📜 SUTRA gathered context: {len(ctx.agents)} agents, {len(ctx.modules)} modules. "
-                    + ("Ready to sync!" if has_creds else "Set GITHUB_TOKEN to enable sync.")
-                ),
-            }
+        return {
+            "success": True,
+            "handler": self.name,
+            "action": "source_authority_status",
+            "agents_found": len(ctx.agents),
+            "modules_found": len(ctx.modules),
+            "document_count": registry["document_count"],
+            "message": f"📜 SUTRA gathered source-authority context for {registry['document_count']} documents, {len(ctx.agents)} agents, and {len(ctx.modules)} modules.",
+        }

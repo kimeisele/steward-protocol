@@ -1,0 +1,80 @@
+kind: source_authority_registry
+version: 1
+repo_id: steward-protocol
+documents:
+  - document_id: readme
+    title: Start Here
+    source_path: README.md
+    authority: informative
+    domain: entrypoint
+    public_abstract: Public entry point for installation, quick start, and repository orientation.
+    labels:
+      source_kind: markdown
+      source_role: entrypoint
+      include_in_sidebar: "true"
+      featured: "true"
+      nav_label: Start Here
+  - document_id: index
+    title: Index
+    source_path: INDEX.md
+    authority: informative
+    domain: reference
+    public_abstract: Structured index of the authored documentation set and supporting references.
+    labels:
+      source_kind: markdown
+      include_in_sidebar: "true"
+      featured: "true"
+      nav_label: Index
+  - document_id: constitution
+    title: Constitution
+    source_path: CONSTITUTION.md
+    authority: binding
+    domain: governance
+    public_abstract: Supreme governance document defining identity, audit, boundary, and transparency requirements.
+    labels:
+      source_kind: markdown
+      include_in_sidebar: "true"
+      featured: "true"
+      nav_label: Constitution
+  - document_id: agi_manifesto
+    title: AGI Manifesto
+    source_path: AGI_MANIFESTO.md
+    authority: doctrine
+    domain: governance
+    public_abstract: Doctrinal statement describing the governed-intelligence philosophy behind the system.
+    labels:
+      source_kind: markdown
+  - document_id: steward_operating_model
+    title: Steward Operating Model
+    source_path: STEWARD.md
+    authority: operative
+    domain: governance
+    public_abstract: Operating-model reference for stewardship roles, responsibilities, and coordination.
+    labels:
+      source_kind: markdown
+  - document_id: protocols
+    title: Protocols
+    source_path: PROTOCOLS.md
+    authority: binding
+    domain: protocol
+    public_abstract: Registry of protocol domains, lifecycle semantics, and implementation-facing coordination rules.
+    labels:
+      source_kind: markdown
+      include_in_sidebar: "true"
+      nav_label: Protocols
+  - document_id: architecture
+    title: Architecture
+    source_path: ARCHITECTURE.md
+    authority: reference
+    domain: protocol
+    public_abstract: High-level architecture overview of core modules, plugins, and system composition.
+    labels:
+      source_kind: markdown
+  - document_id: kernel
+    title: Kernel
+    source_path: KERNEL.md
+    authority: informative
+    domain: protocol
+    public_abstract: Detailed kernel planning and refactor reference for the core runtime foundation.
+    labels:
+      source_kind: markdown

@@ -152,9 +152,6 @@ from vibe_core.plugins.opus_assistant.manas.cortex.silpa import (
 from vibe_core.plugins.opus_assistant.manas.cortex.sutra import (
     SutraOrchestrator,
     SutraWeaver,
-    WikiPage,
-    WikiPageType,
-    WikiSync,
 )
 
 # OPUS-131: SUTRA SENSE (The 3rd Sense - Knowledge Threads)
