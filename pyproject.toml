@@ -102,6 +102,7 @@ dev = [
 
 [project.scripts]
 steward = "vibe_core.cli:cli_entry"
+steward-authority-feed = "vibe_core.authority_feed:main"
 
 [project.urls]
 Documentation = "https://github.com/kimeisele/steward-protocol#readme"
