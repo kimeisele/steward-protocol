@@ -1,6 +1,9 @@
 name: 🫀 Heartbeat - Autonomous Task Orchestrator
 
 on:
+  push:
+    branches: [main]
+
   # DISABLED: No API keys, Takshaka blocks all tools, produces zero output.
   # Re-enable when NodePulse/Holon gets proper secrets + tool access.
   # schedule:
@@ -15,6 +18,7 @@ permissions:
 jobs:
   heartbeat:
     name: Task Orchestration Pulse
+    if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
@@ -64,3 +68,59 @@ jobs:
             *.log
             .vibe/state/*.json
           retention-days: 7
+
+  publish-authority-feed:
+    name: Publish Authority Feed
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: 📦 Install Dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -e .
+
+      - name: 🧪 Validate authority feed slice
+        run: |
+          python -m py_compile vibe_core/authority_feed.py tests/unit/test_authority_feed.py
+          pytest -q tests/unit/test_authority_feed.py tests/manas/test_sutra.py::test_export_authority_bundle_uses_source_documents
+
+      - name: 🧾 Build authority feed
+        run: python -m vibe_core.authority_feed --workspace . --output-dir .authority-feed-out
+
+      - name: 📤 Publish authority feed branch
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          REMOTE="https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          TMPDIR=$(mktemp -d)
+          if git ls-remote --exit-code --heads "$REMOTE" authority-feed >/dev/null 2>&1; then
+            git clone --depth 1 --branch authority-feed "$REMOTE" "$TMPDIR/feed"
+          else
+            git init "$TMPDIR/feed"
+            git -C "$TMPDIR/feed" remote add origin "$REMOTE"
+            git -C "$TMPDIR/feed" checkout -b authority-feed
+          fi
+          git -C "$TMPDIR/feed" config user.name "steward-authority-feed"
+          git -C "$TMPDIR/feed" config user.email "bot@steward-protocol"
+          rsync -a .authority-feed-out/ "$TMPDIR/feed/"
+          git -C "$TMPDIR/feed" add latest-authority-manifest.json bundles
+          if git -C "$TMPDIR/feed" diff --cached --quiet; then
+            echo "No authority feed changes"
+            exit 0
+          fi
+          git -C "$TMPDIR/feed" commit -m "authority-feed: ${GITHUB_SHA}"
+          git -C "$TMPDIR/feed" push origin HEAD:authority-feed
