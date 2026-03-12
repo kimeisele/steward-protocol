@@ -52,6 +52,13 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Set
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
+from vibe_core.authority_exports import (
+    export_authority_bundle as export_neutral_authority_bundle,
+    export_authority_surface_metadata as export_neutral_authority_surface_metadata,
+    export_canonical_surface as export_neutral_canonical_surface,
+    export_public_summary_registry as export_neutral_public_summary_registry,
+    export_repo_graph_snapshot as export_neutral_repo_graph_snapshot,
+)
 from vibe_core.protocols.system_shell import ShellProtocol, SystemShell, ShellResult
 from vibe_core.source_authority_registry import (
     SourceAuthorityDocumentRecord,
@@ -1773,150 +1780,23 @@ class SutraOrchestrator:
 
     def export_public_summary_registry(self) -> dict[str, Any]:
         """Export public summaries for all declared non-navigation pages."""
-        ctx = self._get_context()
-        records = [
-            {
-                "document_id": record.document_id,
-                "title": record.title,
-                "authority": record.authority,
-                "domain": record.domain,
-                "source_path": record.source_path,
-                "public_summary": record.public_abstract,
-                "labels": dict(record.labels),
-            }
-            for record in self.source_authority_registry().documents
-        ]
-        return {
-            "kind": "public_summary_registry",
-            "version": 1,
-            "repo_id": self.source_authority_registry().repo_id,
-            "generated_at": ctx.timestamp,
-            "record_count": len(records),
-            "records": records,
-        }
+        return export_neutral_public_summary_registry(workspace=self._workspace)
 
     def export_canonical_surface(self) -> dict[str, Any]:
         """Export canonical bound documents as source-authoritative artifacts."""
-        ctx = self._get_context()
-        documents = [
-            _canonical_source_document_payload(
-                self._workspace,
-                self._weaver._source_specs,
-                self._weaver._repo_web_url,
-                record,
-            )
-            for record in self.source_authority_registry().documents
-        ]
-        return {
-            "kind": "canonical_surface",
-            "version": 1,
-            "repo_id": self.source_authority_registry().repo_id,
-            "generated_at": ctx.timestamp,
-            "document_count": len(documents),
-            "documents": documents,
-        }
+        return export_neutral_canonical_surface(workspace=self._workspace)
 
     def export_repo_graph_snapshot(self) -> dict[str, Any]:
         """Export source-side repository and graph summary for projection operators."""
-        ctx = self._get_context()
-        return {
-            "kind": "repo_graph",
-            "version": 1,
-            "repo_id": STEWARD_REPO_ID,
-            "generated_at": ctx.timestamp,
-            "summary": {
-                "agent_count": len(ctx.agents),
-                "domain_count": len(ctx.domains),
-                "capability_count": sum(len(capabilities) for capabilities in ctx.capabilities.values()),
-                "node_count": ctx.node_count,
-                "edge_count": ctx.edge_count,
-                "constraint_count": ctx.constraint_count,
-                "module_count": len(ctx.modules),
-                "repo_python_files": ctx.repo_python_files,
-                "repo_markdown_files": ctx.repo_markdown_files,
-                "node_manifest_count": ctx.node_manifest_count,
-            },
-            "repo_areas": ctx.repo_areas,
-            "cartridge_families": ctx.cartridge_families,
-            "knowledge_summary": ctx.knowledge_summary,
-        }
+        return export_neutral_repo_graph_snapshot(workspace=self._workspace)
 
     def export_authority_surface_metadata(self, *, source_sha: str = "") -> dict[str, Any]:
         """Wrap the richer surface metadata export as an authority artifact."""
-        return {
-            "kind": "surface_metadata",
-            "version": 1,
-            "repo_id": STEWARD_REPO_ID,
-            "source_sha": source_sha,
-            "public_surface": {
-                "repo_label": "Steward",
-                "document_prefix": "steward",
-                "overview_page": {
-                    "document_id": "steward_authority",
-                    "rel": "steward_authority",
-                    "kind": "steward_authority",
-                    "title": "Steward Authority",
-                    "wiki_name": "Steward-Authority",
-                    "entrypoint": True,
-                },
-                "canonical_index_page": {
-                    "document_id": "steward_canonical_surface",
-                    "rel": "steward_canonical_surface",
-                    "kind": "steward_canonical_surface",
-                    "title": "Steward Canonical Surface",
-                    "wiki_name": "Steward-Canonical-Surface",
-                    "entrypoint": False,
-                },
-            },
-            "surface_registry": self.export_surface_metadata(),
-        }
+        return export_neutral_authority_surface_metadata(workspace=self._workspace, source_sha=source_sha)
 
     def export_authority_bundle(self, *, source_sha: str = "") -> dict[str, Any]:
         """Export authority records plus the concrete artifacts they describe."""
-        generated_at = datetime.now(timezone.utc).timestamp()
-        version = source_sha or datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-        artifacts_by_kind = {
-            "canonical_surface": self.export_canonical_surface(),
-            "public_summary_registry": self.export_public_summary_registry(),
-            "source_surface_registry": self.export_source_surface_registry(),
-            "repo_graph": self.export_repo_graph_snapshot(),
-            "surface_metadata": self.export_authority_surface_metadata(source_sha=source_sha),
-        }
-        artifact_payloads = {
-            AUTHORITY_EXPORT_ARTIFACTS[export_kind]: payload for export_kind, payload in artifacts_by_kind.items()
-        }
-        authority_exports = [
-            {
-                "export_id": f"{STEWARD_REPO_ID}/{export_kind}",
-                "repo_id": STEWARD_REPO_ID,
-                "export_kind": export_kind,
-                "version": version,
-                "artifact_uri": AUTHORITY_EXPORT_ARTIFACTS[export_kind],
-                "generated_at": generated_at,
-                "contract_version": AUTHORITY_EXPORT_CONTRACT_VERSION,
-                "content_sha256": _artifact_sha256(payload),
-                "labels": {"source_sha": source_sha} if source_sha else {},
-            }
-            for export_kind, payload in artifacts_by_kind.items()
-        ]
-        return {
-            "kind": "source_authority_bundle",
-            "contract_version": AUTHORITY_EXPORT_CONTRACT_VERSION,
-            "generated_at": generated_at,
-            "source_sha": source_sha,
-            "repo_role": {
-                "repo_id": STEWARD_REPO_ID,
-                "role": "normative_source",
-                "owner_boundary": "normative_protocol_surface",
-                "exports": [record["export_kind"] for record in authority_exports],
-                "consumes": [],
-                "publication_targets": ["steward-public-wiki"],
-                "labels": {"public_surface_owner": "agent-internet"},
-            },
-            "authority_exports": authority_exports,
-            "artifact_paths": {export_kind: AUTHORITY_EXPORT_ARTIFACTS[export_kind] for export_kind in artifacts_by_kind},
-            "artifacts": artifact_payloads,
-        }
+        return export_neutral_authority_bundle(workspace=self._workspace, source_sha=source_sha)
 
 # =============================================================================
 # SECTION 6: JNANA INTEGRATION - Chat Interface
