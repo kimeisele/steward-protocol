@@ -7,7 +7,7 @@ from hashlib import sha256
 from pathlib import Path
 from typing import Any
 
-from vibe_core.plugins.opus_assistant.manas.cortex.sutra import SutraOrchestrator
+from vibe_core.authority_exports import export_authority_bundle
 
 AUTHORITY_FEED_CONTRACT_VERSION = 1
 
@@ -30,7 +30,7 @@ def write_authority_feed(*, workspace: Path | str | None = None, output_dir: Pat
     root = Path(workspace or ".").resolve()
     target_root = Path(output_dir).resolve() if output_dir is not None else root / ".authority-feed"
     effective_source_sha = str(source_sha or _source_sha(root)).strip() or "working-tree"
-    bundle = SutraOrchestrator(workspace=root).export_authority_bundle(source_sha=effective_source_sha)
+    bundle = export_authority_bundle(workspace=root, source_sha=effective_source_sha)
     persisted_bundle = {key: value for key, value in bundle.items() if key != "artifacts"}
     bundle_root = target_root / "bundles" / effective_source_sha
     artifacts_manifest: dict[str, dict[str, str]] = {}

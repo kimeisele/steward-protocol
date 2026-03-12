@@ -46,6 +46,7 @@ def test_export_authority_bundle_uses_source_documents():
     assert payload["artifacts"][".authority-exports/source-surface-registry.json"]["document_count"] == 8
     assert payload["artifacts"][".authority-exports/canonical-surface.json"]["documents"][0]["document_id"] == "readme"
     assert payload["artifacts"][".authority-exports/surface-metadata.json"]["public_surface"]["overview_page"]["wiki_name"] == "Steward-Authority"
+    assert payload["artifacts"][".authority-exports/surface-metadata.json"]["federation_surface"]["surface_role"] == "canonical_public_source_authority"
 
 
 def test_handle_sutra_query_describes_available_exports():

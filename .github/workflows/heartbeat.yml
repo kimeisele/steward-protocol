@@ -77,6 +77,6 @@ jobs:
         pip install --upgrade pip
         pip install -e .[dev]
       build-command: |
-        python -m py_compile vibe_core/authority_feed.py tests/unit/test_authority_feed.py
-        pytest -q tests/unit/test_authority_feed.py tests/manas/test_sutra.py::test_export_authority_bundle_uses_source_documents
+        python -m py_compile vibe_core/authority_exports.py vibe_core/authority_feed.py tests/unit/test_authority_exports.py tests/unit/test_authority_feed.py
+        pytest -q tests/unit/test_authority_exports.py tests/unit/test_authority_feed.py
         python -m vibe_core.authority_feed --workspace . --output-dir .authority-feed-out
