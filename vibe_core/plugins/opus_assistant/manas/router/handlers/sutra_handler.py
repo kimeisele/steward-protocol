@@ -18,6 +18,7 @@ __genesis__ = "0xa0848457"  # GenesisByte: parampara % 37 == 0
 import logging
 from typing import TYPE_CHECKING, Any, Dict
 
+from vibe_core.source_authority_registry import load_source_authority_registry
 from .base import AgentType, BaseHandler, register_handler
 
 if TYPE_CHECKING:
@@ -80,19 +81,18 @@ class SutraHandler(BaseHandler):
 
     def _handle_legacy(self, intent: "Intent") -> Dict[str, Any]:
         """Legacy SUTRA handling (fallback if CortexLoader unavailable)."""
-        from vibe_core.plugins.opus_assistant.manas.cortex.sutra import SutraOrchestrator, SutraWeaver
+        from vibe_core.plugins.opus_assistant.manas.cortex.sutra import SutraWeaver
 
         sync_keywords = {"sync", "push", "update wiki", "publish"}
         is_sync_request = any(kw in intent.title.lower() for kw in sync_keywords)
-        orchestrator = SutraOrchestrator(workspace=self._workspace)
-        registry = orchestrator.export_source_surface_registry()
+        registry = load_source_authority_registry(workspace=self._workspace)
 
         if is_sync_request:
             return {
                 "success": False,
                 "handler": self.name,
                 "action": "public_wiki_removed",
-                "document_count": registry["document_count"],
+                "document_count": len(registry.documents),
                 "message": "📜 SUTRA no longer publishes a local wiki. Export authority artifacts here and publish the public membrane via agent-internet.",
             }
 
@@ -102,9 +102,9 @@ class SutraHandler(BaseHandler):
         return {
             "success": True,
             "handler": self.name,
-            "action": "source_authority_status",
+            "action": "documentation_surface_status",
             "agents_found": len(ctx.agents),
             "modules_found": len(ctx.modules),
-            "document_count": registry["document_count"],
-            "message": f"📜 SUTRA gathered source-authority context for {registry['document_count']} documents, {len(ctx.agents)} agents, and {len(ctx.modules)} modules.",
+            "document_count": len(registry.documents),
+            "message": f"📜 SUTRA gathered documentation context for {len(registry.documents)} source documents, {len(ctx.agents)} agents, and {len(ctx.modules)} modules.",
         }

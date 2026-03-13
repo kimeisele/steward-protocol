@@ -3,12 +3,11 @@ Sutra Cortex Adapter - VEDA-4 wrapper for SUTRA documentation system.
 
 OPUS-171 Phase 5.2: Cortex Adapter Pattern
 
-Wraps the existing SutraWeaver/SutraOrchestrator in BaseCortex interface
+Wraps the existing SutraWeaver in BaseCortex interface
 for VEDA-4 auto-discovery via CortexLoader.
 
 CAPABILITIES:
     - generate_docs: Inspect/export source documentation coverage
-    - authority_export: Prepare source-authority export status
     - update_readme: Update README files
     - document_manas: Generate MANAS documentation
 
@@ -28,6 +27,7 @@ import logging
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, Optional
 
+from vibe_core.source_authority_registry import load_source_authority_registry
 from vibe_core.plugins.opus_assistant.manas.cortex.base_cortex import (
     BaseCortex,
     cortex_error,
@@ -45,7 +45,7 @@ class SutraCortexAdapter(BaseCortex):
     """
     VEDA-4 adapter for SUTRA documentation system.
 
-    Wraps SutraWeaver and SutraOrchestrator to provide unified BaseCortex interface.
+    Wraps SutraWeaver to provide unified BaseCortex interface.
 
     Discovery:
         CortexLoader.get_cortex("sutra")
@@ -55,7 +55,6 @@ class SutraCortexAdapter(BaseCortex):
     name = "sutra"
     capabilities = [
         "generate_docs",
-        "authority_export",
         "update_readme",
         "document_manas",
         "fix_documentation_drift",
@@ -69,7 +68,6 @@ class SutraCortexAdapter(BaseCortex):
     ):
         super().__init__(workspace, kernel)
         self._weaver = None
-        self._orchestrator = None
 
     def _get_weaver(self):
         """Lazy-load SutraWeaver."""
@@ -78,16 +76,6 @@ class SutraCortexAdapter(BaseCortex):
 
             self._weaver = SutraWeaver(workspace=self._workspace)
         return self._weaver
-
-    def _get_orchestrator(self):
-        """Lazy-load SutraOrchestrator."""
-        if self._orchestrator is None:
-            from vibe_core.plugins.opus_assistant.manas.cortex.sutra import (
-                SutraOrchestrator,
-            )
-
-            self._orchestrator = SutraOrchestrator(workspace=self._workspace)
-        return self._orchestrator
 
     def execute(self, intent: "Intent") -> Dict[str, Any]:
         """
@@ -141,27 +129,27 @@ class SutraCortexAdapter(BaseCortex):
 
     def _execute_projection_redirect(self) -> Dict[str, Any]:
         """Explain that public publication moved to agent-internet."""
-        orchestrator = self._get_orchestrator()
-        registry = orchestrator.export_source_surface_registry()
+        registry = load_source_authority_registry(workspace=self._workspace)
         return cortex_error(
             handler=self.name,
             error="Local SUTRA wiki publication was removed; publish the public membrane via agent-internet instead.",
             action="public_wiki_removed",
-            document_count=registry["document_count"],
+            document_count=len(registry.documents),
         )
 
     def _execute_doc_generation(self, intent: "Intent") -> Dict[str, Any]:
-        """Report source-authority export coverage."""
-        orchestrator = self._get_orchestrator()
-        registry = orchestrator.export_source_surface_registry()
-        bundle = orchestrator.export_authority_bundle()
+        """Report documentation coverage without routing through Sutra authority exports."""
+        registry = load_source_authority_registry(workspace=self._workspace)
+        weaver = self._get_weaver()
+        context = weaver.gather_context()
 
         return cortex_success(
             handler=self.name,
-            message=f"Prepared source-authority export coverage for {registry['document_count']} documents",
-            action="source_authority_ready",
-            document_count=registry["document_count"],
-            export_kinds=[record["export_kind"] for record in bundle["authority_exports"]],
+            message=f"Prepared documentation coverage for {len(registry.documents)} source documents",
+            action="documentation_surface_ready",
+            document_count=len(registry.documents),
+            agents_found=len(context.agents),
+            modules_found=len(context.modules),
         )
 
     def _execute_manas_docs(self, intent: "Intent") -> Dict[str, Any]:

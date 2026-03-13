@@ -61,7 +61,7 @@ from .mandala import get_mandala_for_chat
 from .samvada import SamvadaMessage, SamvadaResponse
 from .shell import ShellCortex
 from .silpa import handle_silpa_query
-from .sutra import handle_sutra_query
+from vibe_core.source_authority_status import handle_source_authority_query
 from .veda import VedaContext, VedaPipeline, VedaTrustLevel
 
 # OPUS-048: Keywords that trigger drift checking (German + English)
@@ -294,7 +294,7 @@ class JnanaHandler:
                 "  - 'What is X?'\n"
                 "• 'silpa' / 'refactor' - Safe code refactoring\n"
                 "  - Platinum Protocol (test-guarded)\n"
-                "• 'wiki' / 'sutra' - Source authority/export status\n"
+                "• 'wiki' / 'authority' - Source authority/export status\n"
                 "  - 'show authority bundle' - Describe export artifacts\n"
                 "  - 'sync wiki' - Explains publication moved to agent-internet\n"
                 "• 'sankalpa' / 'missions' - Proactive strategy\n"
@@ -330,7 +330,7 @@ class JnanaHandler:
         async def veda_sutra(ctx: VedaContext) -> str:
             msg = ctx.original_message
             content = msg.content if hasattr(msg, "content") else str(msg)
-            return handle_sutra_query(content, workspace=self._workspace)
+            return handle_source_authority_query(content, workspace=self._workspace)
 
         # SANKALPA (Proactive Strategy) handler
         async def veda_sankalpa(ctx: VedaContext) -> str:
