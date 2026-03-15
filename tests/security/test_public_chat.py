@@ -15,6 +15,8 @@ import time
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+
+fastapi = pytest.importorskip("fastapi", reason="fastapi not installed")
 from fastapi import HTTPException
 
 from gateway.api import (

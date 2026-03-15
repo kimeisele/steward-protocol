@@ -127,10 +127,10 @@ class LotusCLI:
         Print detailed routing explanation from the Mahamantra.
         This is the true "Invisible Backend".
         """
-        from vibe_core.mahamantra.mahamantra.__main__ import _render_response
+        from vibe_core.mahamantra.__main__ import _render_response
 
         # The __main__ module's renderer provides the canonical explanation.
-        _render_response(result.resonance, result)
+        _render_response(result.resonance)
 
     def _show_routing_table(self) -> int:
         """Show full routing table from the Mahamantra Adapter."""

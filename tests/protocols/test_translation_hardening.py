@@ -11,29 +11,29 @@ Edge cases, error conditions, and stress tests for:
 ŚRAVAṆAM PRINCIPLE: Sound must work under all conditions.
 """
 
-import pytest
 from typing import Any
 
+import pytest
+
 from vibe_core.protocols.translation import (
-    # Protocols
-    TranslationProtocol,
-    ResonanceProtocol,
-    # Enums
-    TranslationLayer,
+    ENGLISH_PHONEMES,
+    GERMAN_PHONEMES,
+    # Mappings
+    TRANSLATION_OPCODE_MAP,
+    MeaningGraph,
     NaturalLanguage,
     # Data types
     Phoneme,
     ResonancePattern,
+    ResonanceProtocol,
     SemanticUnit,
-    MeaningGraph,
     TextForm,
+    # Enums
+    TranslationLayer,
+    # Protocols
+    TranslationProtocol,
     TranslationResult,
-    # Mappings
-    TRANSLATION_OPCODE_MAP,
-    GERMAN_PHONEMES,
-    ENGLISH_PHONEMES,
 )
-
 
 # =============================================================================
 # PHONEME HARDENING TESTS
@@ -578,7 +578,7 @@ class TestNoAnyTypes:
 
     def test_phoneme_strict_types(self):
         """Phoneme uses only strict types."""
-        from typing import get_type_hints, Any, get_origin
+        from typing import get_origin, get_type_hints
 
         hints = get_type_hints(Phoneme)
         for field_name, field_type in hints.items():
@@ -589,7 +589,7 @@ class TestNoAnyTypes:
 
     def test_resonance_pattern_strict_types(self):
         """ResonancePattern uses only strict types."""
-        from typing import get_type_hints, Any
+        from typing import get_type_hints
 
         hints = get_type_hints(ResonancePattern)
         for field_name, field_type in hints.items():
@@ -597,7 +597,7 @@ class TestNoAnyTypes:
 
     def test_translation_result_strict_types(self):
         """TranslationResult uses only strict types."""
-        from typing import get_type_hints, Any, get_origin, Union
+        from typing import Union, get_origin, get_type_hints
 
         hints = get_type_hints(TranslationResult)
         for field_name, field_type in hints.items():

@@ -16,11 +16,13 @@ Tests for:
 "Even Brahma fears Yamaraja. Only the Holy Name is above him."
 """
 
-import pytest
 import time
 from datetime import datetime, timedelta
 from unittest.mock import MagicMock
 
+import pytest
+
+from vibe_core.protocols.mahajanas.router import Mahajana
 from vibe_core.protocols.mahajanas.yamaraja import (
     Judgeable,
     JudgmentRecord,
@@ -28,7 +30,6 @@ from vibe_core.protocols.mahajanas.yamaraja import (
     Verdict,
     YamarajaProtocol,
 )
-from vibe_core.protocols.mahajanas.router import Mahajana
 from vibe_core.protocols.mahajanas.yamaraja.security import (
     NullSecurityProtocol,
     SecuredSubject,
@@ -39,8 +40,6 @@ from vibe_core.protocols.mahajanas.yamaraja.security import (
     SecurityStateSnapshot,
     SecurityViolation,
 )
-from vibe_core.protocols.mahajanas.router import Mahajana
-
 
 # =============================================================================
 # MOCK LEDGER FOR TESTING

@@ -82,5 +82,5 @@ def test_lotus_cli_print_explain():
 
     # Verify the canonical output from _render_response
     assert "MAHAMANTRA - Krishna Routes Everything" in output
-    assert "CLI ADAPTER" in output
-    assert "Holographic Route" in output or "Fingerprint:" in output
+    assert "ROUTING" in output
+    assert "Position:" in output and "Guardian:" in output

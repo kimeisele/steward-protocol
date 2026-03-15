@@ -4,6 +4,8 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 import pytest
+
+fastapi = pytest.importorskip("fastapi", reason="fastapi not installed")
 from fastapi import HTTPException
 
 from gateway.api import SignedIntentRequest, SignedIntentStatusRequest, verified_intent_status, verified_intents
@@ -21,7 +23,10 @@ class TestVerifiedIntentBridge:
             timestamp=123,
         )
 
-        with patch("gateway.api.os.getenv", side_effect=lambda key, default=None: {"VIBE_API_KEY": "correct-key"}.get(key, default)):
+        with patch(
+            "gateway.api.os.getenv",
+            side_effect=lambda key, default=None: {"VIBE_API_KEY": "correct-key"}.get(key, default),
+        ):
             with pytest.raises(HTTPException) as excinfo:
                 await verified_intents(body, x_api_key="wrong-key")
 
@@ -47,7 +52,10 @@ class TestVerifiedIntentBridge:
         fake_takshaka = MagicMock()
         fake_takshaka.verify_request.return_value = verify_result
 
-        with patch("gateway.api.os.getenv", side_effect=lambda key, default=None: {"VIBE_API_KEY": "correct-key"}.get(key, default)):
+        with patch(
+            "gateway.api.os.getenv",
+            side_effect=lambda key, default=None: {"VIBE_API_KEY": "correct-key"}.get(key, default),
+        ):
             with patch("gateway.api.get_takshaka", return_value=fake_takshaka):
                 with pytest.raises(HTTPException) as excinfo:
                     await verified_intents(body, x_api_key="correct-key")

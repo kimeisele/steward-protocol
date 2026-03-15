@@ -185,7 +185,6 @@ class TestOrchestratorHarness:
     def test_ledger_without_config_raises(self):
         """Accessing ledger without enable_ledger=True raises."""
         from vibe_core.naga.testing import NagaTestHarness
-        import pytest
 
         with NagaTestHarness() as harness:
             with pytest.raises(RuntimeError, match="Ledger not enabled"):
@@ -194,7 +193,6 @@ class TestOrchestratorHarness:
     def test_correction_orchestrator_without_config_raises(self):
         """Accessing correction_orchestrator without config raises."""
         from vibe_core.naga.testing import NagaTestHarness
-        import pytest
 
         with NagaTestHarness() as harness:
             with pytest.raises(RuntimeError, match="CorrectionOrchestrator not enabled"):

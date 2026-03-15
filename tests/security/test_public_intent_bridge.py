@@ -3,6 +3,8 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
+
+fastapi = pytest.importorskip("fastapi", reason="fastapi not installed")
 from fastapi import HTTPException
 
 from gateway.api import PublicIntentRequest, _rate_limit_cache, public_intent_status, public_intents
@@ -18,7 +20,13 @@ class TestPublicIntentBridge:
         request.client.host = "10.0.0.10"
         body = PublicIntentRequest(intent_type="request_fork", title="Fork city")
 
-        with patch("gateway.api.os.getenv", side_effect=lambda key, default=None: {"AGENT_INTERNET_LOTUS_BASE_URL": "", "AGENT_INTERNET_LOTUS_TOKEN": ""}.get(key, default)):
+        with patch(
+            "gateway.api.os.getenv",
+            side_effect=lambda key, default=None: {
+                "AGENT_INTERNET_LOTUS_BASE_URL": "",
+                "AGENT_INTERNET_LOTUS_TOKEN": "",
+            }.get(key, default),
+        ):
             with pytest.raises(HTTPException) as excinfo:
                 await public_intents(request, body)
 

@@ -43,7 +43,7 @@ __mahajana__ = "kapila"
 __position__ = 6
 __genesis__ = "0x25d36ba1"
 
-__all__ = ["MahaCLIAdapter", "CellFingerprint", "AdapterResult"]
+__all__ = ["MahaCLIAdapter", "CellFingerprint", "AdapterResult", "get_adapter"]
 
 import importlib
 import logging

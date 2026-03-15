@@ -7,13 +7,14 @@ Implementation MUST pass these tests.
 "ekam evādvitīyam" - One without a second.
 """
 
-import pytest
 from typing import List
 
+import pytest
+
 from vibe_core.mahamantra.cli import (
+    CLICapability,
     CLIEntryProtocol,
     CLIEntryResult,
-    CLICapability,
     CLIHealth,
     CLIResult,
     CLIState,
@@ -123,7 +124,7 @@ class TestMahamantraCLIEntry:
     def test_cli_auto_execute_returns_cli_result(self):
         """cli_auto.execute() MUST return CLIResult."""
         from vibe_core.mahamantra.cli.auto import cli_auto
-        from vibe_core.mahamantra.cli.protocol import CLIResult
+        from vibe_core.mahamantra.cli.protocol import CLIResult  # noqa: F811
 
         cli_auto.discover_all()
         result = cli_auto.execute("analyze", ["test"])
