@@ -1,0 +1,171 @@
+[
+  {
+    "correlation_id": "",
+    "envelope_id": "8ff875d1-0aed-421f-a03b-bda5e31d83b4",
+    "maha_header_hex": "238e10b6e43f48870331e5a704418756be47461c4d1eaf05cdd011495b6b41c93254e39acee73322d0038f39d6b97d84a0bb0d0000000000ab47c7a58f365214ba83044261633daf",
+    "nadi_op": "send",
+    "nadi_priority": "rajas",
+    "nadi_type": "vyana",
+    "operation": "heartbeat",
+    "payload": {
+      "agent_id": "steward",
+      "capabilities": [
+        "code_analysis",
+        "task_execution",
+        "ci_automation",
+        "federation_bridge",
+        "autonomous_daemon",
+        "healing",
+        "immune_system",
+        "cross_repo_diagnostic"
+      ],
+      "fingerprint": "67f02b9fc889c49c1ddf0611ce8ed0f132bf0f6cce9d06499562efbd0c8fc053",
+      "health": 0.95,
+      "repo": "kimeisele/steward",
+      "timestamp": 1773670912.744698,
+      "version": "0.18.0"
+    },
+    "priority": 1,
+    "source": "steward",
+    "target": "steward-protocol",
+    "timestamp": 1773670923.888087,
+    "ttl_ms": 900000,
+    "ttl_s": 900.0
+  },
+  {
+    "correlation_id": "",
+    "envelope_id": "0074415e-8b37-4db5-912e-6da980c05773",
+    "maha_header_hex": "ae9609ed158f73b10331e5a7044187561edbe5c01250864af929adeb9a32dfdf3254e39acee73322d0038f39d6b97d8400dd6d000000000079bef902fe6d42fbd1615cc07f9fa12f",
+    "nadi_op": "send",
+    "nadi_priority": "rajas",
+    "nadi_type": "vyana",
+    "operation": "city_report",
+    "payload": {
+      "active_campaigns": [
+        {
+          "id": "internet-adaptation",
+          "last_evaluated_heartbeat": 1,
+          "last_gap_summary": [],
+          "north_star": "Continuously adapt the city to relevant new protocols, tools, and standards while keeping execution bounded and the heartbeat healthy.",
+          "status": "active",
+          "title": "Internet adaptation"
+        }
+      ],
+      "alive": 32,
+      "chain_valid": true,
+      "heartbeat": 3,
+      "mission_results": [],
+      "population": 32,
+      "pr_results": []
+    },
+    "priority": 1,
+    "source": "agent-city",
+    "target": "steward-protocol",
+    "timestamp": 1773670923.917312,
+    "ttl_ms": 7200000,
+    "ttl_s": 7200.0
+  },
+  {
+    "correlation_id": "",
+    "envelope_id": "bdac49c0-afd7-4478-80fe-91ceccb2c69f",
+    "maha_header_hex": "ae9609ed158f73b10331e5a7044187561edbe5c01250864af929adeb9a32dfdf3254e39acee73322d0038f39d6b97d8400dd6d000000000079bef902fe6d42fbd1615cc07f9fa12f",
+    "nadi_op": "send",
+    "nadi_priority": "rajas",
+    "nadi_type": "vyana",
+    "operation": "city_report",
+    "payload": {
+      "active_campaigns": [
+        {
+          "id": "internet-adaptation",
+          "last_evaluated_heartbeat": 5,
+          "last_gap_summary": [
+            "keep active work bounded so strategy does not dissolve into thrash"
+          ],
+          "north_star": "Continuously adapt the city to relevant new protocols, tools, and standards while keeping execution bounded and the heartbeat healthy.",
+          "status": "active",
+          "title": "Internet adaptation"
+        }
+      ],
+      "alive": 32,
+      "chain_valid": true,
+      "heartbeat": 7,
+      "mission_results": [],
+      "population": 32,
+      "pr_results": []
+    },
+    "priority": 1,
+    "source": "agent-city",
+    "target": "steward-protocol",
+    "timestamp": 1773670923.917312,
+    "ttl_ms": 7200000,
+    "ttl_s": 7200.0
+  },
+  {
+    "correlation_id": "",
+    "envelope_id": "ebf0e464-2ec8-42ce-842f-7b4f43497b9a",
+    "maha_header_hex": "ae9609ed158f73b10331e5a7044187561edbe5c01250864af929adeb9a32dfdf3254e39acee73322d0038f39d6b97d8400dd6d000000000079bef902fe6d42fbd1615cc07f9fa12f",
+    "nadi_op": "send",
+    "nadi_priority": "rajas",
+    "nadi_type": "vyana",
+    "operation": "city_report",
+    "payload": {
+      "active_campaigns": [
+        {
+          "id": "internet-adaptation",
+          "last_evaluated_heartbeat": 1,
+          "last_gap_summary": [],
+          "north_star": "Continuously adapt the city to relevant new protocols, tools, and standards while keeping execution bounded and the heartbeat healthy.",
+          "status": "active",
+          "title": "Internet adaptation"
+        }
+      ],
+      "alive": 32,
+      "chain_valid": true,
+      "heartbeat": 3,
+      "mission_results": [],
+      "population": 32,
+      "pr_results": []
+    },
+    "priority": 1,
+    "source": "agent-city",
+    "target": "steward-protocol",
+    "timestamp": 1773672114.832438,
+    "ttl_ms": 7200000,
+    "ttl_s": 7200.0
+  },
+  {
+    "correlation_id": "",
+    "envelope_id": "2dda6692-0430-40a0-bdb3-a69d3a35f6a1",
+    "maha_header_hex": "ae9609ed158f73b10331e5a7044187561edbe5c01250864af929adeb9a32dfdf3254e39acee73322d0038f39d6b97d8400dd6d000000000079bef902fe6d42fbd1615cc07f9fa12f",
+    "nadi_op": "send",
+    "nadi_priority": "rajas",
+    "nadi_type": "vyana",
+    "operation": "city_report",
+    "payload": {
+      "active_campaigns": [
+        {
+          "id": "internet-adaptation",
+          "last_evaluated_heartbeat": 5,
+          "last_gap_summary": [
+            "keep active work bounded so strategy does not dissolve into thrash"
+          ],
+          "north_star": "Continuously adapt the city to relevant new protocols, tools, and standards while keeping execution bounded and the heartbeat healthy.",
+          "status": "active",
+          "title": "Internet adaptation"
+        }
+      ],
+      "alive": 32,
+      "chain_valid": true,
+      "heartbeat": 7,
+      "mission_results": [],
+      "population": 32,
+      "pr_results": []
+    },
+    "priority": 1,
+    "source": "agent-city",
+    "target": "steward-protocol",
+    "timestamp": 1773672114.832438,
+    "ttl_ms": 7200000,
+    "ttl_s": 7200.0
+  }
+]

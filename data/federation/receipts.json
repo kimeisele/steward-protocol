@@ -1,0 +1,42 @@
+[
+  {
+    "correlation_id": "",
+    "delivered_at": 1773670923.907874,
+    "envelope_id": "8ff875d1-0aed-421f-a03b-bda5e31d83b4",
+    "operation": "heartbeat",
+    "source_city_id": "steward",
+    "target_city_id": "steward-protocol"
+  },
+  {
+    "correlation_id": "",
+    "delivered_at": 1773670923.921057,
+    "envelope_id": "0074415e-8b37-4db5-912e-6da980c05773",
+    "operation": "city_report",
+    "source_city_id": "agent-city",
+    "target_city_id": "steward-protocol"
+  },
+  {
+    "correlation_id": "",
+    "delivered_at": 1773670923.924787,
+    "envelope_id": "bdac49c0-afd7-4478-80fe-91ceccb2c69f",
+    "operation": "city_report",
+    "source_city_id": "agent-city",
+    "target_city_id": "steward-protocol"
+  },
+  {
+    "correlation_id": "",
+    "delivered_at": 1773672114.837465,
+    "envelope_id": "ebf0e464-2ec8-42ce-842f-7b4f43497b9a",
+    "operation": "city_report",
+    "source_city_id": "agent-city",
+    "target_city_id": "steward-protocol"
+  },
+  {
+    "correlation_id": "",
+    "delivered_at": 1773672114.841805,
+    "envelope_id": "2dda6692-0430-40a0-bdb3-a69d3a35f6a1",
+    "operation": "city_report",
+    "source_city_id": "agent-city",
+    "target_city_id": "steward-protocol"
+  }
+]
