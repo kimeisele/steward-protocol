@@ -1,0 +1,25 @@
+{
+  "identity": {
+    "city_id": "steward-protocol",
+    "slug": "steward-protocol",
+    "repo": "kimeisele/steward-protocol",
+    "public_key": ""
+  },
+  "endpoint": {
+    "city_id": "steward-protocol",
+    "transport": "filesystem",
+    "location": "data/federation"
+  },
+  "capabilities": [
+    "protocol-governance",
+    "substrate-runtime",
+    "authority-projection",
+    "kernel-verification"
+  ],
+  "nadi": {
+    "outbox": "data/federation/nadi_outbox.json",
+    "inbox": "data/federation/nadi_inbox.json",
+    "reports": "data/federation/reports/",
+    "directives": "data/federation/directives/"
+  }
+}

@@ -1,7 +1,7 @@
 {
   "kind": "agent_federation_descriptor",
   "version": 1,
-  "repo_id": "steward-protocol",
+  "repo_id": "kimeisele/steward-protocol",
   "display_name": "Steward Protocol",
   "authority_feed_manifest_url": "https://raw.githubusercontent.com/kimeisele/steward-protocol/authority-feed/latest-authority-manifest.json",
   "projection_intents": [
