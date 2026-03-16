@@ -38,5 +38,13 @@
     "operation": "city_report",
     "source_city_id": "agent-city",
     "target_city_id": "steward-protocol"
+  },
+  {
+    "correlation_id": "70d9b87d-d741-4d82-89e4-710c78d40318",
+    "delivered_at": 1773680559.9972146,
+    "envelope_id": "70d9b87d-d741-4d82-89e4-710c78d40318",
+    "operation": "city_report",
+    "source_city_id": "agent-city",
+    "target_city_id": "steward-protocol"
   }
 ]
