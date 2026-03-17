@@ -257,18 +257,21 @@ class OpenRouterProvider(LLMProvider):
         return self.api_key is not None and self.client is not None
 
     def _get_model_from_config(self) -> str:
-        """Load default model from config/llm.yaml - FAILS if not configured!"""
-        from vibe_core.phoenix import get_config
+        """Load default model from config/llm.yaml with graceful fallback.
 
-        config = get_config()
-        llm_cfg = config.llm  # LLMConfig object
+        Downstream projects (agent-city, agent-world) don't have config/llm.yaml.
+        Crashing on missing config prevents ALL LLM usage in the federation.
+        """
+        try:
+            from vibe_core.phoenix import get_config
 
-        # Access providers dict and get ProviderEntry
-        provider_entry = llm_cfg.providers.get("openrouter")
+            config = get_config()
+            llm_cfg = config.llm
+            provider_entry = llm_cfg.providers.get("openrouter")
+            if provider_entry and provider_entry.default_model:
+                return provider_entry.default_model
+        except (AttributeError, ValueError, TypeError):
+            pass
 
-        if not provider_entry or not provider_entry.default_model:
-            raise ValueError(
-                "❌ FATAL: No model configured! Set 'providers.openrouter.default_model' in config/llm.yaml"
-            )
-
-        return provider_entry.default_model
+        # Fallback: sensible default that works without config
+        return "deepseek/deepseek-v3.2"
