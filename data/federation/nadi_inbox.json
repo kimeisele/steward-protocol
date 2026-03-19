@@ -186,5 +186,177 @@
     "timestamp": 1773680559.9960282,
     "ttl_ms": 7200000,
     "ttl_s": 7200.0
+  },
+  {
+    "correlation_id": "e58f6bca-4f72-4859-87d4-45966b68a717",
+    "envelope_id": "e58f6bca-4f72-4859-87d4-45966b68a717",
+    "maha_header_hex": "ae9609ed158f73b10331e5a7044187561edbe5c01250864af929adeb9a32dfdf3254e39acee73322d0038f39d6b97d8400dd6d000000000079bef902fe6d42fbd1615cc07f9fa12f",
+    "nadi_op": "send",
+    "nadi_priority": "rajas",
+    "nadi_type": "vyana",
+    "operation": "city_report",
+    "payload": {
+      "active_campaigns": [
+        {
+          "id": "internet-adaptation",
+          "last_evaluated_heartbeat": 0,
+          "last_gap_summary": [],
+          "north_star": "Continuously adapt the city to relevant new protocols, tools, and standards while keeping execution bounded and the heartbeat healthy.",
+          "status": "active",
+          "title": "Internet adaptation"
+        }
+      ],
+      "alive": 54,
+      "chain_valid": true,
+      "heartbeat": 183,
+      "mission_results": [],
+      "origin_phase": "moksha",
+      "population": 54,
+      "pr_results": []
+    },
+    "priority": 1,
+    "source": "agent-city",
+    "target": "steward-protocol",
+    "timestamp": 1773950306.346402,
+    "ttl_ms": 7200000,
+    "ttl_s": 7200.0
+  },
+  {
+    "correlation_id": "5bddb48b-ae64-4220-a2ca-982a0309c6e1",
+    "envelope_id": "5bddb48b-ae64-4220-a2ca-982a0309c6e1",
+    "maha_header_hex": "ae9609ed158f73b10331e5a7044187561edbe5c01250864af929adeb9a32dfdf3254e39acee73322d0038f39d6b97d8400dd6d000000000079bef902fe6d42fbd1615cc07f9fa12f",
+    "nadi_op": "send",
+    "nadi_priority": "rajas",
+    "nadi_type": "vyana",
+    "operation": "city_report",
+    "payload": {
+      "active_campaigns": [
+        {
+          "id": "internet-adaptation",
+          "last_evaluated_heartbeat": 0,
+          "last_gap_summary": [],
+          "north_star": "Continuously adapt the city to relevant new protocols, tools, and standards while keeping execution bounded and the heartbeat healthy.",
+          "status": "active",
+          "title": "Internet adaptation"
+        }
+      ],
+      "alive": 54,
+      "chain_valid": true,
+      "heartbeat": 187,
+      "mission_results": [],
+      "origin_phase": "moksha",
+      "population": 54,
+      "pr_results": []
+    },
+    "priority": 1,
+    "source": "agent-city",
+    "target": "steward-protocol",
+    "timestamp": 1773950306.346402,
+    "ttl_ms": 7200000,
+    "ttl_s": 7200.0
+  },
+  {
+    "correlation_id": "b6fecc48-aef4-4d3e-9677-2a3ae6e623d5",
+    "envelope_id": "b6fecc48-aef4-4d3e-9677-2a3ae6e623d5",
+    "maha_header_hex": "ae9609ed158f73b10331e5a7044187561edbe5c01250864af929adeb9a32dfdf3254e39acee73322d0038f39d6b97d8400dd6d000000000079bef902fe6d42fbd1615cc07f9fa12f",
+    "nadi_op": "send",
+    "nadi_priority": "rajas",
+    "nadi_type": "vyana",
+    "operation": "city_report",
+    "payload": {
+      "active_campaigns": [
+        {
+          "id": "internet-adaptation",
+          "last_evaluated_heartbeat": 0,
+          "last_gap_summary": [],
+          "north_star": "Continuously adapt the city to relevant new protocols, tools, and standards while keeping execution bounded and the heartbeat healthy.",
+          "status": "active",
+          "title": "Internet adaptation"
+        }
+      ],
+      "alive": 54,
+      "chain_valid": true,
+      "heartbeat": 191,
+      "mission_results": [],
+      "origin_phase": "moksha",
+      "population": 54,
+      "pr_results": []
+    },
+    "priority": 1,
+    "source": "agent-city",
+    "target": "steward-protocol",
+    "timestamp": 1773950306.346402,
+    "ttl_ms": 7200000,
+    "ttl_s": 7200.0
+  },
+  {
+    "correlation_id": "7e4748c1-a38b-404f-a5d3-5570384d6503",
+    "envelope_id": "7e4748c1-a38b-404f-a5d3-5570384d6503",
+    "maha_header_hex": "ae9609ed158f73b10331e5a7044187561edbe5c01250864af929adeb9a32dfdf3254e39acee73322d0038f39d6b97d8400dd6d000000000079bef902fe6d42fbd1615cc07f9fa12f",
+    "nadi_op": "send",
+    "nadi_priority": "rajas",
+    "nadi_type": "vyana",
+    "operation": "city_report",
+    "payload": {
+      "active_campaigns": [
+        {
+          "id": "internet-adaptation",
+          "last_evaluated_heartbeat": 193,
+          "last_gap_summary": [
+            "keep active work bounded so strategy does not dissolve into thrash"
+          ],
+          "north_star": "Continuously adapt the city to relevant new protocols, tools, and standards while keeping execution bounded and the heartbeat healthy.",
+          "status": "active",
+          "title": "Internet adaptation"
+        }
+      ],
+      "alive": 54,
+      "chain_valid": true,
+      "heartbeat": 195,
+      "mission_results": [],
+      "origin_phase": "moksha",
+      "population": 54,
+      "pr_results": []
+    },
+    "priority": 1,
+    "source": "agent-city",
+    "target": "steward-protocol",
+    "timestamp": 1773950306.346402,
+    "ttl_ms": 7200000,
+    "ttl_s": 7200.0
+  },
+  {
+    "correlation_id": "83cc770b-244c-410b-8798-e39ff79f0a1e",
+    "envelope_id": "83cc770b-244c-410b-8798-e39ff79f0a1e",
+    "maha_header_hex": "ae9609ed158f73b10331e5a7044187561edbe5c01250864af929adeb9a32dfdf3254e39acee73322d0038f39d6b97d8400dd6d000000000079bef902fe6d42fbd1615cc07f9fa12f",
+    "nadi_op": "send",
+    "nadi_priority": "rajas",
+    "nadi_type": "vyana",
+    "operation": "city_report",
+    "payload": {
+      "active_campaigns": [
+        {
+          "id": "internet-adaptation",
+          "last_evaluated_heartbeat": 0,
+          "last_gap_summary": [],
+          "north_star": "Continuously adapt the city to relevant new protocols, tools, and standards while keeping execution bounded and the heartbeat healthy.",
+          "status": "active",
+          "title": "Internet adaptation"
+        }
+      ],
+      "alive": 54,
+      "chain_valid": true,
+      "heartbeat": 199,
+      "mission_results": [],
+      "origin_phase": "moksha",
+      "population": 54,
+      "pr_results": []
+    },
+    "priority": 1,
+    "source": "agent-city",
+    "target": "steward-protocol",
+    "timestamp": 1773950306.346402,
+    "ttl_ms": 7200000,
+    "ttl_s": 7200.0
   }
 ]
