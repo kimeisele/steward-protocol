@@ -358,5 +358,55 @@
     "timestamp": 1773950306.346402,
     "ttl_ms": 7200000,
     "ttl_s": 7200.0
+  },
+  {
+    "correlation_id": "327b6a13-7886-4a42-86ec-a5541f16f3fd",
+    "envelope_id": "327b6a13-7886-4a42-86ec-a5541f16f3fd",
+    "maha_header_hex": "ae9609ed158f73b10331e5a7044187561edbe5c01250864af929adeb9a32dfdf3254e39acee73322d0038f39d6b97d8400dd6d000000000079bef902fe6d42fbd1615cc07f9fa12f",
+    "nadi_op": "send",
+    "nadi_priority": "rajas",
+    "nadi_type": "vyana",
+    "operation": "city_report",
+    "payload": {
+      "active_campaigns": [],
+      "alive": 54,
+      "chain_valid": true,
+      "heartbeat": 205,
+      "mission_results": [],
+      "origin_phase": "moksha",
+      "population": 54,
+      "pr_results": []
+    },
+    "priority": 1,
+    "source": "agent-city",
+    "target": "steward-protocol",
+    "timestamp": 1774194891.8680837,
+    "ttl_ms": 7200000,
+    "ttl_s": 7200.0
+  },
+  {
+    "correlation_id": "783d4781-4828-4639-b9cf-aceed4cd9635",
+    "envelope_id": "783d4781-4828-4639-b9cf-aceed4cd9635",
+    "maha_header_hex": "ae9609ed158f73b10331e5a7044187561edbe5c01250864af929adeb9a32dfdf3254e39acee73322d0038f39d6b97d8400dd6d000000000079bef902fe6d42fbd1615cc07f9fa12f",
+    "nadi_op": "send",
+    "nadi_priority": "rajas",
+    "nadi_type": "vyana",
+    "operation": "city_report",
+    "payload": {
+      "active_campaigns": [],
+      "alive": 54,
+      "chain_valid": true,
+      "heartbeat": 206,
+      "mission_results": [],
+      "origin_phase": "moksha",
+      "population": 54,
+      "pr_results": []
+    },
+    "priority": 1,
+    "source": "agent-city",
+    "target": "steward-protocol",
+    "timestamp": 1774194891.8680837,
+    "ttl_ms": 7200000,
+    "ttl_s": 7200.0
   }
 ]

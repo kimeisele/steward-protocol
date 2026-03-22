@@ -86,5 +86,21 @@
     "operation": "city_report",
     "source_city_id": "agent-city",
     "target_city_id": "steward-protocol"
+  },
+  {
+    "correlation_id": "327b6a13-7886-4a42-86ec-a5541f16f3fd",
+    "delivered_at": 1774194891.8694756,
+    "envelope_id": "327b6a13-7886-4a42-86ec-a5541f16f3fd",
+    "operation": "city_report",
+    "source_city_id": "agent-city",
+    "target_city_id": "steward-protocol"
+  },
+  {
+    "correlation_id": "783d4781-4828-4639-b9cf-aceed4cd9635",
+    "delivered_at": 1774194891.8709335,
+    "envelope_id": "783d4781-4828-4639-b9cf-aceed4cd9635",
+    "operation": "city_report",
+    "source_city_id": "agent-city",
+    "target_city_id": "steward-protocol"
   }
 ]
