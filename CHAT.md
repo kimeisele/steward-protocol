@@ -87,7 +87,7 @@ JNANENDRIYAS (10 Senses - Perception)
 ├── viveka_sense.py      - Discrimination/judgment
 ├── architecture_sense.py - Codebase structure
 ├── dharma_sense.py      - Drift/violation detection
-├── sutra_sense.py       - Wiki/documentation state
+├── sutra_sense.py       - Legacy documentation-gap sensing
 ├── akasha.py           - Knowledge graph access
 └── manas_knowledge.py   - Internal knowledge
 
@@ -108,7 +108,7 @@ HANDLERS (7 Route Handlers)
 ├── mandala.py           - Configuration
 ├── akasha.py            - Knowledge queries
 ├── silpa.py             - Refactoring
-└── sutra.py             - Wiki generation
+└── documentation_surface.py - Documentation surface context / projection status
 
 PIPELINE (VEDA-4)
 ├── veda.py              - Four-fold pipeline orchestrator
@@ -213,7 +213,7 @@ VedaIntent.DRIFT: "_handle_drift",        # ✅ Works
 VedaIntent.MANDALA: "_handle_mandala",    # ⚠️ Partial
 VedaIntent.AKASHA: "_handle_akasha",      # ⚠️ Partial
 VedaIntent.SILPA: "_handle_silpa",        # ❌ Orphaned
-VedaIntent.SUTRA: "_handle_sutra",        # ❌ Orphaned
+VedaIntent.SUTRA: "_handle_documentation",  # legacy alias → documentation surface
 VedaIntent.SANKALPA: "_handle_sankalpa",  # ❌ Orphaned
 VedaIntent.CHAT: "_handle_chat_llm",      # ✅ Works (with bugs)
 ```

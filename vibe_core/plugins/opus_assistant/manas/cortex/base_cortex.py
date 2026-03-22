@@ -8,7 +8,7 @@ This base class enables VEDA-4 auto-discovery of cortex modules via CortexLoader
 Each cortex represents a specialized capability domain:
 
     - ShellCortex: CLI/Git operations
-    - SutraCortex: Documentation weaving
+    - DocumentationCortex: Documentation surface inspection
     - SilpaCortex: Code refactoring
     - TestCortex: Test execution
     - etc.
@@ -25,7 +25,7 @@ ARCHITECTURE:
     └─────────────────────────────────────────────────────────────────────┘
 
 ADAPTER PATTERN:
-    Existing cortex modules (ShellCortex, SutraWeaver, etc.) are wrapped
+    Existing cortex modules (ShellCortex, documentation builders, etc.) are wrapped
     in adapters that implement this interface. This allows VEDA-4 discovery
     without modifying the original implementations.
 
@@ -81,7 +81,7 @@ class BaseCortex(ABC):
     All cortex adapters must inherit from this class to be discovered by CortexLoader.
 
     Required Class Attributes:
-        - name: Unique identifier for the cortex (e.g., "shell", "sutra")
+        - name: Unique identifier for the cortex (e.g., "shell", "documentation")
         - capabilities: List of capabilities this cortex provides
 
     Required Methods:
@@ -104,7 +104,7 @@ class BaseCortex(ABC):
     """
 
     # === MUST BE OVERRIDDEN ===
-    name: ClassVar[str] = ""  # Unique cortex identifier (e.g., "shell", "sutra")
+    name: ClassVar[str] = ""  # Unique cortex identifier (e.g., "shell", "documentation")
     capabilities: ClassVar[List[str]] = []  # What this cortex can do
 
     # === OPTIONAL OVERRIDES ===

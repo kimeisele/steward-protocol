@@ -26,7 +26,7 @@ Architecture (OPUS-171 Phase 5 - Agent-First Design):
 Handler Location (OPUS-171 Phase 5):
     vibe_core/plugins/opus_assistant/manas/router/handlers/
     ├── base.py              # BaseHandler + AgentType constants
-    ├── sutra_handler.py     # Documentation (update_readme, document_manas)
+    ├── documentation_handler.py  # Documentation (update_readme, document_manas)
     ├── shell_handler.py     # Git/Shell (commit, push, pr, cleanup)
     ├── research_handler.py  # Research/Knowledge (web_search, knowledge_query)
     ├── audit_handler.py     # Dharma/Wiring/Sankalpa (audit, strategy)

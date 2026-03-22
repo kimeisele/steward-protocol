@@ -8,7 +8,7 @@ OPUS-050: VEDA (The Knowledge) - VedaPipeline
 OPUS-051: MANDALA (The Configuration) - ConfigWeaver
 OPUS-052: AKASHA (The Space) - AkashaQuery/Sync
 OPUS-053: SILPA (The Craft) - SilpaArchitect
-OPUS-054: SUTRA (The Thread) - SutraWeaver
+OPUS-054: Documentation Surface - DocumentationSurfaceBuilder
 OPUS-055: SANKALPA (The Will) - SankalpaOrchestrator
 OPUS-059: PRAMANA (The Valid Proof) - TestCortex
 
@@ -148,8 +148,12 @@ from vibe_core.plugins.opus_assistant.manas.cortex.silpa import (
     SilpaTransformer,
 )
 
-# OPUS-054: SUTRA (The Thread)
-from vibe_core.plugins.opus_assistant.manas.cortex.sutra import SutraWeaver
+# OPUS-054: Documentation Surface
+from vibe_core.plugins.opus_assistant.manas.cortex.documentation_surface import (
+    DocumentationContext,
+    DocumentationSurfaceBuilder,
+    render_projection_status_section,
+)
 
 # OPUS-131: SUTRA SENSE (The 3rd Sense - Knowledge Threads)
 from vibe_core.plugins.opus_assistant.manas.cortex.sutra_sense import (
@@ -234,11 +238,10 @@ __all__ = [
     "SilpaPlan",
     "RefactorRisk",
     "RefactorType",
-    # OPUS-054: SUTRA (The Thread)
-    "SutraWeaver",
-    "WikiPage",
-    "WikiPageType",
-    "WikiSync",
+    # OPUS-054: Documentation Surface
+    "DocumentationContext",
+    "DocumentationSurfaceBuilder",
+    "render_projection_status_section",
     # OPUS-055: SANKALPA (The Will)
     "SankalpaOrchestrator",
     # OPUS-059: PRAMANA (The Valid Proof)

@@ -1,20 +1,21 @@
-## Steward Protocol Wiki Canonical Surface Model
+## Steward Protocol Authority Surface Model
 
 ### Purpose
 
-`steward-protocol` should be the normative mothership of the federation: constitutional, governable, semantically stable, and explicit about provenance. The wiki should therefore be a governed document surface, not a thin generated brochure.
+`steward-protocol` should be the normative mothership of the federation: constitutional, governable, semantically stable, and explicit about provenance. The source repo should therefore export governed authority artifacts; public wiki/projection rendering belongs to `agent-internet`.
 
 ### Audit Summary
 
-- The current SUTRA wiki compiler emits only 6 pages: `Home`, `Pantheon`, `Law`, `Map`, `_Sidebar`, `_Footer`.
-- The generator is largely hardcoded inside `vibe_core/plugins/opus_assistant/manas/cortex/sutra.py`.
+- The legacy local SUTRA wiki compiler has been removed.
+- Authority export now lives in neutral top-level modules such as `vibe_core/authority_exports.py` and `vibe_core/source_authority_registry.py`.
+- Public membrane rendering and publication belong to `agent-internet`, not `steward-protocol`.
 - Rich authored source material already exists in the repo (`CONSTITUTION.md`, `README.md`, `AGI_MANIFESTO.md`, `PROTOCOLS.md`, `STEWARD.md`, `KERNEL.md`, `ARCHITECTURE.md`, `INDEX.md`, `docs/*`).
 - The current public surface collapses this corpus into shallow projections instead of binding canonical documents directly.
 - `Law.md` is the clearest failure mode: it flattens `CONSTITUTION.md` headings and mixes in noisy implementation stems like `__init__`, `keys`, `contracts`, and `invariants`.
 
 ### Core Design Principle
 
-The wiki must distinguish **binding canonical pages** from **derived pages**.
+The authority surface must distinguish **binding canonical documents** from **derived public projections**.
 
 - **Canonical pages** preserve authored doctrine with minimal transformation.
 - **Derived pages** summarize, index, compare, or map canonical/code sources.
@@ -25,7 +26,7 @@ The wiki must distinguish **binding canonical pages** from **derived pages**.
 
 #### 1. Canonical bound pages
 
-One authored source document binds to one public wiki page.
+One authored source document binds to one canonical authority artifact.
 
 Examples:
 - `Constitution`
@@ -110,27 +111,27 @@ Replace the current governance surface:
 
 ### Minimal Implementation Slice
 
-1. Introduce a manifest-driven page registry for the wiki surface.
-2. Move page declarations and nav order out of hardcoded SUTRA templates.
-3. Add direct bindings for:
+1. Keep the source-authority registry declarative and manifest-like.
+2. Bind canonical authored documents directly into neutral authority exports.
+3. Let `agent-internet` render/project the public membrane from those exports.
+4. Maintain direct bindings for:
    - `README.md`
    - `CONSTITUTION.md`
    - `AGI_MANIFESTO.md`
    - `PROTOCOLS.md`
    - `ARCHITECTURE.md` or `KERNEL.md`
-4. Generate `_Sidebar` and `_Footer` from the manifest.
-5. Keep current build/publish entrypoints intact so rollout risk stays low.
+5. Keep local publication entrypoints removed so the boundary stays explicit.
 
 ### Likely Initial File Changes
 
-- modify `vibe_core/plugins/opus_assistant/manas/cortex/sutra.py`
-- modify `vibe_core/wiki_publisher.py`
-- add a wiki surface manifest (for example `wiki-src/manifest.yaml`)
-- add tests for canonical binding, derived page generation, and navigation output
+- modify `vibe_core/authority_exports.py`
+- modify `vibe_core/source_authority_registry.py`
+- modify `agent-internet` projection/rendering code for public membrane views
+- add tests for canonical binding, authority export completeness, and projection consumption
 
 ### Success Criteria
 
-- The wiki expands beyond the current 6-page bottleneck.
+- The authority exports cover the canonical doctrine corpus without a local wiki compiler.
 - Canonical pages read like real source doctrine, not summaries.
-- Navigation mirrors the actual doctrine/governance/protocol structure of the repo.
-- Derived pages become clearly secondary to the canon instead of masquerading as the canon.
+- Public navigation mirrors the actual doctrine/governance/protocol structure once rendered by `agent-internet`.
+- Derived pages remain clearly secondary to the canon instead of masquerading as the canon.

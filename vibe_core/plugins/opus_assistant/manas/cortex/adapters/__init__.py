@@ -13,7 +13,7 @@ ADAPTER PATTERN:
 
 AVAILABLE ADAPTERS:
     - ShellCortexAdapter: Git/CLI operations
-    - SutraCortexAdapter: Documentation weaving
+    - DocumentationCortexAdapter: Documentation surface inspection
     - TestCortexAdapter: Test execution
     - SilpaCortexAdapter: Code refactoring
 

@@ -93,7 +93,7 @@ class VedaIntent(Enum):
     SILPA = "silpa"
     REFACTOR = "refactor"
 
-    # SUTRA (Wiki Documentation)
+    # Legacy documentation/wiki aliases
     SUTRA = "sutra"
     WIKI = "wiki"
 
@@ -570,8 +570,8 @@ class Artha:
         VedaIntent.DEPENDENCIES: "_handle_akasha",
         VedaIntent.SILPA: "_handle_silpa",
         VedaIntent.REFACTOR: "_handle_silpa",
-        VedaIntent.SUTRA: "_handle_sutra",
-        VedaIntent.WIKI: "_handle_sutra",
+        VedaIntent.SUTRA: "_handle_documentation",
+        VedaIntent.WIKI: "_handle_documentation",
         VedaIntent.SANKALPA: "_handle_sankalpa",
         VedaIntent.MISSIONS: "_handle_sankalpa",
         VedaIntent.STRATEGY: "_handle_sankalpa",
@@ -666,7 +666,7 @@ class Artha:
         if intent in {VedaIntent.SILPA, VedaIntent.REFACTOR}:
             hints.append("silpa_context_needed")
         if intent in {VedaIntent.SUTRA, VedaIntent.WIKI}:
-            hints.append("sutra_context_needed")
+            hints.append("documentation_context_needed")
         if intent in {VedaIntent.SANKALPA, VedaIntent.MISSIONS, VedaIntent.STRATEGY}:
             hints.append("sankalpa_context_needed")
 

@@ -56,7 +56,8 @@ class GoogleProvider(LLMProvider):
         # Gemini 2.5 (latest, free during preview)
         "gemini-2.5-flash": {"input": 0.0, "output": 0.0},
         "gemini-2.5-flash-exp": {"input": 0.0, "output": 0.0},
-        # Gemini 2.0 (experimental, free during preview)
+        # Gemini 2.0 (free during preview)
+        "gemini-2.0-flash": {"input": 0.0, "output": 0.0},
         "gemini-2.0-flash-exp": {"input": 0.0, "output": 0.0},
         # Gemini 1.5 (stable)
         "gemini-1.5-flash": {"input": 0.075, "output": 0.30},
@@ -97,23 +98,32 @@ class GoogleProvider(LLMProvider):
 
     def invoke(
         self,
-        prompt: str,
+        prompt: str = "",
         model: str = "gemini-2.5-flash",
         max_tokens: int = 4096,
         temperature: float = 1.0,
         max_retries: int = 3,
+        messages: list[dict[str, str]] | None = None,
         **kwargs: Any,
     ) -> LLMResponse:
         """
-        Invoke Gemini with a prompt.
+        Invoke Gemini with a prompt or messages.
+
+        Supports both simple prompt strings and OpenAI-style messages format.
+        When messages are provided, system messages become Gemini system_instruction
+        and user/assistant messages become content parts.
+
+        JSON mode: pass response_format={"type": "json_object"} in kwargs.
+        Timeout: pass timeout=<seconds> in kwargs.
 
         Args:
-            prompt: Input prompt
+            prompt: Input prompt (used if messages not provided)
             model: Gemini model identifier (default: gemini-2.5-flash)
             max_tokens: Maximum output tokens
             temperature: Sampling temperature
             max_retries: Maximum retry attempts
-            **kwargs: Additional Google-specific parameters
+            messages: Optional OpenAI-style messages list
+            **kwargs: response_format, timeout, and other parameters
 
         Returns:
             LLMResponse with content and usage
@@ -121,23 +131,60 @@ class GoogleProvider(LLMProvider):
         Raises:
             ProviderInvocationError: If all retries fail
         """
+        # Extract Brain-compatible kwargs
+        response_format = kwargs.pop("response_format", None)
+        timeout = kwargs.pop("timeout", None)
+        kwargs.pop("max_retries", None)  # already a named param
+
+        # Convert OpenAI-style messages to Gemini format
+        system_instruction = None
+        contents = prompt
+        if messages:
+            system_parts = []
+            user_parts = []
+            for msg in messages:
+                role = msg.get("role", "user")
+                content = msg.get("content", "")
+                if role == "system":
+                    system_parts.append(content)
+                else:
+                    user_parts.append(content)
+            if system_parts:
+                system_instruction = "\n".join(system_parts)
+            contents = "\n".join(user_parts) if user_parts else prompt
+
         last_error = None
 
         for attempt in range(max_retries):
             try:
-                # Create model instance
-                gemini_model = self.genai.GenerativeModel(model)
+                # Create model instance with optional system instruction
+                model_kwargs: dict[str, Any] = {}
+                if system_instruction:
+                    model_kwargs["system_instruction"] = system_instruction
+                gemini_model = self.genai.GenerativeModel(model, **model_kwargs)
 
                 # Configure generation settings
-                generation_config = {
+                generation_config: dict[str, Any] = {
                     "max_output_tokens": max_tokens,
                     "temperature": temperature,
                 }
 
+                # JSON mode via response_mime_type
+                if response_format and isinstance(response_format, dict):
+                    if response_format.get("type") == "json_object":
+                        generation_config["response_mime_type"] = "application/json"
+
+                # Request options (timeout)
+                generate_kwargs: dict[str, Any] = {
+                    "generation_config": generation_config,
+                }
+                if timeout:
+                    generate_kwargs["request_options"] = {"timeout": timeout}
+
                 # Generate response
                 response = gemini_model.generate_content(
-                    prompt,
-                    generation_config=generation_config,
+                    contents,
+                    **generate_kwargs,
                 )
 
                 # Extract token usage (Google provides this in metadata)

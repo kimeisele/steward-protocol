@@ -1,9 +1,9 @@
 def test_gather_projection_context_prefers_agent_internet_snapshot(monkeypatch, tmp_path):
-    from vibe_core.plugins.opus_assistant.manas.cortex import sutra
+    from vibe_core.plugins.opus_assistant.manas.cortex import documentation_surface
 
     monkeypatch.setenv("AGENT_INTERNET_LOTUS_BASE_URL", "https://lotus.example.test")
     monkeypatch.setenv("AGENT_INTERNET_LOTUS_TOKEN", "token-123")
-    monkeypatch.setenv("SUTRA_AGENT_INTERNET_ROOT", "/srv/steward-protocol")
+    monkeypatch.setenv("AGENT_INTERNET_PROJECTION_ROOT", "/srv/steward-protocol")
 
     calls = []
 
@@ -19,12 +19,12 @@ def test_gather_projection_context_prefers_agent_internet_snapshot(monkeypatch, 
             return {"agent_web_index": {"stats": {"record_count": 12}}}
         raise AssertionError(path)
 
-    monkeypatch.setattr(sutra, "_fetch_agent_internet_json", fake_fetch)
+    monkeypatch.setattr(documentation_surface, "_fetch_agent_internet_json", fake_fetch)
 
-    weaver = sutra.SutraWeaver(workspace=tmp_path)
-    ctx = sutra.WikiContext(node_count=1, edge_count=2, constraint_count=3)
+    builder = documentation_surface.DocumentationSurfaceBuilder(workspace=tmp_path)
+    ctx = documentation_surface.DocumentationContext(node_count=1, edge_count=2, constraint_count=3)
 
-    weaver._gather_projection_context(ctx)
+    builder._gather_projection_context(ctx)
 
     assert ctx.projection_mode == "agent_internet"
     assert ctx.projection_base_url == "https://lotus.example.test"
@@ -41,6 +41,6 @@ def test_gather_projection_context_prefers_agent_internet_snapshot(monkeypatch, 
 
 
 def test_render_projection_section_reports_local_fallback():
-    from vibe_core.plugins.opus_assistant.manas.cortex.sutra import WikiContext, _render_projection_section
+    from vibe_core.plugins.opus_assistant.manas.cortex.documentation_surface import DocumentationContext, render_projection_status_section
 
-    assert "Local fallback active" in _render_projection_section(WikiContext())
+    assert "Local fallback active" in render_projection_status_section(DocumentationContext())

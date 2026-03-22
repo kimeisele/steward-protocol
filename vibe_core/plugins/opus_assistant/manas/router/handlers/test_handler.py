@@ -162,11 +162,11 @@ class ContractHandler(BaseHandler):
         logger.info(f"📜 Contract handler: {intent_type}")
 
         try:
-            # Documentation-related → SUTRA
+            # Documentation-related → documentation handler
             if "doc" in intent_type:
-                from .sutra_handler import SutraHandler
+                from .documentation_handler import DocumentationHandler
 
-                handler = SutraHandler(workspace=self._workspace, config=self._config)
+                handler = DocumentationHandler(workspace=self._workspace, config=self._config)
                 handler.inject_kernel(self._kernel)
                 return handler.handle(intent)
 

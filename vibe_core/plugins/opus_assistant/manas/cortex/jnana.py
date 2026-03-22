@@ -326,8 +326,8 @@ class JnanaHandler:
             content = msg.content if hasattr(msg, "content") else str(msg)
             return handle_silpa_query(content, workspace=self._workspace)
 
-        # SUTRA (Wiki Documentation) handler
-        async def veda_sutra(ctx: VedaContext) -> str:
+        # Documentation / authority status handler
+        async def veda_documentation(ctx: VedaContext) -> str:
             msg = ctx.original_message
             content = msg.content if hasattr(msg, "content") else str(msg)
             return handle_source_authority_query(content, workspace=self._workspace)
@@ -368,7 +368,7 @@ class JnanaHandler:
         self._veda.karma.register_handler("_handle_mandala", veda_mandala)
         self._veda.karma.register_handler("_handle_akasha", veda_akasha)
         self._veda.karma.register_handler("_handle_silpa", veda_silpa)
-        self._veda.karma.register_handler("_handle_sutra", veda_sutra)
+        self._veda.karma.register_handler("_handle_documentation", veda_documentation)
         self._veda.karma.register_handler("_handle_sankalpa", veda_sankalpa)
         self._veda.karma.register_handler("_handle_action", veda_action)
         self._veda.karma.register_handler("_handle_chat_llm", veda_chat)

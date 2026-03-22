@@ -52,6 +52,6 @@ def get_source_authority_for_chat(workspace: Path | None = None) -> str:
 - "sync wiki" - explains that publication moved to agent-internet
 
 **Boundary:**
-- The authority export path is neutral and no longer runs through `sutra.py`.
+- The authority export path is neutral and no longer runs through the legacy local wiki compiler.
 - Public membrane rendering and publication belong to `agent-internet`.
 """

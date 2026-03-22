@@ -26,7 +26,7 @@
 
 ### P3: Manas / Cortex (The Mind)
 - [x] `tests/manas/test_memory_store.py` (Refactored w/ AkashicProtocol + State Reset)
-- [x] `tests/manas/test_sutra.py` (Refactored w/ ShellProtocol - No MagicMock)
+- [x] `tests/manas/test_documentation_surface.py` (Documentation surface adapter/builder coverage)
 
 ## Rules
 1. **No Ad-Hoc Mocks**: Use `class MockX(ProtocolX): ...`

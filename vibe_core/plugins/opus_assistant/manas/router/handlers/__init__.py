@@ -14,7 +14,7 @@ Usage:
     handlers = get_all_handlers(workspace=Path.cwd())
 
     # Static import (for type hints)
-    from vibe_core.plugins.opus_assistant.manas.router.handlers import SutraHandler
+    from vibe_core.plugins.opus_assistant.manas.router.handlers.documentation_handler import DocumentationHandler
 """
 
 # === MAHAJANA DECLARATION (machine-readable) ===

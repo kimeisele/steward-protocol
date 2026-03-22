@@ -8,9 +8,9 @@ DESIGN PRINCIPLES:
 2. Handlers self-register their intent types
 3. Future: Handlers can delegate to Agents (Agent-First)
 
-PATTERN:
-    class SutraHandler(BaseHandler):
-        name = "sutra"
+    PATTERN:
+        class DocumentationHandler(BaseHandler):
+            name = "documentation"
         intent_types = ["update_readme", "update_opus_documentation", ...]
 
         def handle(self, intent: Intent) -> Dict[str, Any]:
@@ -48,7 +48,7 @@ class BaseHandler(ABC):
     OPUS-171 Phase 5: VEDA-4 compliant handler pattern.
 
     Subclasses MUST define:
-    - name: Unique handler name (e.g., "sutra", "shell", "silpa")
+    - name: Unique handler name (e.g., "documentation", "shell", "silpa")
     - intent_types: List of intent types this handler processes
     - handle(): The main handler logic
 
@@ -57,8 +57,8 @@ class BaseHandler(ABC):
     - priority: Handler priority for conflict resolution (higher = first)
 
     Usage:
-        class SutraHandler(BaseHandler):
-            name = "sutra"
+        class DocumentationHandler(BaseHandler):
+            name = "documentation"
             intent_types = ["update_readme", "update_opus_documentation"]
             agent_type = "documentation"  # Future: route via DocAgent
 
@@ -70,7 +70,7 @@ class BaseHandler(ABC):
     _naga_flooded: bool = True
 
     # === REQUIRED CLASS ATTRIBUTES ===
-    name: ClassVar[str] = ""  # Handler name (e.g., "sutra", "shell")
+    name: ClassVar[str] = ""  # Handler name (e.g., "documentation", "shell")
     intent_types: ClassVar[List[str]] = []  # Intent types this handler processes
 
     # === OPTIONAL CLASS ATTRIBUTES (Agent-First) ===
@@ -169,7 +169,7 @@ def register_handler(cls: type) -> type:
 
     Usage:
         @register_handler
-        class SutraHandler(BaseHandler):
+        class DocumentationHandler(BaseHandler):
             ...
     """
     if not issubclass(cls, BaseHandler):
@@ -195,7 +195,7 @@ def get_registered_handlers() -> Dict[str, type]:
 class AgentType:
     """Agent domain types for future routing."""
 
-    DOCUMENTATION = "documentation"  # Sutra, docs, harness
+    DOCUMENTATION = "documentation"  # docs, wiki aliases, harness
     GIT = "git"  # Shell, commit, push, PR
     TESTING = "testing"  # Test, mutation, coverage
     AUDIT = "audit"  # Dharma, wiring, security

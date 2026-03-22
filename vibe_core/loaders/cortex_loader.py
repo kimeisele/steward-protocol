@@ -59,7 +59,7 @@ class CortexLoader(CodeModuleLoader):
 
     Cortex modules are execution engines wrapped in BaseCortex adapters.
     Each cortex adapter declares:
-    - name: Unique cortex identifier (e.g., "shell", "sutra")
+    - name: Unique cortex identifier (e.g., "shell", "documentation")
     - capabilities: List of capabilities it provides
 
     Usage:
@@ -136,7 +136,7 @@ class CortexLoader(CodeModuleLoader):
         Get a cortex by name.
 
         Args:
-            name: Cortex name (e.g., "shell", "sutra")
+            name: Cortex name (e.g., "shell", "documentation")
             workspace: Workspace path
             kernel: Optional kernel for injection
 
