@@ -1,0 +1,39 @@
+{
+  "artifacts": {
+    ".authority-exports/canonical-surface.json": {
+      "export_kind": "canonical_surface",
+      "path": "bundles/ce2c6783e99a76e787004942a197ea7eaa2bfcda/.authority-exports/canonical-surface.json",
+      "sha256": "dad0917017a81f6cf427b4f86849f97f227ca7605eb11aadde156b334f054edb"
+    },
+    ".authority-exports/public-summary-registry.json": {
+      "export_kind": "public_summary_registry",
+      "path": "bundles/ce2c6783e99a76e787004942a197ea7eaa2bfcda/.authority-exports/public-summary-registry.json",
+      "sha256": "58eca5c58c2614ca45c577d50174b58aecafb20f747748a66aa9457da67044ed"
+    },
+    ".authority-exports/repo-graph.json": {
+      "export_kind": "repo_graph",
+      "path": "bundles/ce2c6783e99a76e787004942a197ea7eaa2bfcda/.authority-exports/repo-graph.json",
+      "sha256": "cf2f7a6d04f2a428a903323da097108952efff7d5ea41b5cdf12cbfe7220e148"
+    },
+    ".authority-exports/source-surface-registry.json": {
+      "export_kind": "source_surface_registry",
+      "path": "bundles/ce2c6783e99a76e787004942a197ea7eaa2bfcda/.authority-exports/source-surface-registry.json",
+      "sha256": "8c7cc65a63e789e3ed0cba172bfb6870acd18c93702216e597125b962965ba6c"
+    },
+    ".authority-exports/surface-metadata.json": {
+      "export_kind": "surface_metadata",
+      "path": "bundles/ce2c6783e99a76e787004942a197ea7eaa2bfcda/.authority-exports/surface-metadata.json",
+      "sha256": "2529bbdc33b61d8a7138e1d0cab6cc251c7ad3036c4fe5d4a01963993323bb52"
+    }
+  },
+  "bundle": {
+    "kind": "source_authority_bundle",
+    "path": "bundles/ce2c6783e99a76e787004942a197ea7eaa2bfcda/source-authority-bundle.json",
+    "sha256": "66ac576f83c78e9d0f3b035b04634e0ce45e3cb99930688606f65040cb29e392"
+  },
+  "contract_version": 1,
+  "generated_at": 1774194916.470693,
+  "kind": "source_authority_feed_manifest",
+  "source_repo_id": "steward-protocol",
+  "source_sha": "ce2c6783e99a76e787004942a197ea7eaa2bfcda"
+}

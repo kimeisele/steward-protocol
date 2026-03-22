@@ -1,0 +1,62 @@
+{
+  "cartridge_families": [],
+  "generated_at": 1774194916.606692,
+  "kind": "repo_graph",
+  "knowledge_summary": "Neutral authority export derived from 8 source authority documents.",
+  "repo_areas": [
+    {
+      "name": "vibe_core",
+      "python_files": 1918
+    },
+    {
+      "name": "tests",
+      "python_files": 605
+    },
+    {
+      "name": "scripts",
+      "python_files": 163
+    },
+    {
+      "name": "docs",
+      "python_files": 13
+    },
+    {
+      "name": "knowledge",
+      "python_files": 6
+    },
+    {
+      "name": "gateway",
+      "python_files": 3
+    },
+    {
+      "name": "agent-city",
+      "python_files": 2
+    },
+    {
+      "name": "test_parsing.py",
+      "python_files": 1
+    },
+    {
+      "name": "verify_agni.py",
+      "python_files": 1
+    },
+    {
+      "name": "audit_gad_derivation.py",
+      "python_files": 1
+    }
+  ],
+  "repo_id": "steward-protocol",
+  "summary": {
+    "agent_count": 0,
+    "capability_count": 0,
+    "constraint_count": 0,
+    "domain_count": 4,
+    "edge_count": 0,
+    "module_count": 10,
+    "node_count": 8,
+    "node_manifest_count": 184,
+    "repo_markdown_files": 625,
+    "repo_python_files": 2729
+  },
+  "version": 1
+}

@@ -1,0 +1,109 @@
+{
+  "generated_at": 1774194916.48816,
+  "kind": "public_summary_registry",
+  "record_count": 8,
+  "records": [
+    {
+      "authority": "informative",
+      "document_id": "readme",
+      "domain": "entrypoint",
+      "labels": {
+        "featured": "true",
+        "include_in_sidebar": "true",
+        "nav_label": "Start Here",
+        "source_kind": "markdown",
+        "source_role": "entrypoint"
+      },
+      "public_summary": "Public entry point for installation, quick start, and repository orientation.",
+      "source_path": "README.md",
+      "title": "Start Here"
+    },
+    {
+      "authority": "informative",
+      "document_id": "index",
+      "domain": "reference",
+      "labels": {
+        "featured": "true",
+        "include_in_sidebar": "true",
+        "nav_label": "Index",
+        "source_kind": "markdown"
+      },
+      "public_summary": "Structured index of the authored documentation set and supporting references.",
+      "source_path": "INDEX.md",
+      "title": "Index"
+    },
+    {
+      "authority": "binding",
+      "document_id": "constitution",
+      "domain": "governance",
+      "labels": {
+        "featured": "true",
+        "include_in_sidebar": "true",
+        "nav_label": "Constitution",
+        "source_kind": "markdown"
+      },
+      "public_summary": "Supreme governance document defining identity, audit, boundary, and transparency requirements.",
+      "source_path": "CONSTITUTION.md",
+      "title": "Constitution"
+    },
+    {
+      "authority": "doctrine",
+      "document_id": "agi_manifesto",
+      "domain": "governance",
+      "labels": {
+        "source_kind": "markdown"
+      },
+      "public_summary": "Doctrinal statement describing the governed-intelligence philosophy behind the system.",
+      "source_path": "AGI_MANIFESTO.md",
+      "title": "AGI Manifesto"
+    },
+    {
+      "authority": "operative",
+      "document_id": "steward_operating_model",
+      "domain": "governance",
+      "labels": {
+        "source_kind": "markdown"
+      },
+      "public_summary": "Operating-model reference for stewardship roles, responsibilities, and coordination.",
+      "source_path": "STEWARD.md",
+      "title": "Steward Operating Model"
+    },
+    {
+      "authority": "binding",
+      "document_id": "protocols",
+      "domain": "protocol",
+      "labels": {
+        "include_in_sidebar": "true",
+        "nav_label": "Protocols",
+        "source_kind": "markdown"
+      },
+      "public_summary": "Registry of protocol domains, lifecycle semantics, and implementation-facing coordination rules.",
+      "source_path": "PROTOCOLS.md",
+      "title": "Protocols"
+    },
+    {
+      "authority": "reference",
+      "document_id": "architecture",
+      "domain": "protocol",
+      "labels": {
+        "source_kind": "markdown"
+      },
+      "public_summary": "High-level architecture overview of core modules, plugins, and system composition.",
+      "source_path": "ARCHITECTURE.md",
+      "title": "Architecture"
+    },
+    {
+      "authority": "informative",
+      "document_id": "kernel",
+      "domain": "protocol",
+      "labels": {
+        "source_kind": "markdown"
+      },
+      "public_summary": "Detailed kernel planning and refactor reference for the core runtime foundation.",
+      "source_path": "KERNEL.md",
+      "title": "Kernel"
+    }
+  ],
+  "repo_id": "steward-protocol",
+  "version": 1
+}

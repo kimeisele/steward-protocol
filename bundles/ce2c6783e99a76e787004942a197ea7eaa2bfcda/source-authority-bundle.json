@@ -1,0 +1,99 @@
+{
+  "artifact_paths": {
+    "canonical_surface": ".authority-exports/canonical-surface.json",
+    "public_summary_registry": ".authority-exports/public-summary-registry.json",
+    "repo_graph": ".authority-exports/repo-graph.json",
+    "source_surface_registry": ".authority-exports/source-surface-registry.json",
+    "surface_metadata": ".authority-exports/surface-metadata.json"
+  },
+  "authority_exports": [
+    {
+      "artifact_uri": ".authority-exports/canonical-surface.json",
+      "content_sha256": "3543fb0d10ad0667b16b1947685b5497538318c28ae4d8fd106bfaa4b7ffc789",
+      "contract_version": 1,
+      "export_id": "steward-protocol/canonical_surface",
+      "export_kind": "canonical_surface",
+      "generated_at": 1774194916.470693,
+      "labels": {
+        "source_sha": "ce2c6783e99a76e787004942a197ea7eaa2bfcda"
+      },
+      "repo_id": "steward-protocol",
+      "version": "ce2c6783e99a76e787004942a197ea7eaa2bfcda"
+    },
+    {
+      "artifact_uri": ".authority-exports/public-summary-registry.json",
+      "content_sha256": "98bffb2b57cc57a3e51f38284177a136a3d27b6a09d6bce015349b22816c9e52",
+      "contract_version": 1,
+      "export_id": "steward-protocol/public_summary_registry",
+      "export_kind": "public_summary_registry",
+      "generated_at": 1774194916.470693,
+      "labels": {
+        "source_sha": "ce2c6783e99a76e787004942a197ea7eaa2bfcda"
+      },
+      "repo_id": "steward-protocol",
+      "version": "ce2c6783e99a76e787004942a197ea7eaa2bfcda"
+    },
+    {
+      "artifact_uri": ".authority-exports/source-surface-registry.json",
+      "content_sha256": "afd45e8d3bcba7c69251328f66b7816ebd638aed4aa085182f4b8a439f108c11",
+      "contract_version": 1,
+      "export_id": "steward-protocol/source_surface_registry",
+      "export_kind": "source_surface_registry",
+      "generated_at": 1774194916.470693,
+      "labels": {
+        "source_sha": "ce2c6783e99a76e787004942a197ea7eaa2bfcda"
+      },
+      "repo_id": "steward-protocol",
+      "version": "ce2c6783e99a76e787004942a197ea7eaa2bfcda"
+    },
+    {
+      "artifact_uri": ".authority-exports/repo-graph.json",
+      "content_sha256": "976fabfc048b574bbf0080b3179d64a162291112061ed58c23ec2b7eafe6db3b",
+      "contract_version": 1,
+      "export_id": "steward-protocol/repo_graph",
+      "export_kind": "repo_graph",
+      "generated_at": 1774194916.470693,
+      "labels": {
+        "source_sha": "ce2c6783e99a76e787004942a197ea7eaa2bfcda"
+      },
+      "repo_id": "steward-protocol",
+      "version": "ce2c6783e99a76e787004942a197ea7eaa2bfcda"
+    },
+    {
+      "artifact_uri": ".authority-exports/surface-metadata.json",
+      "content_sha256": "01962e3529d350c7166129044ce13fbf5c6cc513796d9bf04a9b8c7371718625",
+      "contract_version": 1,
+      "export_id": "steward-protocol/surface_metadata",
+      "export_kind": "surface_metadata",
+      "generated_at": 1774194916.470693,
+      "labels": {
+        "source_sha": "ce2c6783e99a76e787004942a197ea7eaa2bfcda"
+      },
+      "repo_id": "steward-protocol",
+      "version": "ce2c6783e99a76e787004942a197ea7eaa2bfcda"
+    }
+  ],
+  "contract_version": 1,
+  "generated_at": 1774194916.470693,
+  "kind": "source_authority_bundle",
+  "repo_role": {
+    "consumes": [],
+    "exports": [
+      "canonical_surface",
+      "public_summary_registry",
+      "source_surface_registry",
+      "repo_graph",
+      "surface_metadata"
+    ],
+    "labels": {
+      "public_surface_owner": "agent-internet"
+    },
+    "owner_boundary": "normative_protocol_surface",
+    "publication_targets": [
+      "steward-public-wiki"
+    ],
+    "repo_id": "steward-protocol",
+    "role": "normative_source"
+  },
+  "source_sha": "ce2c6783e99a76e787004942a197ea7eaa2bfcda"
+}

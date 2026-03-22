@@ -1,0 +1,215 @@
+{
+  "federation_surface": {
+    "canonical_for_public_federation": true,
+    "consumer_guidance": "Treat this authority feed and its projected wiki pages as public federation truth; authenticated control planes are companion operator surfaces.",
+    "operator_companion_surfaces": [
+      "lotus_operator_plane",
+      "authenticated_steward_bridge"
+    ],
+    "public_channels": [
+      "authority_feed_manifest",
+      "canonical_surface",
+      "public_summary_registry"
+    ],
+    "publication_model": "github_authority_feed_plus_projected_wiki",
+    "surface_role": "canonical_public_source_authority"
+  },
+  "kind": "surface_metadata",
+  "public_surface": {
+    "canonical_index_page": {
+      "document_id": "steward_canonical_surface",
+      "entrypoint": false,
+      "kind": "steward_canonical_surface",
+      "rel": "steward_canonical_surface",
+      "title": "Steward Canonical Surface",
+      "wiki_name": "Steward-Canonical-Surface"
+    },
+    "document_prefix": "steward",
+    "overview_page": {
+      "document_id": "steward_authority",
+      "entrypoint": true,
+      "kind": "steward_authority",
+      "rel": "steward_authority",
+      "title": "Steward Authority",
+      "wiki_name": "Steward-Authority"
+    },
+    "repo_label": "Steward"
+  },
+  "repo_id": "steward-protocol",
+  "source_sha": "ce2c6783e99a76e787004942a197ea7eaa2bfcda",
+  "surface_registry": {
+    "generated_at": 1774194916.714751,
+    "kind": "wiki_surface_registry",
+    "page_count": 8,
+    "pages": [
+      {
+        "authority": "informative",
+        "domain": "entrypoint",
+        "featured": true,
+        "filename": "Start-Here.md",
+        "id": "README",
+        "include_in_sidebar": true,
+        "page_class": "canonical",
+        "public_summary": "Public entry point for installation, quick start, and repository orientation.",
+        "query_aliases": [
+          "readme",
+          "README"
+        ],
+        "section": "Entrypoint",
+        "source_path": "README.md",
+        "title": "Start Here",
+        "wiki_name": "Start-Here"
+      },
+      {
+        "authority": "informative",
+        "domain": "reference",
+        "featured": true,
+        "filename": "Index.md",
+        "id": "INDEX",
+        "include_in_sidebar": true,
+        "page_class": "canonical",
+        "public_summary": "Structured index of the authored documentation set and supporting references.",
+        "query_aliases": [
+          "index",
+          "INDEX"
+        ],
+        "section": "Reference",
+        "source_path": "INDEX.md",
+        "title": "Index",
+        "wiki_name": "Index"
+      },
+      {
+        "authority": "binding",
+        "domain": "governance",
+        "featured": true,
+        "filename": "Constitution.md",
+        "id": "CONSTITUTION",
+        "include_in_sidebar": true,
+        "page_class": "canonical",
+        "public_summary": "Supreme governance document defining identity, audit, boundary, and transparency requirements.",
+        "query_aliases": [
+          "constitution",
+          "CONSTITUTION"
+        ],
+        "section": "Governance",
+        "source_path": "CONSTITUTION.md",
+        "title": "Constitution",
+        "wiki_name": "Constitution"
+      },
+      {
+        "authority": "doctrine",
+        "domain": "governance",
+        "featured": false,
+        "filename": "AGI-Manifesto.md",
+        "id": "AGI_MANIFESTO",
+        "include_in_sidebar": false,
+        "page_class": "canonical",
+        "public_summary": "Doctrinal statement describing the governed-intelligence philosophy behind the system.",
+        "query_aliases": [
+          "agi manifesto",
+          "AGI MANIFESTO"
+        ],
+        "section": "Governance",
+        "source_path": "AGI_MANIFESTO.md",
+        "title": "AGI Manifesto",
+        "wiki_name": "AGI-Manifesto"
+      },
+      {
+        "authority": "operative",
+        "domain": "governance",
+        "featured": false,
+        "filename": "Steward-Operating-Model.md",
+        "id": "STEWARD_OPERATING_MODEL",
+        "include_in_sidebar": false,
+        "page_class": "canonical",
+        "public_summary": "Operating-model reference for stewardship roles, responsibilities, and coordination.",
+        "query_aliases": [
+          "steward operating model",
+          "STEWARD"
+        ],
+        "section": "Governance",
+        "source_path": "STEWARD.md",
+        "title": "Steward Operating Model",
+        "wiki_name": "Steward-Operating-Model"
+      },
+      {
+        "authority": "binding",
+        "domain": "protocol",
+        "featured": false,
+        "filename": "Protocols.md",
+        "id": "PROTOCOLS",
+        "include_in_sidebar": true,
+        "page_class": "canonical",
+        "public_summary": "Registry of protocol domains, lifecycle semantics, and implementation-facing coordination rules.",
+        "query_aliases": [
+          "protocols",
+          "PROTOCOLS"
+        ],
+        "section": "Protocol",
+        "source_path": "PROTOCOLS.md",
+        "title": "Protocols",
+        "wiki_name": "Protocols"
+      },
+      {
+        "authority": "reference",
+        "domain": "protocol",
+        "featured": false,
+        "filename": "Architecture.md",
+        "id": "ARCHITECTURE",
+        "include_in_sidebar": false,
+        "page_class": "canonical",
+        "public_summary": "High-level architecture overview of core modules, plugins, and system composition.",
+        "query_aliases": [
+          "architecture",
+          "ARCHITECTURE"
+        ],
+        "section": "Protocol",
+        "source_path": "ARCHITECTURE.md",
+        "title": "Architecture",
+        "wiki_name": "Architecture"
+      },
+      {
+        "authority": "informative",
+        "domain": "protocol",
+        "featured": false,
+        "filename": "Kernel.md",
+        "id": "KERNEL",
+        "include_in_sidebar": false,
+        "page_class": "canonical",
+        "public_summary": "Detailed kernel planning and refactor reference for the core runtime foundation.",
+        "query_aliases": [
+          "kernel",
+          "KERNEL"
+        ],
+        "section": "Protocol",
+        "source_path": "KERNEL.md",
+        "title": "Kernel",
+        "wiki_name": "Kernel"
+      }
+    ],
+    "projection": {
+      "base_url": "",
+      "manifest": {},
+      "mode": "source_authority_export",
+      "public_graph": {},
+      "repo_graph": {},
+      "root": "",
+      "search_index": {}
+    },
+    "repo_web_url": "https://github.com/kimeisele/steward-protocol",
+    "sections": [
+      "Entrypoint",
+      "Reference",
+      "Governance",
+      "Protocol"
+    ],
+    "system_metrics": {
+      "document_count": 8,
+      "node_manifest_count": 184,
+      "repo_markdown_files": 625,
+      "repo_python_files": 2729
+    },
+    "version": 2
+  },
+  "version": 1
+}
