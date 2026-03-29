@@ -1,74 +1,60 @@
-name: 🫀 Heartbeat - Autonomous Task Orchestrator
+name: Heartbeat
 
 on:
-  push:
-    branches: [main]
-
-  # DISABLED: No API keys, Takshaka blocks all tools, produces zero output.
-  # Re-enable when NodePulse/Holon gets proper secrets + tool access.
-  # schedule:
-  #   - cron: '0 * * * *'
-
+  schedule:
+    - cron: '0 */6 * * *'  # Every 6 hours
   workflow_dispatch:
-    # Allow manual triggering for testing
+  repository_dispatch:
+    types: [heartbeat-trigger]
 
 permissions:
   contents: write
 
+concurrency:
+  group: heartbeat
+  cancel-in-progress: false
+
 jobs:
   heartbeat:
-    name: Task Orchestration Pulse
-    if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
 
     steps:
-      - name: 📥 Checkout Repository
+      - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: 🐍 Setup Python
+      - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-          cache: 'pip'
 
-      - name: 📦 Install Dependencies
+      - name: Install dependencies
         run: |
           pip install --upgrade pip
           pip install -e .[dev]
 
-      - name: 🫀 Execute Heartbeat Pulse
+      - name: Run heartbeat
         env:
           PYTHONUNBUFFERED: 1
         run: |
           python scripts/heartbeat.py
 
-      - name: 📤 Push Changes
+      - name: Push Changes
         if: success()
         run: |
           git config --global user.name "STEWARD Heartbeat"
           git config --global user.email "heartbeat@steward-protocol.local"
-
-          # Check if there are changes
+          
           if git diff --quiet && git diff --cached --quiet; then
             echo "No changes to push"
           else
             git push origin ${GITHUB_REF#refs/heads/}
           fi
 
-      - name: 📊 Upload Logs
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: heartbeat-logs-${{ github.run_number }}
-          path: |
-            *.log
-            .vibe/state/*.json
-          retention-days: 7
-
+      - name: Write heartbeat payload
+        run: |
+          mkdir -p data/federation
+          echo '[{"agent_id":"steward-protocol","op":"heartbeat","status":"alive","role":"substrate"}]' > data/federation/nadi_outbox.json
 
       - name: Relay outbox to steward-federation hub
         if: always()
