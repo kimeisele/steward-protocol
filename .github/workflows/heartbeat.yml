@@ -1,1 +1,103 @@
+name: Heartbeat
 
+on:
+  schedule:
+    - cron: '0 */6 * * *'  # Every 6 hours
+  workflow_dispatch:
+  repository_dispatch:
+    types: [heartbeat-trigger]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: heartbeat
+  cancel-in-progress: false
+
+jobs:
+  heartbeat:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -e .[dev]
+
+      - name: Run heartbeat
+        env:
+          PYTHONUNBUFFERED: 1
+        run: |
+          python scripts/heartbeat.py
+
+      - name: Push Changes
+        if: success()
+        run: |
+          git config --global user.name "STEWARD Heartbeat"
+          git config --global user.email "heartbeat@steward-protocol.local"
+          
+          if git diff --quiet && git diff --cached --quiet; then
+            echo "No changes to push"
+          else
+            git push origin ${GITHUB_REF#refs/heads/}
+          fi
+
+      - name: Write heartbeat payload
+        run: |
+          mkdir -p data/federation
+          echo '[{"agent_id":"steward-protocol","op":"heartbeat","status":"alive","role":"substrate"}]' > data/federation/nadi_outbox.json
+
+      - name: Relay outbox to steward-federation hub
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.FEDERATION_PAT || secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.FEDERATION_PAT || secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir -p data/federation
+          OUTBOX="data/federation/nadi_outbox.json"
+          
+          if [ ! -f "$OUTBOX" ]; then
+            echo "[]" > "$OUTBOX"
+          fi
+          
+          if [ "$(cat "$OUTBOX" | tr -d '[:space:]')" = "[]" ]; then
+            echo "Outbox empty, skipping relay"
+            exit 0
+          fi
+          
+          git clone --depth=1 https://x-access-token:${GH_TOKEN}@github.com/kimeisele/steward-federation.git /tmp/hub
+          
+          mkdir -p /tmp/hub/nadi
+          
+          cp "$OUTBOX" /tmp/hub/nadi/steward-protocol_to_steward.json
+          
+          cd /tmp/hub
+          git config user.name "federation-bot"
+          git config user.email "bot@federation"
+          git add nadi/steward-protocol_to_steward.json
+          git diff --cached --quiet || git commit -m "relay: steward-protocol outbox → steward (heartbeat #${{ github.run_number }})"
+          git push || echo "Push failed, continuing..."
+          
+          echo "[]" > "$OUTBOX"
+          echo "Outbox relayed and cleared"
+
+  publish-authority-feed:
+    name: Publish Authority Feed
+    uses: kimeisele/agent-internet/.github/workflows/reusable-publish-authority-feed.yml@main
+    with:
+      install-command: |
+        pip install --upgrade pip
+        pip install -e .[dev]
+      build-command: |
+        python -m py_compile vibe_core/authority_exports.py vibe_core/authority_feed.py vibe_core/source_authority_status.py tests/unit/test_authority_exports.py tests/unit/test_authority_feed.py tests/unit/test_source_authority_status.py
+        pytest -q tests/unit/test_authority_exports.py tests/unit/test_authority_feed.py tests/unit/test_source_authority_status.py
+        python -m vibe_core.authority_feed --workspace . --output-dir .authority-feed-out
