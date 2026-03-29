@@ -69,6 +69,40 @@ jobs:
             .vibe/state/*.json
           retention-days: 7
 
+
+      - name: Relay outbox to steward-federation hub
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.FEDERATION_PAT || secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir -p data/federation
+          OUTBOX="data/federation/nadi_outbox.json"
+          
+          if [ ! -f "$OUTBOX" ]; then
+            echo "[]" > "$OUTBOX"
+          fi
+          
+          if [ "$(cat "$OUTBOX" | tr -d '[:space:]')" = "[]" ]; then
+            echo "Outbox empty, skipping relay"
+            exit 0
+          fi
+          
+          git clone --depth=1 https://x-access-token:${GH_TOKEN}@github.com/kimeisele/steward-federation.git /tmp/hub
+          
+          mkdir -p /tmp/hub/nadi
+          
+          cp "$OUTBOX" /tmp/hub/nadi/steward-protocol_to_steward.json
+          
+          cd /tmp/hub
+          git config user.name "federation-bot"
+          git config user.email "bot@federation"
+          git add nadi/steward-protocol_to_steward.json
+          git diff --cached --quiet || git commit -m "relay: steward-protocol outbox → steward (heartbeat #${{ github.run_number }})"
+          git push || echo "Push failed, continuing..."
+          
+          echo "[]" > "$OUTBOX"
+          echo "Outbox relayed and cleared"
+
   publish-authority-feed:
     name: Publish Authority Feed
     uses: kimeisele/agent-internet/.github/workflows/reusable-publish-authority-feed.yml@main
