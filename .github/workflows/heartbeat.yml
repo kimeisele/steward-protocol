@@ -74,6 +74,7 @@ jobs:
         if: always()
         env:
           GH_TOKEN: ${{ secrets.FEDERATION_PAT || secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.FEDERATION_PAT || secrets.GITHUB_TOKEN }}
         run: |
           mkdir -p data/federation
           OUTBOX="data/federation/nadi_outbox.json"
