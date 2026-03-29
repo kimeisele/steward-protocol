@@ -36,6 +36,7 @@ jobs:
       - name: Run heartbeat
         env:
           PYTHONUNBUFFERED: 1
+        continue-on-error: true
         run: |
           python scripts/heartbeat.py
 
