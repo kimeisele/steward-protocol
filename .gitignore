@@ -327,3 +327,5 @@ __pycache__/
 # NOT tracked in git - this is presence, not memory.
 **/node.json
 temp/
+# Node crypto keys — never commit
+data/federation/.node_keys.json
