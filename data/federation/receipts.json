@@ -862,5 +862,21 @@
     "operation": "heartbeat",
     "source_city_id": "steward",
     "target_city_id": "steward-protocol"
+  },
+  {
+    "correlation_id": "36b24113-cd52-40d8-8b79-06799e81011c",
+    "delivered_at": 1774894208.335237,
+    "envelope_id": "36b24113-cd52-40d8-8b79-06799e81011c",
+    "operation": "heartbeat",
+    "source_city_id": "steward",
+    "target_city_id": "steward-protocol"
+  },
+  {
+    "correlation_id": "40063055-90f3-4a15-9dc0-1f004d7d59e0",
+    "delivered_at": 1774894214.965707,
+    "envelope_id": "40063055-90f3-4a15-9dc0-1f004d7d59e0",
+    "operation": "heartbeat",
+    "source_city_id": "steward",
+    "target_city_id": "steward-protocol"
   }
 ]
