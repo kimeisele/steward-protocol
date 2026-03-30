@@ -53,6 +53,13 @@ nadi --peer-json data/federation/peer.json heartbeat --health 1.0
         \ user.email \"heartbeat@steward-protocol.local\"\n\nif git diff --quiet &&\
         \ git diff --cached --quiet; then\n  echo \"No changes to push\"\nelse\n \
         \ git push origin ${GITHUB_REF#refs/heads/}\nfi\n"
+      - name: Save node keys cache
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: data/federation/.node_keys.json
+          key: node-keys-${{ github.repository }}-v1
+
     - name: Relay outbox to steward-federation hub
       if: always()
       env:
