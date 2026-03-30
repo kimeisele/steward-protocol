@@ -36,11 +36,9 @@ jobs:
         '
     - name: Write heartbeat payload
       run: 'mkdir -p data/federation
-
-        echo ''[{"agent_id":"steward-protocol","operation":"heartbeat","source":"steward-protocol","status":"alive","role":"substrate"}]''
-        > data/federation/nadi_outbox.json
-
-        '
+pip install -q 'git+https://github.com/kimeisele/steward-federation.git' 2>/dev/null || true
+mkdir -p data/federation
+nadi --peer-json data/federation/peer.json heartbeat --health 1.0
     - name: Push Changes
       if: success()
       run: "git config --global user.name \"STEWARD Heartbeat\"\ngit config --global\
