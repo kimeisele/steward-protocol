@@ -68,8 +68,7 @@ jobs:
         run: |
           nadi sync
           nadi heartbeat
-          nadi sync
-          echo "Heartbeat + sync complete"
+          echo "Heartbeat generated (outbox will be relayed before final sync)"
 
       - name: Save node keys cache
         if: always()
@@ -122,3 +121,12 @@ jobs:
 
           echo "[]" > "$OUTBOX"
           echo "Outbox relayed and cleared"
+
+      - name: Final NADI sync
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.FEDERATION_PAT || secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.FEDERATION_PAT || secrets.GITHUB_TOKEN }}
+        run: |
+          nadi sync
+          echo "Final sync complete"
