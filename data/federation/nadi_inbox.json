@@ -6946,5 +6946,95 @@
     "timestamp": 1774971378.8355062,
     "ttl_ms": 900000,
     "ttl_s": 900.0
+  },
+  {
+    "correlation_id": "8234172f-2c3c-4684-8ca6-3bbadd5395fd",
+    "envelope_id": "8234172f-2c3c-4684-8ca6-3bbadd5395fd",
+    "maha_header_hex": "238e10b6e43f48870331e5a704418756be47461c4d1eaf05cdd011495b6b41c93254e39acee73322d0038f39d6b97d84a0bb0d0000000000ab47c7a58f365214ba83044261633daf",
+    "nadi_op": "send",
+    "nadi_priority": "rajas",
+    "nadi_type": "vyana",
+    "operation": "heartbeat",
+    "payload": {
+      "agent_id": "ag_e3331b8d3b0d20a7",
+      "capabilities": [
+        "code_analysis",
+        "task_execution",
+        "ci_automation",
+        "federation_bridge",
+        "autonomous_daemon"
+      ],
+      "fingerprint": "ba8429a39e537cb86305b4438d0293c04ff7f286fd7a403cf20a232ba2599c7e",
+      "health": 0.8549660291922829,
+      "repo": "kimeisele/steward",
+      "timestamp": 1774972355.1865692,
+      "version": "0.17.0"
+    },
+    "priority": 1,
+    "source": "steward",
+    "target": "steward-protocol",
+    "timestamp": 1774973043.2076864,
+    "ttl_ms": 900000,
+    "ttl_s": 900.0
+  },
+  {
+    "correlation_id": "fccefd28-1763-4ec9-acb9-03105209ce90",
+    "envelope_id": "fccefd28-1763-4ec9-acb9-03105209ce90",
+    "maha_header_hex": "238e10b6e43f48870331e5a704418756be47461c4d1eaf05cdd011495b6b41c93254e39acee73322d0038f39d6b97d84a0bb0d0000000000ab47c7a58f365214ba83044261633daf",
+    "nadi_op": "send",
+    "nadi_priority": "rajas",
+    "nadi_type": "vyana",
+    "operation": "heartbeat",
+    "payload": {
+      "agent_id": "ag_e3331b8d3b0d20a7",
+      "capabilities": [
+        "code_analysis",
+        "task_execution",
+        "ci_automation",
+        "federation_bridge",
+        "autonomous_daemon"
+      ],
+      "fingerprint": "ba8429a39e537cb86305b4438d0293c04ff7f286fd7a403cf20a232ba2599c7e",
+      "health": 0.8574680291922829,
+      "repo": "kimeisele/steward",
+      "timestamp": 1774972361.4929862,
+      "version": "0.17.0"
+    },
+    "priority": 1,
+    "source": "steward",
+    "target": "steward-protocol",
+    "timestamp": 1774973043.2076864,
+    "ttl_ms": 900000,
+    "ttl_s": 900.0
+  },
+  {
+    "correlation_id": "60f8ebb8-bd48-41d2-9c93-aa3d2a4ccca0",
+    "envelope_id": "60f8ebb8-bd48-41d2-9c93-aa3d2a4ccca0",
+    "maha_header_hex": "238e10b6e43f48870331e5a704418756be47461c4d1eaf05cdd011495b6b41c93254e39acee73322d0038f39d6b97d84a0bb0d0000000000ab47c7a58f365214ba83044261633daf",
+    "nadi_op": "send",
+    "nadi_priority": "rajas",
+    "nadi_type": "vyana",
+    "operation": "heartbeat",
+    "payload": {
+      "agent_id": "ag_e3331b8d3b0d20a7",
+      "capabilities": [
+        "code_analysis",
+        "task_execution",
+        "ci_automation",
+        "federation_bridge",
+        "autonomous_daemon"
+      ],
+      "fingerprint": "ba8429a39e537cb86305b4438d0293c04ff7f286fd7a403cf20a232ba2599c7e",
+      "health": 0.857804822028598,
+      "repo": "kimeisele/steward",
+      "timestamp": 1774972371.9605634,
+      "version": "0.17.0"
+    },
+    "priority": 1,
+    "source": "steward",
+    "target": "steward-protocol",
+    "timestamp": 1774973043.2076864,
+    "ttl_ms": 900000,
+    "ttl_s": 900.0
   }
 ]
