@@ -2822,5 +2822,13 @@
     "operation": "heartbeat",
     "source_city_id": "steward",
     "target_city_id": "steward-protocol"
+  },
+  {
+    "correlation_id": "e5b2fb39-5b02-4a72-a188-bb0bb1b6ad3c",
+    "delivered_at": 1775045210.3418598,
+    "envelope_id": "e5b2fb39-5b02-4a72-a188-bb0bb1b6ad3c",
+    "operation": "heartbeat",
+    "source_city_id": "steward",
+    "target_city_id": "steward-protocol"
   }
 ]
