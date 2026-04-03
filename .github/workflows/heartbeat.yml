@@ -35,7 +35,7 @@ jobs:
           NODE_KEYS: ${{ secrets.NODE_PRIVATE_KEY }}
         run: |
           mkdir -p data/federation
-          echo "$NODE_KEYS" > data/federation/.node_keys.json
+          printf '%s' "$NODE_KEYS" > data/federation/.node_keys.json
           echo "✅ Node identity injected from NODE_PRIVATE_KEY secret"
 
       - name: Install dependencies
