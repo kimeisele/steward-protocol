@@ -30,6 +30,14 @@ jobs:
         with:
           python-version: '3.11'
 
+      - name: Inject node identity from GitHub Secret
+        env:
+          NODE_KEYS: ${{ secrets.NODE_PRIVATE_KEY }}
+        run: |
+          mkdir -p data/federation
+          echo "$NODE_KEYS" > data/federation/.node_keys.json
+          echo "✅ Node identity injected from NODE_PRIVATE_KEY secret"
+
       - name: Install dependencies
         run: |
           pip install --upgrade pip
@@ -47,14 +55,6 @@ jobs:
             git push origin ${GITHUB_REF#refs/heads/}
           fi
 
-      - name: Restore node keys cache
-        uses: actions/cache/restore@v4
-        with:
-          path: data/federation/.node_keys.json
-          key: node-keys-${{ github.repository }}-v1
-          restore-keys: |
-            node-keys-${{ github.repository }}-
-
       - name: Install nadi-kit
         env:
           GH_TOKEN: ${{ secrets.FEDERATION_PAT || secrets.GITHUB_TOKEN }}
@@ -69,13 +69,6 @@ jobs:
           nadi sync
           nadi heartbeat
           echo "Heartbeat generated (outbox will be relayed before final sync)"
-
-      - name: Save node keys cache
-        if: always()
-        uses: actions/cache/save@v4
-        with:
-          path: data/federation/.node_keys.json
-          key: node-keys-${{ github.repository }}-v1
 
       - name: Relay outbox to steward-federation hub
         if: always()
