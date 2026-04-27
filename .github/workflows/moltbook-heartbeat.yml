@@ -55,7 +55,10 @@ jobs:
         run: |
           git config user.name "steward-protocol[bot]"
           git config user.email "steward-protocol[bot]@users.noreply.github.com"
-          git add -f .vibe/state/*.json .vibe/state/mahamantra/*.json .vibe/state/moltbook_activity_log 2>/dev/null || true
+          # No -f: if .vibe/state files become gitignored later, that's an
+          # explicit signal — workflows must never bypass ignore rules.
+          # Same anti-pattern that re-leaked steward's private key (TICKET-009).
+          git add .vibe/state/*.json .vibe/state/mahamantra/*.json .vibe/state/moltbook_activity_log 2>/dev/null || true
           # Also stage backup deletions
           git add -u .vibe/state/*_backup/ 2>/dev/null || true
           if ! git diff --cached --quiet; then
