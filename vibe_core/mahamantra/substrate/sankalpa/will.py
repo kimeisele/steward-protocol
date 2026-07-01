@@ -264,6 +264,7 @@ class SankalpaPlanner:
         idle_minutes: int = 0,
         pending_intents: int = 0,
         ci_green: bool = True,
+        is_stagnating: bool = False,
     ) -> List[SankalpaIntent]:
         """
         Evaluate all strategies and generate intents for those that should fire.
@@ -276,7 +277,7 @@ class SankalpaPlanner:
                 if not strategy.enabled:
                     continue
 
-                if self._should_fire(strategy, idle_minutes, pending_intents, ci_green):
+                if self._should_fire(strategy, idle_minutes, pending_intents, ci_green, is_stagnating):
                     intent = self._create_intent(mission, strategy)
                     intents.append(intent)
 
@@ -307,6 +308,7 @@ class SankalpaPlanner:
         idle_minutes: int,
         pending_intents: int,
         ci_green: bool,
+        is_stagnating: bool = False,
     ) -> bool:
         """Determine if a strategy should fire."""
         # Constraints
@@ -323,6 +325,8 @@ class SankalpaPlanner:
             return idle_minutes >= trigger.idle_minutes
         elif trigger.trigger_type == TriggerType.TIME_BASED:
             return self._check_time_trigger(trigger, strategy)
+        elif trigger.trigger_type == TriggerType.CONDITION_BASED:
+            return is_stagnating
 
         return False
 
@@ -466,6 +470,7 @@ class SankalpaOrchestrator:
         idle_minutes: int = 0,
         pending_intents: int = 0,
         ci_green: bool = True,
+        is_stagnating: bool = False,
     ) -> List[SankalpaIntent]:
         """
         Perform a strategic thinking cycle.
@@ -475,6 +480,7 @@ class SankalpaOrchestrator:
             idle_minutes=idle_minutes,
             pending_intents=pending_intents,
             ci_green=ci_green,
+            is_stagnating=is_stagnating,
         )
 
     async def execute_intent(self, intent: SankalpaIntent) -> SankalpaResult:

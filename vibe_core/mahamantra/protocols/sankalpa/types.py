@@ -352,6 +352,7 @@ class SankalpaOrchestratorProtocol(Protocol):
         idle_minutes: int = 0,
         pending_intents: int = 0,
         ci_green: bool = True,
+        is_stagnating: bool = False,
     ) -> List["SankalpaIntent"]:
         """
         Perform a strategic thinking cycle.
