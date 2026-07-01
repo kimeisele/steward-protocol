@@ -879,3 +879,198 @@ class TestIntentGeneration:
                 # Mission may or may not exist depending on timing
                 if mission:
                     assert "SANKALPA" in intent.description
+
+
+# =============================================================================
+# SECTION 11: CONDITION_BASED TRIGGER TESTS (Kapitel 3b — Willensbildung)
+# =============================================================================
+
+
+class TestConditionBasedTrigger:
+    """Tests for CONDITION_BASED trigger (macro-stagnation detection).
+
+    Verifies that the new is_stagnating parameter correctly activates
+    CONDITION_BASED strategies without breaking existing IDLE_BASED
+    or TIME_BASED strategies.
+    """
+
+    def test_condition_based_fires_when_stagnating(self):
+        """CONDITION_BASED strategy fires when is_stagnating=True, not when False."""
+        from vibe_core.mahamantra.protocols.sankalpa.types import (
+            SankalpaMission,
+            SankalpaStrategy,
+            SankalpaTrigger,
+            TriggerType,
+            MissionPriority,
+            MissionStatus,
+            StrategyFrequency,
+        )
+        from vibe_core.mahamantra.substrate.sankalpa.will import SankalpaOrchestrator
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            orch = SankalpaOrchestrator(workspace=Path(tmpdir))
+            planner = orch._planner
+
+            # Create a CONDITION_BASED strategy
+            trigger = SankalpaTrigger(trigger_type=TriggerType.CONDITION_BASED)
+            strategy = SankalpaStrategy(
+                id="test_condition_based",
+                name="Test Condition-Based Trigger",
+                description="Test CONDITION_BASED trigger for stagnation",
+                trigger=trigger,
+                frequency=StrategyFrequency.DAILY,
+                intent_type="diagnose_stagnation",
+                intent_template={},
+                requires_ci_green=False,
+                requires_no_pending_intents=False,
+                max_executions_per_day=3,
+                enabled=True,
+            )
+
+            mission = SankalpaMission(
+                id="test_mission_stagnation",
+                name="Test Stagnation Mission",
+                description="Test mission for CONDITION_BASED",
+                priority=MissionPriority.HIGH,
+                status=MissionStatus.ACTIVE,
+                strategies=[strategy],
+                owner="steward",
+            )
+
+            planner._registry.add_mission(mission)
+
+            # Test 1: with is_stagnating=False, should NOT fire
+            intents_false = planner.evaluate(
+                idle_minutes=0, pending_intents=0, ci_green=True, is_stagnating=False
+            )
+            assert len(intents_false) == 0, "CONDITION_BASED should not fire when is_stagnating=False"
+
+            # Test 2: with is_stagnating=True, SHOULD fire
+            intents_true = planner.evaluate(
+                idle_minutes=0, pending_intents=0, ci_green=True, is_stagnating=True
+            )
+            assert len(intents_true) == 1, "CONDITION_BASED should fire when is_stagnating=True"
+            assert intents_true[0].intent_type == "diagnose_stagnation", "Intent type should be diagnose_stagnation"
+
+    def test_condition_based_ignores_idle(self):
+        """CONDITION_BASED strategy fires based only on is_stagnating, not idle_minutes."""
+        from vibe_core.mahamantra.protocols.sankalpa.types import (
+            SankalpaMission,
+            SankalpaStrategy,
+            SankalpaTrigger,
+            TriggerType,
+            MissionPriority,
+            MissionStatus,
+            StrategyFrequency,
+        )
+        from vibe_core.mahamantra.substrate.sankalpa.will import (
+            SankalpaOrchestrator,
+            SankalpaPlanner,
+            SankalpaRegistry,
+        )
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            # Create isolated planner (no default missions)
+            registry = SankalpaRegistry(workspace=Path(tmpdir))
+            # Clear default missions to isolate test
+            registry._missions.clear()
+            planner = SankalpaPlanner(registry)
+
+            trigger = SankalpaTrigger(trigger_type=TriggerType.CONDITION_BASED)
+            strategy = SankalpaStrategy(
+                id="test_condition_ignores_idle",
+                name="Condition Should Ignore Idle",
+                description="CONDITION_BASED must not depend on idle_minutes",
+                trigger=trigger,
+                frequency=StrategyFrequency.DAILY,
+                intent_type="diagnose_stagnation",
+                intent_template={},
+                requires_ci_green=False,
+                requires_no_pending_intents=False,
+                max_executions_per_day=3,
+                enabled=True,
+            )
+
+            mission = SankalpaMission(
+                id="test_mission_idle_independence",
+                name="Test Idle Independence",
+                description="CONDITION_BASED should not care about idle_minutes",
+                priority=MissionPriority.HIGH,
+                status=MissionStatus.ACTIVE,
+                strategies=[strategy],
+                owner="steward",
+            )
+
+            registry.add_mission(mission)
+
+            # Even with 0 idle_minutes and is_stagnating=True, should fire
+            intents = planner.evaluate(
+                idle_minutes=0, pending_intents=0, ci_green=True, is_stagnating=True
+            )
+            assert len(intents) == 1, "CONDITION_BASED should fire regardless of idle_minutes when is_stagnating=True"
+
+            # With high idle_minutes but is_stagnating=False, should NOT fire
+            intents_no_stag = planner.evaluate(
+                idle_minutes=1000, pending_intents=0, ci_green=True, is_stagnating=False
+            )
+            assert len(intents_no_stag) == 0, "CONDITION_BASED should not fire when is_stagnating=False, even with high idle_minutes"
+
+    def test_idle_based_still_works(self):
+        """IDLE_BASED strategies still fire correctly (backward compatibility)."""
+        from vibe_core.mahamantra.protocols.sankalpa.types import (
+            SankalpaMission,
+            SankalpaStrategy,
+            SankalpaTrigger,
+            TriggerType,
+            MissionPriority,
+            MissionStatus,
+            StrategyFrequency,
+        )
+        from vibe_core.mahamantra.substrate.sankalpa.will import SankalpaOrchestrator
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            orch = SankalpaOrchestrator(workspace=Path(tmpdir))
+            planner = orch._planner
+
+            # Create an IDLE_BASED strategy (traditional trigger)
+            trigger = SankalpaTrigger(
+                trigger_type=TriggerType.IDLE_BASED,
+                idle_minutes=10,
+            )
+            strategy = SankalpaStrategy(
+                id="test_idle_backward_compat",
+                name="Test Idle Backward Compat",
+                description="IDLE_BASED should still work with default is_stagnating=False",
+                trigger=trigger,
+                frequency=StrategyFrequency.DAILY,
+                intent_type="health_check",
+                intent_template={},
+                requires_ci_green=False,
+                requires_no_pending_intents=False,
+                max_executions_per_day=3,
+                enabled=True,
+            )
+
+            mission = SankalpaMission(
+                id="test_mission_idle_compat",
+                name="Test Idle Compatibility",
+                description="Verify IDLE_BASED still works",
+                priority=MissionPriority.HIGH,
+                status=MissionStatus.ACTIVE,
+                strategies=[strategy],
+                owner="steward",
+            )
+
+            planner._registry.add_mission(mission)
+
+            # With idle_minutes >= trigger.idle_minutes, should fire (backward compat)
+            intents = planner.evaluate(
+                idle_minutes=10, pending_intents=0, ci_green=True, is_stagnating=False
+            )
+            assert len(intents) == 1, "IDLE_BASED should fire when idle_minutes threshold met (backward compat)"
+
+            # With idle_minutes < trigger.idle_minutes, should NOT fire
+            intents_no_idle = planner.evaluate(
+                idle_minutes=5, pending_intents=0, ci_green=True, is_stagnating=False
+            )
+            assert len(intents_no_idle) == 0, "IDLE_BASED should not fire when idle_minutes below threshold"
