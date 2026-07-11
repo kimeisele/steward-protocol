@@ -447,7 +447,7 @@ class BrahmaService(BrahmaProtocol, PanchaTattvaProtocol, ExecutableMixin):
         enforcer = getattr(kernel, "_capability_enforcer", None)
         if enforcer:
             return bool(enforcer.can_revoke(actor_id, target_id))
-        return actor_id == "kernel"
+        return actor_id.upper() in ("KERNEL", "CIVIC") or actor_id == target_id
 
     def boot_plugins(self, kernel: object, plugins: List[object]) -> None:
         """Boot all plugins in priority order."""

@@ -498,7 +498,7 @@ class RealVibeKernel(VibeKernel, VajraGuarded, PanchaTattvaProtocol):
         return self._raw_brahma.can_modify_capability(self, actor, target)
 
     def _can_grant_capability(self, actor: str) -> bool:
-        return actor == "kernel"
+        return actor.upper() == "KERNEL"
 
     def _grant_repo_access(self, agent_id: str) -> None:
         _grant_repo_access_impl(self, agent_id)
