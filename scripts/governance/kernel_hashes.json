@@ -15,7 +15,7 @@
   ".github/workflows/deploy.yml": "40ead00904bfe85199acc3d33beedebd72d97ec0e194ae271c5b5854af97a261",
   ".github/workflows/factory.yml": "6d7324be291b71f6cf0a2427266f94ba3b2b2e39e22032e163f2777d17d72623",
   ".github/workflows/heartbeat.yml": "6b533cfc4b2751dd8abd1fcad62bcb20118c46388526f82a72bb36c8603a664f",
-  ".github/workflows/integration-tests.yml": "be421caf2e589dccb80d4ff22566926f5e53e4f51b26ff59cf160b0e8e916046",
+  ".github/workflows/integration-tests.yml": "a759d6e7db5a1cfab215770055017a6e368b4f0678fc2d699237eb9d6135a34f",
   ".github/workflows/scheduled-agents.yml": "2d0171d56ad9d6a43e2466dfa4a0cf4f4cca35075dbfbcf6ec7ae1d2a4d02673",
   ".github/workflows/scribe-docs.yml": "05761742e35a98505a8c662b190e2a675745e49fdb1efbde7c372cbe3d4b0076",
   ".github/workflows/steward-ci.yml": "7a0c520a2b5a030cc1eca8518c5ec8e62097bdfe6e9087461bbf9c87248fbc2b",
