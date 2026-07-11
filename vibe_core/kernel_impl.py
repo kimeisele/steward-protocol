@@ -299,6 +299,13 @@ class RealVibeKernel(VibeKernel, VajraGuarded, PanchaTattvaProtocol):
         reason: Optional[str] = None,
     ) -> Dict[str, object]:
         """Grant capabilities to an agent. KernelProtocol compliant."""
+        if not self._can_grant_capability(granter_id):
+            return {
+                "success": False,
+                "granted": [],
+                "already_had": [],
+                "message": f"Permission denied: '{granter_id}' cannot grant capabilities",
+            }
         return self._raw_brahma.grant_capability(agent_id, capabilities, granter_id, reason)
 
     def revoke_capability(
@@ -309,6 +316,13 @@ class RealVibeKernel(VibeKernel, VajraGuarded, PanchaTattvaProtocol):
         reason: Optional[str] = None,
     ) -> Dict[str, object]:
         """Revoke capabilities from an agent. KernelProtocol compliant."""
+        if not self._can_revoke_capability(revoker_id, agent_id):
+            return {
+                "success": False,
+                "revoked": [],
+                "not_found": [],
+                "message": f"Permission denied: '{revoker_id}' cannot revoke from '{agent_id}'",
+            }
         return self._raw_brahma.revoke_capability(agent_id, capabilities, revoker_id, reason)
 
     @property
