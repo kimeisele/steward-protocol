@@ -49,6 +49,7 @@ def _get_kernel():
     """Get StandaloneKernel (full VibeKernel interface) or fallback to MinimalKernel."""
     try:
         from vibe_core.standalone_kernel import get_standalone_kernel
+
         return get_standalone_kernel()
     except Exception as e:
         logger.warning(f"StandaloneKernel unavailable, using MinimalKernel: {e}")
@@ -129,6 +130,7 @@ def main() -> int:
             # Advance VenuOrchestrator — drives MURALI phase rotation
             try:
                 from vibe_core.mahamantra import mahamantra
+
                 mahamantra.venu.step()
             except Exception as e:
                 logger.warning(f"VenuOrchestrator step failed: {e}")

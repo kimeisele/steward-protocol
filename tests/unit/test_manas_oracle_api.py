@@ -294,6 +294,7 @@ class TestManasOracleErrorHandling:
     def test_fast_initialization(self):
         """Oracle init should be fast (< 5 seconds, no kernel boot)."""
         import time
+
         start = time.monotonic()
         oracle = ManasOracle()
         elapsed = time.monotonic() - start
@@ -302,6 +303,7 @@ class TestManasOracleErrorHandling:
     def test_fast_consult(self):
         """consult() should be fast (< 1 second)."""
         import time
+
         oracle = ManasOracle()
         start = time.monotonic()
         oracle.consult({"task_title": "test", "risk_level": "low"})

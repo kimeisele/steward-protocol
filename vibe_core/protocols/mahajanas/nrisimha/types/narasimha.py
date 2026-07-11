@@ -128,8 +128,11 @@ def _detect_shell_threats(command: str) -> dict | None:
     worst: dict | None = None
     worst_rank = -1
     severity_rank = {
-        ThreatLevel.GREEN: 0, ThreatLevel.YELLOW: 1, ThreatLevel.ORANGE: 2,
-        ThreatLevel.RED: 3, ThreatLevel.APOCALYPSE: 4,
+        ThreatLevel.GREEN: 0,
+        ThreatLevel.YELLOW: 1,
+        ThreatLevel.ORANGE: 2,
+        ThreatLevel.RED: 3,
+        ThreatLevel.APOCALYPSE: 4,
     }
     for pattern, description, severity in _SHELL_THREATS:
         if pattern.search(command):

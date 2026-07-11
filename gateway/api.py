@@ -336,7 +336,9 @@ def _bridge_public_intent(body: PublicIntentRequest, *, client_ip: str) -> dict:
         except ValueError:
             error_payload = {}
         if exc.code in {400, 401, 403, 404}:
-            raise HTTPException(status_code=exc.code, detail=error_payload.get("error", "Public intent bridge upstream error")) from exc
+            raise HTTPException(
+                status_code=exc.code, detail=error_payload.get("error", "Public intent bridge upstream error")
+            ) from exc
         raise HTTPException(status_code=502, detail="Public intent bridge upstream error") from exc
     except (URLError, TimeoutError, ValueError) as exc:
         logger.error(f"Public intent bridge unavailable: {exc}")
@@ -388,7 +390,9 @@ def _bridge_verified_intent(body: SignedIntentRequest, *, verified_fingerprint: 
         except ValueError:
             error_payload = {}
         if exc.code in {400, 401, 403, 404}:
-            raise HTTPException(status_code=exc.code, detail=error_payload.get("error", "Verified intent bridge upstream error")) from exc
+            raise HTTPException(
+                status_code=exc.code, detail=error_payload.get("error", "Verified intent bridge upstream error")
+            ) from exc
         raise HTTPException(status_code=502, detail="Verified intent bridge upstream error") from exc
     except (URLError, TimeoutError, ValueError) as exc:
         logger.error(f"Verified intent bridge unavailable: {exc}")
@@ -427,7 +431,9 @@ def _bridge_public_intent_status(*, intent_id: str) -> dict:
         except ValueError:
             error_payload = {}
         if exc.code in {400, 401, 403, 404}:
-            raise HTTPException(status_code=exc.code, detail=error_payload.get("error", "Public intent status bridge upstream error")) from exc
+            raise HTTPException(
+                status_code=exc.code, detail=error_payload.get("error", "Public intent status bridge upstream error")
+            ) from exc
         raise HTTPException(status_code=502, detail="Public intent status bridge upstream error") from exc
     except (URLError, TimeoutError, ValueError) as exc:
         logger.error(f"Public intent status bridge unavailable: {exc}")
@@ -464,7 +470,9 @@ def _bridge_verified_intent_status(*, intent_id: str, verified_agent_id: str, ve
         except ValueError:
             error_payload = {}
         if exc.code in {400, 401, 403, 404}:
-            raise HTTPException(status_code=exc.code, detail=error_payload.get("error", "Verified intent status bridge upstream error")) from exc
+            raise HTTPException(
+                status_code=exc.code, detail=error_payload.get("error", "Verified intent status bridge upstream error")
+            ) from exc
         raise HTTPException(status_code=502, detail="Verified intent status bridge upstream error") from exc
     except (URLError, TimeoutError, ValueError) as exc:
         logger.error(f"Verified intent status bridge unavailable: {exc}")

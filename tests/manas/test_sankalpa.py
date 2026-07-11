@@ -940,15 +940,11 @@ class TestConditionBasedTrigger:
             planner._registry.add_mission(mission)
 
             # Test 1: with is_stagnating=False, should NOT fire
-            intents_false = planner.evaluate(
-                idle_minutes=0, pending_intents=0, ci_green=True, is_stagnating=False
-            )
+            intents_false = planner.evaluate(idle_minutes=0, pending_intents=0, ci_green=True, is_stagnating=False)
             assert len(intents_false) == 0, "CONDITION_BASED should not fire when is_stagnating=False"
 
             # Test 2: with is_stagnating=True, SHOULD fire
-            intents_true = planner.evaluate(
-                idle_minutes=0, pending_intents=0, ci_green=True, is_stagnating=True
-            )
+            intents_true = planner.evaluate(idle_minutes=0, pending_intents=0, ci_green=True, is_stagnating=True)
             assert len(intents_true) == 1, "CONDITION_BASED should fire when is_stagnating=True"
             assert intents_true[0].intent_type == "diagnose_stagnation", "Intent type should be diagnose_stagnation"
 
@@ -1004,16 +1000,14 @@ class TestConditionBasedTrigger:
             registry.add_mission(mission)
 
             # Even with 0 idle_minutes and is_stagnating=True, should fire
-            intents = planner.evaluate(
-                idle_minutes=0, pending_intents=0, ci_green=True, is_stagnating=True
-            )
+            intents = planner.evaluate(idle_minutes=0, pending_intents=0, ci_green=True, is_stagnating=True)
             assert len(intents) == 1, "CONDITION_BASED should fire regardless of idle_minutes when is_stagnating=True"
 
             # With high idle_minutes but is_stagnating=False, should NOT fire
-            intents_no_stag = planner.evaluate(
-                idle_minutes=1000, pending_intents=0, ci_green=True, is_stagnating=False
+            intents_no_stag = planner.evaluate(idle_minutes=1000, pending_intents=0, ci_green=True, is_stagnating=False)
+            assert len(intents_no_stag) == 0, (
+                "CONDITION_BASED should not fire when is_stagnating=False, even with high idle_minutes"
             )
-            assert len(intents_no_stag) == 0, "CONDITION_BASED should not fire when is_stagnating=False, even with high idle_minutes"
 
     def test_idle_based_still_works(self):
         """IDLE_BASED strategies still fire correctly (backward compatibility)."""
@@ -1064,13 +1058,9 @@ class TestConditionBasedTrigger:
             planner._registry.add_mission(mission)
 
             # With idle_minutes >= trigger.idle_minutes, should fire (backward compat)
-            intents = planner.evaluate(
-                idle_minutes=10, pending_intents=0, ci_green=True, is_stagnating=False
-            )
+            intents = planner.evaluate(idle_minutes=10, pending_intents=0, ci_green=True, is_stagnating=False)
             assert len(intents) == 1, "IDLE_BASED should fire when idle_minutes threshold met (backward compat)"
 
             # With idle_minutes < trigger.idle_minutes, should NOT fire
-            intents_no_idle = planner.evaluate(
-                idle_minutes=5, pending_intents=0, ci_green=True, is_stagnating=False
-            )
+            intents_no_idle = planner.evaluate(idle_minutes=5, pending_intents=0, ci_green=True, is_stagnating=False)
             assert len(intents_no_idle) == 0, "IDLE_BASED should not fire when idle_minutes below threshold"

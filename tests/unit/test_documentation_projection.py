@@ -10,7 +10,13 @@ def test_gather_projection_context_prefers_agent_internet_snapshot(monkeypatch, 
     def fake_fetch(config, path, *, query=None):
         calls.append((path, dict(query or {}), dict(config)))
         if path == "/v1/lotus/agent-web-manifest":
-            return {"agent_web_manifest": {"documents": [{"document_id": "home"}], "entrypoints": {"default": "Home.md"}, "stats": {"service_count": 2, "route_count": 4}}}
+            return {
+                "agent_web_manifest": {
+                    "documents": [{"document_id": "home"}],
+                    "entrypoints": {"default": "Home.md"},
+                    "stats": {"service_count": 2, "route_count": 4},
+                }
+            }
         if path == "/v1/lotus/agent-web-graph":
             return {"agent_web_graph": {"stats": {"node_count": 6, "edge_count": 9}}}
         if path == "/v1/lotus/agent-web-repo-graph":
@@ -41,6 +47,9 @@ def test_gather_projection_context_prefers_agent_internet_snapshot(monkeypatch, 
 
 
 def test_render_projection_section_reports_local_fallback():
-    from vibe_core.plugins.opus_assistant.manas.cortex.documentation_surface import DocumentationContext, render_projection_status_section
+    from vibe_core.plugins.opus_assistant.manas.cortex.documentation_surface import (
+        DocumentationContext,
+        render_projection_status_section,
+    )
 
     assert "Local fallback active" in render_projection_status_section(DocumentationContext())

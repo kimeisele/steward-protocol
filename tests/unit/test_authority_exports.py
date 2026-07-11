@@ -23,4 +23,7 @@ def test_export_authority_bundle_uses_neutral_exporter_contract():
     assert bundle["kind"] == "source_authority_bundle"
     assert bundle["repo_role"]["repo_id"] == "steward-protocol"
     assert bundle["artifacts"][".authority-exports/source-surface-registry.json"]["document_count"] == 8
-    assert bundle["artifacts"][".authority-exports/surface-metadata.json"]["federation_surface"]["publication_model"] == "github_authority_feed_plus_projected_wiki"
+    assert (
+        bundle["artifacts"][".authority-exports/surface-metadata.json"]["federation_surface"]["publication_model"]
+        == "github_authority_feed_plus_projected_wiki"
+    )

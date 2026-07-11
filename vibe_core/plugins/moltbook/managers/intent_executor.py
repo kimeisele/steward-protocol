@@ -154,8 +154,7 @@ class IntentExecutor:
             existing_thread_id = self._find_existing_thread(target)
             if existing_thread_id:
                 logger.info(
-                    f"Thread reuse: commenting on {existing_thread_id} in m/{target} "
-                    f"instead of creating new post"
+                    f"Thread reuse: commenting on {existing_thread_id} in m/{target} instead of creating new post"
                 )
                 self._execute_comment_intent_on_thread(intent_dict, existing_thread_id, seed)
                 return

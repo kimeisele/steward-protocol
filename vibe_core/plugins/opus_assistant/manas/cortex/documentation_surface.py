@@ -107,14 +107,16 @@ class DocumentationSurfaceBuilder:
             cartridges_root = self._workspace / "vibe_core" / "cartridges"
             runtime_families: Counter[str] = Counter()
             for agent_id, manifest in weaver.manifests.items():
-                ctx.agents.append({
-                    "id": agent_id,
-                    "name": manifest.name,
-                    "domain": manifest.domain,
-                    "version": manifest.version,
-                    "capabilities": list(manifest.capabilities.keys()),
-                    "tier": manifest.tier,
-                })
+                ctx.agents.append(
+                    {
+                        "id": agent_id,
+                        "name": manifest.name,
+                        "domain": manifest.domain,
+                        "version": manifest.version,
+                        "capabilities": list(manifest.capabilities.keys()),
+                        "tier": manifest.tier,
+                    }
+                )
                 family = str(getattr(manifest, "tier", "agent") or "agent").lower()
                 source_path = getattr(manifest, "source_path", None)
                 if isinstance(source_path, Path):
@@ -128,7 +130,9 @@ class DocumentationSurfaceBuilder:
                 ctx.domains.setdefault(manifest.domain, []).append(agent_id)
                 ctx.capabilities[agent_id] = list(manifest.capabilities.keys())
             ctx.node_manifest_count = len(weaver.manifests)
-            ctx.cartridge_families = [{"name": name, "agents": count} for name, count in runtime_families.most_common(10)]
+            ctx.cartridge_families = [
+                {"name": name, "agents": count} for name, count in runtime_families.most_common(10)
+            ]
         except Exception as exc:
             logger.warning("DocumentationSurface: could not gather MANDALA context: %s", exc)
 
@@ -168,11 +172,13 @@ class DocumentationSurfaceBuilder:
                     py_files = list(module_dir.glob("**/*.py"))
                     if py_files:
                         repo_areas[module_dir.name] = len(py_files)
-                        ctx.modules.append({
-                            "name": module_dir.name,
-                            "files": len(py_files),
-                            "path": str(module_dir.relative_to(self._workspace)),
-                        })
+                        ctx.modules.append(
+                            {
+                                "name": module_dir.name,
+                                "files": len(py_files),
+                                "path": str(module_dir.relative_to(self._workspace)),
+                            }
+                        )
             ctx.repo_python_files = len(list(vibe_core.rglob("*.py")))
             ctx.repo_markdown_files = len(list(self._workspace.rglob("*.md")))
             ctx.repo_areas = [{"name": name, "python_files": count} for name, count in repo_areas.most_common(10)]
@@ -187,7 +193,9 @@ class DocumentationSurfaceBuilder:
             query = {"root": config["root"]}
             manifest_payload = _fetch_agent_internet_json(config, "/v1/lotus/agent-web-manifest", query=query)
             public_graph_payload = _fetch_agent_internet_json(config, "/v1/lotus/agent-web-graph", query=query)
-            repo_graph_payload = _fetch_agent_internet_json(config, "/v1/lotus/agent-web-repo-graph", query={**query, "limit": 25})
+            repo_graph_payload = _fetch_agent_internet_json(
+                config, "/v1/lotus/agent-web-repo-graph", query={**query, "limit": 25}
+            )
             search_index_payload = _fetch_agent_internet_json(config, "/v1/lotus/agent-web-index", query=query)
             ctx.projection_mode = "agent_internet"
             ctx.projection_base_url = str(config["base_url"])
@@ -200,7 +208,9 @@ class DocumentationSurfaceBuilder:
             if repo_summary:
                 ctx.node_count = int(repo_summary.get("node_count", ctx.node_count) or ctx.node_count)
                 ctx.edge_count = int(repo_summary.get("edge_count", ctx.edge_count) or ctx.edge_count)
-                ctx.constraint_count = int(repo_summary.get("constraint_count", ctx.constraint_count) or ctx.constraint_count)
+                ctx.constraint_count = int(
+                    repo_summary.get("constraint_count", ctx.constraint_count) or ctx.constraint_count
+                )
         except Exception as exc:
             logger.warning("DocumentationSurface: could not gather agent-internet projection surfaces: %s", exc)
 
@@ -232,8 +242,12 @@ def _resolve_agent_internet_projection_config(workspace: Path) -> dict[str, Any]
     return {"base_url": base_url, "bearer_token": bearer_token, "timeout_s": timeout_s, "root": root}
 
 
-def _fetch_agent_internet_json(config: dict[str, Any], path: str, *, query: dict[str, Any] | None = None) -> dict[str, Any]:
-    encoded = urlencode({str(key): str(value) for key, value in dict(query or {}).items() if value not in (None, "")}, doseq=True)
+def _fetch_agent_internet_json(
+    config: dict[str, Any], path: str, *, query: dict[str, Any] | None = None
+) -> dict[str, Any]:
+    encoded = urlencode(
+        {str(key): str(value) for key, value in dict(query or {}).items() if value not in (None, "")}, doseq=True
+    )
     suffix = f"?{encoded}" if encoded else ""
     request = Request(f"{config['base_url']}{path}{suffix}", method="GET")
     request.add_header("Authorization", f"Bearer {config['bearer_token']}")

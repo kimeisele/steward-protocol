@@ -12,8 +12,7 @@ def handle_source_authority_query(content: str, workspace: Path | None = None) -
     registry = load_source_authority_registry(workspace=root)
     bundle = export_authority_bundle(workspace=root)
     export_lines = [
-        f"- `{record['export_kind']}` → `{record['artifact_uri']}`"
-        for record in bundle["authority_exports"]
+        f"- `{record['export_kind']}` → `{record['artifact_uri']}`" for record in bundle["authority_exports"]
     ]
 
     if any(word in content_lower for word in ["authority", "bundle", "registry", "summary", "canonical", "export"]):
@@ -25,7 +24,22 @@ def handle_source_authority_query(content: str, workspace: Path | None = None) -
             f"{chr(10).join(export_lines)}"
         )
 
-    if any(word in content_lower for word in ["preview", "show", "display", "generate", "create", "build", "update", "sync", "push", "deploy", "publish"]):
+    if any(
+        word in content_lower
+        for word in [
+            "preview",
+            "show",
+            "display",
+            "generate",
+            "create",
+            "build",
+            "update",
+            "sync",
+            "push",
+            "deploy",
+            "publish",
+        ]
+    ):
         return (
             "📜 **Source Authority Export** no longer publishes local wiki pages.\n\n"
             "Public membrane rendering and publication belong to `agent-internet`.\n"
@@ -44,7 +58,7 @@ def get_source_authority_for_chat(workspace: Path | None = None) -> str:
     return f"""📜 **Source Authority Export**
 ├─ Repo: {registry.repo_id}
 ├─ Documents: {len(registry.documents)}
-└─ Export Kinds: {', '.join(export_kinds)}
+└─ Export Kinds: {", ".join(export_kinds)}
 
 **Commands:**
 - "show authority bundle" - Describe exported authority artifacts

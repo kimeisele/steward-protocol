@@ -53,7 +53,9 @@ def _slugify_wiki_name(value: str) -> str:
     return "-".join(parts) or "Document"
 
 
-def _normalize_bound_markdown(content: str, *, source_path: str, workspace: Path, wiki_names: dict[str, str], repo_web_url: str) -> str:
+def _normalize_bound_markdown(
+    content: str, *, source_path: str, workspace: Path, wiki_names: dict[str, str], repo_web_url: str
+) -> str:
     normalized = content.replace("-->#", "-->\n#").replace("--><", "-->\n<")
     source_file = (workspace / source_path).resolve()
 
@@ -109,10 +111,18 @@ def _repo_file_counts(workspace: Path) -> tuple[int, int, int, list[dict[str, An
     return python_files, markdown_files, yaml_files, areas
 
 
-def _canonical_source_document_payload(workspace: Path, repo_web_url: str, wiki_names: dict[str, str], document: SourceAuthorityDocumentRecord) -> dict[str, Any]:
+def _canonical_source_document_payload(
+    workspace: Path, repo_web_url: str, wiki_names: dict[str, str], document: SourceAuthorityDocumentRecord
+) -> dict[str, Any]:
     source_path = workspace / document.source_path
     if source_path.exists():
-        content = _normalize_bound_markdown(source_path.read_text(), source_path=document.source_path, workspace=workspace, wiki_names=wiki_names, repo_web_url=repo_web_url)
+        content = _normalize_bound_markdown(
+            source_path.read_text(),
+            source_path=document.source_path,
+            workspace=workspace,
+            wiki_names=wiki_names,
+            repo_web_url=repo_web_url,
+        )
     else:
         content = f"# {document.title}\n\n_Source document not found: `{document.source_path}`_\n"
     payload = document.to_payload()
@@ -124,13 +134,38 @@ def _canonical_source_document_payload(workspace: Path, repo_web_url: str, wiki_
 def export_source_surface_registry(*, workspace: Path | str | None = None) -> dict[str, Any]:
     root = Path(workspace or ".").resolve()
     documents = [record.to_payload() for record in _source_documents(root)]
-    return {"kind": "source_surface_registry", "version": 1, "repo_id": STEWARD_REPO_ID, "generated_at": datetime.now(timezone.utc).timestamp(), "document_count": len(documents), "documents": documents}
+    return {
+        "kind": "source_surface_registry",
+        "version": 1,
+        "repo_id": STEWARD_REPO_ID,
+        "generated_at": datetime.now(timezone.utc).timestamp(),
+        "document_count": len(documents),
+        "documents": documents,
+    }
 
 
 def export_public_summary_registry(*, workspace: Path | str | None = None) -> dict[str, Any]:
     root = Path(workspace or ".").resolve()
-    records = [{"document_id": record.document_id, "title": record.title, "authority": record.authority, "domain": record.domain, "source_path": record.source_path, "public_summary": record.public_abstract, "labels": dict(record.labels)} for record in _source_documents(root)]
-    return {"kind": "public_summary_registry", "version": 1, "repo_id": STEWARD_REPO_ID, "generated_at": datetime.now(timezone.utc).timestamp(), "record_count": len(records), "records": records}
+    records = [
+        {
+            "document_id": record.document_id,
+            "title": record.title,
+            "authority": record.authority,
+            "domain": record.domain,
+            "source_path": record.source_path,
+            "public_summary": record.public_abstract,
+            "labels": dict(record.labels),
+        }
+        for record in _source_documents(root)
+    ]
+    return {
+        "kind": "public_summary_registry",
+        "version": 1,
+        "repo_id": STEWARD_REPO_ID,
+        "generated_at": datetime.now(timezone.utc).timestamp(),
+        "record_count": len(records),
+        "records": records,
+    }
 
 
 def export_canonical_surface(*, workspace: Path | str | None = None) -> dict[str, Any]:
@@ -139,7 +174,14 @@ def export_canonical_surface(*, workspace: Path | str | None = None) -> dict[str
     wiki_names = _wiki_names(documents)
     repo_web_url = _parse_git_origin_url(root)
     payloads = [_canonical_source_document_payload(root, repo_web_url, wiki_names, record) for record in documents]
-    return {"kind": "canonical_surface", "version": 1, "repo_id": STEWARD_REPO_ID, "generated_at": datetime.now(timezone.utc).timestamp(), "document_count": len(payloads), "documents": payloads}
+    return {
+        "kind": "canonical_surface",
+        "version": 1,
+        "repo_id": STEWARD_REPO_ID,
+        "generated_at": datetime.now(timezone.utc).timestamp(),
+        "document_count": len(payloads),
+        "documents": payloads,
+    }
 
 
 def export_repo_graph_snapshot(*, workspace: Path | str | None = None) -> dict[str, Any]:
@@ -174,7 +216,24 @@ def export_authority_surface_metadata(*, workspace: Path | str | None = None, so
     documents = _source_documents(root)
     repo_web_url = _parse_git_origin_url(root)
     repo_python_files, repo_markdown_files, node_manifest_count, _ = _repo_file_counts(root)
-    pages = [{"id": record.document_id.upper(), "title": record.title, "wiki_name": _slugify_wiki_name(record.title), "filename": f"{_slugify_wiki_name(record.title)}.md", "page_class": "canonical", "authority": record.authority, "domain": record.domain, "section": record.domain.replace("_", " ").title(), "public_summary": record.public_abstract, "source_path": record.source_path, "featured": str(record.labels.get("featured") or "").lower() == "true", "include_in_sidebar": str(record.labels.get("include_in_sidebar") or "").lower() == "true", "query_aliases": [record.document_id.replace("_", " "), Path(record.source_path).stem.replace("_", " ")]} for record in documents]
+    pages = [
+        {
+            "id": record.document_id.upper(),
+            "title": record.title,
+            "wiki_name": _slugify_wiki_name(record.title),
+            "filename": f"{_slugify_wiki_name(record.title)}.md",
+            "page_class": "canonical",
+            "authority": record.authority,
+            "domain": record.domain,
+            "section": record.domain.replace("_", " ").title(),
+            "public_summary": record.public_abstract,
+            "source_path": record.source_path,
+            "featured": str(record.labels.get("featured") or "").lower() == "true",
+            "include_in_sidebar": str(record.labels.get("include_in_sidebar") or "").lower() == "true",
+            "query_aliases": [record.document_id.replace("_", " "), Path(record.source_path).stem.replace("_", " ")],
+        }
+        for record in documents
+    ]
     sections = list(dict.fromkeys(str(page["section"]) for page in pages if str(page["section"])))
     return {
         "kind": "surface_metadata",
@@ -184,8 +243,22 @@ def export_authority_surface_metadata(*, workspace: Path | str | None = None, so
         "public_surface": {
             "repo_label": "Steward",
             "document_prefix": "steward",
-            "overview_page": {"document_id": "steward_authority", "rel": "steward_authority", "kind": "steward_authority", "title": "Steward Authority", "wiki_name": "Steward-Authority", "entrypoint": True},
-            "canonical_index_page": {"document_id": "steward_canonical_surface", "rel": "steward_canonical_surface", "kind": "steward_canonical_surface", "title": "Steward Canonical Surface", "wiki_name": "Steward-Canonical-Surface", "entrypoint": False},
+            "overview_page": {
+                "document_id": "steward_authority",
+                "rel": "steward_authority",
+                "kind": "steward_authority",
+                "title": "Steward Authority",
+                "wiki_name": "Steward-Authority",
+                "entrypoint": True,
+            },
+            "canonical_index_page": {
+                "document_id": "steward_canonical_surface",
+                "rel": "steward_canonical_surface",
+                "kind": "steward_canonical_surface",
+                "title": "Steward Canonical Surface",
+                "wiki_name": "Steward-Canonical-Surface",
+                "entrypoint": False,
+            },
         },
         "federation_surface": {
             "surface_role": "canonical_public_source_authority",
@@ -203,8 +276,21 @@ def export_authority_surface_metadata(*, workspace: Path | str | None = None, so
             "sections": sections,
             "page_count": len(pages),
             "pages": pages,
-            "system_metrics": {"document_count": len(documents), "repo_python_files": repo_python_files, "repo_markdown_files": repo_markdown_files, "node_manifest_count": node_manifest_count},
-            "projection": {"mode": "source_authority_export", "base_url": "", "root": "", "manifest": {}, "public_graph": {}, "repo_graph": {}, "search_index": {}},
+            "system_metrics": {
+                "document_count": len(documents),
+                "repo_python_files": repo_python_files,
+                "repo_markdown_files": repo_markdown_files,
+                "node_manifest_count": node_manifest_count,
+            },
+            "projection": {
+                "mode": "source_authority_export",
+                "base_url": "",
+                "root": "",
+                "manifest": {},
+                "public_graph": {},
+                "repo_graph": {},
+                "search_index": {},
+            },
         },
     }
 
@@ -220,14 +306,37 @@ def export_authority_bundle(*, workspace: Path | str | None = None, source_sha: 
         "repo_graph": export_repo_graph_snapshot(workspace=root),
         "surface_metadata": export_authority_surface_metadata(workspace=root, source_sha=source_sha),
     }
-    artifact_payloads = {AUTHORITY_EXPORT_ARTIFACTS[export_kind]: payload for export_kind, payload in artifacts_by_kind.items()}
-    authority_exports = [{"export_id": f"{STEWARD_REPO_ID}/{export_kind}", "repo_id": STEWARD_REPO_ID, "export_kind": export_kind, "version": version, "artifact_uri": AUTHORITY_EXPORT_ARTIFACTS[export_kind], "generated_at": generated_at, "contract_version": AUTHORITY_EXPORT_CONTRACT_VERSION, "content_sha256": _artifact_sha256(payload), "labels": {"source_sha": source_sha} if source_sha else {}} for export_kind, payload in artifacts_by_kind.items()]
+    artifact_payloads = {
+        AUTHORITY_EXPORT_ARTIFACTS[export_kind]: payload for export_kind, payload in artifacts_by_kind.items()
+    }
+    authority_exports = [
+        {
+            "export_id": f"{STEWARD_REPO_ID}/{export_kind}",
+            "repo_id": STEWARD_REPO_ID,
+            "export_kind": export_kind,
+            "version": version,
+            "artifact_uri": AUTHORITY_EXPORT_ARTIFACTS[export_kind],
+            "generated_at": generated_at,
+            "contract_version": AUTHORITY_EXPORT_CONTRACT_VERSION,
+            "content_sha256": _artifact_sha256(payload),
+            "labels": {"source_sha": source_sha} if source_sha else {},
+        }
+        for export_kind, payload in artifacts_by_kind.items()
+    ]
     return {
         "kind": "source_authority_bundle",
         "contract_version": AUTHORITY_EXPORT_CONTRACT_VERSION,
         "generated_at": generated_at,
         "source_sha": source_sha,
-        "repo_role": {"repo_id": STEWARD_REPO_ID, "role": "normative_source", "owner_boundary": "normative_protocol_surface", "exports": [record["export_kind"] for record in authority_exports], "consumes": [], "publication_targets": ["steward-public-wiki"], "labels": {"public_surface_owner": "agent-internet"}},
+        "repo_role": {
+            "repo_id": STEWARD_REPO_ID,
+            "role": "normative_source",
+            "owner_boundary": "normative_protocol_surface",
+            "exports": [record["export_kind"] for record in authority_exports],
+            "consumes": [],
+            "publication_targets": ["steward-public-wiki"],
+            "labels": {"public_surface_owner": "agent-internet"},
+        },
         "authority_exports": authority_exports,
         "artifact_paths": {export_kind: AUTHORITY_EXPORT_ARTIFACTS[export_kind] for export_kind in artifacts_by_kind},
         "artifacts": artifact_payloads,

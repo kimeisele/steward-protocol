@@ -14,7 +14,9 @@ AUTHORITY_FEED_CONTRACT_VERSION = 1
 
 def _source_sha(workspace: Path) -> str:
     try:
-        return subprocess.check_output(["git", "-C", str(workspace), "rev-parse", "HEAD"], text=True).strip() or "unknown"
+        return (
+            subprocess.check_output(["git", "-C", str(workspace), "rev-parse", "HEAD"], text=True).strip() or "unknown"
+        )
     except Exception:
         return "unknown"
 
@@ -26,7 +28,9 @@ def _write_json(path: Path, payload: dict[str, Any]) -> str:
     return sha256(rendered.encode("utf-8")).hexdigest()
 
 
-def write_authority_feed(*, workspace: Path | str | None = None, output_dir: Path | str | None = None, source_sha: str | None = None) -> tuple[Path, dict[str, Any]]:
+def write_authority_feed(
+    *, workspace: Path | str | None = None, output_dir: Path | str | None = None, source_sha: str | None = None
+) -> tuple[Path, dict[str, Any]]:
     root = Path(workspace or ".").resolve()
     target_root = Path(output_dir).resolve() if output_dir is not None else root / ".authority-feed"
     effective_source_sha = str(source_sha or _source_sha(root)).strip() or "working-tree"
@@ -81,7 +85,11 @@ def main(argv: list[str] | None = None) -> int:
         output_dir=args.output_dir,
         source_sha=(args.source_sha or None),
     )
-    print(json.dumps({"output": str(path), "repo_id": manifest["source_repo_id"], "source_sha": manifest["source_sha"]}, indent=2))
+    print(
+        json.dumps(
+            {"output": str(path), "repo_id": manifest["source_repo_id"], "source_sha": manifest["source_sha"]}, indent=2
+        )
+    )
     return 0
 
 

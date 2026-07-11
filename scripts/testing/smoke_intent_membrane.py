@@ -17,7 +17,15 @@ if str(project_root) not in sys.path:
 from vibe_core.steward.crypto import generate_keys, sign_content
 
 
-def _request_json(base_url: str, path: str, *, method: str = "GET", payload: dict | None = None, headers: dict | None = None, timeout: float = 10.0) -> tuple[int, dict]:
+def _request_json(
+    base_url: str,
+    path: str,
+    *,
+    method: str = "GET",
+    payload: dict | None = None,
+    headers: dict | None = None,
+    timeout: float = 10.0,
+) -> tuple[int, dict]:
     data = None if payload is None else json.dumps(payload).encode("utf-8")
     request = Request(f"{base_url.rstrip('/')}{path}", data=data, method=method)
     request.add_header("Content-Type", "application/json")
@@ -37,7 +45,9 @@ def _expect(status: int, payload: dict, expected: int, label: str) -> None:
         raise SystemExit(f"{label} failed: expected {expected}, got {status}, payload={json.dumps(payload)}")
 
 
-def _intent_fields(*, intent_type: str, title: str, description: str, repo: str, space_id: str, requested_by_handle: str) -> dict:
+def _intent_fields(
+    *, intent_type: str, title: str, description: str, repo: str, space_id: str, requested_by_handle: str
+) -> dict:
     return {
         "intent_type": intent_type,
         "title": title,
@@ -70,7 +80,9 @@ def run_public(base_url: str, *, timeout: float, repo: str, space_id: str, reque
         space_id=space_id,
         requested_by_handle=requested_by_handle,
     )
-    status, created = _request_json(base_url, "/v1/public-intents", method="POST", payload=create_payload, timeout=timeout)
+    status, created = _request_json(
+        base_url, "/v1/public-intents", method="POST", payload=create_payload, timeout=timeout
+    )
     _expect(status, created, 200, "public create")
     intent_id = created["data"]["intent"]["intent_id"]
     status, fetched = _request_json(base_url, f"/v1/public-intents/{intent_id}", timeout=timeout)
@@ -78,7 +90,9 @@ def run_public(base_url: str, *, timeout: float, repo: str, space_id: str, reque
     return {"intent_id": intent_id, "status": fetched["data"]["intent"]["status"]}
 
 
-def run_verified(base_url: str, *, api_key: str, timeout: float, repo: str, space_id: str, requested_by_handle: str, agent_id: str) -> dict:
+def run_verified(
+    base_url: str, *, api_key: str, timeout: float, repo: str, space_id: str, requested_by_handle: str, agent_id: str
+) -> dict:
     private_key_pem, public_key_pem = generate_keys()
     timestamp = int(time.time())
     create_fields = _intent_fields(
@@ -97,12 +111,16 @@ def run_verified(base_url: str, *, api_key: str, timeout: float, repo: str, spac
         "timestamp": timestamp,
     }
     headers = {"x-api-key": api_key}
-    status, created = _request_json(base_url, "/v1/intents", method="POST", payload=create_payload, headers=headers, timeout=timeout)
+    status, created = _request_json(
+        base_url, "/v1/intents", method="POST", payload=create_payload, headers=headers, timeout=timeout
+    )
     _expect(status, created, 200, "verified create")
     intent = created["data"]["intent"]
     expected_subject = f"verified_agent:{agent_id}"
     if intent.get("requested_by_subject_id") != expected_subject:
-        raise SystemExit(f"verified create stored wrong subject: {intent.get('requested_by_subject_id')} != {expected_subject}")
+        raise SystemExit(
+            f"verified create stored wrong subject: {intent.get('requested_by_subject_id')} != {expected_subject}"
+        )
     intent_id = intent["intent_id"]
 
     timestamp = int(time.time())
@@ -114,12 +132,20 @@ def run_verified(base_url: str, *, api_key: str, timeout: float, repo: str, spac
         "public_key": public_key_pem,
         "timestamp": timestamp,
     }
-    status_code, fetched = _request_json(base_url, "/v1/intents/status", method="POST", payload=status_payload, headers=headers, timeout=timeout)
+    status_code, fetched = _request_json(
+        base_url, "/v1/intents/status", method="POST", payload=status_payload, headers=headers, timeout=timeout
+    )
     _expect(status_code, fetched, 200, "verified read")
     fetched_intent = fetched["data"]["intent"]
     if fetched_intent.get("requested_by_subject_id") != expected_subject:
-        raise SystemExit(f"verified read stored wrong subject: {fetched_intent.get('requested_by_subject_id')} != {expected_subject}")
-    return {"intent_id": intent_id, "status": fetched_intent["status"], "requested_by_subject_id": fetched_intent["requested_by_subject_id"]}
+        raise SystemExit(
+            f"verified read stored wrong subject: {fetched_intent.get('requested_by_subject_id')} != {expected_subject}"
+        )
+    return {
+        "intent_id": intent_id,
+        "status": fetched_intent["status"],
+        "requested_by_subject_id": fetched_intent["requested_by_subject_id"],
+    }
 
 
 def main() -> int:
@@ -142,7 +168,13 @@ def main() -> int:
 
     summary: dict[str, dict] = {}
     if not args.skip_public:
-        summary["public"] = run_public(args.base_url, timeout=args.timeout, repo=args.repo, space_id=args.space_id, requested_by_handle=args.requested_by_handle)
+        summary["public"] = run_public(
+            args.base_url,
+            timeout=args.timeout,
+            repo=args.repo,
+            space_id=args.space_id,
+            requested_by_handle=args.requested_by_handle,
+        )
     if not args.skip_verified:
         summary["verified"] = run_verified(
             args.base_url,

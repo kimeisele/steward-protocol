@@ -58,7 +58,8 @@ def _get_default_model_from_config(provider_name: str) -> str:
     except Exception as e:
         logger.warning(
             "Could not load model from config for '%s': %s — using fallback",
-            provider_name, e,
+            provider_name,
+            e,
         )
 
     # Graceful fallback — never crash to NoOp just because config is missing

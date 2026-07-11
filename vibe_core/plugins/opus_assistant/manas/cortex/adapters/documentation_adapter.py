@@ -47,7 +47,9 @@ class DocumentationCortexAdapter(BaseCortex):
                 return self._execute_manas_docs()
             if intent_type == "fix_documentation_drift":
                 return self._execute_drift_fix(intent)
-            return cortex_success(handler=self.name, message=f"Documentation intent acknowledged: {intent_type}", intent_type=intent_type)
+            return cortex_success(
+                handler=self.name, message=f"Documentation intent acknowledged: {intent_type}", intent_type=intent_type
+            )
         except Exception as exc:
             logger.error("DocumentationCortexAdapter error: %s", exc)
             return cortex_error(handler=self.name, error=str(exc))

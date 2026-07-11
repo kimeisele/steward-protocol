@@ -62,7 +62,9 @@ class SourceAuthorityRegistryRecord:
         }
 
 
-def load_source_authority_registry(*, workspace: Path | None = None, registry_path: Path | None = None) -> SourceAuthorityRegistryRecord:
+def load_source_authority_registry(
+    *, workspace: Path | None = None, registry_path: Path | None = None
+) -> SourceAuthorityRegistryRecord:
     path = _resolve_registry_path(workspace=workspace, registry_path=registry_path)
     payload = yaml.safe_load(path.read_text()) or {}
     if not isinstance(payload, dict):

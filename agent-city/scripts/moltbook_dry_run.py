@@ -52,12 +52,14 @@ class DryRunReport:
         self.start_time = time.time()
 
     def record(self, name: str, success: bool, data: Any = None, error: str = ""):
-        self.results.append({
-            "name": name,
-            "success": success,
-            "data": data,
-            "error": error,
-        })
+        self.results.append(
+            {
+                "name": name,
+                "success": success,
+                "data": data,
+                "error": error,
+            }
+        )
         status = "✓" if success else "✗"
         print(f"  {status} {name}")
         if error:
@@ -70,14 +72,14 @@ class DryRunReport:
         passed = sum(1 for r in self.results if r["success"])
         failed = sum(1 for r in self.results if not r["success"])
         total = len(self.results)
-        print(f"\n{'='*60}")
+        print(f"\n{'=' * 60}")
         print(f"DRY-RUN COMPLETE: {passed}/{total} passed, {failed} failed ({elapsed:.1f}s)")
         if failed:
             print("\nFAILED:")
             for r in self.results:
                 if not r["success"]:
                     print(f"  ✗ {r['name']}: {r['error']}")
-        print(f"{'='*60}")
+        print(f"{'=' * 60}")
         return failed == 0
 
 
@@ -97,21 +99,29 @@ async def run_dry_run(client: MoltbookClient, write_enabled: bool = False) -> bo
 
     try:
         profile = await client.get_own_profile()
-        report.record("get_own_profile", True, {
-            "name": profile.get("name"),
-            "karma": profile.get("karma"),
-            "follower_count": profile.get("follower_count"),
-            "is_claimed": profile.get("is_claimed"),
-        })
+        report.record(
+            "get_own_profile",
+            True,
+            {
+                "name": profile.get("name"),
+                "karma": profile.get("karma"),
+                "follower_count": profile.get("follower_count"),
+                "is_claimed": profile.get("is_claimed"),
+            },
+        )
     except Exception as e:
         report.record("get_own_profile", False, error=str(e))
 
     try:
         profile = await client.get_profile("steward-protocol")
-        report.record("get_profile(steward-protocol)", True, {
-            "name": profile.get("name"),
-            "karma": profile.get("karma"),
-        })
+        report.record(
+            "get_profile(steward-protocol)",
+            True,
+            {
+                "name": profile.get("name"),
+                "karma": profile.get("karma"),
+            },
+        )
     except Exception as e:
         report.record("get_profile", False, error=str(e))
 
@@ -123,10 +133,14 @@ async def run_dry_run(client: MoltbookClient, write_enabled: bool = False) -> bo
     first_post_id = None
     try:
         feed = await client.get_feed(sort="new", limit=3)
-        report.record("get_feed(new, 3)", True, {
-            "count": len(feed),
-            "first_title": feed[0].get("title", "?")[:60] if feed else "empty",
-        })
+        report.record(
+            "get_feed(new, 3)",
+            True,
+            {
+                "count": len(feed),
+                "first_title": feed[0].get("title", "?")[:60] if feed else "empty",
+            },
+        )
         if feed and isinstance(feed[0], dict):
             first_post_id = feed[0].get("id")
     except Exception as e:
@@ -141,10 +155,14 @@ async def run_dry_run(client: MoltbookClient, write_enabled: bool = False) -> bo
     if first_post_id:
         try:
             post = await client.get_post(first_post_id)
-            report.record(f"get_post({first_post_id[:8]}...)", True, {
-                "title": post.get("title", "?")[:60],
-                "upvotes": post.get("upvotes"),
-            })
+            report.record(
+                f"get_post({first_post_id[:8]}...)",
+                True,
+                {
+                    "title": post.get("title", "?")[:60],
+                    "upvotes": post.get("upvotes"),
+                },
+            )
         except Exception as e:
             report.record("get_post", False, error=str(e))
 
@@ -164,10 +182,14 @@ async def run_dry_run(client: MoltbookClient, write_enabled: bool = False) -> bo
 
     try:
         results = await client.semantic_search("agent operating system", limit=3)
-        report.record("semantic_search", True, {
-            "count": len(results),
-            "first_type": results[0].get("type", "?") if results else "empty",
-        })
+        report.record(
+            "semantic_search",
+            True,
+            {
+                "count": len(results),
+                "first_type": results[0].get("type", "?") if results else "empty",
+            },
+        )
     except Exception as e:
         report.record("semantic_search", False, error=str(e))
 
@@ -178,10 +200,14 @@ async def run_dry_run(client: MoltbookClient, write_enabled: bool = False) -> bo
 
     try:
         hb = await client.check_heartbeat()
-        report.record("check_heartbeat", True, {
-            "has_activity": hb.get("has_activity"),
-            "requests_count": hb.get("requests", {}).get("count") if isinstance(hb.get("requests"), dict) else "?",
-        })
+        report.record(
+            "check_heartbeat",
+            True,
+            {
+                "has_activity": hb.get("has_activity"),
+                "requests_count": hb.get("requests", {}).get("count") if isinstance(hb.get("requests"), dict) else "?",
+            },
+        )
     except Exception as e:
         report.record("check_heartbeat", False, error=str(e))
 
@@ -204,19 +230,27 @@ async def run_dry_run(client: MoltbookClient, write_enabled: bool = False) -> bo
 
     try:
         submolts = await client.get_submolts()
-        report.record("get_submolts", True, {
-            "count": len(submolts),
-            "first": submolts[0].get("name", "?") if submolts else "empty",
-        })
+        report.record(
+            "get_submolts",
+            True,
+            {
+                "count": len(submolts),
+                "first": submolts[0].get("name", "?") if submolts else "empty",
+            },
+        )
     except Exception as e:
         report.record("get_submolts", False, error=str(e))
 
     try:
         submolt = await client.get_submolt("general")
-        report.record("get_submolt(general)", True, {
-            "name": submolt.get("name"),
-            "subscribers": submolt.get("subscriber_count"),
-        })
+        report.record(
+            "get_submolt(general)",
+            True,
+            {
+                "name": submolt.get("name"),
+                "subscribers": submolt.get("subscriber_count"),
+            },
+        )
     except Exception as e:
         report.record("get_submolt(general)", False, error=str(e))
 
@@ -246,10 +280,14 @@ async def run_dry_run(client: MoltbookClient, write_enabled: bool = False) -> bo
             submolt=None,
         )
         created_post_id = post.get("id", "")
-        report.record("create_post", True, {
-            "id": created_post_id,
-            "title": post.get("title", "?")[:60],
-        })
+        report.record(
+            "create_post",
+            True,
+            {
+                "id": created_post_id,
+                "title": post.get("title", "?")[:60],
+            },
+        )
     except Exception as e:
         report.record("create_post", False, error=str(e))
 
@@ -260,10 +298,14 @@ async def run_dry_run(client: MoltbookClient, write_enabled: bool = False) -> bo
                 created_post_id,
                 "Automated comment — write-cycle test. Will be cleaned up.",
             )
-            report.record("comment", True, {
-                "id": comment.get("id", "?"),
-                "post_id": created_post_id,
-            })
+            report.record(
+                "comment",
+                True,
+                {
+                    "id": comment.get("id", "?"),
+                    "post_id": created_post_id,
+                },
+            )
         except Exception as e:
             report.record("comment", False, error=str(e))
 
@@ -392,9 +434,9 @@ def main():
     else:
         mode = "LIVE API (read-only)"
 
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print(f"MOLTBOOK DRY-RUN — {mode}")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
 
     success = asyncio.run(run_dry_run(client, write_enabled=write_enabled))
     sys.exit(0 if success else 1)
