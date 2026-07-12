@@ -256,8 +256,29 @@ class RealVibeKernel(VibeKernel, VajraGuarded, PanchaTattvaProtocol):
         """Step 8: BOOTSTRAP — Plugin loading + seal."""
         if load_plugins:
             self._raw_brahma.bootstrap(self, self._config)
+            self._init_genesis_path()
         self._status = KernelStatus.STOPPED
         self.vajra_seal()
+
+    def _init_genesis_path(self) -> None:
+        """Resolve the Genesis cognitive pack directory for EnvoyPlugin.
+
+        EnvoyPlugin.load_circuits() guards on hasattr(kernel, "genesis_path") and
+        scans genesis_path/"circuits". The genesis pack is registered as a
+        cognitive_pack (not a plugin), so it never appears in Brahma's plugin
+        metadata — resolve it from the ManifestRegistry instead (Befund 122).
+        """
+        from vibe_core.loaders.manifest_registry import ManifestRegistry
+
+        self.genesis_path = None
+        try:
+            for entry in ManifestRegistry.get_enabled("cognitive_pack"):
+                if entry.id == "genesis_knowledge":
+                    self.genesis_path = entry.parent_dir
+                    logger.info(f"KERNEL: genesis_path resolved to {self.genesis_path}")
+                    break
+        except Exception as e:
+            logger.warning(f"KERNEL: could not resolve genesis_path: {e}")
 
     def __init__(
         self,

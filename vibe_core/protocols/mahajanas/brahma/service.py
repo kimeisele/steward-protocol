@@ -349,19 +349,6 @@ class BrahmaService(BrahmaProtocol, PanchaTattvaProtocol, ExecutableMixin):
         )
         setattr(kernel, "_plugins", plugins)
 
-        # 2b. GENESIS PATH - EnvoyPlugin needs kernel.genesis_path to find genesis circuits.
-        # Without this the hasattr() guard in EnvoyPlugin.load_circuits() silently fails
-        # and the genesis pack's circuits are never scanned (see Befund 122).
-        for _meta in metadata.values():
-            _mpath = getattr(_meta, "manifest_path", None)
-            if _mpath is not None and getattr(_meta, "item_id", "") == "genesis_knowledge":
-                setattr(kernel, "genesis_path", _mpath.parent)
-                logger.info(f"BRAHMA: genesis_path set to {_mpath.parent}")
-                break
-        else:
-            if not hasattr(kernel, "genesis_path"):
-                setattr(kernel, "genesis_path", None)
-
         # 3. BOOT - Wake the Plugins
         self.boot_plugins(kernel, plugins)
 
