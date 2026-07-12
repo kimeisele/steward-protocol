@@ -535,24 +535,32 @@ class EventBus(EventBusProtocol):
 
         return subscriber_id
 
-    def unsubscribe(self, subscriber_id: str) -> bool:
+    def unsubscribe(self, subscriber_id, event_type=None) -> bool:
         """
         Unsubscribe from events.
 
         Args:
-            subscriber_id: Subscriber ID returned by subscribe()
+            subscriber_id: Subscriber ID returned by subscribe(), OR the callback
+                itself (agent.system.unsubscribe_from_events passes the callback).
+            event_type: Ignored; accepted because agent_interface passes it.
 
         Returns:
             True if was subscribed, False otherwise
 
         Note: Uses _callback_ids reverse lookup to find and remove callback.
         """
-        # Find callback by ID
+        # Tolerant: agent_interface calls unsubscribe(callback, event_type).
+        # Accept a callback directly as well as a subscriber id.
         callback_to_remove = None
-        for callback, cid in self._callback_ids.items():
-            if cid == subscriber_id:
-                callback_to_remove = callback
-                break
+        if callable(subscriber_id):
+            if subscriber_id in self._callback_ids:
+                callback_to_remove = subscriber_id
+        else:
+            # Find callback by ID
+            for callback, cid in self._callback_ids.items():
+                if cid == subscriber_id:
+                    callback_to_remove = callback
+                    break
 
         if callback_to_remove is None:
             logger.debug(f"Subscriber {subscriber_id} not found")

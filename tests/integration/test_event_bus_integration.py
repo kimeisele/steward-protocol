@@ -355,7 +355,7 @@ def test_event_bus_status():
     agent2.system.subscribe_to_events(agent2.on_event, "type.b")
 
     # Check status
-    status = kernel.get_event_bus_status()
+    status = kernel.event_bus.get_status()
 
     assert "total_events" in status
     assert "subscribers" in status
