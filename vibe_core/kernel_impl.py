@@ -503,10 +503,7 @@ class RealVibeKernel(VibeKernel, VajraGuarded, PanchaTattvaProtocol):
             asyncio.get_running_loop()
         except RuntimeError:
             return  # no loop running -> the sync wrapper is fine
-        raise RuntimeError(
-            f"kernel.{op}() cannot be called from async code; "
-            f"await kernel.{op}_async() instead."
-        )
+        raise RuntimeError(f"kernel.{op}() cannot be called from async code; await kernel.{op}_async() instead.")
 
     def _get_settings_manifestation_data(self) -> Dict[str, object]:
         return self._raw_brahma.get_settings_data(self)
