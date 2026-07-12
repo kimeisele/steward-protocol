@@ -483,10 +483,30 @@ class RealVibeKernel(VibeKernel, VajraGuarded, PanchaTattvaProtocol):
         }
 
     def boot(self, mode: Optional[BootMode] = None) -> None:
+        self._guard_no_running_loop("boot")
         asyncio.run(self.boot_async(mode))
 
     def shutdown(self, reason: str = "User shutdown") -> None:
+        self._guard_no_running_loop("shutdown")
         asyncio.run(self.shutdown_async(reason))
+
+    @staticmethod
+    def _guard_no_running_loop(op: str) -> None:
+        """Fail loudly when a sync wrapper is used inside a running event loop.
+
+        boot()/shutdown() wrap the async variants with asyncio.run(), which cannot
+        run inside an existing loop. Callers in async code must await boot_async()/
+        shutdown_async() instead. Without this guard the failure surfaces as an
+        opaque RuntimeError deep in asyncio (Befund 124).
+        """
+        try:
+            asyncio.get_running_loop()
+        except RuntimeError:
+            return  # no loop running -> the sync wrapper is fine
+        raise RuntimeError(
+            f"kernel.{op}() cannot be called from async code; "
+            f"await kernel.{op}_async() instead."
+        )
 
     def _get_settings_manifestation_data(self) -> Dict[str, object]:
         return self._raw_brahma.get_settings_data(self)

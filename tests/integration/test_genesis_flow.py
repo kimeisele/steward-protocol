@@ -80,7 +80,7 @@ async def test_genesis_flow():
     assert status in ["success", "PROPOSAL_PENDING", "COMPLETED", "FAILED", "NO_MATCH", "SUBMITTED"]
 
     # STEP 5: Shutdown (skip - can timeout on large workspace)
-    kernel.shutdown(reason="Genesis Flow test complete")
+    await kernel.shutdown_async(reason="Genesis Flow test complete")
 
 
 @pytest.mark.integration
