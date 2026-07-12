@@ -500,6 +500,22 @@ class EventBus(EventBusProtocol):
         Returns:
             Subscription ID
         """
+        # --- Tolerant argument normalisation ---
+        # Callers historically pass (event_type, callback) reversed, bare strings,
+        # single EventType, or "*". Normalise before use.
+        if not callable(callback) and callable(event_types):
+            callback, event_types = event_types, callback
+            logger.warning(
+                "EventBus.subscribe called with (event_type, callback); "
+                "canonical order is subscribe(callback, event_types). Swapping."
+            )
+        if isinstance(event_types, str):
+            # "*" means "all events" -> global subscriber (None)
+            event_types = None if event_types == "*" else [event_types]
+        elif isinstance(event_types, EventType):
+            event_types = [event_types]
+        # --- end normalisation ---
+
         # Generate and store subscriber ID
         subscriber_id = f"sub_{len(self._callback_ids)}"
         self._callback_ids[callback] = subscriber_id

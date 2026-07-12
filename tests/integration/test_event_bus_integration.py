@@ -294,7 +294,7 @@ def test_subscriber_error_doesnt_crash_others():
     kernel.register_agent(good_agent, spawn_process=False)
 
     # Subscribe both
-    kernel.subscribe_to_events(bad_callback, "test.fault")
+    kernel.event_bus.subscribe(bad_callback, "test.fault")
     good_agent.system.subscribe_to_events(good_agent.on_event, "test.fault")
 
     # Broadcast
