@@ -30,14 +30,6 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Inject node identity from GitHub Secret
-        env:
-          NODE_KEYS: ${{ secrets.NODE_PRIVATE_KEY }}
-        run: |
-          mkdir -p data/federation
-          printf '%s' "$NODE_KEYS" > data/federation/.node_keys.json
-          echo "✅ Node identity injected from NODE_PRIVATE_KEY secret"
-
       - name: Install dependencies
         run: |
           pip install --upgrade pip
