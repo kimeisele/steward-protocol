@@ -55,6 +55,7 @@ jobs:
 
       - name: Run NADI heartbeat cycle
         env:
+          NODE_PRIVATE_KEY: ${{ secrets.NODE_PRIVATE_KEY }}
           GH_TOKEN: ${{ secrets.FEDERATION_PAT || secrets.GITHUB_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.FEDERATION_PAT || secrets.GITHUB_TOKEN }}
         run: |
