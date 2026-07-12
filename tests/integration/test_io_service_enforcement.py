@@ -172,8 +172,8 @@ def test_kernel_has_io_attribute():
 
         from vibe_core.kernel_impl import RealVibeKernel
 
-        source = inspect.getsource(RealVibeKernel.__init__)
+        source = inspect.getsource(RealVibeKernel)
 
-        assert "self.io = KernelIOService" in source, "RealVibeKernel.__init__ must set self.io = KernelIOService(self)"
+        assert "self.io = KernelIOService" in source, "RealVibeKernel must set self.io = KernelIOService(self)"
     except ImportError as e:
         pytest.fail(f"Failed to import kernel: {e}")

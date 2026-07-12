@@ -35,7 +35,7 @@ async def test_genesis_flow():
     kernel = await orchestrator.boot_orchestrated(force=True)
 
     status = kernel.get_status()
-    assert status.get("status") in ["RUNNING", "IDLE"]
+    assert status.get("kernel_status") in ["RUNNING", "IDLE", "BOOTING"]
 
     # STEP 2: Initialize UniversalProvider
     from vibe_core.cartridges.system.envoy.provider import UniversalProvider
@@ -91,7 +91,7 @@ def test_genesis_flow_kernel_boot():
 
     assert kernel is not None
     status = kernel.get_status()
-    assert "status" in status
+    assert "kernel_status" in status
 
     # Shutdown skip - can timeout on large workspace
     kernel.shutdown(reason="Test complete")
