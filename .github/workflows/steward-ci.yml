@@ -123,7 +123,7 @@ jobs:
           python-version: '3.11'
 
       - name: Install ruff
-        run: pip install ruff
+        run: pip install ruff==0.15.21
 
       - name: Ruff check (critical)
         run: ruff check vibe_core scripts --select=E9,F63,F7,F82 --output-format=github
