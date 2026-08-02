@@ -80,7 +80,7 @@ def _w_vandanam(lotus: "MahamantraLotus", ctx: dict) -> None:
 
 
 def _w_dasyam(lotus: "MahamantraLotus", ctx: dict) -> None:
-    d = lotus.dasyam(ctx["attractor"], ctx.get("opcode"))
+    d = lotus.dasyam(ctx["attractor"], ctx.get("opcode"), category=ctx["seed"] >> 24)
     ctx["position"] = d["position"]
     ctx["diw"] = d["diw"]
     ctx["diw_comp"] = d["diw_comp"]

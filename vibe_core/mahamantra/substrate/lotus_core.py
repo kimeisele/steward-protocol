@@ -793,11 +793,15 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         }
 
     @staticmethod
-    def dasyam(attractor: int, opcode: Optional[int] = None) -> dict:
+    def dasyam(
+        attractor: int,
+        opcode: Optional[int] = None,
+        category: Optional[int] = None,
+    ) -> dict:
         """7. DASYAM + SHABDA — Position/Quarter/Role + RAMA Grid phoneme signature."""
         P = _get_pipeline()
         WORDS = P.WORDS
-        position = attractor % WORDS
+        position = (category % WORDS) if category is not None else (attractor % WORDS)
 
         diw = P.THE_FLUTE_CYCLE[position]
         diw_comp = P.diw_components[position]

@@ -229,7 +229,7 @@ class MahaCompression(MahaCompressionProtocol):
         seed = self._compute_seed(text)
 
         # Position in 16-word grid
-        position = seed % WORDS
+        position = (seed >> 24) % WORDS
 
         # Generate summary if requested
         summary = None
@@ -337,7 +337,7 @@ class MahaCompression(MahaCompressionProtocol):
         """
         # Use seed properties to infer intent
         # This is deterministic but approximate
-        position = seed % WORDS
+        position = (seed >> 24) % WORDS
 
         # Map positions to gunas (simplified)
         # 0-3 = TAMAS, 4-7 = RAJAS, 8-11 = SATTVA, 12-15 = SUDDHA
