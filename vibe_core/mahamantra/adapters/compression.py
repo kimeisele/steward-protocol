@@ -140,14 +140,15 @@ def _compute_seed_cached(text: str) -> int:
     vibrations = text_to_vibration(text)
     vibration_sum = sum(sig.signature_id for sig in vibrations) if vibrations else 0
 
-    # MERGE: XOR hash with vibration_sum — phonetics modulate the hash
-    # This is NOT symmetric destruction (like seed^seed=0) because
-    # text_hash and vibration_sum are structurally different values.
-    merged = text_hash ^ (vibration_sum & 0xFFFFFFFF)
+    # Channel 1 — locality: classification follows phonetics.
+    # Keep the phonetic signal out of the identity bits so a uniformly
+    # distributed hash cannot erase its locality through XOR.
+    category = vibration_sum % WORDS  # 0-15, phonetically stable
 
-    category = merged % WORDS  # 0-15, phonetically influenced
+    # Channel 2 — identity: uniqueness remains with the structural hash.
+    identity = text_hash % MAHA_QUANTUM
 
-    base_seed = (category * MAHA_QUANTUM) + (merged % MAHA_QUANTUM)
+    base_seed = (category * MAHA_QUANTUM) + identity
 
     synth = MahaModularSynth(default_preset="quantum")
     transformed = synth.transform(base_seed)
@@ -228,7 +229,7 @@ class MahaCompression(MahaCompressionProtocol):
         seed = self._compute_seed(text)
 
         # Position in 16-word grid
-        position = seed % WORDS
+        position = (seed >> 24) % WORDS
 
         # Generate summary if requested
         summary = None
@@ -336,7 +337,7 @@ class MahaCompression(MahaCompressionProtocol):
         """
         # Use seed properties to infer intent
         # This is deterministic but approximate
-        position = seed % WORDS
+        position = (seed >> 24) % WORDS
 
         # Map positions to gunas (simplified)
         # 0-3 = TAMAS, 4-7 = RAJAS, 8-11 = SATTVA, 12-15 = SUDDHA

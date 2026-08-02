@@ -4,6 +4,8 @@ Tests for substrate/language/engine.py — MahaLanguageEngine orchestrator.
 Tests the full pipeline end-to-end. Determinism is the core invariant.
 """
 
+import re
+
 import pytest
 
 from vibe_core.mahamantra.protocols._seed import PARAMPARA
@@ -76,7 +78,7 @@ class TestGenerate:
 
     def test_verse_ref_format(self, engine):
         result = engine.generate("the meaning of sacrifice")
-        assert result.verse_ref.startswith("BG.18.")
+        assert re.match(r"^BG\.\d{1,2}\.\d{1,2}$", result.verse_ref)
 
     def test_output_nonempty(self, engine):
         result = engine.generate("who am I?")
