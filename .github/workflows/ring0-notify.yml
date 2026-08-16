@@ -1,0 +1,60 @@
+name: RING0 Change Visibility
+
+# Visibility instead of review gate (owner decision 2026-08-16): a register
+# or RING0 change must not go unnoticed. Every push to main touching these
+# paths opens an issue with file, commit SHA, author, and diff.
+# Opens/reuses/comments only — never closes (same rule as the watchdog).
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/governance/kernel_hashes.json'
+      - 'scripts/governance/verify_kernel.py'
+      - 'scripts/governance/vishnu_guard.py'
+      - '.github/workflows/attest.yml'
+      - '.github/workflows/container-build.yml'
+      - '.github/workflows/deploy.yml'
+      - '.github/workflows/factory.yml'
+      - '.github/workflows/heartbeat.yml'
+      - '.github/workflows/integration-tests.yml'
+      - '.github/workflows/scheduled-agents.yml'
+      - '.github/workflows/scribe-docs.yml'
+      - '.github/workflows/steward-ci.yml'
+      - '.github/workflows/system-cycle.yml'
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Open RING0 change issue
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          SHA="${{ github.sha }}"
+          AUTHOR="${{ github.actor }}"
+          FILES="$(git diff --name-only HEAD~1 HEAD 2>/dev/null || echo 'unknown')"
+          DIFF="$(git diff HEAD~1 HEAD 2>/dev/null | head -120 || true)"
+          TITLE="RING0 change on main: $SHA (by $AUTHOR)"
+          existing="$(gh issue list --repo kimeisele/steward-protocol \
+            --state open --label ring0-change --json number \
+            --jq '.[0].number // empty' 2>/dev/null || true)"
+          body="RING0 path changed on main at commit \`$SHA\` by \`$AUTHOR\`. Files: \n\n$FILES\n\nDiff (first 120 lines):\n\n$DIFF\n\nThis issue is opened automatically for visibility. It is never closed automatically; close it manually once the change is acknowledged."
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --repo kimeisele/steward-protocol \
+              --body "Additional RING0 change: \`$SHA\` by \`$AUTHOR\`. Files: \n\n$FILES"
+          else
+            gh issue create --repo kimeisele/steward-protocol \
+              --title "$TITLE" \
+              --label ring0-change \
+              --body "$body"
+          fi
