@@ -1,5 +1,11 @@
 # Code owners for the kernel-integrity and RING0 paths.
 #
+# STATUS 2026-08-16: NOT ENFORCED. require_code_owner_reviews=false and
+# there is no second active collaborator (federation-operator invite was
+# withdrawn; the only active account is kimeisele). This file documents
+# responsibility and becomes enforced the moment a second write-capable
+# account exists and require_code_owner_reviews is enabled.
+#
 # The integrity register and the enforcement machinery must not be replaceable
 # by the players. The owner account (kimeisele) writes most of this repo; a
 # change to these paths requires a second identity (federation-operator) to
