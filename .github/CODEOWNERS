@@ -1,0 +1,27 @@
+# Code owners for the kernel-integrity and RING0 paths.
+#
+# The integrity register and the enforcement machinery must not be replaceable
+# by the players. The owner account (kimeisele) writes most of this repo; a
+# change to these paths requires a second identity (federation-operator) to
+# approve it at the moment the diff exists.
+#
+# RING0 files are changed directly on main by procedure (see
+# scripts/governance/verify_kernel.py "HASH UPDATES"); branch protection with
+# required reviewers applies to PRs touching these paths.
+
+# Kernel integrity register + verifier
+/scripts/governance/kernel_hashes.json   @federation-operator
+/scripts/governance/verify_kernel.py     @federation-operator
+/scripts/governance/vishnu_guard.py      @federation-operator
+
+# The RING0 workflow surface (hash-pinned in the register)
+/.github/workflows/attest.yml            @federation-operator
+/.github/workflows/container-build.yml   @federation-operator
+/.github/workflows/deploy.yml            @federation-operator
+/.github/workflows/factory.yml           @federation-operator
+/.github/workflows/heartbeat.yml         @federation-operator
+/.github/workflows/integration-tests.yml @federation-operator
+/.github/workflows/scheduled-agents.yml  @federation-operator
+/.github/workflows/scribe-docs.yml       @federation-operator
+/.github/workflows/steward-ci.yml        @federation-operator
+/.github/workflows/system-cycle.yml      @federation-operator
